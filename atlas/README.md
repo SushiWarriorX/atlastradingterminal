@@ -77,3 +77,8 @@ atlas/
   web/src/             Vite + React + TypeScript; widgets/, workspaces, command bar
   docs/                architecture, data-providers, roadmap, implementation-status, known-limitations
 ```
+
+## Windows: one-step start
+
+Double-click `start-windows.bat` (practice mode with synthetic DEMO data). Use `start-windows.bat -Real` from PowerShell for real data.
+The first run installs everything and needs Python 3.11+ and Node 18+. Close the two black windows it opens to stop ATLAS.
