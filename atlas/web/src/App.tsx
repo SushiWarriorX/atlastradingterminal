@@ -1,0 +1,82 @@
+import { useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "./api";
+import { useStore } from "./store";
+import { NAV } from "./workspaces";
+import { TopBar } from "./TopBar";
+import { Workspace } from "./Workspace";
+
+const HOTKEYS: Record<string, string> = { "1": "overview", "2": "btc", "3": "equities", "4": "scanner", "5": "news", "6": "macro", "7": "ai" };
+const HELP = [
+  ["BTC", "BTC desk"], ["BTC CHART", "BTC multi-chart"], ["AAPL", "equity desk for AAPL"], ["NVDA TECH", "technical levels for NVDA"],
+  ["AI BTC", "AI technical brief on BTC"], ["MACRO", "macro desk (yields)"], ["COMPARE BTC QQQ", "overlay rebased to 100 + correlation (daily/weekly)"], ["BTC MTF / NVDA MTF", "multi-timeframe structure and score"],
+  ["SCAN BREAKOUT", "run a preset: BREAKOUT PULLBACK VOLUME RS REVERSAL COMPRESSION BREAKDOWN"], ["PORT / RISK", "paper portfolio, order ticket, risk limits, analytics, scenarios"], ["BUY AAPL 10 LMT 190 SL 180", "DRAFTS a paper order in the ticket (sends nothing)"], ["NEWS / AAPL NEWS", "RSS headlines (polled, DELAYED), near-duplicates grouped, feeds editable"], ["natural language", "5+ words routes to the AI desk"],
+];
+
+/** Desktop notifications for NEW unread events (only if the user granted permission; the in-app list is the source of truth). */
+function useDesktopNotifications() {
+  const ev = useQuery({ queryKey: ["alert-events"], queryFn: () => api.alertEvents(100), refetchInterval: 8000 });
+  const seen = useRef<number | null>(null);
+  useEffect(() => {
+    const list = ev.data?.events;
+    if (!list) return;
+    const top = list.reduce((m, e) => Math.max(m, e.id), 0);
+    if (seen.current !== null && typeof Notification !== "undefined" && Notification.permission === "granted") {
+      list.filter((e) => e.id > seen.current! && !e.delivery.startsWith("suppressed")).slice(0, 3)
+        .forEach((e) => new Notification(`ATLAS · ${e.severity.toUpperCase()}`, { body: e.message }));
+    }
+    seen.current = top;
+  }, [ev.data]);
+}
+
+export function App() {
+  useDesktopNotifications();
+  const { hydrate, hydrated, workspace, setWorkspace, notice, setNotice, helpOpen, setHelp } = useStore();
+  const views = useQuery({ queryKey: ["views"], queryFn: api.views, staleTime: Infinity });
+  const st = useQuery({ queryKey: ["status"], queryFn: api.status, refetchInterval: 15_000 });
+  useEffect(() => { hydrate(); }, [hydrate]);
+  useEffect(() => {
+    const on = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && HOTKEYS[e.key]) { e.preventDefault(); setWorkspace(HOTKEYS[e.key]); }
+      if (e.key === "Escape") { setHelp(false); setNotice(null); }
+    };
+    window.addEventListener("keydown", on);
+    return () => window.removeEventListener("keydown", on);
+  }, [setWorkspace, setHelp, setNotice]);
+  if (!hydrated) return <div className="boot">Loading…</div>;
+  const lastSync = st.dataUpdatedAt ? new Date(st.dataUpdatedAt).toLocaleTimeString("en-GB") : "—";
+  return (
+    <div className="app">
+      <TopBar />
+      <div className="body">
+        <nav className="side" aria-label="Main navigation">
+          {NAV.map((n, i) => {
+            const m = views.data?.[n.view];
+            return (
+              <button key={n.view} className={`nav ${workspace === n.view ? "on" : ""}`} onClick={() => setWorkspace(n.view)} title={m && !m.implemented ? `Not built yet (Phase ${m.phase})` : n.label}>
+                <span>{n.label}</span>{m && !m.implemented ? <span className="ph">P{m.phase}</span> : i < 7 ? <span className="hk">^{i + 1}</span> : null}
+              </button>);
+          })}
+        </nav>
+        <main className="main">
+          {notice && <div className="notice" onClick={() => setNotice(null)}>{notice} <span className="dim">(click to dismiss)</span></div>}
+          <Workspace view={workspace} />
+        </main>
+      </div>
+      <footer className="statusbar">
+        <span>DATA HEALTH: {st.isError ? <b className="down">API DOWN</b> : st.data ? Object.entries(st.data.providers).map(([n, p]) => `${n}:${p.consecutive_failures ? "FAIL" : p.ok ? "ok" : "idle"}`).join(" ") : "…"}</span>
+        <span>LAST SYNC {lastSync}</span>
+        <span>AGENT: {st.data?.ai.configured ? "ready" : "off"}</span>
+        <span className="env">{st.data?.broker_env ?? "—"} MODE · live trading unavailable</span>
+      </footer>
+      {helpOpen && (
+        <div className="modal" onClick={() => setHelp(false)}><div className="modal-b" onClick={(e) => e.stopPropagation()}>
+          <h3>COMMANDS</h3>
+          <table className="tbl"><tbody>{HELP.map(([c, d]) => <tr key={c}><td className="mono"><b>{c}</b></td><td className="dim">{d}</td></tr>)}</tbody></table>
+          <h3>KEYS</h3>
+          <p className="dim small">/ or Ctrl+K focus the command bar · Ctrl+1..7 jump to workspaces · Tab autocompletes · Esc closes</p>
+          <button className="mini" onClick={() => setHelp(false)}>close</button>
+        </div></div>)}
+    </div>
+  );
+}
