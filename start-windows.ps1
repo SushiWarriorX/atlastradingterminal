@@ -1,9 +1,12 @@
 # ATLAS: one-step start for Windows. Double-click start-windows.bat (or run this file in PowerShell).
 #   start-windows.bat          practice mode: synthetic DEMO data, no keys, nothing real
 #   start-windows.bat -Real    real data (Yahoo, Coinbase, FRED, RSS). Needs internet.
+#   .\start-windows.bat -IbkrPort 4001   real data AND read-only IBKR prices through IB Gateway (live: 4001, paper: 4002; TWS: 7496 / 7497).
+#                                        Connects by itself and reconnects after Gateway's daily logout. It can only read: it never places orders.
+# Optional: copy local-settings.example.ps1 to local-settings.ps1 and put your keys there (that file is never uploaded to GitHub).
 # First run installs everything (a few minutes). Later runs start in seconds.
 # To stop ATLAS, close the two black windows it opens.
-param([switch]$Real)
+param([switch]$Real, [int]$IbkrPort = 0)
 
 $ErrorActionPreference = "Continue"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -33,8 +36,25 @@ function Test-Url($url) {
     }
 }
 
+if ($IbkrPort -gt 0) { $Real = $true }      # IBKR prices only make sense with real data
+
 Write-Host "ATLAS starting..." -ForegroundColor Cyan
 if ($Real) { Write-Host "Mode: REAL data" -ForegroundColor Yellow } else { Write-Host "Mode: practice (synthetic DEMO data)" -ForegroundColor Green }
+
+# Private settings (keys): optional file next to this script, ignored by git
+$localSettings = Join-Path $root "local-settings.ps1"
+if (Test-Path $localSettings) {
+    . $localSettings
+    Write-Host "Loaded your private settings from local-settings.ps1"
+}
+if ($IbkrPort -gt 0) {
+    $env:IBKR_ENABLED = "1"
+    $env:IBKR_MODE = "readonly"
+    $env:IBKR_PORT = "$IbkrPort"
+    $env:ATLAS_IBKR_DATA = "1"
+    $env:IBKR_AUTOCONNECT = "1"
+    Write-Host "IBKR: read-only on port $IbkrPort. IB Gateway must be open and logged in." -ForegroundColor Yellow
+}
 
 # 1. Python 3.11 or newer
 $pyVersion = ""
@@ -83,14 +103,25 @@ if (-not (Test-Path (Join-Path $web "node_modules"))) {
 }
 
 # 5. Start both programs, each in its own window
-if (Test-Url "http://127.0.0.1:8000/api/health") {
-    Write-Host "A backend is already running on port 8000: using it. (Close the old ATLAS windows first if you want a fresh start.)" -ForegroundColor Yellow
-} else {
-    $b = $backend.Replace("'", "''")
-    $p = $venvPython.Replace("'", "''")
-    $demoLine = if ($Real) { "Remove-Item Env:ATLAS_DEMO -ErrorAction SilentlyContinue" } else { "`$env:ATLAS_DEMO = '1'" }
-    Start-Window ("`$Host.UI.RawUI.WindowTitle = 'ATLAS backend (close this window to stop it)'; Set-Location '$b'; $demoLine; & '$p' -m atlas_api")
+# An old backend would keep its old settings (for example the wrong IBKR port), so it is stopped first. Only a Python process is ever stopped.
+$listener = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($listener) {
+    $owner = Get-Process -Id $listener.OwningProcess -ErrorAction SilentlyContinue
+    if ($owner -and $owner.ProcessName -like "python*") {
+        Write-Host "Stopping the ATLAS backend that was already running, so it restarts with the current settings..." -ForegroundColor Yellow
+        Stop-Process -Id $owner.Id -Force -ErrorAction SilentlyContinue
+        for ($i = 0; $i -lt 20; $i++) {
+            if (-not (Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue)) { break }
+            Start-Sleep -Milliseconds 500
+        }
+    } else {
+        Stop-WithProblem "Port 8000 is being used by another program ($($owner.ProcessName)), not by ATLAS. Close that program and run this again."
+    }
 }
+$b = $backend.Replace("'", "''")
+$p = $venvPython.Replace("'", "''")
+$demoLine = if ($Real) { "Remove-Item Env:ATLAS_DEMO -ErrorAction SilentlyContinue" } else { "`$env:ATLAS_DEMO = '1'" }
+Start-Window ("`$Host.UI.RawUI.WindowTitle = 'ATLAS backend (close this window to stop it)'; Set-Location '$b'; $demoLine; & '$p' -m atlas_api")
 if (Test-Url "http://127.0.0.1:5173") {
     Write-Host "A screen is already running on port 5173: using it." -ForegroundColor Yellow
 } else {

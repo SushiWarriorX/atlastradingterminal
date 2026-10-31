@@ -82,3 +82,7 @@ atlas/
 
 Double-click `start-windows.bat` (practice mode with synthetic DEMO data). Use `start-windows.bat -Real` from PowerShell for real data.
 The first run installs everything and needs Python 3.11+ and Node 18+. Close the two black windows it opens to stop ATLAS.
+
+## IBKR with one command (Windows)
+
+Log in to IB Gateway with its API enabled (and ideally Read-Only API ticked), then run `.\start-windows.bat -IbkrPort 4001` (live) or `-IbkrPort 4002` (paper). ATLAS connects by itself and reconnects after the daily logout. It is read-only.

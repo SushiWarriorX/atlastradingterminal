@@ -134,6 +134,18 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     run_news = (os.getenv("ATLAS_NEWS_LOOP", "0" if demo else "1") == "1") if news_loop is None and alert_loop is not False else bool(news_loop)
     news_seconds = float(os.getenv("ATLAS_NEWS_SECONDS", "900"))
 
+    async def ibkr_keepalive(every: float) -> None:
+        """Opt-in (IBKR_AUTOCONNECT=1): connect to a running TWS/Gateway and reconnect after its daily logout. Uses the same read-only/paper rules as the
+        Connect button; a refusal is recorded as the last error and retried later, never raised."""
+        while True:
+            if not broker.connected:
+                try:
+                    await broker.connect()
+                    db.audit("system", "ibkr_autoconnect", {"mode": broker.s.mode, "port": broker.s.port})
+                except Exception:  # noqa: BLE001  BrokerError already stored last_error; Gateway may simply not be running yet
+                    pass
+            await asyncio.sleep(every)
+
     @asynccontextmanager
     async def lifespan(_app):
         tasks = []
@@ -143,6 +155,8 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             tasks.append(asyncio.create_task(trading.run_loop(paper_seconds)))
         if run_news:
             tasks.append(asyncio.create_task(news.run_loop(news_seconds)))
+        if broker is not None and os.getenv("IBKR_AUTOCONNECT") == "1":
+            tasks.append(asyncio.create_task(ibkr_keepalive(float(os.getenv("IBKR_RECONNECT_SECONDS", "30")))))
         yield
         for t in tasks:
             t.cancel()

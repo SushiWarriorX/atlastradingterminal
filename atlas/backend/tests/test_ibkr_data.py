@@ -271,3 +271,43 @@ def test_the_provider_makes_market_data_calls_only():
     src = inspect.getsource(ibkr_data)
     for forbidden in ("placeOrder", "cancelOrder", "reqGlobalCancel", "whatIfOrder", "Order(", "MarketOrder", "LimitOrder", "StopOrder", "positions(", "accountSummary"):
         assert forbidden not in src.replace("`placeOrder`", ""), forbidden
+
+
+# --- auto-connect -----------------------------------------------------------------------------------------------------------------------
+def test_autoconnect_retries_until_the_gateway_is_up_and_never_in_paper_mode_on_a_live_port(tmp_path, monkeypatch):
+    import time
+    from test_ibkr import FakeIB
+
+    monkeypatch.setenv("IBKR_AUTOCONNECT", "1")
+    monkeypatch.setenv("IBKR_RECONNECT_SECONDS", "0.05")
+    ib = FakeIB(refuse=True)
+    b = IBKRBroker(IBKRSettings(mode="readonly", port=4001), ib_factory=lambda: ib)
+    with TestClient(create_app(db_path=str(tmp_path / "ac.db"), demo=False, providers={"yahoo": FakeYahoo()}, alert_loop=False, broker=b)) as c:
+        time.sleep(0.4)
+        st = c.get("/api/ibkr/status").json()["data"]
+        assert st["connected"] is False and "ConnectionRefusedError" in (st["last_error"] or "")      # Gateway not up yet: error recorded, app still fine
+        ib.refuse = False                                                                          # Gateway comes up
+        for _ in range(40):
+            if c.get("/api/ibkr/status").json()["data"]["connected"]:
+                break
+            time.sleep(0.1)
+        assert c.get("/api/ibkr/status").json()["data"]["connected"] is True and ib.connect_calls[-1]["readonly"] is True
+    # the live-port guard still applies to the automatic path
+    ib2 = FakeIB()
+    b2 = IBKRBroker(IBKRSettings(mode="paper_trading", port=4001), ib_factory=lambda: ib2)
+    with TestClient(create_app(db_path=str(tmp_path / "ac2.db"), demo=False, providers={"yahoo": FakeYahoo()}, alert_loop=False, broker=b2)) as c:
+        time.sleep(0.4)
+        st = c.get("/api/ibkr/status").json()["data"]
+        assert st["connected"] is False and ib2.connect_calls == []
+
+
+def test_autoconnect_is_off_by_default(tmp_path, monkeypatch):
+    import time
+    from test_ibkr import FakeIB
+
+    monkeypatch.delenv("IBKR_AUTOCONNECT", raising=False)
+    ib = FakeIB()
+    with TestClient(create_app(db_path=str(tmp_path / "ac3.db"), demo=False, providers={"yahoo": FakeYahoo()}, alert_loop=False,
+                               broker=IBKRBroker(IBKRSettings(mode="readonly"), ib_factory=lambda: ib))) as c:
+        time.sleep(0.3)
+        assert ib.connect_calls == [] and c.get("/api/ibkr/status").json()["data"]["connected"] is False
