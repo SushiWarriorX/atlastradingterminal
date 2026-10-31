@@ -28,6 +28,7 @@ from .trading.models import OrderIn
 from .alerts.manager import AlertManager, InAppNotifier
 from .alerts.telegram import TelegramNotifier, silence_http_logs
 from .alerts.rules import INSTRUMENT_KINDS, parse_rule
+from .ai.agents import AgentTeam, fundamental_snapshot, macro_snapshot, risk_snapshot
 from .ai.desk import Desk
 from .backtest import presets as bt_presets, run as bt_run
 from .backtest.spec import BtSpec
@@ -114,6 +115,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         broker = IBKRBroker(IBKRSettings(host=os.getenv("IBKR_HOST", "127.0.0.1"), port=int(os.getenv("IBKR_PORT", "7497")), client_id=int(os.getenv("IBKR_CLIENT_ID", "21")),
                                          mode=os.getenv("IBKR_MODE", "readonly"), account=os.getenv("IBKR_ACCOUNT") or None))
     trading = TradingEngine(db, svc, broker=broker)
+    team = AgentTeam(desk.llm, db, svc, fundamentals, trading, desk)
     paper_loop = (os.getenv("ATLAS_PAPER_LOOP", "1") == "1") if alert_loop is None else alert_loop
     paper_seconds = float(os.getenv("ATLAS_PAPER_SECONDS", "5"))
     # RSS polling: on by default for real data, off in demo mode (there is no network and no fabricated headlines); ATLAS_NEWS_LOOP=1/0 overrides
@@ -793,10 +795,24 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     @app.post("/api/ai/analyze")
     async def ai_analyze(b: AnalyzeIn):
         need_ai()
-        if b.agent != "technical":
-            raise ApiError("AGENT_NOT_AVAILABLE", f"agent '{b.agent}' is not built yet (roadmap phases 4-6)", 501)
+        if b.agent not in ("technical", "fundamental", "macro", "risk", "chief"):
+            raise ApiError("AGENT_NOT_AVAILABLE", f"unknown agent '{b.agent}'. Built: technical, fundamental, macro, risk, chief. Not built: news (headlines are untrusted text), "
+                                                  "scanner, strategy (a strategy agent would drift into trade recommendations)", 501)
         try:
-            return ok(await desk.technical(b.instrument_id))
+            if b.agent == "technical":
+                return ok(await desk.technical(b.instrument_id))
+            inst = I.resolve(b.instrument_id) if b.instrument_id else None
+            if b.agent in ("fundamental", "chief") and inst is None:
+                raise ToolError(f"unknown instrument {b.instrument_id}")
+            if b.agent == "chief":
+                out = await team.chief(inst.id)
+                db.audit("ai", "chief", {"analysis_id": out["analysis_id"], "status": out["status"]})
+                return ok(out)
+            if b.agent == "fundamental":
+                if inst.asset_class not in ("equity", "etf"):
+                    raise ApiError("NOT_APPLICABLE", f"fundamentals do not apply to {inst.asset_class} instruments", 422)
+                return ok(await team.specialist("fundamental", await fundamental_snapshot(inst, fundamentals)))
+            return ok(await team.specialist(b.agent, await (macro_snapshot(svc) if b.agent == "macro" else risk_snapshot(trading))))
         except ToolError as e:
             raise ApiError("UNKNOWN_INSTRUMENT", str(e), 404)
 

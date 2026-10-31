@@ -85,6 +85,7 @@ export const api = {
   aiChat: (message: string, instrument_id?: string) =>
     call<{ analysis_id: string; answer: string; status: string; tool_calls: { name: string; ok: boolean; source_id?: string }[]; usage: { input_tokens: number; output_tokens: number }; model: string }>(
       "/api/ai/chat", body("POST", { message, instrument_id })),
+  aiAnalyze: <T,>(agent: string, instrument_id: string) => call<T>("/api/ai/analyze", body("POST", { instrument_id, agent })),
   aiTechnical: (instrument_id: string) =>
     call<{ analysis_id: string; status: string; report: TechReport | null; error: string | null; snapshot_id: string; model: string }>(
       "/api/ai/analyze", body("POST", { instrument_id, agent: "technical" })),
@@ -159,6 +160,20 @@ export const api = {
   scanDelete: (id: number) => call<unknown>(`/api/scanner/saved/${id}`, { method: "DELETE" }),
 };
 
+export interface FactCite { fact: string; value: number; comment: string }
+export interface SpecialistRep {
+  agent: string; assessment: string; summary: string; pillars: { name: string; rating: string; evidence: FactCite[] }[]; supporting: FactCite[]; contradictory: FactCite[];
+  data_limitations: string[]; consistency_notes: string[]; computed?: { limit_breaches?: string[]; computed_tilt?: { label: string; score: number; note: string; signals: { name: string; text: string }[] } };
+}
+export interface SpecialistResult { analysis_id?: string; status: string; report?: (SpecialistRep & Partial<TechReport>) | null; error?: string | null; data_limitations?: string[] }
+export interface ChiefRep {
+  stance: "constructive" | "cautious" | "neutral" | "insufficient_data"; agreements: string[]; conflicts_addressed: string[]; what_would_change_my_mind: string[];
+  data_limitations: string[]; cites: string[]; summary: string; consistency_notes: string[];
+}
+export interface DeskResult {
+  analysis_id: string; status: "completed" | "partial" | "no_data" | "failed_validation"; chief: ChiefRep | null; error: string | null; instrument_id: string;
+  specialists: Record<string, SpecialistResult>; views: Record<string, string>; conflicts: { between: string[]; text: string }[]; usage: { input_tokens: number; output_tokens: number }; model: string;
+}
 export interface TechReport {
   directional_assessment: string; time_horizon: string; summary: string; observations: string[];
   key_levels: { role: string; level_id: string; price: number; kind: string; derivation: string }[];

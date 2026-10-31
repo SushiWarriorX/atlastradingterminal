@@ -96,3 +96,14 @@
 - **No scanner filters on fundamentals** (each would need a company-data fetch per symbol), no peer comparison, no history of ratios, no filings text, no analyst ratings or price targets.
 - **Funds and ETFs** show only price-range data; company ratios are marked not applicable.
 - **The 6-hour cache** means a figure can be up to 6 hours old even on a "live" fetch; the refresh button bypasses it.
+
+## AI specialists and chief
+
+- **Untested with a real model.** Everything was tested against a scripted fake that follows the schema. A live model may produce malformed JSON, cite the wrong facts, or hit the pattern guard on legitimate wording. The server retries once with the rejection reason, then reports `failed_validation` instead of showing an unchecked answer.
+- **Validation proves the evidence exists, not that the reasoning is right.** A report can cite real facts and still draw a poor conclusion. The cross-checks (macro reference tilt, limit breaches, negative earnings, constructive-vs-adverse) are a few hand-written rules, not a general reasoning check.
+- **The order-language guard is a pattern list**, a safety net behind the schema (which has no order, size, stop or target field). It can miss a creative phrasing and can reject an innocent sentence; the retry message says what matched.
+- **Macro thresholds are hand-chosen and uncalibrated** (inverted curve, VIX above 25 or below 16, S&P versus its 200-day average, 10-year yield up 25 bp in 20 observations). The tilt is a reference, not a forecast. In DEMO mode the macro series are synthetic (the demo VIX is not realistic).
+- **Conflicts only compare directional words** (bullish/supportive/risk-on against bearish/adverse/risk-off). "Mixed" never conflicts, and the risk agent is excluded from conflict detection because it describes risk, not direction.
+- **The chief reads validated specialist output, not raw data**, and gets no tools: it cannot fetch anything itself.
+- **Cost:** the full desk makes up to five model calls (four specialists plus the chief), each retried at most once.
+- **No news, scanner or strategy agent**, by design (see implementation status).

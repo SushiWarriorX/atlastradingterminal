@@ -52,6 +52,8 @@ node atlas/web/e2e/scanner.cjs ./e2e-out
 node atlas/web/e2e/alerts.cjs ./e2e-out
 node atlas/web/e2e/analysis.cjs ./e2e-out   # compare overlay + multi-timeframe
 node atlas/web/e2e/hyperliquid.cjs ./e2e-out  # needs e2e/fake_hyperliquid.py; see the header of the script
+# agents e2e: start the backend with `python atlas/web/e2e/serve_fake_llm.py 8000` (scripted LLM) instead of `python -m atlas_api`
+node atlas/web/e2e/agents.cjs ./e2e-out
 node atlas/web/e2e/fundamentals.cjs ./e2e-out  # DEMO data
 node atlas/web/e2e/news.cjs ./e2e-out       # needs e2e/fake_rss.py; see the header of the script
 node atlas/web/e2e/backtest.cjs ./e2e-out   # backtester (demo data; saves a run, use a throwaway ATLAS_DB)
