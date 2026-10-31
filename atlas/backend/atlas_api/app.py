@@ -17,6 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from . import commands, instruments as I
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
+from .providers.ibkr_data import IBKRData
 from .journal import hyperliquid as hl, importers as jimp, stats as jstats
 from .journal.matching import Exec
 from .journal.store import JournalError, JournalStore
@@ -114,6 +115,17 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         # IBKR_MODE: readonly (default; any account, positions/executions only) or paper_trading (orders, paper accounts only). There is no live mode.
         broker = IBKRBroker(IBKRSettings(host=os.getenv("IBKR_HOST", "127.0.0.1"), port=int(os.getenv("IBKR_PORT", "7497")), client_id=int(os.getenv("IBKR_CLIENT_ID", "21")),
                                          mode=os.getenv("IBKR_MODE", "readonly"), account=os.getenv("IBKR_ACCOUNT") or None))
+    ibkr_md = None
+    if broker is not None and os.getenv("ATLAS_IBKR_DATA") == "1" and not demo:
+        ibkr_md = IBKRData(broker)       # US stocks/ETFs prefer IBKR while connected; Yahoo stays the labelled fallback
+        svc.add_provider(ibkr_md)
+
+    def ibkr_status_dict() -> dict:
+        if broker is None:
+            return {"configured": False}
+        return {**broker.status(), "market_data": {"enabled": ibkr_md is not None, "active": bool(ibkr_md and ibkr_md.available),
+                "note": "US stocks/ETFs use IBKR quotes and bars while connected (live only with a market-data subscription, else delayed); Yahoo is the labelled fallback."
+                        if ibkr_md else "off: set ATLAS_IBKR_DATA=1 to prefer IBKR market data for US stocks/ETFs"}}
     trading = TradingEngine(db, svc, broker=broker)
     team = AgentTeam(desk.llm, db, svc, fundamentals, trading, desk)
     paper_loop = (os.getenv("ATLAS_PAPER_LOOP", "1") == "1") if alert_loop is None else alert_loop
@@ -190,7 +202,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             "demo_mode": demo,
             "providers": {n: {"entitlement": p.entitlement, "delay_seconds": p.delay_seconds, **svc.health[n]} for n, p in provs.items()},
             "ai": {"configured": desk.configured, "model": desk.llm.model if desk.llm else None},
-            "ibkr": broker.status() if broker else {"configured": False},
+            "ibkr": ibkr_status_dict(),
             "update_seconds": db.pref_get("update_seconds", 5),
         })
 
@@ -400,7 +412,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
 
     @app.get("/api/ibkr/status")
     async def ibkr_status():
-        return ok(broker.status() if broker else {"configured": False, "help": IBKR_HELP})
+        return ok(ibkr_status_dict() if broker else {"configured": False, "help": IBKR_HELP})
 
     @app.post("/api/ibkr/connect")
     async def ibkr_connect():

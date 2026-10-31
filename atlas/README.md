@@ -32,6 +32,7 @@ Telegram alerts (optional): create a bot with @BotFather, message it once, find 
 ```bash
 # read positions and executions from ANY account (the API connection itself is read-only); default
 IBKR_ENABLED=1 IBKR_MODE=readonly IBKR_PORT=7496 python -m atlas_api
+# add ATLAS_IBKR_DATA=1 to prefer IBKR market data for US stocks/ETFs while connected (Yahoo stays the labelled fallback)
 # route orders to your PAPER account only (refuses live ports and any non-paper account)
 IBKR_ENABLED=1 IBKR_MODE=paper_trading IBKR_PORT=7497 python -m atlas_api
 ```

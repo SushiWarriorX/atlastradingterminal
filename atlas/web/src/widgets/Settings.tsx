@@ -64,6 +64,7 @@ function IbkrSection() {
             <tr><td>Mode</td><td className="r mono">{d.mode === "paper_trading" ? "PAPER TRADING (orders → paper account only)" : "READ-ONLY (positions & executions)"}</td></tr>
             <tr><td>Connection</td><td className="r mono">{d.connected ? <span className="up">● connected</span> : <span className="dim">○ not connected</span>} {d.host}:{d.port}</td></tr>
             <tr><td>Account</td><td className="r mono">{d.account ?? "—"} {d.account ? (d.account_is_paper ? <span className="up small">paper</span> : <span className="warnc small">LIVE account (read-only)</span>) : null}</td></tr>
+            {d.market_data && <tr title={d.market_data.note}><td>Market data from IBKR</td><td className="r mono">{d.market_data.active ? <span className="up">active (US stocks/ETFs)</span> : d.market_data.enabled ? <span className="warnc">enabled, waiting for connection</span> : "off"}</td></tr>}
             <tr><td>Can place orders</td><td className="r mono">{d.can_trade ? <span className="up">yes (paper)</span> : "no"}</td></tr>
           </tbody></table>
           {d.last_error && <div className="note warn">Last error: {d.last_error}</div>}

@@ -380,4 +380,5 @@ export interface JStats { currency: string | null; excluded: Record<string, numb
 export interface IbkrStatus {
   configured: boolean; help?: string; mode?: "readonly" | "paper_trading"; connected?: boolean; host?: string; port?: number; accounts?: string[]; account?: string | null;
   account_is_paper?: boolean; can_trade?: boolean; last_error?: string | null; note?: string;
+  market_data?: { enabled: boolean; active: boolean; note: string };
 }

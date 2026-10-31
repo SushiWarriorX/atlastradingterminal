@@ -107,3 +107,14 @@
 - **The chief reads validated specialist output, not raw data**, and gets no tools: it cannot fetch anything itself.
 - **Cost:** the full desk makes up to five model calls (four specialists plus the chief), each retried at most once.
 - **No news, scanner or strategy agent**, by design (see implementation status).
+
+## IBKR market data
+
+- **Never run against a real TWS or IB Gateway.** It was written from the ib_async API as remembered and tested with a fake. First things to check on a real run: where delayed ticks land (`last`/`bid` versus `delayedLast`/`delayedBid`; both are read), the market-data type switch, historical-request pacing (error 162 becomes a fallback to Yahoo), and ambiguous symbols (SMART routing without a primary exchange).
+- **Quote volume is deliberately not reported.** IBKR reports US stock snapshot volume in round lots; until verified against another source the field is left empty rather than shown ten or a hundred times off. Bars do carry IBKR's volume as reported, marked unverified.
+- **Snapshots, not streaming.** Each quote is a one-shot request (cached a few seconds by the service); there is no tick stream, so the UI polls as before.
+- **Live only with a subscription.** Without one the quote is DELAYED (the declared delay is 15 minutes) and says so. A paper account has its own data entitlements and may show delayed data even when the live account is subscribed.
+- **Stocks and ETFs in USD only.** Indices (SPX, VIX, NDX), crypto, FX and futures stay on their current providers. Regular trading hours only; no extended-hours bars.
+- **Not adjusted for dividends.** Historical bars are as IBKR reports them (split-adjusted).
+- **Mixed sources inside one chart.** If IBKR answers some requests and Yahoo others (for example during a reconnect), the two can differ slightly in volume and in the last bar; the provider and the fallback note are on each response.
+- **One request at a time** (a lock) keeps IBKR's rate limits safe but makes a cold scan of many symbols slow. The scanner and backtester still use their own Yahoo daily-bar source.
