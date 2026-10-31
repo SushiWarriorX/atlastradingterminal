@@ -12,6 +12,7 @@ import { AIWidget } from "./widgets/AI";
 import { ScannerWidget } from "./widgets/Scanner";
 import { BacktestWidget } from "./widgets/Backtest";
 import { NewsFeedsWidget, NewsWidget } from "./widgets/News";
+import { FundamentalsWidget } from "./widgets/Fundamentals";
 import { MtfWidget } from "./widgets/Mtf";
 import { JournalEditorWidget, JournalImportWidget, JournalSourcesWidget, JournalTradesWidget, PerformanceWidget2 } from "./widgets/Journal";
 import { OrdersWidget, PortfolioWidget, TicketWidget } from "./widgets/Trading";
@@ -32,6 +33,7 @@ function render(w: WidgetCfg) {
     case "scanner": return <ScannerWidget />;
     case "backtest": return <BacktestWidget />;
     case "news": return <NewsWidget />;
+    case "fundamentals": return <FundamentalsWidget />;
     case "newsfeeds": return <NewsFeedsWidget />;
     case "mtf": return <MtfWidget />;
     case "journaltrades": return <JournalTradesWidget />;

@@ -127,3 +127,4 @@ a.mini { text-decoration: none; display: inline-block; }
 .bt-cav { font-size: 10.5px; color: var(--dim); } .bt-cav ul { margin: 2px 0 0 14px; padding: 0; } .mono.warn { color: var(--warn); }
 .news-list { overflow: auto; flex: 1; min-height: 120px; } .news-item { padding: 4px 0; border-bottom: 1px solid var(--grid); } .news-h { display: flex; gap: 6px; flex-wrap: wrap; align-items: baseline; }
 .news-h a { color: var(--text); text-decoration: none; font-weight: 600; } .news-h a:hover { color: var(--accent); text-decoration: underline; } .news-s { color: var(--dim); padding-top: 1px; }
+.fa-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 4px 18px; overflow: auto; flex: 1; } .fa-group { min-width: 0; }

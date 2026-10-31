@@ -93,6 +93,7 @@ export const api = {
   scanNL: (text: string) => call<NLResult>("/api/scanner/nl", body("POST", { text })),
   scanRun: (x: { preset?: string; spec?: ScanSpec }) => call<{ job_id: string }>("/api/scanner/run", body("POST", x)),
   scanJob: (id: string) => call<ScanJob>(`/api/scanner/jobs/${id}`),
+  fundamentals: (id: string, refresh = false) => call<Fundamentals>(`/api/fundamentals/${encodeURIComponent(id)}${refresh ? "?refresh=true" : ""}`),
   news: (x: { symbol?: string; q?: string }) => call<NewsResult>(`/api/news?${new URLSearchParams(Object.entries(x).filter(([, v]) => v) as [string, string][])}`),
   newsRefresh: () => call<{ results: { id: number; name: string; ok: boolean; new: number; seen: number; error: string | null }[] }>("/api/news/refresh", body("POST", {})),
   newsFeeds: () => call<{ feeds: NewsFeed[]; note: string }>("/api/news/feeds"),
@@ -187,6 +188,15 @@ export interface ScanJob { id: string; status: "running" | "done" | "failed"; do
 export interface ScanPreset { id: string; name: string; description: string; spec: ScanSpec }
 export interface NLResult { ok: boolean; error?: string; spec: ScanSpec | null; matched: string[]; unsupported: string[]; rules?: string[]; note?: string }
 
+
+// --- fundamentals ---------------------------------------------------------------
+export interface FundRow { key: string; label: string; value: number | null; unit: string; basis: string; note: string | null }
+export interface Fundamentals {
+  instrument_id: string; symbol: string; name: string | null; sector: string | null; industry: string | null; quote_type: string | null; currency: string; price: number | null;
+  groups: { name: string; rows: FundRow[] }[]; missing: string[]; not_meaningful: Record<string, string>; next_earnings_date: string | null;
+  financials_as_of: string | null; financials_age_days: number | null; flags: string[];
+  prov: { provider: string; fetched_at: string; origin: "live" | "cache" | "stale"; status: Status; quality: string[] };
+}
 
 // --- news ---------------------------------------------------------------------
 export interface NewsItem {

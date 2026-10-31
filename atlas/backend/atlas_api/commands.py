@@ -20,6 +20,7 @@ VIEWS = {
     "ideas": (False, 6, "Trade idea board"),
     "portfolio": (True, None, "Portfolio and paper trading"),
     "risk": (True, None, "Portfolio risk"),
+    "fundamentals": (True, None, "Company fundamentals (Yahoo, unofficial)"),
     "backtest": (True, None, "Backtester (daily bars, point-in-time rules)"),
     "journal": (True, None, "Trade journal and performance"),
     "alerts": (True, None, "Alerts"),
@@ -28,14 +29,13 @@ VIEWS = {
 NAV = {"OVERVIEW": "overview", "MARKETS": "markets", "BTC": "btc", "EQUITIES": "equities", "CHARTS": "charts",
        "SCAN": "scanner", "SCANNER": "scanner", "NEWS": "news", "MACRO": "macro", "FED": "macro", "CPI": "macro",
        "AI": "ai", "IDEAS": "ideas", "PORT": "portfolio", "PORTFOLIO": "portfolio", "RISK": "risk",
-       "BACKTEST": "backtest", "BT": "backtest", "JOURNAL": "journal", "PERF": "journal", "PERFORMANCE": "journal", "ALERTS": "alerts", "SETTINGS": "settings"}
-FUNCS = {"MTF": "equities", "CHART": "charts", "GP": "charts", "NEWS": "news", "N": "news", "TECH": "charts", "FA": "equities",
+       "BACKTEST": "backtest", "BT": "backtest", "FA": "fundamentals", "FUNDAMENTALS": "fundamentals", "JOURNAL": "journal", "PERF": "journal", "PERFORMANCE": "journal", "ALERTS": "alerts", "SETTINGS": "settings"}
+FUNCS = {"MTF": "equities", "CHART": "charts", "GP": "charts", "NEWS": "news", "N": "news", "TECH": "charts", "FA": "fundamentals",
          "OI": "btc", "FUNDING": "btc", "DES": "equities", "AI": "ai"}
 MACRO_PARAMS = {"FED": "fed", "CPI": "inflation"}
 # Which sub-feature of an implemented view is missing -> honest message
 PARTIAL = {"OI": (7, "BTC open interest needs a derivatives provider (CoinGlass/exchange)"),
            "FUNDING": (7, "BTC funding needs a derivatives provider"),
-           "FA": (7, "Fundamentals need a financials provider (SEC/licensed)"),
            "FED": (5, "Fed dashboard (policy rate, FOMC calendar) not built; showing yields"),
            "CPI": (5, "CPI dashboard not built; showing yields")}
 ALL_WORDS = sorted(set(NAV) | set(FUNCS) | {"HELP", "COMPARE", "ALERT", "BUY", "SELL"})

@@ -52,6 +52,7 @@ node atlas/web/e2e/scanner.cjs ./e2e-out
 node atlas/web/e2e/alerts.cjs ./e2e-out
 node atlas/web/e2e/analysis.cjs ./e2e-out   # compare overlay + multi-timeframe
 node atlas/web/e2e/hyperliquid.cjs ./e2e-out  # needs e2e/fake_hyperliquid.py; see the header of the script
+node atlas/web/e2e/fundamentals.cjs ./e2e-out  # DEMO data
 node atlas/web/e2e/news.cjs ./e2e-out       # needs e2e/fake_rss.py; see the header of the script
 node atlas/web/e2e/backtest.cjs ./e2e-out   # backtester (demo data; saves a run, use a throwaway ATLAS_DB)
 # trading e2e (fresh DB): ATLAS_DEMO=1 ATLAS_ALERT_SECONDS=2 ATLAS_PAPER_SECONDS=2 python -m atlas_api

@@ -86,3 +86,13 @@
 - **Headline, link and a 320-character plain-text summary only**, kept 14 days. Publishers' terms apply; this is for personal research.
 - **Feed URLs are checked as text** (http/https, no credentials, no loopback/private literal addresses, redirects re-checked). A DNS name that resolves to a private address is not caught; feed URLs are chosen by the single local user.
 - **The AI agents cannot read news** by design for now: headlines are untrusted text and a prompt-injection path until a tool wrapper is designed for it.
+
+## Fundamentals
+
+- **Unverified against live Yahoo.** The sandbox had no internet. The `info` keys used (trailingEps, forwardEps, marketCap, enterpriseValue, totalRevenue, ebitda, bookValue, sharesOutstanding, totalCash, totalDebt, dividendRate, revenueGrowth, margins, returnOnEquity, mostRecentQuarter, ...) and the `calendar` earnings-date shape come from memory and change between yfinance versions. Missing keys show as "—" with a count; they never raise or get guessed.
+- **Unofficial and lagging.** Company data lags filings by weeks. `financials_as_of` and a flag after 135 days say how old it is. Nothing here is a licensed data feed.
+- **Ratios mix periods.** P/E uses the current price over trailing EPS; margins and growth are the provider's latest-quarter or TTM figures. Debt/equity uses book value per share times shares, which is only as good as those two inputs. Forward EPS is an analyst estimate.
+- **Sector and industry are Yahoo's labels**, not GICS.
+- **No scanner filters on fundamentals** (each would need a company-data fetch per symbol), no peer comparison, no history of ratios, no filings text, no analyst ratings or price targets.
+- **Funds and ETFs** show only price-range data; company ratios are marked not applicable.
+- **The 6-hour cache** means a figure can be up to 6 hours old even on a "live" fetch; the refresh button bypasses it.

@@ -25,8 +25,8 @@ class ToolError(Exception):
 
 
 class Registry:
-    def __init__(self, svc: MarketService, journal=None):
-        self.svc, self.journal = svc, journal
+    def __init__(self, svc: MarketService, journal=None, fundamentals=None):
+        self.svc, self.journal, self.fundamentals = svc, journal, fundamentals
         sym = {"symbol": {"type": "string", "description": "Ticker or alias, e.g. BTC, AAPL, SPY, VIX"}}
         iv = {"interval": {"type": "string", "enum": ALL_INTERVALS}}
         both = frozenset({"desk", "technical"})
@@ -44,6 +44,10 @@ class Registry:
                  "side, time of day, holding time, R bucket and tags. Each group carries n and reliable. NEVER draw conclusions from groups with reliable=false (fewer than 30 trades): "
                  "say the sample is too small. Past results do not predict future results.",
                  {"type": "object", "properties": {"symbol": {"type": "string"}, "source": {"type": "string"}}}, self._journal, frozenset({"desk"})),
+            Tool("get_fundamentals", "Company fundamentals for an equity or ETF: valuation, growth, margins, balance sheet, dividend and 52-week position, every ratio COMPUTED in code "
+                 "from raw figures with its basis. Fields that could not be computed are listed in `missing` or `not_meaningful` (with the reason): never fill them in. "
+                 "Data is unofficial and lags filings: check `financials_as_of` and `flags`. Not available for crypto or indices.",
+                 {"type": "object", "properties": sym, "required": ["symbol"]}, self._fundamentals, frozenset({"desk"})),
             Tool("search_instruments", "Search the instrument catalog by symbol or name.",
                  {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}, self._search, frozenset({"desk"})),
             Tool("get_market_session", "US equity market session state (NYSE calendar).",
@@ -101,6 +105,15 @@ class Registry:
         top = {g: rows[:6] for g, rows in r["groups"].items()}
         return {"source_id": "journal:stats", "currency": r["currency"], "excluded_currencies": r["excluded"], "summary": r["summary"],
                 "groups": top, "caveats": r.get("caveats", []), "closed_trades": len(closed)}
+
+    async def _fundamentals(self, a):
+        if self.fundamentals is None:
+            return {"error": "DATA_UNAVAILABLE", "detail": "fundamentals are not available"}
+        inst = self._inst(a)
+        f = await self.fundamentals.get(inst)
+        return {"source_id": f"{inst.id}:fundamentals", "instrument_id": inst.id, "name": f["name"], "sector": f["sector"], "price": f["price"], "values": f["values"],
+                "missing": f["missing"], "not_meaningful": f["not_meaningful"], "next_earnings_date": f["next_earnings_date"], "financials_as_of": f["financials_as_of"],
+                "flags": f["flags"], "data_status": f["prov"]["status"], "provider": f["prov"]["provider"], "as_of": f["prov"]["fetched_at"]}
 
     async def _search(self, a):
         return {"results": [{"id": i.id, "symbol": i.symbol, "name": i.name, "asset_class": i.asset_class}

@@ -21,6 +21,7 @@ from .journal import hyperliquid as hl, importers as jimp, stats as jstats
 from .journal.matching import Exec
 from .journal.store import JournalError, JournalStore
 from .news.service import NewsError, NewsService
+from .fundamentals.service import DemoFundamentals, FundamentalsService, YahooFundamentals
 from .trading import analytics as tr_analytics
 from .trading.engine import EngineError, TradingEngine, jsonable
 from .trading.models import OrderIn
@@ -63,7 +64,7 @@ def ok(data):
     return {"ok": True, "data": data}
 
 
-def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None) -> FastAPI:
+def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None, fundamentals_provider=None) -> FastAPI:
     demo = os.getenv("ATLAS_DEMO") == "1" if demo is None else demo
     db = DB(db_path or os.getenv("ATLAS_DB", "atlas.db"))
     provs = providers if providers is not None else {"coinbase": CoinbaseProvider(), "yahoo": YahooProvider(), "fred": FredProvider()}
@@ -75,8 +76,9 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     journal = JournalStore(db)
     news = NewsService(db, news_client, allow_local=os.getenv("ATLAS_NEWS_ALLOW_LOCAL") == "1", user_agent=os.getenv("ATLAS_NEWS_USER_AGENT", "ATLAS-Terminal/0.1 (personal research)"),
                        symbol_url=os.getenv("ATLAS_NEWS_SYMBOL_URL") or None)
+    fundamentals = FundamentalsService(db, fundamentals_provider or (DemoFundamentals() if demo else YahooFundamentals()), demo)
     hl_client = hyperliquid or hl.HyperliquidClient(os.getenv("HYPERLIQUID_API_BASE", "https://api.hyperliquid.xyz"))
-    desk = Desk(llm, Registry(svc, journal), db)
+    desk = Desk(llm, Registry(svc, journal, fundamentals), db)
     bars: BarSource = bar_source or (DemoBars() if demo else YahooBars())
     jobs = scan_engine.Jobs()
     bt_source: BarSource = backtest_source or bar_source or (DemoBars(days=1100) if demo else YahooBars(period="5y", ttl=3600.0))
@@ -138,6 +140,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     app.state.trading = trading
     app.state.journal = journal
     app.state.news = news
+    app.state.fundamentals = fundamentals
     app.state.broker = broker
     app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
                        allow_methods=["*"], allow_headers=["*"])
@@ -808,6 +811,14 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     def inst_id(sym: str) -> str:
         i = I.by_symbol(sym) or I.adhoc(sym)
         return i.id if i else f"EQUITY:US:{sym}"
+
+    # --- fundamentals ---------------------------------------------------------
+    @app.get("/api/fundamentals/{token:path}")
+    async def fundamentals_get(token: str, refresh: bool = False):
+        inst = I.resolve(token)
+        if inst is None:
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown instrument '{token[:40]}'", 404)
+        return ok(await fundamentals.get(inst, force=refresh))
 
     # --- news -----------------------------------------------------------------
     @app.exception_handler(NewsError)
