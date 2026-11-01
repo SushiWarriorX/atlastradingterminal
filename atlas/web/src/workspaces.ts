@@ -1,4 +1,4 @@
-export type WidgetType = "fundamentals" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "portfolio" | "ticket" | "orders" | "risklimits" | "riskanalytics" | "scenario" | "performance" | "mtf" | "alerts" | "alertevents" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "derivatives" | "fundamentals" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "portfolio" | "ticket" | "orders" | "risklimits" | "riskanalytics" | "scenario" | "performance" | "mtf" | "alerts" | "alertevents" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[] }
 
@@ -28,10 +28,10 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "quote", type: "quote", x: 8, y: 0, w: 4, h: 13, props: { id: BTC } },
     { i: "c15", type: "chart", x: 0, y: 13, w: 4, h: 10, props: { id: BTC, interval: "15m" } },
     { i: "cd", type: "chart", x: 4, y: 13, w: 4, h: 10, props: { id: BTC, interval: "1d" } },
-    un("deriv", "btc_deriv", 8, 13, 4, 5),
-    { i: "ai", type: "ai", x: 8, y: 18, w: 4, h: 10 },
+    { i: "ai", type: "ai", x: 8, y: 13, w: 4, h: 10 },
     { i: "tech", type: "tech", x: 0, y: 23, w: 8, h: 8 },
     { i: "mtf", type: "mtf", x: 0, y: 31, w: 12, h: 16 },
+    { i: "deriv", type: "derivatives", x: 0, y: 47, w: 12, h: 15 },
   ] },
   equities: { id: "equities", name: "US Equity Trading Desk", widgets: [
     { i: "chart", type: "chart", x: 0, y: 0, w: 8, h: 13 },

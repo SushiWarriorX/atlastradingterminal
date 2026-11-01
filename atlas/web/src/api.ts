@@ -94,6 +94,8 @@ export const api = {
   scanNL: (text: string) => call<NLResult>("/api/scanner/nl", body("POST", { text })),
   scanRun: (x: { preset?: string; spec?: ScanSpec }) => call<{ job_id: string }>("/api/scanner/run", body("POST", x)),
   scanJob: (id: string) => call<ScanJob>(`/api/scanner/jobs/${id}`),
+  derivatives: (fresh = false) => call<DerivSnapshot>(`/api/derivatives/btc${fresh ? "?fresh=true" : ""}`),
+  derivativesHistory: (hours = 72) => call<DerivHistory>(`/api/derivatives/btc/history?hours=${hours}`),
   fundamentals: (id: string, refresh = false) => call<Fundamentals>(`/api/fundamentals/${encodeURIComponent(id)}${refresh ? "?refresh=true" : ""}`),
   news: (x: { symbol?: string; q?: string }) => call<NewsResult>(`/api/news?${new URLSearchParams(Object.entries(x).filter(([, v]) => v) as [string, string][])}`),
   newsRefresh: () => call<{ results: { id: number; name: string; ok: boolean; new: number; seen: number; error: string | null }[] }>("/api/news/refresh", body("POST", {})),
@@ -203,6 +205,22 @@ export interface ScanJob { id: string; status: "running" | "done" | "failed"; do
 export interface ScanPreset { id: string; name: string; description: string; spec: ScanSpec }
 export interface NLResult { ok: boolean; error?: string; spec: ScanSpec | null; matched: string[]; unsupported: string[]; rules?: string[]; note?: string }
 
+
+// --- BTC derivatives ---------------------------------------------------------------
+export interface DerivVenue {
+  venue: string; label: string; ok: boolean; status: Status | "UNAVAILABLE"; mark?: number; index?: number | null; basis_pct?: number | null; funding_rate?: number; funding_interval_h?: number;
+  funding_8h_pct?: number; funding_annual_pct?: number; oi_btc?: number; oi_usd?: number; age_seconds?: number | null; notes?: string[]; error?: { code: string; message: string };
+}
+export interface Pctile { available: boolean; pctile?: number; points?: number; have?: number; need?: number }
+export interface DerivSnapshot {
+  venues: DerivVenue[]; as_of: string; demo: boolean; history_points: number; notes: string[];
+  aggregate: {
+    available: boolean; venues_ok: number; venues_expected: number; venues_failed: string[]; flags: string[]; oi_btc?: number; oi_usd?: number; funding_annual_pct?: number;
+    funding_spread_annual_pct?: number; mark_dispersion_pct?: number; funding_percentile_30d?: Pctile; oi_percentile_30d?: Pctile;
+    oi_change_24h_pct?: { available: boolean; value?: number; reason?: string };
+  };
+}
+export interface DerivHistory { funding_annual_pct: { ts: string; v: number }[]; oi_usd: { ts: string; v: number }[]; hours: number }
 
 // --- fundamentals ---------------------------------------------------------------
 export interface FundRow { key: string; label: string; value: number | null; unit: string; basis: string; note: string | null }

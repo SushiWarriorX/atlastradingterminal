@@ -118,3 +118,14 @@
 - **Not adjusted for dividends.** Historical bars are as IBKR reports them (split-adjusted).
 - **Mixed sources inside one chart.** If IBKR answers some requests and Yahoo others (for example during a reconnect), the two can differ slightly in volume and in the last bar; the provider and the fallback note are on each response.
 - **One request at a time** (a lock) keeps IBKR's rate limits safe but makes a cold scan of many symbols slow. The scanner and backtester still use their own Yahoo daily-bar source.
+
+## BTC derivatives
+
+- **Unverified against the live exchanges.** The sandbox had no internet. Endpoints (Hyperliquid `metaAndAssetCtxs`, Binance `premiumIndex` and `openInterest`, Bybit v5 `tickers`, OKX `funding-rate`, `open-interest`, `mark-price`, `index-tickers`) and field names are from memory. A mismatch shows up as that venue FAILED with a "shape" error, never as a guess.
+- **Regional blocks.** Some exchanges refuse some countries or networks (HTTP 403 or 451). That venue shows as unavailable with the reason; the others still work and coverage is displayed.
+- **Perpetuals only.** The basis shown is the perpetual's mark premium to the index, not a dated-futures basis. No options, implied volatility, liquidations, ETF flows or on-chain data: those have no reliable free source and are shown as unavailable, never as zero.
+- **Funding intervals.** Hyperliquid is hourly, OKX is measured from its own timestamps, Binance and Bybit are assumed 8 h (BTCUSDT's default). A symbol with a different interval would be mis-scaled until the assumption is replaced by the venues' funding-info endpoints.
+- **Annualised funding is simple (rate x periods per year), not compounded,** and it is a description of the current rate, not a forecast or a yield.
+- **Open interest covers the venues that answered**, not the whole market, and is in BTC at each venue's mark price. Coin-margined products are not included.
+- **Percentiles and 24 h change need ATLAS's own history.** They appear after about 100 recorded points (roughly 8 hours at the 5-minute default) and only while ATLAS is running; there is no backfill from the exchanges.
+- **Venue timestamps.** Hyperliquid's response has no timestamp, so local receive time is used; a venue's age is measured against your computer's clock, so a wrong PC clock can show LIVE data as stale or the reverse.

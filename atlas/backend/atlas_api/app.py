@@ -22,6 +22,8 @@ from .journal import hyperliquid as hl, importers as jimp, stats as jstats
 from .journal.matching import Exec
 from .journal.store import JournalError, JournalStore
 from .news.service import NewsError, NewsService
+from .derivatives.service import DerivativesService
+from .derivatives.venues import VenueClient
 from .fundamentals.service import DemoFundamentals, FundamentalsService, YahooFundamentals
 from .trading import analytics as tr_analytics
 from .trading.engine import EngineError, TradingEngine, jsonable
@@ -66,7 +68,7 @@ def ok(data):
     return {"ok": True, "data": data}
 
 
-def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None, fundamentals_provider=None) -> FastAPI:
+def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None, fundamentals_provider=None, deriv_client=None) -> FastAPI:
     demo = os.getenv("ATLAS_DEMO") == "1" if demo is None else demo
     db = DB(db_path or os.getenv("ATLAS_DB", "atlas.db"))
     provs = providers if providers is not None else {"coinbase": CoinbaseProvider(), "yahoo": YahooProvider(), "fred": FredProvider()}
@@ -78,6 +80,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     journal = JournalStore(db)
     news = NewsService(db, news_client, allow_local=os.getenv("ATLAS_NEWS_ALLOW_LOCAL") == "1", user_agent=os.getenv("ATLAS_NEWS_USER_AGENT", "ATLAS-Terminal/0.1 (personal research)"),
                        symbol_url=os.getenv("ATLAS_NEWS_SYMBOL_URL") or None)
+    derivs = DerivativesService(db, deriv_client, demo)
     fundamentals = FundamentalsService(db, fundamentals_provider or (DemoFundamentals() if demo else YahooFundamentals()), demo)
     hl_client = hyperliquid or hl.HyperliquidClient(os.getenv("HYPERLIQUID_API_BASE", "https://api.hyperliquid.xyz"))
     desk = Desk(llm, Registry(svc, journal, fundamentals), db)
@@ -133,6 +136,9 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     # RSS polling: on by default for real data, off in demo mode (there is no network and no fabricated headlines); ATLAS_NEWS_LOOP=1/0 overrides
     run_news = (os.getenv("ATLAS_NEWS_LOOP", "0" if demo else "1") == "1") if news_loop is None and alert_loop is not False else bool(news_loop)
     news_seconds = float(os.getenv("ATLAS_NEWS_SECONDS", "900"))
+    # derivatives polling records history for percentiles: on for real data, off in demo (nothing real to record); ATLAS_DERIV_LOOP=1/0 overrides
+    run_derivs = (os.getenv("ATLAS_DERIV_LOOP", "0" if demo else "1") == "1") if alert_loop is not False else False
+    deriv_seconds = float(os.getenv("ATLAS_DERIV_SECONDS", "300"))
 
     async def ibkr_keepalive(every: float) -> None:
         """Opt-in (IBKR_AUTOCONNECT=1): connect to a running TWS/Gateway and reconnect after its daily logout. Uses the same read-only/paper rules as the
@@ -155,6 +161,8 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             tasks.append(asyncio.create_task(trading.run_loop(paper_seconds)))
         if run_news:
             tasks.append(asyncio.create_task(news.run_loop(news_seconds)))
+        if run_derivs:
+            tasks.append(asyncio.create_task(derivs.run_loop(deriv_seconds)))
         if broker is not None and os.getenv("IBKR_AUTOCONNECT") == "1":
             tasks.append(asyncio.create_task(ibkr_keepalive(float(os.getenv("IBKR_RECONNECT_SECONDS", "30")))))
         yield
@@ -169,6 +177,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     app.state.journal = journal
     app.state.news = news
     app.state.fundamentals = fundamentals
+    app.state.derivs = derivs
     app.state.broker = broker
     app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
                        allow_methods=["*"], allow_headers=["*"])
@@ -853,6 +862,15 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     def inst_id(sym: str) -> str:
         i = I.by_symbol(sym) or I.adhoc(sym)
         return i.id if i else f"EQUITY:US:{sym}"
+
+    # --- BTC derivatives -------------------------------------------------------
+    @app.get("/api/derivatives/btc")
+    async def derivatives_btc(fresh: bool = False):
+        return ok(await derivs.snapshot(fresh))
+
+    @app.get("/api/derivatives/btc/history")
+    async def derivatives_btc_history(hours: float = 48):
+        return ok(derivs.history(max(1.0, min(hours, 24 * 30))))
 
     # --- fundamentals ---------------------------------------------------------
     @app.get("/api/fundamentals/{token:path}")

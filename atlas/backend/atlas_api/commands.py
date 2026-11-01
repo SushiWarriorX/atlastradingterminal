@@ -34,9 +34,7 @@ FUNCS = {"MTF": "equities", "CHART": "charts", "GP": "charts", "NEWS": "news", "
          "OI": "btc", "FUNDING": "btc", "DES": "equities", "AI": "ai"}
 MACRO_PARAMS = {"FED": "fed", "CPI": "inflation"}
 # Which sub-feature of an implemented view is missing -> honest message
-PARTIAL = {"OI": (7, "BTC open interest needs a derivatives provider (CoinGlass/exchange)"),
-           "FUNDING": (7, "BTC funding needs a derivatives provider"),
-           "FED": (5, "Fed dashboard (policy rate, FOMC calendar) not built; showing yields"),
+PARTIAL = {"FED": (5, "Fed dashboard (policy rate, FOMC calendar) not built; showing yields"),
            "CPI": (5, "CPI dashboard not built; showing yields")}
 ALL_WORDS = sorted(set(NAV) | set(FUNCS) | {"HELP", "COMPARE", "ALERT", "BUY", "SELL"})
 

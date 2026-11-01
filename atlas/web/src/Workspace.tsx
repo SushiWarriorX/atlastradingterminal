@@ -13,6 +13,7 @@ import { ScannerWidget } from "./widgets/Scanner";
 import { BacktestWidget } from "./widgets/Backtest";
 import { NewsFeedsWidget, NewsWidget } from "./widgets/News";
 import { FundamentalsWidget } from "./widgets/Fundamentals";
+import { DerivativesWidget } from "./widgets/Derivatives";
 import { MtfWidget } from "./widgets/Mtf";
 import { JournalEditorWidget, JournalImportWidget, JournalSourcesWidget, JournalTradesWidget, PerformanceWidget2 } from "./widgets/Journal";
 import { OrdersWidget, PortfolioWidget, TicketWidget } from "./widgets/Trading";
@@ -34,6 +35,7 @@ function render(w: WidgetCfg) {
     case "backtest": return <BacktestWidget />;
     case "news": return <NewsWidget />;
     case "fundamentals": return <FundamentalsWidget />;
+    case "derivatives": return <DerivativesWidget />;
     case "newsfeeds": return <NewsFeedsWidget />;
     case "mtf": return <MtfWidget />;
     case "journaltrades": return <JournalTradesWidget />;
@@ -53,7 +55,7 @@ function render(w: WidgetCfg) {
     case "health": return <HealthWidget />;
     case "yields": return <YieldsWidget />;
     case "settings": return <SettingsWidget />;
-    case "unavailable": return p.view === "news" ? <NewsWidget /> : <UnavailableWidget view={p.view} />;      // layouts saved before news existed still hold the placeholder
+    case "unavailable": return p.view === "news" ? <NewsWidget /> : p.view === "btc_deriv" ? <DerivativesWidget /> : <UnavailableWidget view={p.view} />;      // layouts saved before news existed still hold the placeholder
   }
 }
 
