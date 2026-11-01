@@ -1,10 +1,15 @@
 import { create } from "zustand";
 import { api, Prefs } from "./api";
 
-const BTC = "CRYPTO:COINBASE:BTC-USD:SPOT";
+import { BTC_ID as BTC, DEFAULT_EQUITY, isEquityId } from "./ids";
+import { NAV } from "./workspaces";
+
+const EQ_KEY = "atlas.selectedEquity";
+const loadEquity = (): string => { try { const v = localStorage.getItem(EQ_KEY); return v && isEquityId(v) ? v : DEFAULT_EQUITY; } catch { return DEFAULT_EQUITY; } };
+const saveEquity = (id: string) => { try { localStorage.setItem(EQ_KEY, id); } catch { /* per-viewer convenience only */ } };
 
 interface State {
-  theme: "dark" | "light"; updateSeconds: number; selected: string; workspace: string; hydrated: boolean;
+  theme: "dark" | "light"; updateSeconds: number; selected: string; selectedEquity: string; workspace: string; hydrated: boolean;
   pendingAsk: string | null; pendingScan: string | null; pendingBacktest: string | null; alertDraft: Record<string, unknown> | null; pendingCompare: string[] | null; ticketDraft: Record<string, string> | null; portfolioId: number | undefined; journalKey: string | null; helpOpen: boolean; notice: string | null;
   hydrate: () => Promise<void>;
   select: (id: string) => void;
@@ -27,17 +32,23 @@ interface State {
 const persist = (p: Partial<Prefs>) => { api.setPrefs(p).catch(() => undefined); };
 
 export const useStore = create<State>((set, get) => ({
-  theme: "dark", updateSeconds: 5, selected: BTC, workspace: "overview", hydrated: false, pendingAsk: null, pendingScan: null, pendingBacktest: null, alertDraft: null, pendingCompare: null, ticketDraft: null, portfolioId: undefined, journalKey: null, helpOpen: false, notice: null,
+  theme: "dark", updateSeconds: 5, selected: BTC, selectedEquity: loadEquity(), workspace: "overview", hydrated: false, pendingAsk: null, pendingScan: null, pendingBacktest: null, alertDraft: null, pendingCompare: null, ticketDraft: null, portfolioId: undefined, journalKey: null, helpOpen: false, notice: null,
   hydrate: async () => {
     try {
       const p = await api.prefs();
       document.documentElement.dataset.theme = p.theme;
-      set({ theme: p.theme, updateSeconds: p.update_seconds, selected: p.selected_instrument, workspace: p.workspace, hydrated: true });
+      const eq = isEquityId(p.selected_instrument) ? p.selected_instrument : loadEquity();
+      saveEquity(eq);
+      // a workspace that no longer exists (Markets, Fundamentals) falls back to Overview instead of showing a dead page
+      set({ theme: p.theme, updateSeconds: p.update_seconds, selected: p.selected_instrument, selectedEquity: eq, workspace: NAV.some((n) => n.view === p.workspace) ? p.workspace : "overview", hydrated: true });
     } catch {
       set({ hydrated: true });
     }
   },
-  select: (id) => { set({ selected: id }); persist({ selected_instrument: id }); },
+  select: (id) => {
+    if (isEquityId(id)) { saveEquity(id); set({ selected: id, selectedEquity: id }); } else set({ selected: id });
+    persist({ selected_instrument: id });
+  },
   setWorkspace: (w) => { set({ workspace: w }); persist({ workspace: w }); },
   setTheme: (t) => { document.documentElement.dataset.theme = t; set({ theme: t }); persist({ theme: t }); },
   setUpdateSeconds: (s) => { set({ updateSeconds: s }); persist({ update_seconds: s }); },

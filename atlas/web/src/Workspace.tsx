@@ -12,7 +12,7 @@ import { AIWidget } from "./widgets/AI";
 import { ScannerWidget } from "./widgets/Scanner";
 import { BacktestWidget } from "./widgets/Backtest";
 import { NewsFeedsWidget, NewsWidget } from "./widgets/News";
-import { FundamentalsWidget } from "./widgets/Fundamentals";
+import { ScopeContext } from "./scope";
 import { DerivativesWidget } from "./widgets/Derivatives";
 import { MtfWidget } from "./widgets/Mtf";
 import { JournalEditorWidget, JournalImportWidget, JournalSourcesWidget, JournalTradesWidget, PerformanceWidget2 } from "./widgets/Journal";
@@ -23,10 +23,10 @@ import { SettingsWidget } from "./widgets/Settings";
 
 const Grid = WidthProvider(RGL);
 
-function render(w: WidgetCfg) {
+function render(w: WidgetCfg, view: string) {
   const p = w.props ?? {};
   switch (w.type) {
-    case "chart": return <ChartWidget instrumentId={p.id} defaultInterval={p.interval} title={p.title} />;
+    case "chart": return <ChartWidget instrumentId={p.id} defaultInterval={p.interval} title={p.title} wid={`${view}.${w.i}`} pick={p.pick as "any" | "equity" | undefined} />;
     case "watchlist": return <WatchlistWidget />;
     case "quote": return <QuoteWidget instrumentId={p.id} />;
     case "tech": return <TechWidget />;
@@ -34,7 +34,6 @@ function render(w: WidgetCfg) {
     case "scanner": return <ScannerWidget />;
     case "backtest": return <BacktestWidget />;
     case "news": return <NewsWidget />;
-    case "fundamentals": return <FundamentalsWidget />;
     case "derivatives": return <DerivativesWidget />;
     case "newsfeeds": return <NewsFeedsWidget />;
     case "mtf": return <MtfWidget />;
@@ -82,12 +81,14 @@ export function Workspace({ view }: { view: string }) {
   const reset = async () => { await api.resetLayout(view); qc.setQueryData(["layout", view], null); };
 
   return (
+    <ScopeContext.Provider value={def.scope ?? null}>
     <div className="ws">
       <div className="ws-bar"><span>{def.name}</span><span className="dim small">drag headers to move · drag corners to resize · layout is saved</span><button className="mini" onClick={reset}>reset layout</button></div>
       <Grid className="layout" layout={layout} cols={12} rowHeight={30} margin={[6, 6]} draggableHandle=".panel-h" draggableCancel="button,input,select,textarea,a,label" onLayoutChange={onChange} compactType="vertical" key={`${view}-${saved.dataUpdatedAt}`}>
-        {def.widgets.map((w) => <div key={w.i}>{render(w)}</div>)}
+        {def.widgets.map((w) => <div key={w.i}>{render(w, view)}</div>)}
       </Grid>
     </div>
+    </ScopeContext.Provider>
   );
 }
 const pick = (l: Layout) => ({ i: l.i, x: l.x, y: l.y, w: l.w, h: l.h });

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiFailure } from "../api";
 import { ago } from "../fmt";
-import { useStore } from "../store";
+import { useSelectedId } from "../scope";
 import { Badge, ErrorBox, Panel } from "../ui";
 
 const symbolOf = (id: string) => { const p = id.split(":"); return p[0] === "CRYPTO" ? p[2] : p[p.length - 1]; };
@@ -11,7 +11,7 @@ const err = (e: unknown) => (e instanceof ApiFailure ? e.message : String(e));
 
 export function NewsWidget() {
   const qc = useQueryClient();
-  const selected = useStore((s) => s.selected);
+  const selected = useSelectedId();
   const sym = symbolOf(selected);
   const [scope, setScope] = useState<"all" | "symbol">("all");
   const [q, setQ] = useState("");

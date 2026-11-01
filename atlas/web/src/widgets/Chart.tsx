@@ -7,6 +7,7 @@ import {
 import { api, Candle } from "../api";
 import { px } from "../fmt";
 import { useStore } from "../store";
+import { isEquityId, useSelectedId } from "../scope";
 import { ErrorBox, Panel, ProvLine } from "../ui";
 import { CompareView } from "./Compare";
 
@@ -21,11 +22,34 @@ const OVERLAYS: Record<string, { specs: string[]; color: string; label: string }
 type ChartType = "candles" | "bars" | "line" | "area";
 const css = (v: string) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
-export function ChartWidget({ instrumentId, defaultInterval = "1d", title }: { instrumentId?: string; defaultInterval?: string; title?: string }) {
-  const selected = useStore((s) => s.selected);
+const PIN = "atlas.chartPin.";
+const loadPin = (k: string): string | null => { try { return localStorage.getItem(PIN + k); } catch { return null; } };
+const savePin = (k: string, id: string | null) => { try { if (id) localStorage.setItem(PIN + k, id); else localStorage.removeItem(PIN + k); } catch { /* per-viewer convenience only */ } };
+
+/** pick="any": this chart has its own asset (type a symbol to change it). pick="equity": typing changes the Equities desk's stock/ETF. No pick: the asset is fixed by the desk. */
+export function ChartWidget({ instrumentId, defaultInterval = "1d", title, wid, pick }: { instrumentId?: string; defaultInterval?: string; title?: string; wid?: string; pick?: "any" | "equity" }) {
+  const selected = useSelectedId();
+  const [pinned, setPinned] = useState<string | null>(() => (pick === "any" && wid ? loadPin(wid) : null));
+  const [symIn, setSymIn] = useState("");
+  const [symMsg, setSymMsg] = useState<string | null>(null);
+  const found = useQuery({ queryKey: ["chart-search", symIn], queryFn: () => api.search(symIn), enabled: !!pick && symIn.trim().length > 0 });
+  const choices = (found.data ?? []).filter((i) => pick !== "equity" || isEquityId(i.id)).slice(0, 6);
+  const choose = (i: { id: string }) => {
+    setSymIn(""); setSymMsg(null);
+    if (pick === "equity") useStore.getState().select(i.id);
+    else { setPinned(i.id); if (wid) savePin(wid, i.id); }
+  };
+  const submitSym = async () => {
+    const t = symIn.trim().toUpperCase();
+    if (!t) return;
+    const list = (await api.search(t)).filter((i) => pick !== "equity" || isEquityId(i.id));
+    const hit = list.find((i) => i.symbol === t) ?? list[0];
+    if (hit) choose(hit); else setSymMsg(pick === "equity" ? `No stock or ETF matches "${t}"` : `No match for "${t}"`);
+  };
+  const unpin = () => { setPinned(null); if (wid) savePin(wid, null); };
   const theme = useStore((s) => s.theme);
   const every = useStore((s) => s.updateSeconds) * 1000;
-  const id = instrumentId ?? selected;
+  const id = instrumentId ?? pinned ?? selected;
   const [interval, setIv] = useState(defaultInterval);
   const [type, setType] = useState<ChartType>("candles");
   const [log, setLog] = useState(false);
@@ -39,7 +63,7 @@ export function ChartWidget({ instrumentId, defaultInterval = "1d", title }: { i
   const select = useStore((s) => s.select);
   // `COMPARE A B` from the command bar: the first synced chart (no fixed instrument) takes it
   useEffect(() => {
-    if (!pendingCompare || instrumentId) return;
+    if (!pendingCompare || instrumentId || pinned) return;
     const c = takePendingCompare();      // only the first synced chart to ask gets it
     if (c) { select(c[0]); setCmp(c.slice(1)); setCmpIv("1d"); }
   }, [pendingCompare]);
@@ -144,6 +168,18 @@ export function ChartWidget({ instrumentId, defaultInterval = "1d", title }: { i
     <Panel title={title ?? `CHART ${inst.data?.symbol ?? ""} ${interval}`} className={full ? "fullscreen" : ""}
       right={<>{ohlcv.data && <ProvLine prov={ohlcv.data.prov} extra={ohlcv.data.derived_from ? `derived from ${ohlcv.data.derived_from}` : undefined} />}
         <button className="mini" onClick={() => setFull(!full)} title="Toggle full screen">{full ? "✕" : "⤢"}</button></>}>
+      {pick && (
+        <div className="toolbar chart-pick">
+          <div className="addrow">
+            <input className="w80" value={symIn} onChange={(e) => { setSymIn(e.target.value.toUpperCase()); setSymMsg(null); }} onKeyDown={(e) => e.key === "Enter" && submitSym()}
+              placeholder={`${inst.data?.symbol ?? "symbol"} · change…`} aria-label="Chart symbol" spellCheck={false} />
+            {symIn && choices.length > 0 && (
+              <div className="dropdown">{choices.map((i) => <div key={i.id} className="opt" onClick={() => choose(i)}><b>{i.symbol}</b> <span className="dim">{i.name}</span></div>)}</div>)}
+          </div>
+          {pinned && <button className="mini" onClick={unpin} title="Stop using this chart's own asset and follow the selected instrument again">↺ follow selection</button>}
+          {symMsg && <span className="warnc small">{symMsg}</span>}
+          <span className="dim small">{pick === "equity" ? "stocks and ETFs only" : pinned ? "own asset" : "follows the selected instrument"}</span>
+        </div>)}
       <div className="toolbar">
         {supported.map((i) => <button key={i} className={`mini ${i === interval ? "on" : ""}`} onClick={() => setIv(i)}>{i}</button>)}
         <span className="sep" />

@@ -3,29 +3,35 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, Instrument, isErr } from "../api";
 import { dir, pct, px } from "../fmt";
 import { useStore } from "../store";
+import { isEquityId, useScope, useSelectedId } from "../scope";
 import { Badge, ErrorBox, Panel } from "../ui";
 
 export function WatchlistWidget() {
   const qc = useQueryClient();
-  const { selected, select } = useStore();
+  const { select } = useStore();
+  const selected = useSelectedId();
+  const scope = useScope();
   const every = useStore((s) => s.updateSeconds) * 1000;
   const [active, setActive] = useState<number | null>(null);
   const [q, setQ] = useState("");
   const lists = useQuery({ queryKey: ["watchlists"], queryFn: api.watchlists });
-  const wl = lists.data?.find((w) => w.id === active) ?? lists.data?.[0];
+  const wl0 = lists.data?.find((w) => w.id === active) ?? lists.data?.[0];
+  // the Equities desk shows stocks and ETFs only: BTC, indices and macro series are filtered out of the view (the list itself is unchanged)
+  const wl = wl0 && scope === "equity" ? { ...wl0, items: wl0.items.filter(isEquityId) } : wl0;
   const quotes = useQuery({ queryKey: ["quotes", wl?.items.join()], queryFn: () => api.quotes(wl!.items), enabled: !!wl && wl.items.length > 0, refetchInterval: every });
-  const found = useQuery({ queryKey: ["search", q], queryFn: () => api.search(q), enabled: q.trim().length > 0 });
+  const found0 = useQuery({ queryKey: ["search", q], queryFn: () => api.search(q), enabled: q.trim().length > 0 });
+  const found = { ...found0, data: scope === "equity" ? found0.data?.filter((i) => isEquityId(i.id)) : found0.data };
   const refresh = () => qc.invalidateQueries({ queryKey: ["watchlists"] });
-  const add = useMutation({ mutationFn: (i: Instrument) => api.wlAdd(wl!.id, i.id), onSuccess: () => { setQ(""); refresh(); } });
-  const rm = useMutation({ mutationFn: (id: string) => api.wlRemove(wl!.id, id), onSuccess: refresh });
+  const add = useMutation({ mutationFn: (i: Instrument) => api.wlAdd(wl0!.id, i.id), onSuccess: () => { setQ(""); refresh(); } });
+  const rm = useMutation({ mutationFn: (id: string) => api.wlRemove(wl0!.id, id), onSuccess: refresh });
   const create = useMutation({ mutationFn: (n: string) => api.wlCreate(n), onSuccess: (w) => { setActive(w.id); refresh(); } });
   const del = useMutation({ mutationFn: (id: number) => api.wlDelete(id), onSuccess: () => { setActive(null); refresh(); } });
 
   const byId = new Map((quotes.data ?? []).map((x) => [x.instrument_id, x]));
   return (
-    <Panel title="WATCHLIST" right={wl && lists.data!.length > 1 && <button className="mini" onClick={() => confirm(`Delete watchlist "${wl.name}"?`) && del.mutate(wl.id)}>delete list</button>}>
+    <Panel title="WATCHLIST" right={wl0 && lists.data!.length > 1 && <button className="mini" onClick={() => confirm(`Delete watchlist "${wl0.name}"?`) && del.mutate(wl0.id)}>delete list</button>}>
       <div className="toolbar">
-        {lists.data?.map((w) => <button key={w.id} className={`mini ${w.id === wl?.id ? "on" : ""}`} onClick={() => setActive(w.id)}>{w.name}</button>)}
+        {lists.data?.map((w) => <button key={w.id} className={`mini ${w.id === wl0?.id ? "on" : ""}`} onClick={() => setActive(w.id)}>{w.name}</button>)}
         <button className="mini" onClick={() => { const n = prompt("New watchlist name"); if (n?.trim()) create.mutate(n.trim()); }}>+ list</button>
       </div>
       <div className="addrow">

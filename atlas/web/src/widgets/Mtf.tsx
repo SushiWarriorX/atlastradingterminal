@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api, MtfFactor } from "../api";
 import { dir, num, px } from "../fmt";
 import { useStore } from "../store";
+import { useSelectedId } from "../scope";
 import { Badge, ErrorBox, Panel } from "../ui";
 
 const FACTOR_LABEL: Record<string, string> = { trend: "Trend", structure: "Structure", momentum: "Momentum", volume: "Volume", relative_strength: "Relative strength", volatility: "Volatility" };
@@ -19,7 +20,7 @@ function Bar({ f }: { f: MtfFactor }) {
 }
 
 export function MtfWidget() {
-  const id = useStore((s) => s.selected);
+  const id = useSelectedId();
   const every = useStore((s) => s.updateSeconds) * 1000;
   const [bench, setBench] = useState<string>("");   // "" = automatic (SPY for US equities, none for crypto)
   const inst = useQuery({ queryKey: ["instrument", id], queryFn: () => api.instrument(id), staleTime: 60_000 });

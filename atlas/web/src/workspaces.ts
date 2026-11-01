@@ -1,6 +1,6 @@
-export type WidgetType = "derivatives" | "fundamentals" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "portfolio" | "ticket" | "orders" | "risklimits" | "riskanalytics" | "scenario" | "performance" | "mtf" | "alerts" | "alertevents" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "portfolio" | "ticket" | "orders" | "risklimits" | "riskanalytics" | "scenario" | "performance" | "mtf" | "alerts" | "alertevents" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
-export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[] }
+export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
 const BTC = "CRYPTO:COINBASE:BTC-USD:SPOT";
 const un = (i: string, view: string, x: number, y: number, w: number, h: number): WidgetCfg => ({ i, type: "unavailable", x, y, w, h, props: { view } });
@@ -15,15 +15,7 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "news", type: "news", x: 7, y: 13, w: 5, h: 6 },
     { i: "ai", type: "ai", x: 7, y: 19, w: 5, h: 10 },
   ] },
-  markets: { id: "markets", name: "Markets", widgets: [
-    { i: "c1", type: "chart", x: 0, y: 0, w: 6, h: 10, props: { id: "INDEX:SPGI:SPX" } },
-    { i: "c2", type: "chart", x: 6, y: 0, w: 6, h: 10, props: { id: "INDEX:NASDAQ:NDX" } },
-    { i: "c3", type: "chart", x: 0, y: 10, w: 6, h: 10, props: { id: "INDEX:CBOE:VIX" } },
-    { i: "c4", type: "chart", x: 6, y: 10, w: 6, h: 10, props: { id: BTC } },
-    { i: "watch", type: "watchlist", x: 0, y: 20, w: 6, h: 10 },
-    { i: "yields", type: "yields", x: 6, y: 20, w: 6, h: 6 },
-  ] },
-  btc: { id: "btc", name: "BTC Trading Desk", widgets: [
+  btc: { id: "btc", name: "BTC Intelligence (Bitcoin only)", scope: "btc", widgets: [
     { i: "c1h", type: "chart", x: 0, y: 0, w: 8, h: 13, props: { id: BTC, interval: "1h" } },
     { i: "quote", type: "quote", x: 8, y: 0, w: 4, h: 13, props: { id: BTC } },
     { i: "c15", type: "chart", x: 0, y: 13, w: 4, h: 10, props: { id: BTC, interval: "15m" } },
@@ -33,8 +25,8 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "mtf", type: "mtf", x: 0, y: 31, w: 12, h: 16 },
     { i: "deriv", type: "derivatives", x: 0, y: 47, w: 12, h: 15 },
   ] },
-  equities: { id: "equities", name: "US Equity Trading Desk", widgets: [
-    { i: "chart", type: "chart", x: 0, y: 0, w: 8, h: 13 },
+  equities: { id: "equities", name: "US Equity Trading Desk (stocks and ETFs only)", scope: "equity", widgets: [
+    { i: "chart", type: "chart", x: 0, y: 0, w: 8, h: 13, props: { pick: "equity" } },
     { i: "watch", type: "watchlist", x: 8, y: 0, w: 4, h: 13 },
     { i: "quote", type: "quote", x: 0, y: 13, w: 4, h: 11 },
     { i: "tech", type: "tech", x: 4, y: 13, w: 8, h: 11 },
@@ -72,12 +64,6 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "import", type: "journalimport", x: 0, y: 37, w: 7, h: 20 },
     { i: "sources", type: "journalsources", x: 7, y: 22, w: 5, h: 22 },
   ] },
-  fundamentals: { id: "fundamentals", name: "Fundamentals", widgets: [
-    { i: "fa", type: "fundamentals", x: 0, y: 0, w: 8, h: 26 },
-    { i: "quote", type: "quote", x: 8, y: 0, w: 4, h: 13 },
-    { i: "news", type: "news", x: 8, y: 13, w: 4, h: 13 },
-    { i: "chart", type: "chart", x: 0, y: 26, w: 8, h: 12 },
-  ] },
   news: { id: "news", name: "News", widgets: [
     { i: "news", type: "news", x: 0, y: 0, w: 8, h: 24 },
     { i: "feeds", type: "newsfeeds", x: 8, y: 0, w: 4, h: 24 },
@@ -90,10 +76,10 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "tech", type: "tech", x: 7, y: 34, w: 5, h: 13 },
   ] },
   charts: { id: "charts", name: "Multi-chart", widgets: [
-    { i: "c1", type: "chart", x: 0, y: 0, w: 6, h: 12, props: { interval: "1d" } },
-    { i: "c2", type: "chart", x: 6, y: 0, w: 6, h: 12, props: { interval: "1h" } },
-    { i: "c3", type: "chart", x: 0, y: 12, w: 6, h: 12, props: { interval: "15m" } },
-    { i: "c4", type: "chart", x: 6, y: 12, w: 6, h: 12, props: { interval: "5m" } },
+    { i: "c1", type: "chart", x: 0, y: 0, w: 6, h: 12, props: { interval: "1d", pick: "any" } },
+    { i: "c2", type: "chart", x: 6, y: 0, w: 6, h: 12, props: { interval: "1h", pick: "any" } },
+    { i: "c3", type: "chart", x: 0, y: 12, w: 6, h: 12, props: { interval: "15m", pick: "any" } },
+    { i: "c4", type: "chart", x: 6, y: 12, w: 6, h: 12, props: { interval: "5m", pick: "any" } },
   ] },
   macro: { id: "macro", name: "Macro Research Desk", widgets: [
     { i: "c10", type: "chart", x: 0, y: 0, w: 6, h: 12, props: { id: "MACRO:FRED:DGS10", title: "US 10Y YIELD (FRED, daily)" } },
@@ -114,7 +100,7 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
 };
 // Views without a workspace render a single "not built yet" panel driven by /api/meta/views.
 export const NAV: { view: string; label: string }[] = [
-  ["overview", "OVERVIEW"], ["markets", "MARKETS"], ["btc", "BTC INTELLIGENCE"], ["equities", "EQUITIES"], ["fundamentals", "FUNDAMENTALS"], ["charts", "CHARTS"],
+  ["overview", "OVERVIEW"], ["btc", "BTC INTELLIGENCE"], ["equities", "EQUITIES"], ["charts", "CHARTS"],
   ["scanner", "SCANNER"], ["news", "NEWS"], ["macro", "MACRO"], ["ai", "AI DESK"], ["ideas", "TRADE IDEAS"], ["portfolio", "PORTFOLIO"],
   ["risk", "RISK"], ["backtest", "BACKTEST"], ["journal", "JOURNAL"], ["alerts", "ALERTS"], ["settings", "SETTINGS"],
 ].map(([view, label]) => ({ view, label }));

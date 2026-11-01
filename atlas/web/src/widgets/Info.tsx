@@ -2,10 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { ago, dir, num, pct, px } from "../fmt";
 import { useStore } from "../store";
+import { useSelectedId } from "../scope";
 import { Badge, ErrorBox, Panel, ProvLine } from "../ui";
 
 export function QuoteWidget({ instrumentId }: { instrumentId?: string }) {
-  const selected = useStore((s) => s.selected);
+  const selected = useSelectedId();
   const every = useStore((s) => s.updateSeconds) * 1000;
   const id = instrumentId ?? selected;
   const inst = useQuery({ queryKey: ["instrument", id], queryFn: () => api.instrument(id), staleTime: 60_000 });
@@ -38,7 +39,7 @@ export function QuoteWidget({ instrumentId }: { instrumentId?: string }) {
 }
 
 export function TechWidget() {
-  const id = useStore((s) => s.selected);
+  const id = useSelectedId();
   const every = useStore((s) => s.updateSeconds) * 1000;
   const inst = useQuery({ queryKey: ["instrument", id], queryFn: () => api.instrument(id), staleTime: 60_000 });
   const iv = inst.data?.supported_intervals?.includes("1h") ? "1h" : "1d";

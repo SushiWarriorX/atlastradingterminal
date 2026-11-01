@@ -9,7 +9,6 @@ from . import instruments as I
 # view -> implementation status (single source of truth; the UI reads this via /api/meta/views)
 VIEWS = {
     "overview": (True, None, "Global Market Overview"),
-    "markets": (True, None, "Markets"),
     "btc": (True, None, "BTC Trading Desk"),
     "equities": (True, None, "US Equity Trading Desk"),
     "charts": (True, None, "Multi-chart"),
@@ -20,17 +19,16 @@ VIEWS = {
     "ideas": (False, 6, "Trade idea board"),
     "portfolio": (True, None, "Portfolio and paper trading"),
     "risk": (True, None, "Portfolio risk"),
-    "fundamentals": (True, None, "Company fundamentals (Yahoo, unofficial)"),
     "backtest": (True, None, "Backtester (daily bars, point-in-time rules)"),
     "journal": (True, None, "Trade journal and performance"),
     "alerts": (True, None, "Alerts"),
     "settings": (True, None, "Settings"),
 }
-NAV = {"OVERVIEW": "overview", "MARKETS": "markets", "BTC": "btc", "EQUITIES": "equities", "CHARTS": "charts",
+NAV = {"OVERVIEW": "overview", "BTC": "btc", "EQUITIES": "equities", "CHARTS": "charts",
        "SCAN": "scanner", "SCANNER": "scanner", "NEWS": "news", "MACRO": "macro", "FED": "macro", "CPI": "macro",
        "AI": "ai", "IDEAS": "ideas", "PORT": "portfolio", "PORTFOLIO": "portfolio", "RISK": "risk",
-       "BACKTEST": "backtest", "BT": "backtest", "FA": "fundamentals", "FUNDAMENTALS": "fundamentals", "JOURNAL": "journal", "PERF": "journal", "PERFORMANCE": "journal", "ALERTS": "alerts", "SETTINGS": "settings"}
-FUNCS = {"MTF": "equities", "CHART": "charts", "GP": "charts", "NEWS": "news", "N": "news", "TECH": "charts", "FA": "fundamentals",
+       "BACKTEST": "backtest", "BT": "backtest", "JOURNAL": "journal", "PERF": "journal", "PERFORMANCE": "journal", "ALERTS": "alerts", "SETTINGS": "settings"}
+FUNCS = {"MTF": "equities", "CHART": "charts", "GP": "charts", "NEWS": "news", "N": "news", "TECH": "charts",
          "OI": "btc", "FUNDING": "btc", "DES": "equities", "AI": "ai"}
 MACRO_PARAMS = {"FED": "fed", "CPI": "inflation"}
 # Which sub-feature of an implemented view is missing -> honest message
@@ -128,20 +126,24 @@ def resolve(text: str) -> Command:
         s = _suggest(head)
         return Command(False, error=f"Unknown command or symbol '{head}'." + (f" Did you mean {', '.join(s)}?" if s else " HELP lists commands."), suggestions=s)
     if len(toks) == 1:
-        return Command(True, view="btc" if inst.asset_class == "crypto" else "equities", instrument_ids=[inst.id],
-                       message=inst.note)
+        return Command(True, view=_desk_for(inst), instrument_ids=[inst.id], message=inst.note)
     fn = toks[1]
     if fn not in FUNCS:
         s = difflib.get_close_matches(fn, list(FUNCS), n=3, cutoff=0.5)
         return Command(False, error=f"Unknown function '{fn}' for {inst.symbol}." + (f" Did you mean {', '.join(s)}?" if s else ""), suggestions=s)
     view = FUNCS[fn]
-    if view == "equities" and inst.asset_class == "crypto":
-        view = "btc"
+    if view == "equities":
+        view = _desk_for(inst)
     if fn == "NEWS" or fn == "N":
         return Command(True, view="news", instrument_ids=[inst.id])
     partial = PARTIAL.get(fn)
     return Command(True, view=view, instrument_ids=[inst.id], params={"function": fn},
                    implemented=partial is None, phase=partial[0] if partial else None, message=partial[1] if partial else inst.note)
+
+
+def _desk_for(inst) -> str:
+    """Which desk an instrument belongs on: BTC desk is BTC only, Equities desk is stocks and ETFs only, everything else (indices, macro series) goes to Charts."""
+    return "btc" if inst.asset_class == "crypto" else "equities" if inst.asset_class in ("equity", "etf") else "charts"
 
 
 def _order_draft(side: str, toks: list[str]) -> Command:

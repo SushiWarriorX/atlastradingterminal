@@ -3,12 +3,13 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { api, ApiFailure, DeskResult, SpecialistRep, SpecialistResult, TechReport } from "../api";
 import { px } from "../fmt";
 import { useStore } from "../store";
+import { useSelectedId } from "../scope";
 import { ErrorBox, Panel } from "../ui";
 
 interface Msg { role: "user" | "ai" | "sys"; text: string; meta?: string }
 
 export function AIWidget() {
-  const selected = useStore((s) => s.selected);
+  const selected = useSelectedId();
   const inst = useQuery({ queryKey: ["instrument", selected], queryFn: () => api.instrument(selected), staleTime: 60_000 });
   const st = useQuery({ queryKey: ["aistatus"], queryFn: api.aiStatus, refetchInterval: 30_000 });
   const [msgs, setMsgs] = useState<Msg[]>([]);
