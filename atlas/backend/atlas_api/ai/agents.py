@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import math
 import re
 import uuid
 from datetime import datetime, timezone
@@ -23,6 +22,7 @@ from pydantic import BaseModel, Field, ValidationError
 from .. import instruments as I
 from ..db import DB, now
 from ..models import ProviderUnavailable
+from ..numeric import num
 from .llm import LLM
 
 ASSESS = {
@@ -110,20 +110,10 @@ def flatten(d, prefix: str = "", depth: int = 3) -> dict[str, float]:
     if isinstance(d, dict) and depth >= 0:
         for k, v in d.items():
             key = f"{prefix}.{k}" if prefix else str(k)
-            if isinstance(v, bool):
-                continue
-            if isinstance(v, (int, float)):
-                if math.isfinite(v):
-                    out[key] = float(v)
-            elif isinstance(v, str):
-                try:
-                    f = float(v)
-                    if math.isfinite(f):
-                        out[key] = f
-                except ValueError:
-                    pass
-            elif isinstance(v, dict):
+            if isinstance(v, dict):
                 out.update(flatten(v, key, depth - 1))
+            elif isinstance(v, (int, float, str)) and (f := num(v)) is not None:
+                out[key] = f
     return out
 
 

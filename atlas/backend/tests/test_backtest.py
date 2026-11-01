@@ -299,3 +299,12 @@ def test_api_trades_carry_catalog_instrument_ids(client):
     assert j["result"]["trades"][0]["instrument_id"].startswith("EQUITY:")
     saved = client.get(f"/api/backtest/runs/{j['run_id']}").json()["data"]["result"]
     assert saved["trades"][0]["instrument_id"] == j["result"]["trades"][0]["instrument_id"]
+
+
+def test_a_finished_backtest_is_saved_exactly_once_however_often_it_is_polled(client):
+    r = client.post("/api/backtest/run", json={"spec": {"name": "Once", "entry": RULE, "stop_atr": None, "max_hold_bars": 3, "oos_fraction": 0}})
+    j = wait(client, r.json()["data"]["job_id"])
+    for _ in range(5):
+        again = client.get(f"/api/backtest/jobs/{r.json()['data']['job_id']}").json()["data"]
+        assert again["run_id"] == j["run_id"]
+    assert [x["name"] for x in client.get("/api/backtest/runs").json()["data"]] == ["Once"]

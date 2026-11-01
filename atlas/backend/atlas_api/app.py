@@ -23,7 +23,7 @@ from .journal.matching import Exec
 from .journal.store import JournalError, JournalStore
 from .news.service import NewsError, NewsService
 from .derivatives.service import DerivativesService
-from .derivatives.venues import VenueClient
+from .jobs import Jobs
 from .fundamentals.service import DemoFundamentals, FundamentalsService, YahooFundamentals
 from .trading import analytics as tr_analytics
 from .trading.engine import EngineError, TradingEngine, jsonable
@@ -85,9 +85,9 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     hl_client = hyperliquid or hl.HyperliquidClient(os.getenv("HYPERLIQUID_API_BASE", "https://api.hyperliquid.xyz"))
     desk = Desk(llm, Registry(svc, journal, fundamentals), db)
     bars: BarSource = bar_source or (DemoBars() if demo else YahooBars())
-    jobs = scan_engine.Jobs()
+    jobs = Jobs(scan_engine.run)
     bt_source: BarSource = backtest_source or bar_source or (DemoBars(days=1100) if demo else YahooBars(period="5y", ttl=3600.0))
-    bt_jobs = bt_run.BtJobs()
+    bt_jobs = Jobs(bt_run.run, keep=10, on_done=lambda r: bt_persist(r))      # saves each finished run once, in a worker thread
     app_symbols_override: dict = {}  # test hook: universe name -> symbols
 
     if not db.q("SELECT 1 FROM watchlists LIMIT 1"):
@@ -914,7 +914,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             ys = yahoo_symbol(None, sym)
             if ys:
                 symbol_fetch = await news.refresh_symbol(ys, sym.split("-")[0] if ys.endswith("-USD") else sym)
-        out = news.items(sym.split("-")[0] if sym and sym.endswith("-USD") else sym, q, max(1, min(hours, 24 * 14)), max(1, min(limit, 200)))
+        out = await asyncio.to_thread(news.items, sym.split("-")[0] if sym and sym.endswith("-USD") else sym, q, max(1, min(hours, 24 * 14)), max(1, min(limit, 200)))
         out["meta"]["symbol_fetch"] = symbol_fetch
         return ok(out)
 
@@ -991,18 +991,18 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
                 x["instrument_id"] = ids[x["symbol"]]
         return r
 
+    def bt_persist(r: dict) -> dict:
+        """Runs once per finished backtest, in a worker thread: tag trades with catalog ids, then save the full result."""
+        bt_decorate(r)
+        rid = db.x("INSERT INTO backtest_runs(name,spec,result,trades,ran_at) VALUES(?,?,?,?,?)",
+                   (r["meta"]["spec"]["name"], json.dumps(r["meta"]["spec"]), json.dumps(r), r["summary"]["n"], r["meta"]["ran_at"]))
+        return {"run_id": rid}
+
     @app.get("/api/backtest/jobs/{jid}")
     async def bt_job(jid: str):
         j = bt_jobs.view(jid)
         if j is None:
             raise ApiError("NOT_FOUND", "backtest job not found (jobs are kept in memory)", 404)
-        if j["status"] == "done" and not bt_jobs.jobs[jid].get("run_id"):
-            r = bt_decorate(j["result"])
-            bt_jobs.jobs[jid]["run_id"] = db.x("INSERT INTO backtest_runs(name,spec,result,trades,ran_at) VALUES(?,?,?,?,?)",
-                                              (r["meta"]["spec"]["name"], json.dumps(r["meta"]["spec"]), json.dumps(r), r["summary"]["n"], r["meta"]["ran_at"]))
-            j["run_id"] = bt_jobs.jobs[jid]["run_id"]
-        elif j["status"] == "done":
-            j["run_id"] = bt_jobs.jobs[jid]["run_id"]
         return ok(j)
 
     @app.get("/api/backtest/runs")
@@ -1014,7 +1014,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         rows = db.q("SELECT * FROM backtest_runs WHERE id=?", (rid,))
         if not rows:
             raise ApiError("NOT_FOUND", "no such saved backtest", 404)
-        return ok({"id": rid, "result": bt_decorate(json.loads(rows[0]["result"]))})
+        return ok({"id": rid, "result": await asyncio.to_thread(lambda: bt_decorate(json.loads(rows[0]["result"])))})
 
     @app.delete("/api/backtest/runs/{rid}")
     async def bt_run_del(rid: int):

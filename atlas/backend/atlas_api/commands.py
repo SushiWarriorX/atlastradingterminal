@@ -81,28 +81,8 @@ def resolve(text: str) -> Command:
     if head == "AI":
         inst = _sym(toks[1]) if len(toks) > 1 else None
         return Command(True, view="ai", instrument_ids=[inst.id] if inst else [], params={"brief": bool(inst)})
-    if head in ("SCAN", "SCANNER") and len(toks) > 1:
-        from .scanner.presets import ALIASES, PRESETS, UNAVAILABLE_PRESETS
-
-        key = "_".join(toks[1:]).lower()
-        pid = ALIASES.get(toks[1], key)
-        if pid in UNAVAILABLE_PRESETS:
-            return Command(True, view="scanner", implemented=False, phase=4, message=UNAVAILABLE_PRESETS[pid])
-        if pid not in PRESETS:
-            s = difflib.get_close_matches(toks[1], list(ALIASES) + [p.upper() for p in PRESETS], n=3, cutoff=0.5)
-            return Command(False, error=f"Unknown scan '{' '.join(toks[1:])}'." + (f" Did you mean {', '.join(s)}?" if s else " Presets: " + ", ".join(sorted(ALIASES))), suggestions=s)
-        return Command(True, view="scanner", params={"preset": pid})
-    if head in ("BACKTEST", "BT") and len(toks) > 1:
-        from .scanner.presets import ALIASES, PRESETS, UNAVAILABLE_PRESETS
-
-        key = "_".join(toks[1:]).lower()
-        pid = ALIASES.get(toks[1], key)
-        if pid in UNAVAILABLE_PRESETS:
-            return Command(True, view="backtest", implemented=False, phase=4, message=UNAVAILABLE_PRESETS[pid])
-        if pid not in PRESETS:
-            s = difflib.get_close_matches(toks[1], list(ALIASES) + [p.upper() for p in PRESETS], n=3, cutoff=0.5)
-            return Command(False, error=f"Unknown backtest '{' '.join(toks[1:])}'." + (f" Did you mean {', '.join(s)}?" if s else " Presets: " + ", ".join(sorted(ALIASES))), suggestions=s)
-        return Command(True, view="backtest", params={"preset": pid})
+    if head in PRESET_VIEWS and len(toks) > 1:
+        return _preset_command(PRESET_VIEWS[head], toks)
     if head in NAV and head not in ("BTC",) or (head == "BTC" and len(toks) == 1):
         if head == "BTC":
             inst = I.by_symbol("BTC")
@@ -127,11 +107,28 @@ def resolve(text: str) -> Command:
     view = FUNCS[fn]
     if view == "equities":
         view = _desk_for(inst)
-    if fn == "NEWS" or fn == "N":
+    if fn in ("NEWS", "N"):
         return Command(True, view="news", instrument_ids=[inst.id])
     partial = PARTIAL.get(fn)
     return Command(True, view=view, instrument_ids=[inst.id], params={"function": fn},
                    implemented=partial is None, phase=partial[0] if partial else None, message=partial[1] if partial else inst.note)
+
+
+PRESET_VIEWS = {"SCAN": "scanner", "SCANNER": "scanner", "BACKTEST": "backtest", "BT": "backtest"}
+
+
+def _preset_command(view: str, toks: list[str]) -> Command:
+    """SCAN <preset> and BACKTEST <preset> share the scanner's presets, aliases and "not built" list."""
+    from .scanner.presets import ALIASES, PRESETS, UNAVAILABLE_PRESETS
+
+    pid = ALIASES.get(toks[1], "_".join(toks[1:]).lower())
+    if pid in UNAVAILABLE_PRESETS:
+        return Command(True, view=view, implemented=False, phase=4, message=UNAVAILABLE_PRESETS[pid])
+    if pid not in PRESETS:
+        what = "scan" if view == "scanner" else "backtest"
+        s = difflib.get_close_matches(toks[1], list(ALIASES) + [p.upper() for p in PRESETS], n=3, cutoff=0.5)
+        return Command(False, error=f"Unknown {what} '{' '.join(toks[1:])}'." + (f" Did you mean {', '.join(s)}?" if s else " Presets: " + ", ".join(sorted(ALIASES))), suggestions=s)
+    return Command(True, view=view, params={"preset": pid})
 
 
 def _desk_for(inst) -> str:

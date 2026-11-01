@@ -2,13 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColorType, createChart, LineSeries, UTCTimestamp } from "lightweight-charts";
 import { api, ApiFailure, BtGroupRow, BtResult, BtSpec, BtStats } from "../api";
-import { dir, num, pct } from "../fmt";
+import { dir, num, pct, sgn } from "../fmt";
 import { useStore } from "../store";
 import { Badge, ErrorBox, Panel } from "../ui";
 
 const css = (v: string) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const rng = (x?: [number, number] | null, f = (v: number) => num(v * 100, 0) + "%") => (x ? `${f(x[0])} – ${f(x[1])}` : "—");
-const sgn = (x: number | null | undefined, d = 2) => (x === null || x === undefined ? "—" : `${x >= 0 ? "+" : ""}${num(x, d)}`);
 
 function Num({ label, value, onChange, step = 1, min, max, nullable }: { label: string; value: number | null; onChange: (v: number | null) => void; step?: number; min?: number; max?: number; nullable?: boolean }) {
   return (

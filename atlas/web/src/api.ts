@@ -42,6 +42,9 @@ export class ApiFailure extends Error {
   constructor(public code: string, message: string, public httpStatus: number, public extra: Record<string, unknown> = {}) { super(message); }
 }
 
+/** One line for a failed call: "CODE: message" for API errors, the plain text otherwise. */
+export const errText = (e: unknown): string => (e instanceof ApiFailure ? `${e.code}: ${e.message}` : String(e));
+
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   let r: Response;
   try {
@@ -110,25 +113,6 @@ export const api = {
   btDelete: (id: number) => call<unknown>(`/api/backtest/runs/${id}`, { method: "DELETE" }),
   scanSave: (name: string, spec: ScanSpec) => call<unknown>("/api/scanner/save", body("POST", { name, spec })),
   scanSaved: () => call<{ id: number; name: string; spec: ScanSpec }[]>("/api/scanner/saved"),
-  portfolios: () => call<PortfolioRow[]>("/api/portfolios"),
-  portfolioCreate: (name: string, kind: string, starting_cash: string) => call<PortfolioRow>("/api/portfolios", body("POST", { name, kind, starting_cash })),
-  portfolio: (pid?: number) => call<PortfolioSummary>(`/api/portfolio${pid ? `?pid=${pid}` : ""}`),
-  manualPosition: (pid: number, instrument_id: string, qty: string, avg_cost: string) => call<unknown>(`/api/portfolios/${pid}/manual/position`, body("PUT", { instrument_id, qty, avg_cost })),
-  manualCash: (pid: number, cash: string) => call<unknown>(`/api/portfolios/${pid}/manual/cash`, body("PUT", { cash })),
-  paperReset: (pid: number) => call<unknown>(`/api/portfolios/${pid}/reset`, body("POST", { confirm: true })),
-  orderPreview: (o: OrderBody) => call<OrderPreview>("/api/orders/preview", body("POST", o)),
-  orderSubmit: (order: OrderBody, preview_id: string, client_key: string) => call<{ order: OrderRow; duplicate: boolean }>("/api/orders/paper", body("POST", { order, preview_id, client_key })),
-  orders: (pid?: number, state?: string) => call<OrderRow[]>(`/api/orders?${pid ? `pid=${pid}&` : ""}${state ? `state=${state}` : ""}`),
-  orderCancel: (id: number) => call<OrderRow>(`/api/orders/${id}/cancel`, { method: "POST" }),
-  fills: (pid?: number) => call<FillRow[]>(`/api/fills${pid ? `?pid=${pid}` : ""}`),
-  riskLimits: () => call<RiskLimits>("/api/risk/limits"),
-  setRiskLimits: (l: Partial<RiskLimits>) => call<RiskLimits>("/api/risk/limits", body("PUT", l)),
-  tradingHalt: (halted: boolean, cancel_open = false) => call<{ halted: boolean; cancelled_orders: number[] }>("/api/trading/halt", body("POST", { halted, cancel_open })),
-  riskSize: (instrument_id: string, entry: string, stop: string, pid?: number) => call<SizeResult>(`/api/risk/size?instrument_id=${encodeURIComponent(instrument_id)}&entry=${entry}&stop=${stop}${pid ? `&pid=${pid}` : ""}`),
-  portfolioRisk: (pid?: number, benchmark = "SPY") => call<PortfolioRisk>(`/api/portfolio/risk?${pid ? `pid=${pid}&` : ""}benchmark=${benchmark}`),
-  scenario: (b: { portfolio_id?: number; shocks: Record<string, number>; benchmark?: string; benchmark_shock?: number }) => call<ScenarioResult>("/api/portfolio/scenario", body("POST", b)),
-  performance: (pid?: number) => call<Performance>(`/api/portfolio/performance${pid ? `?pid=${pid}` : ""}`),
-  reconcile: (pid?: number) => call<Reconcile>(`/api/portfolio/reconcile${pid ? `?pid=${pid}` : ""}`),
   journalSources: () => call<{ sources: JournalSource[]; batches: ImportBatch[] }>("/api/journal/sources"),
   journalPresets: () => call<{ presets: Record<string, { label: string; verified: boolean; note: string }>; roles: { trades: string[]; flows: string[] } }>("/api/journal/presets"),
   journalPreview: (b: ImportBody) => call<ImportPreview>("/api/journal/import/preview", body("POST", b)),
@@ -144,20 +128,11 @@ export const api = {
   ibkrStatus: () => call<IbkrStatus>("/api/ibkr/status"),
   ibkrConnect: () => call<IbkrStatus>("/api/ibkr/connect", { method: "POST" }),
   ibkrDisconnect: () => call<IbkrStatus>("/api/ibkr/disconnect", { method: "POST" }),
-  ibkrLink: (name: string) => call<PortfolioRow>("/api/ibkr/portfolio", body("POST", { name })),
-  ibkrSync: () => call<{ portfolios: { cash: string; positions: number; unsupported: string[] }[]; journal: { executions_seen: number; inserted: number; duplicates: number; note: string } }>("/api/ibkr/sync", { method: "POST" }),
+  ibkrSync: () => call<{ journal: { executions_seen: number; inserted: number; duplicates: number; note: string } }>("/api/ibkr/sync", { method: "POST" }),
   compare: (ids: string[], interval: string, limit = 300) => call<CompareResult>(`/api/compare?ids=${encodeURIComponent(ids.join(","))}&interval=${interval}&limit=${limit}`),
   mtf: (id: string, benchmark?: string) => call<MtfResult>(`/api/technical/mtf?instrument_id=${encodeURIComponent(id)}${benchmark ? `&benchmark=${benchmark}` : ""}`),
   telegramStatus: () => call<TelegramStatus>("/api/telegram/status"),
   telegramTest: () => call<{ sent: boolean }>("/api/telegram/test", { method: "POST" }),
-  alerts: () => call<AlertRow[]>("/api/alerts"),
-  alertCreate: (rule: AlertRule) => call<AlertRow>("/api/alerts", body("POST", rule)),
-  alertUpdate: (id: number, rule: AlertRule) => call<AlertRow>(`/api/alerts/${id}`, body("PUT", rule)),
-  alertEnable: (id: number, enabled: boolean) => call<AlertRow>(`/api/alerts/${id}/enabled`, body("POST", { enabled })),
-  alertDelete: (id: number) => call<unknown>(`/api/alerts/${id}`, { method: "DELETE" }),
-  alertEvents: (limit = 100) => call<{ events: AlertEvent[]; unread: number }>(`/api/alerts/events?limit=${limit}`),
-  alertRead: (ids: number[] | null) => call<{ marked: number }>("/api/alerts/events/read", body("POST", { ids })),
-  alertEvaluate: () => call<{ events: AlertEvent[]; evaluated: number }>("/api/alerts/evaluate", { method: "POST" }),
   scanDelete: (id: number) => call<unknown>(`/api/scanner/saved/${id}`, { method: "DELETE" }),
 };
 
@@ -267,16 +242,6 @@ export interface BtJob { id: string; status: "running" | "done" | "failed"; done
 export interface BtPreset { id: string; name: string; description: string; spec: BtSpec }
 
 // --- alerts ------------------------------------------------------------------
-export type AlertRule = { kind: string; name?: string | null; cooldown_seconds?: number; severity?: string; [k: string]: unknown };
-export interface AlertRow {
-  id: number; name: string; kind: string; rule: AlertRule; version: number; enabled: boolean; created_at: string;
-  state: { prev?: boolean | null; last_value?: number | null; last_eval_at?: number; last_status?: string | null; last_skip?: string | null; error?: string; fires?: number };
-}
-export interface AlertEvent {
-  id: number; alert_id: number | null; alert_name: string; rule_version: number; kind: string; severity: "info" | "warning" | "critical";
-  ts: string; message: string; delivery: string; read: boolean;
-  trigger: { value?: number; detail?: string; notes?: string[]; symbols?: string[]; data?: { provider: string; status: Status; event_time?: string | null } | null; rule?: AlertRule & { instrument_id?: string } };
-}
 
 export interface TelegramStatus {
   configured: boolean; setup?: string; enabled?: boolean; min_severity?: "info" | "warning" | "critical";
@@ -307,54 +272,6 @@ export interface MtfResult {
   rules: Record<string, string>;
 }
 
-// --- portfolio / paper trading / risk (money values are exact decimal STRINGS; parse for display only) ---
-export interface PortfolioRow { id: number; name: string; kind: "paper" | "manual"; starting_cash: string; cash: string; venue: "sim" | "ibkr"; broker_account: string | null }
-export interface Holding {
-  instrument_id: string; symbol: string; asset_class: string; sector: string; qty: string; avg_cost: string; mark: string | null; value: string; valuation: "mark" | "at_cost";
-  unrealized: string | null; unrealized_pct: string | null; day_pnl: string | null; realized: string; planned_stop: string | null; planned_risk: string | null; weight_pct: string | null;
-  data: { status: Status; provider: string } | null;
-}
-export interface PortfolioSummary {
-  portfolio: PortfolioRow; cash: string; invested: string; equity: string; positions: Holding[]; unpriced_positions: number; valuation_note: string | null;
-  realized_total: string; unrealized_total: string; day_pnl_total: string; halted: boolean; day_start_equity: string | null;
-  exposure: { gross: string; gross_pct: string | null; leverage: string | null; largest_position_pct: string | null;
-    by_asset_class: Record<string, { value: string; pct: string | null }>; by_sector: Record<string, { value: string; pct: string | null }> };
-}
-export interface OrderBody { instrument_id: string; side: "buy" | "sell"; qty: string; type: string; limit_price?: string; stop_price?: string; planned_stop?: string; tif?: string; portfolio_id?: number }
-export interface RiskCheck { name: string; status: "pass" | "warn" | "fail" | "needs_data" | "not_checked"; detail: string }
-export interface OrderPreview {
-  preview_id: string; expires_in_seconds: number; verdict: "APPROVE_FOR_PAPER_REVIEW" | "REJECT" | "NEEDS_MORE_DATA"; checks: RiskCheck[]; disclaimer: string; simulator: string;
-  estimate: { price: string | null; notional: string | null; fee: string | null; total_cost: string | null; cash_available_before: string; cash_available_after: string | null };
-  data: { status: Status; provider: string } | null; order: Record<string, unknown>;
-}
-export interface OrderRow {
-  id: number; symbol: string; instrument_id: string; side: string; type: string; tif: string; qty: string; limit_price: string | null; stop_price: string | null; planned_stop: string | null;
-  state: string; filled_qty: string; remaining_qty: string; avg_fill_price: string | null; triggered: number; reason: string | null; created_at: string; expires_at: string | null;
-  data_status: string | null; events: { ts: string; event: string; detail: string }[];
-}
-export interface FillRow { id: number; order_id: number; symbol: string; side: string; qty: string; price: string; fee: string; ts: string; data_status: string | null; provider: string | null; note: string | null }
-export interface RiskLimits {
-  max_risk_per_trade_pct: number; max_aggregate_risk_pct: number; daily_loss_warning_pct: number; max_daily_loss_pct: number; max_position_pct: number;
-  max_order_notional: number | null; max_spread_bps: Record<string, number>; require_stop: boolean; allow_fractional_equities: boolean; blocked_symbols: string[];
-}
-export interface SizeResult { equity: string; risk_pct: string; qty: string; binding_constraint: string; by_risk: string; by_position_cap: string; by_buying_power: string; planned_risk: string; note: string }
-export interface PortfolioRisk {
-  available: boolean; reason?: string; observations?: number; assumptions: string[]; valuation_note: string | null;
-  volatility_ann_pct?: number; max_drawdown_pct?: number; worst_day_pct?: number;
-  var_95_1d?: { pct: number; amount: number }; es_95_1d?: { pct?: number; amount?: number; available?: boolean; reason?: string; tail_observations?: number };
-  var_99_1d?: { pct?: number; amount?: number; available?: boolean; reason?: string };
-  beta?: { benchmark: string; value: number | null; correlation: number | null; by_position: Record<string, number | null> };
-  correlation?: { symbols: string[]; matrix: (number | null)[][] }; most_correlated?: { pair: string; corr: number }[];
-  concentration?: { top_position: string; top_position_pct_of_equity: number; hhi_invested: number; note: string };
-  liquidity?: { positions: { symbol: string; value: number; adv_usd_20d: number | null; pct_of_adv: number | null; days_to_exit_at_10pct: number | null }[]; note: string };
-  exposure: { gross: string; gross_pct: number | null; leverage: number | null };
-}
-export interface ScenarioResult {
-  equity_before: string; equity_after: string; pnl: string; pnl_pct_of_equity: number | null; note: string | null; ignored_shocks: string[]; caveats: string[];
-  positions: { symbol: string; value: string; shock_pct: number | null; source: string; pnl: string }[];
-}
-export interface Performance { points: { ts: string; equity: string }[]; reason?: string; samples?: number; total_return_pct?: number | null; max_drawdown_pct?: number; start_equity?: number; latest_equity?: number; note: string }
-export interface Reconcile { applicable: boolean; consistent?: boolean; reason?: string; issues?: unknown[]; fills_checked?: number }
 
 // --- journal / performance / IBKR ---------------------------------------------------------------
 export interface HyperliquidSync {

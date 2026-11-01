@@ -10,10 +10,12 @@ Funding intervals: OKX reports the next funding time so the interval is measured
 """
 from __future__ import annotations
 
-import math
+import asyncio
 from datetime import datetime, timezone
 
 import httpx
+
+from ..numeric import num
 
 VENUES = ("hyperliquid", "binance", "bybit", "okx")
 LABELS = {"hyperliquid": "Hyperliquid", "binance": "Binance (USD-M)", "bybit": "Bybit (linear)", "okx": "OKX (swap)"}
@@ -25,21 +27,16 @@ class VenueError(Exception):
         self.code, self.message = code, message
 
 
-def num(x) -> float | None:
-    if x is None or isinstance(x, bool):
-        return None
-    try:
-        v = float(x)
-    except (TypeError, ValueError):
-        return None
-    return v if math.isfinite(v) else None
-
-
 def _need(d: dict, key: str, venue: str, positive: bool = False) -> float:
     v = num(d.get(key))
     if v is None or (positive and v <= 0):
         raise VenueError("shape", f"{venue}: missing or invalid '{key}'")
     return v
+
+
+def _ms(x) -> int:
+    v = num(x)
+    return int(v) if v else 0
 
 
 def _rec(venue, mark, index, rate, interval_h, oi_base, ts_ms, notes=None, next_ms=None) -> dict:
@@ -69,9 +66,9 @@ def parse_binance(premium: dict, oi: dict) -> dict:
         raise VenueError("shape", "binance: unexpected response")
     if "code" in premium and "markPrice" not in premium:
         raise VenueError("api", f"binance: {str(premium.get('msg', premium.get('code')))[:80]}")
-    ts = num(premium.get("time")) or num(oi.get("time"))
     return _rec("binance", _need(premium, "markPrice", "binance", True), num(premium.get("indexPrice")), _need(premium, "lastFundingRate", "binance"), 8.0,
-                _need(oi, "openInterest", "binance"), int(ts) if ts else 0, ["funding interval assumed 8 h (the BTCUSDT default)"], int(num(premium.get("nextFundingTime")) or 0) or None)
+                _need(oi, "openInterest", "binance"), _ms(premium.get("time")) or _ms(oi.get("time")), ["funding interval assumed 8 h (the BTCUSDT default)"],
+                _ms(premium.get("nextFundingTime")) or None)
 
 
 def parse_bybit(tickers: dict) -> dict:
@@ -81,9 +78,8 @@ def parse_bybit(tickers: dict) -> dict:
         t = tickers["result"]["list"][0]
     except (TypeError, KeyError, IndexError, AttributeError):
         raise VenueError("shape", "bybit: unexpected tickers response") from None
-    ts = num(tickers.get("time"))
     return _rec("bybit", _need(t, "markPrice", "bybit", True), num(t.get("indexPrice")), _need(t, "fundingRate", "bybit"), 8.0, _need(t, "openInterest", "bybit"),
-                int(ts) if ts else 0, ["funding interval assumed 8 h (the BTCUSDT default)"], int(num(t.get("nextFundingTime")) or 0) or None)
+                _ms(tickers.get("time")), ["funding interval assumed 8 h (the BTCUSDT default)"], _ms(t.get("nextFundingTime")) or None)
 
 
 def _okx_first(d: dict, what: str) -> dict:
@@ -102,7 +98,7 @@ def parse_okx(funding: dict, oi: dict, mark: dict, index: dict) -> dict:
     if hours is None:
         raise VenueError("shape", "okx: cannot measure the funding interval")
     return _rec("okx", _need(m, "markPx", "okx", True), num(i.get("idxPx")), _need(f, "fundingRate", "okx"), round(hours, 4), _need(o, "oiCcy", "okx"),
-                int(num(o.get("ts")) or num(m.get("ts")) or 0), ["open interest = the venue's coin-denominated figure (oiCcy)"], int(t1))
+                _ms(o.get("ts")) or _ms(m.get("ts")), ["open interest = the venue's coin-denominated figure (oiCcy)"], int(t1))
 
 
 class VenueClient:
@@ -111,23 +107,20 @@ class VenueClient:
     def __init__(self, client: httpx.AsyncClient | None = None):
         self.c = client or httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=5.0))
 
-    async def _get(self, url: str, params: dict | None = None):
+    async def _req(self, method: str, url: str, **kw):
         try:
-            r = await self.c.get(url, params=params)
+            r = await self.c.request(method, url, **kw)
         except httpx.TimeoutException:
             raise VenueError("timeout", "timed out") from None
         except httpx.HTTPError as e:
             raise VenueError("network", f"unreachable ({type(e).__name__})") from None
         return self._json(r)
 
+    async def _get(self, url: str, params: dict | None = None):
+        return await self._req("GET", url, params=params)
+
     async def _post(self, url: str, body: dict):
-        try:
-            r = await self.c.post(url, json=body)
-        except httpx.TimeoutException:
-            raise VenueError("timeout", "timed out") from None
-        except httpx.HTTPError as e:
-            raise VenueError("network", f"unreachable ({type(e).__name__})") from None
-        return self._json(r)
+        return await self._req("POST", url, json=body)
 
     @staticmethod
     def _json(r: httpx.Response):
@@ -146,7 +139,6 @@ class VenueClient:
         return parse_hyperliquid(await self._post("https://api.hyperliquid.xyz/info", {"type": "metaAndAssetCtxs"}))
 
     async def binance(self) -> dict:
-        import asyncio
         p, o = await asyncio.gather(self._get("https://fapi.binance.com/fapi/v1/premiumIndex", {"symbol": "BTCUSDT"}),
                                     self._get("https://fapi.binance.com/fapi/v1/openInterest", {"symbol": "BTCUSDT"}))
         return parse_binance(p, o)
@@ -155,7 +147,6 @@ class VenueClient:
         return parse_bybit(await self._get("https://api.bybit.com/v5/market/tickers", {"category": "linear", "symbol": "BTCUSDT"}))
 
     async def okx(self) -> dict:
-        import asyncio
         b = "https://www.okx.com/api/v5"
         f, o, m, i = await asyncio.gather(self._get(f"{b}/public/funding-rate", {"instId": "BTC-USDT-SWAP"}),
                                           self._get(f"{b}/public/open-interest", {"instType": "SWAP", "instId": "BTC-USDT-SWAP"}),
@@ -164,4 +155,4 @@ class VenueClient:
         return parse_okx(f, o, m, i)
 
     async def fetch(self, venue: str) -> dict:
-        return await getattr(self, venue)()
+        return await {"hyperliquid": self.hyperliquid, "binance": self.binance, "bybit": self.bybit, "okx": self.okx}[venue]()

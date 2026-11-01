@@ -252,3 +252,13 @@ def test_api_demo_mode(tmp_path):
     with TestClient(create_app(db_path=str(tmp_path / "dd.db"), demo=True, alert_loop=False)) as c:
         d = c.get("/api/derivatives/btc").json()["data"]
         assert d["demo"] is True and all(r["status"] == "DEMO" for r in d["venues"])
+
+
+def test_history_is_recorded_at_most_once_per_interval_however_often_the_panel_polls(db):
+    s = DerivativesService(db, Fake())
+    for _ in range(4):
+        run(s.snapshot(fresh=True))
+    assert db.q("SELECT COUNT(*) FROM deriv_history WHERE venue='ALL'")[0][0] == 1          # evenly spaced samples keep the percentiles honest
+    s._last_rec = time.monotonic() - 300                                                     # the interval has passed
+    run(s.snapshot(fresh=True))
+    assert db.q("SELECT COUNT(*) FROM deriv_history WHERE venue='ALL'")[0][0] == 2

@@ -2,7 +2,7 @@ export type WidgetType = "derivatives" | "news" | "newsfeeds" | "backtest" | "jo
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
-const BTC = "CRYPTO:COINBASE:BTC-USD:SPOT";
+import { BTC_ID as BTC } from "./ids";
 const un = (i: string, view: string, x: number, y: number, w: number, h: number): WidgetCfg => ({ i, type: "unavailable", x, y, w, h, props: { view } });
 
 export const WORKSPACES: Record<string, WorkspaceDef> = {

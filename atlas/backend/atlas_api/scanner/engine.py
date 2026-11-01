@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import time
-import uuid
 from datetime import datetime, timezone
 
 import numpy as np
@@ -80,35 +79,3 @@ async def run(spec: ScanSpec, source: BarSource, symbols: list[str] | None = Non
             "ran_at": datetime.now(timezone.utc).isoformat(), "duration_ms": int((time.monotonic() - t0) * 1000), "notes": notes,
         },
     }
-
-
-class Jobs:
-    """In-memory background scan jobs with progress."""
-
-    def __init__(self, keep: int = 20):
-        self.jobs: dict[str, dict] = {}
-        self.keep = keep
-
-    def start(self, spec: ScanSpec, source: BarSource, symbols: list[str] | None = None) -> str:
-        jid = str(uuid.uuid4())
-        job = {"id": jid, "status": "running", "done": 0, "total": 0, "result": None, "error": None, "spec": spec.model_dump()}
-        self.jobs[jid] = job
-        for old in list(self.jobs)[: -self.keep]:
-            del self.jobs[old]
-
-        def prog(d, t):
-            job["done"], job["total"] = d, t
-
-        async def go():
-            try:
-                job["result"] = await run(spec, source, symbols, prog)
-                job["status"] = "done"
-            except Exception as e:  # noqa: BLE001
-                job["status"], job["error"] = "failed", f"{type(e).__name__}: {e}"
-
-        job["task"] = asyncio.create_task(go())
-        return jid
-
-    def view(self, jid: str) -> dict | None:
-        j = self.jobs.get(jid)
-        return None if j is None else {k: v for k, v in j.items() if k != "task"}

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColorType, createChart, LineSeries, UTCTimestamp } from "lightweight-charts";
-import { api, ApiFailure, HyperliquidSync, ImportPreview, JGroupRow, JNote, JTrade } from "../api";
+import { api, errText, HyperliquidSync, ImportPreview, JGroupRow, JNote, JTrade } from "../api";
 import { ago, dir, num } from "../fmt";
 import { useStore } from "../store";
 import { Badge, ErrorBox, Panel } from "../ui";
 
-const err = (e: unknown) => (e instanceof ApiFailure ? `${e.code}: ${e.message}` : String(e));
+const err = errText;
 const css = (v: string) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const money = (x: number | null | undefined, d = 2) => (x === null || x === undefined ? "—" : num(x, d));
 const signed = (x: number | null | undefined, d = 2) => (x === null || x === undefined ? "—" : `${x >= 0 ? "+" : ""}${num(x, d)}`);

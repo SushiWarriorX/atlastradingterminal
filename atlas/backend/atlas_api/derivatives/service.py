@@ -19,6 +19,7 @@ CACHE_SECONDS = 30.0
 RETENTION_DAYS = 35
 PCTILE_DAYS = 30
 MIN_HISTORY = 100
+RECORD_EVERY = 240.0      # seconds between recorded history points (the background loop runs every 300 s)
 
 
 class DemoVenueClient:
@@ -38,9 +39,12 @@ class DerivativesService:
         self.db, self.demo = db, demo
         self.client = DemoVenueClient() if demo else (client or VenueClient())
         self._cache: tuple[float, dict] | None = None
+        self._last_rec: float | None = None
         self._lock = asyncio.Lock()
 
     async def _one(self, venue: str) -> dict:
+        def fail(code: str, message: str) -> dict:
+            return {"venue": venue, "label": LABELS[venue], "ok": False, "status": "UNAVAILABLE", "error": {"code": code, "message": message}}
         try:
             raw = await asyncio.wait_for(self.client.fetch(venue), 15)
             row = compute.enrich(raw)
@@ -48,22 +52,23 @@ class DerivativesService:
                 row["status"] = "DEMO"
             return {**row, "label": LABELS[venue]}
         except VenueError as e:
-            return {"venue": venue, "label": LABELS[venue], "ok": False, "status": "UNAVAILABLE", "error": {"code": e.code, "message": e.message}}
+            return fail(e.code, e.message)
         except asyncio.TimeoutError:
-            return {"venue": venue, "label": LABELS[venue], "ok": False, "status": "UNAVAILABLE", "error": {"code": "timeout", "message": "timed out"}}
+            return fail("timeout", "timed out")
         except Exception as e:  # noqa: BLE001  one venue's bug must not take down the others
-            return {"venue": venue, "label": LABELS[venue], "ok": False, "status": "UNAVAILABLE", "error": {"code": "internal", "message": type(e).__name__}}
+            return fail("internal", type(e).__name__)
 
     def _record(self, rows: list[dict], agg: dict) -> None:
+        """At most one history point per RECORD_EVERY seconds, however often the panel polls: evenly spaced samples keep the percentiles honest."""
+        if self._last_rec is not None and time.monotonic() - self._last_rec < RECORD_EVERY:
+            return
+        self._last_rec = time.monotonic()
         ts = iso_now()
+        pts = [(ts, r["venue"], r["mark"], r["funding_annual_pct"], r["oi_btc"], r["oi_usd"], r["basis_pct"]) for r in rows if r.get("ok")]
+        if agg.get("available"):
+            pts.append((ts, "ALL", None, agg["funding_annual_pct"], agg["oi_btc"], agg["oi_usd"], None))
         with self.db.tx() as c:
-            for r in rows:
-                if r.get("ok"):
-                    c.execute("INSERT INTO deriv_history(ts,venue,mark,funding_annual_pct,oi_btc,oi_usd,basis_pct) VALUES(?,?,?,?,?,?,?)",
-                              (ts, r["venue"], r["mark"], r["funding_annual_pct"], r["oi_btc"], r["oi_usd"], r["basis_pct"]))
-            if agg.get("available"):
-                c.execute("INSERT INTO deriv_history(ts,venue,mark,funding_annual_pct,oi_btc,oi_usd,basis_pct) VALUES(?,?,?,?,?,?,?)",
-                          (ts, "ALL", None, agg["funding_annual_pct"], agg["oi_btc"], agg["oi_usd"], None))
+            c.executemany("INSERT INTO deriv_history(ts,venue,mark,funding_annual_pct,oi_btc,oi_usd,basis_pct) VALUES(?,?,?,?,?,?,?)", pts)
             c.execute("DELETE FROM deriv_history WHERE ts < ?", ((datetime.now(timezone.utc) - timedelta(days=RETENTION_DAYS)).isoformat(),))
 
     def _series(self, venue: str, col: str, days: float) -> list[tuple[str, float]]:

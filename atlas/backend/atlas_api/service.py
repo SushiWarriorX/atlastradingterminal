@@ -82,56 +82,44 @@ class MarketService:
         self._cache[key] = (time.monotonic() + _TTL[kind], val)
         return val
 
+    async def _try_chain(self, chain: list, call):
+        """Ask each provider in order until one answers. A failed preferred provider is recorded and named in the result's quality notes;
+        the last provider's failure is raised."""
+        skipped: list[str] = []
+        for i, p in enumerate(chain):
+            try:
+                obj = await call(p)
+            except ProviderUnavailable as e:
+                self._note(p, False, e.message)
+                if i == len(chain) - 1:
+                    raise
+                skipped.append(f"{p.name}: {e.message[:100]}")
+                continue
+            self._note(p, True)
+            if skipped:
+                obj.prov.quality.append("preferred provider unavailable (" + "; ".join(skipped) + f"): using {p.name}")
+            return obj
+
     async def quote(self, inst: Instrument) -> Quote:
         chain = self._chain(inst)
-
-        async def fetch():
-            skipped: list[str] = []
-            for i, p in enumerate(chain):
-                try:
-                    q = await p.quote(inst)
-                except ProviderUnavailable as e:
-                    self._note(p, False, e.message)
-                    if i == len(chain) - 1:
-                        raise
-                    skipped.append(f"{p.name}: {e.message[:100]}")
-                    continue
-                self._note(p, True)
-                if skipped:
-                    q.prov.quality.append("preferred provider unavailable (" + "; ".join(skipped) + f"): using {p.name}")
-                return q
-
-        q = await self._cached(("q", inst.id, chain[0].name), "quote", fetch)
+        q = await self._cached(("q", inst.id, chain[0].name), "quote", lambda: self._try_chain(chain, lambda p: p.quote(inst)))
         return self._finalize(inst, q.model_copy(deep=True))
+
+    @staticmethod
+    async def _bars(p, inst: Instrument, interval: str, limit: int) -> OHLCV:
+        if interval in p.native_intervals:
+            return await p.ohlcv(inst, interval, limit)
+        base = DERIVED[interval]
+        bucket = WEEK if interval == "1w" else SECONDS[interval]
+        o = await p.ohlcv(inst, base, limit * (bucket // SECONDS[base]))
+        o.candles = resample(o.candles, bucket, MONDAY_OFFSET if interval == "1w" else 0)[-limit:]
+        o.interval, o.derived_from = interval, base
+        return o
 
     async def ohlcv(self, inst: Instrument, interval: str, limit: int = 300) -> OHLCV:
         default = self.provider_for(inst)
         if interval not in self.supported_intervals(inst):
             raise ProviderUnavailable(default.name, f"interval {interval} not available for {inst.id} from {default.name}")
         chain = [p for p in self._chain(inst) if self._supports(p, interval)] or [default]
-
-        async def fetch():
-            skipped: list[str] = []
-            for i, p in enumerate(chain):
-                try:
-                    if interval in p.native_intervals:
-                        o = await p.ohlcv(inst, interval, limit)
-                    else:
-                        base = DERIVED[interval]
-                        ratio = (WEEK if interval == "1w" else SECONDS[interval]) // SECONDS[base]
-                        o = await p.ohlcv(inst, base, limit * ratio)
-                        o.candles = resample(o.candles, WEEK if interval == "1w" else SECONDS[interval], MONDAY_OFFSET if interval == "1w" else 0)[-limit:]
-                        o.interval, o.derived_from = interval, base
-                except ProviderUnavailable as e:
-                    self._note(p, False, e.message)
-                    if i == len(chain) - 1:
-                        raise
-                    skipped.append(f"{p.name}: {e.message[:100]}")
-                    continue
-                self._note(p, True)
-                if skipped:
-                    o.prov.quality.append("preferred provider unavailable (" + "; ".join(skipped) + f"): using {p.name}")
-                return o
-
-        o = await self._cached(("o", inst.id, chain[0].name, interval, limit), "ohlcv", fetch)
+        o = await self._cached(("o", inst.id, chain[0].name, interval, limit), "ohlcv", lambda: self._try_chain(chain, lambda p: self._bars(p, inst, interval, limit)))
         return self._finalize(inst, o.model_copy(deep=True))

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import math
+import time
 from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 
@@ -89,8 +90,8 @@ class IBKRData:
         self._set_type(3 if delayed else 1)
         t = ib.reqMktData(contract, "", True, False)
         try:
-            end = asyncio.get_event_loop().time() + self.timeout
-            while asyncio.get_event_loop().time() < end:
+            end = time.monotonic() + self.timeout
+            while time.monotonic() < end:
                 if self._price(t, delayed) is not None:
                     break
                 await asyncio.sleep(0.15)
@@ -115,9 +116,12 @@ class IBKRData:
         bid, ask = self._field(t, "bid", delayed), self._field(t, "ask", delayed)
         return (bid + ask) / 2 if bid is not None and ask is not None and ask >= bid else None      # a midpoint is labelled as such below
 
-    async def quote(self, inst: Instrument) -> Quote:
+    def _require(self) -> None:
         if not self.available:
             raise ProviderUnavailable(self.name, "IBKR is not connected")
+
+    async def quote(self, inst: Instrument) -> Quote:
+        self._require()
         async with self._lock:
             contract = await self._contract(inst)
             delayed = False
@@ -143,8 +147,7 @@ class IBKRData:
                             entitlement=self.entitlement + (" [delayed]" if delayed else " [live]"), delay_seconds=DELAYED_SECONDS if delayed else 0, quality=quality))
 
     async def ohlcv(self, inst: Instrument, interval: str, limit: int) -> OHLCV:
-        if not self.available:
-            raise ProviderUnavailable(self.name, "IBKR is not connected")
+        self._require()
         size, dur = BARS[interval]
         async with self._lock:
             contract = await self._contract(inst)

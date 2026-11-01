@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, Instrument, isErr } from "../api";
 import { dir, pct, px } from "../fmt";
 import { useStore } from "../store";
-import { isEquityId, useScope, useSelectedId } from "../scope";
+import { isEquityId } from "../ids";
+import { useDebounced } from "../hooks";
+import { useScope, useSelectedId } from "../scope";
 import { Badge, ErrorBox, Panel } from "../ui";
 
 export function WatchlistWidget() {
@@ -19,7 +21,8 @@ export function WatchlistWidget() {
   // the Equities desk shows stocks and ETFs only: BTC, indices and macro series are filtered out of the view (the list itself is unchanged)
   const wl = wl0 && scope === "equity" ? { ...wl0, items: wl0.items.filter(isEquityId) } : wl0;
   const quotes = useQuery({ queryKey: ["quotes", wl?.items.join()], queryFn: () => api.quotes(wl!.items), enabled: !!wl && wl.items.length > 0, refetchInterval: every });
-  const found0 = useQuery({ queryKey: ["search", q], queryFn: () => api.search(q), enabled: q.trim().length > 0 });
+  const dq = useDebounced(q);
+  const found0 = useQuery({ queryKey: ["search", dq], queryFn: () => api.search(dq), enabled: dq.trim().length > 0 });
   const found = { ...found0, data: scope === "equity" ? found0.data?.filter((i) => isEquityId(i.id)) : found0.data };
   const refresh = () => qc.invalidateQueries({ queryKey: ["watchlists"] });
   const add = useMutation({ mutationFn: (i: Instrument) => api.wlAdd(wl0!.id, i.id), onSuccess: () => { setQ(""); refresh(); } });

@@ -7,7 +7,9 @@ import {
 import { api, Candle } from "../api";
 import { px } from "../fmt";
 import { useStore } from "../store";
-import { isEquityId, useSelectedId } from "../scope";
+import { isEquityId } from "../ids";
+import { useDebounced } from "../hooks";
+import { useSelectedId } from "../scope";
 import { ErrorBox, Panel, ProvLine } from "../ui";
 import { CompareView } from "./Compare";
 
@@ -32,7 +34,8 @@ export function ChartWidget({ instrumentId, defaultInterval = "1d", title, wid, 
   const [pinned, setPinned] = useState<string | null>(() => (pick === "any" && wid ? loadPin(wid) : null));
   const [symIn, setSymIn] = useState("");
   const [symMsg, setSymMsg] = useState<string | null>(null);
-  const found = useQuery({ queryKey: ["chart-search", symIn], queryFn: () => api.search(symIn), enabled: !!pick && symIn.trim().length > 0 });
+  const dSym = useDebounced(symIn);
+  const found = useQuery({ queryKey: ["chart-search", dSym], queryFn: () => api.search(dSym), enabled: !!pick && dSym.trim().length > 0 });
   const choices = (found.data ?? []).filter((i) => pick !== "equity" || isEquityId(i.id)).slice(0, 6);
   const choose = (i: { id: string }) => {
     setSymIn(""); setSymMsg(null);

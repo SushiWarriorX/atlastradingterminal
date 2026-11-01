@@ -7,23 +7,13 @@ Inputs are untrusted third-party data: numbers must be finite, text is control-s
 """
 from __future__ import annotations
 
-import math
 import re
 from datetime import date, datetime, timezone
 
+from ..numeric import num
+
 STALE_FINANCIALS_DAYS = 135          # a quarter plus the usual reporting lag
 _CTRL = re.compile(r"[\x00-\x1f\x7f]")
-
-
-def num(x) -> float | None:
-    """Finite float or None. Strings such as 'Infinity', 'N/A' and NaN give None; booleans are not numbers."""
-    if x is None or isinstance(x, bool):
-        return None
-    try:
-        v = float(x)
-    except (TypeError, ValueError):
-        return None
-    return v if math.isfinite(v) else None
 
 
 def text(x, limit: int = 80) -> str | None:

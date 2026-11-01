@@ -6,7 +6,6 @@ this module stores headlines with provenance, groups near-duplicates determinist
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import ipaddress
 import json
 import re
@@ -93,7 +92,11 @@ def cluster(items: list[dict], threshold: float = 0.7, window_h: float = 48) -> 
                 continue
             if abs(it["_ts"] - g["_ts_first"]) > window_h * 3600:
                 continue
-            if len(t & gt) / len(t | gt) >= threshold:
+            small, big = (len(t), len(gt)) if len(t) <= len(gt) else (len(gt), len(t))
+            if small / big < threshold:           # Jaccard can never exceed min/max of the sizes: skip the set operations
+                continue
+            inter = len(t & gt)
+            if inter / (len(t) + len(gt) - inter) >= threshold:
                 g["members"].append(it)
                 g["_ts_first"] = min(g["_ts_first"], it["_ts"])
                 placed = True
@@ -131,9 +134,9 @@ class NewsService:
     # --- feed management ---------------------------------------------------------------------------
     def feeds(self) -> list[dict]:
         out = []
+        counts = {r["feed_id"]: r["n"] for r in self.db.q("SELECT feed_id, COUNT(*) AS n FROM news_items GROUP BY feed_id")}
         for r in self.db.q("SELECT * FROM news_feeds WHERE kind='rss' ORDER BY builtin DESC, name"):
-            n = self.db.q("SELECT COUNT(*) FROM news_items WHERE feed_id=?", (r["id"],))[0][0]
-            out.append({"id": r["id"], "name": r["name"], "url": masked(r["url"]), "enabled": bool(r["enabled"]), "builtin": bool(r["builtin"]), "items": n,
+            out.append({"id": r["id"], "name": r["name"], "url": masked(r["url"]), "enabled": bool(r["enabled"]), "builtin": bool(r["builtin"]), "items": counts.get(r["id"], 0),
                         "last_fetch": r["last_fetch"], "last_ok": r["last_ok"], "last_error": r["last_error"], "last_count": r["last_count"]})
         return out
 
@@ -205,8 +208,8 @@ class NewsService:
             if status == 304:
                 res.update(ok=True)
             else:
-                items, dropped = parse(body)
-                res.update(ok=True, seen=len(items), new=self._store(row["id"], items, force_symbol), dropped=dropped)
+                items, dropped = await asyncio.to_thread(parse, body)       # XML parsing and the insert transaction stay off the event loop
+                res.update(ok=True, seen=len(items), new=await asyncio.to_thread(self._store, row["id"], items, force_symbol), dropped=dropped)
                 if not sym:
                     self.db.x("UPDATE news_feeds SET etag=?, last_modified=? WHERE id=?", (hdr.get("etag"), hdr.get("last-modified"), row["id"]))
         except FeedError as e:

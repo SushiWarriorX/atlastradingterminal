@@ -1,5 +1,5 @@
 export function num(x: number | null | undefined, d = 2): string {
-  if (x === null || x === undefined || Number.isNaN(x)) return "—";
+  if (x === null || x === undefined || !Number.isFinite(x)) return "—";
   return x.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 export function px(x: number | null | undefined): string {
@@ -8,6 +8,9 @@ export function px(x: number | null | undefined): string {
 }
 export function pct(x: number | null | undefined): string {
   return x === null || x === undefined ? "—" : `${x >= 0 ? "+" : ""}${x.toFixed(2)}%`;
+}
+export function sgn(x: number | null | undefined, d = 2): string {
+  return x === null || x === undefined ? "—" : `${x >= 0 ? "+" : ""}${num(x, d)}`;
 }
 export const dir = (x: number | null | undefined) => (x === null || x === undefined ? "" : x >= 0 ? "up" : "down");
 export function ago(iso: string | null | undefined): string {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiFailure } from "../api";
+import { useDebounced } from "../hooks";
 import { ago } from "../fmt";
 import { useSelectedId } from "../scope";
 import { Badge, ErrorBox, Panel } from "../ui";
@@ -16,7 +17,8 @@ export function NewsWidget() {
   const [scope, setScope] = useState<"all" | "symbol">("all");
   const [q, setQ] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
-  const news = useQuery({ queryKey: ["news", scope, sym, q], queryFn: () => api.news({ symbol: scope === "symbol" ? sym : undefined, q: q.trim() || undefined }), refetchInterval: 120_000, retry: 0 });
+  const dq = useDebounced(q);
+  const news = useQuery({ queryKey: ["news", scope, sym, dq], queryFn: () => api.news({ symbol: scope === "symbol" ? sym : undefined, q: dq.trim() || undefined }), refetchInterval: 120_000, retry: 0 });
   const refresh = useMutation({
     mutationFn: () => api.newsRefresh(),
     onSuccess: (r) => { const bad = r.results.filter((x) => !x.ok).length; setMsg(`Fetched ${r.results.length} feeds: ${r.results.reduce((a, x) => a + x.new, 0)} new headlines${bad ? `, ${bad} failed (see the feeds panel)` : ""}.`); qc.invalidateQueries({ queryKey: ["news"] }); qc.invalidateQueries({ queryKey: ["news-feeds"] }); },

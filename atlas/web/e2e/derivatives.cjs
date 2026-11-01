@@ -22,7 +22,7 @@ fs.mkdirSync(S, { recursive: true });
   for (const name of ['Hyperliquid', 'Binance', 'Bybit', 'OKX', 'All answering venues']) if (!rows.some(r => r.includes(name))) throw new Error('missing row: ' + name);
   const text = await pg.locator('.panel.deriv').innerText();
   if (!/DEMO/.test(text) || !/Synthetic demo data/.test(text)) throw new Error('demo data not labelled');
-  if (!/liquidations, ETF flows and on-chain data have no reliable free source/.test(text)) throw new Error('unavailable data not disclosed');
+  if (!/Liquidations, ETF flows and on-chain data are not included \(no reliable free source\)/.test(text)) throw new Error('unavailable data not disclosed');
   if (!/not enough history yet/.test(text)) throw new Error('missing-history state not shown');
   const hl = (await pg.locator('.panel.deriv tbody tr', { hasText: 'Hyperliquid' }).innerText()).replace(/\s+/g, ' ');
   console.log('Hyperliquid row:', hl);

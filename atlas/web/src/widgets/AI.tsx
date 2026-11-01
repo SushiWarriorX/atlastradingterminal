@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { api, ApiFailure, DeskResult, SpecialistRep, SpecialistResult, TechReport } from "../api";
+import { api, errText, DeskResult, SpecialistRep, SpecialistResult, TechReport } from "../api";
 import { px } from "../fmt";
 import { useStore } from "../store";
 import { useSelectedId } from "../scope";
@@ -23,24 +23,24 @@ export function AIWidget() {
   const chat = useMutation({
     mutationFn: (m: string) => api.aiChat(m, selected),
     onSuccess: (r) => setMsgs((x) => [...x, { role: "ai", text: r.answer, meta: `${r.tool_calls.map((c) => `${c.name}${c.ok ? "" : " ✕"}`).join(", ") || "no tools"} · ${r.usage.input_tokens + r.usage.output_tokens} tok · ${r.model}${r.status !== "completed" ? ` · ${r.status}` : ""}` }]),
-    onError: (e) => setMsgs((x) => [...x, { role: "sys", text: e instanceof ApiFailure ? `${e.code}: ${e.message}` : String(e) }]),
+    onError: (e) => setMsgs((x) => [...x, { role: "sys", text: errText(e) }]),
   });
   const tech = useMutation({
     mutationFn: () => api.aiTechnical(selected),
     onSuccess: (r) => r.report ? setReport({ r: r.report, sym: inst.data?.symbol ?? selected, id: r.analysis_id })
       : setMsgs((x) => [...x, { role: "sys", text: `Technical analysis ${r.status}: ${r.error ?? "no data"}` }]),
-    onError: (e) => setMsgs((x) => [...x, { role: "sys", text: e instanceof ApiFailure ? `${e.code}: ${e.message}` : String(e) }]),
+    onError: (e) => setMsgs((x) => [...x, { role: "sys", text: errText(e) }]),
   });
   const sysMsg = (text: string) => setMsgs((x) => [...x, { role: "sys", text }]);
   const deskRun = useMutation({
     mutationFn: () => api.aiAnalyze<DeskResult>("chief", selected),
     onSuccess: (d) => { setDesk({ d, sym: inst.data?.symbol ?? selected }); setSpec(null); if (!d.chief) sysMsg(`Desk analysis ${d.status}: ${d.error ?? "no specialist produced a validated report"}`); },
-    onError: (e) => sysMsg(e instanceof ApiFailure ? `${e.code}: ${e.message}` : String(e)),
+    onError: (e) => sysMsg(errText(e)),
   });
   const specRun = useMutation({
     mutationFn: (agent: string) => api.aiAnalyze<SpecialistResult>(agent, selected).then((r) => ({ agent, r })),
     onSuccess: ({ agent, r }) => { setSpec({ agent, r, sym: inst.data?.symbol ?? selected }); setDesk(null); if (!r.report) sysMsg(`${agent} analysis ${r.status}: ${r.error ?? (r.data_limitations ?? []).join("; ") ?? "no data"}`); },
-    onError: (e) => sysMsg(e instanceof ApiFailure ? `${e.code}: ${e.message}` : String(e)),
+    onError: (e) => sysMsg(errText(e)),
   });
   const busy = tech.isPending || deskRun.isPending || specRun.isPending;
   const { pendingAsk, setPendingAsk, setNotice } = useStore();

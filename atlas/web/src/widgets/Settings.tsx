@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, ApiFailure } from "../api";
+import { api, errText } from "../api";
 import { useStore } from "../store";
 import { Badge, Panel } from "../ui";
 
@@ -15,7 +15,7 @@ function TelegramSection() {
   const test = useMutation({
     mutationFn: api.telegramTest,
     onSuccess: () => setResult({ ok: true, text: "Test message sent. Check Telegram." }),
-    onError: (e) => setResult({ ok: false, text: e instanceof ApiFailure ? `${e.code}: ${e.message}` : String(e) }),
+    onError: (e) => setResult({ ok: false, text: errText(e) }),
   });
   const d = st.data;
   return (
@@ -47,7 +47,7 @@ function IbkrSection() {
   const st = useQuery({ queryKey: ["ibkr"], queryFn: api.ibkrStatus, refetchInterval: 10_000 });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const done = (text: string) => { setMsg({ ok: true, text }); for (const k of ["ibkr", "portfolios", "portfolio", "journal-trades", "journal-sources"]) qc.invalidateQueries({ queryKey: [k] }); };
-  const fail = (e: unknown) => setMsg({ ok: false, text: e instanceof ApiFailure ? `${e.code}: ${e.message}` : String(e) });
+  const fail = (e: unknown) => setMsg({ ok: false, text: errText(e) });
   const connect = useMutation({ mutationFn: api.ibkrConnect, onSuccess: () => done("Connected."), onError: fail });
   const disconnect = useMutation({ mutationFn: api.ibkrDisconnect, onSuccess: () => done("Disconnected."), onError: fail });
   const sync = useMutation({ mutationFn: api.ibkrSync, onSuccess: (r) => done(`Journal: ${r.journal.inserted} new execution(s), ${r.journal.duplicates} already known. ${r.journal.note}`), onError: fail });
