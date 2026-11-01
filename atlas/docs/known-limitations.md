@@ -149,3 +149,8 @@
 - **There is no multi-chart page any more.** One chart on the Overview can change asset; the BTC and Equities pages each have their own fixed charts. Side-by-side charts of different assets are not possible.
 - **The AI panel lives on the Overview, BTC Intelligence and Macro pages.** On the BTC page it is locked to Bitcoin; elsewhere it follows the selected instrument. Typing `AI BTC` or a free-text question switches to the Overview, where the panel is small.
 - **Ctrl+1 to Ctrl+7 follow the sidebar order** (Overview, BTC, Equities, Scanner, News, Macro, Backtest), so the shortcuts changed again.
+
+## Market-data reliability (fix/market-data-reliability)
+- Yahoo serves regular-session prices only. In pre-market and after-hours, Yahoo quotes and all bar data are labelled HISTORICAL ("regular-session price") instead of STALE. Real extended-hours prices are not available from Yahoo; an IBKR quote keeps its own LIVE/DELAYED label.
+- Scanner relative strength compares the stock and benchmark over the same two trading dates. If the benchmark lacks either date, the RS field is empty and RS filters cannot pass.
+- Identical simultaneous quote/bar requests share one provider call. Yahoo quotes still use a 5-day 1-minute history plus `fast_info` per symbol (needed for previous close, market cap, VWAP); failures are not cached.
