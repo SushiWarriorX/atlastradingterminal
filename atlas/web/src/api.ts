@@ -1,3 +1,4 @@
+import type { CheckState_ } from "./health";
 export type Status = "LIVE" | "DELAYED" | "HISTORICAL" | "STALE" | "DEMO" | "UNAVAILABLE";
 
 export interface Prov {
@@ -60,6 +61,8 @@ const body = (m: string, b: unknown): RequestInit => ({ method: m, body: JSON.st
 
 export const api = {
   status: () => call<MarketStatus>("/api/market/status"),
+  healthCheckLast: () => call<CheckState_>("/api/health/check"),
+  healthCheckRun: () => call<CheckState_>("/api/health/check", { method: "POST", headers: { "Content-Type": "application/json", "X-Atlas-Request": "health-check" } }),
   views: () => call<Record<string, ViewMeta>>("/api/meta/views"),
   strip: () => call<StripItem[]>("/api/market/strip"),
   quotes: (ids: string[]) => call<QuoteOrErr[]>(`/api/quotes?ids=${encodeURIComponent(ids.join(","))}`),
