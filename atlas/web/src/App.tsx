@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "./api";
 import { useStore } from "./store";
@@ -11,27 +11,10 @@ const HOTKEYS: Record<string, string> = Object.fromEntries(NAV.slice(0, 7).map((
 const HELP = [
   ["BTC", "BTC desk"], ["BTC CHART", "BTC multi-chart"], ["AAPL", "equity desk for AAPL"], ["NVDA TECH", "technical levels for NVDA"],
   ["AI BTC", "AI technical brief on BTC"], ["MACRO", "macro desk (yields)"], ["COMPARE BTC QQQ", "overlay rebased to 100 + correlation (daily/weekly)"], ["BTC MTF / NVDA MTF", "multi-timeframe structure and score"],
-  ["SCAN BREAKOUT", "run a preset: BREAKOUT PULLBACK VOLUME RS REVERSAL COMPRESSION BREAKDOWN"], ["PORT / RISK", "paper portfolio, order ticket, risk limits, analytics, scenarios"], ["BUY AAPL 10 LMT 190 SL 180", "DRAFTS a paper order in the ticket (sends nothing)"], ["NEWS / AAPL NEWS", "RSS headlines (polled, DELAYED), near-duplicates grouped, feeds editable"], ["natural language", "5+ words routes to the AI desk"],
+  ["SCAN BREAKOUT", "run a preset: BREAKOUT PULLBACK VOLUME RS REVERSAL COMPRESSION BREAKDOWN"], ["NEWS / AAPL NEWS", "RSS headlines (polled, DELAYED), near-duplicates grouped, feeds editable"], ["natural language", "5+ words routes to the AI desk"],
 ];
 
-/** Desktop notifications for NEW unread events (only if the user granted permission; the in-app list is the source of truth). */
-function useDesktopNotifications() {
-  const ev = useQuery({ queryKey: ["alert-events"], queryFn: () => api.alertEvents(100), refetchInterval: 8000 });
-  const seen = useRef<number | null>(null);
-  useEffect(() => {
-    const list = ev.data?.events;
-    if (!list) return;
-    const top = list.reduce((m, e) => Math.max(m, e.id), 0);
-    if (seen.current !== null && typeof Notification !== "undefined" && Notification.permission === "granted") {
-      list.filter((e) => e.id > seen.current! && !e.delivery.startsWith("suppressed")).slice(0, 3)
-        .forEach((e) => new Notification(`ATLAS · ${e.severity.toUpperCase()}`, { body: e.message }));
-    }
-    seen.current = top;
-  }, [ev.data]);
-}
-
 export function App() {
-  useDesktopNotifications();
   const { hydrate, hydrated, workspace, setWorkspace, notice, setNotice, helpOpen, setHelp } = useStore();
   const views = useQuery({ queryKey: ["views"], queryFn: api.views, staleTime: Infinity });
   const st = useQuery({ queryKey: ["status"], queryFn: api.status, refetchInterval: 15_000 });

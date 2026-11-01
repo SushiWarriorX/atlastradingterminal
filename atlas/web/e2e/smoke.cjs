@@ -27,14 +27,16 @@ fs.mkdirSync(S, { recursive: true });
   await pg.keyboard.press('Enter');
   await pg.waitForTimeout(600);
   console.log('notice:', await pg.locator('.notice').innerText());
-  // not-built module
+  // a removed section answers clearly instead of being read as a ticker
   await pg.keyboard.press('Escape');
   await pg.keyboard.press('/');
-  await pg.keyboard.type('IDEAS');
+  await pg.keyboard.type('BUY AAPL 10');
   await pg.keyboard.press('Enter');
   await pg.waitForTimeout(800);
-  console.log('IDEAS ->', await pg.locator('.notice').innerText(), '|', (await pg.locator('.unavail .big').allInnerTexts()).join(' / '));
-  await pg.screenshot({ path: S + '/02-ideas-unbuilt.png' });
+  const removed = await pg.locator('.notice').innerText();
+  console.log('BUY AAPL 10 ->', removed);
+  if (!/removed from ATLAS/.test(removed)) throw new Error('removed command should say so');
+  await pg.screenshot({ path: S + '/02-removed-command.png' });
   // BTC desk
   await pg.keyboard.press('Control+2');
   await pg.waitForTimeout(2500);

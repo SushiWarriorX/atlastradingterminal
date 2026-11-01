@@ -16,25 +16,24 @@ VIEWS = {
     "news": (True, None, "News (RSS headlines, polled)"),
     "macro": (True, None, "Macro Research Desk"),
     "ai": (True, None, "AI Research Desk"),
-    "ideas": (False, 6, "Trade idea board"),
-    "portfolio": (True, None, "Portfolio and paper trading"),
-    "risk": (True, None, "Portfolio risk"),
     "backtest": (True, None, "Backtester (daily bars, point-in-time rules)"),
     "journal": (True, None, "Trade journal and performance"),
-    "alerts": (True, None, "Alerts"),
     "settings": (True, None, "Settings"),
 }
 NAV = {"OVERVIEW": "overview", "BTC": "btc", "EQUITIES": "equities", "CHARTS": "charts",
        "SCAN": "scanner", "SCANNER": "scanner", "NEWS": "news", "MACRO": "macro", "FED": "macro", "CPI": "macro",
-       "AI": "ai", "IDEAS": "ideas", "PORT": "portfolio", "PORTFOLIO": "portfolio", "RISK": "risk",
-       "BACKTEST": "backtest", "BT": "backtest", "JOURNAL": "journal", "PERF": "journal", "PERFORMANCE": "journal", "ALERTS": "alerts", "SETTINGS": "settings"}
+       "AI": "ai",
+       "BACKTEST": "backtest", "BT": "backtest", "JOURNAL": "journal", "PERF": "journal", "PERFORMANCE": "journal", "SETTINGS": "settings"}
 FUNCS = {"MTF": "equities", "CHART": "charts", "GP": "charts", "NEWS": "news", "N": "news", "TECH": "charts",
          "OI": "btc", "FUNDING": "btc", "DES": "equities", "AI": "ai"}
 MACRO_PARAMS = {"FED": "fed", "CPI": "inflation"}
 # Which sub-feature of an implemented view is missing -> honest message
 PARTIAL = {"FED": (5, "Fed dashboard (policy rate, FOMC calendar) not built; showing yields"),
            "CPI": (5, "CPI dashboard not built; showing yields")}
-ALL_WORDS = sorted(set(NAV) | set(FUNCS) | {"HELP", "COMPARE", "ALERT", "BUY", "SELL"})
+# Words from sections that were removed: a clear message beats treating "BUY" or "RISK" as a ticker symbol.
+REMOVED = {"BUY": "Order drafting", "SELL": "Order drafting", "ALERT": "Alerts", "ALERTS": "Alerts", "PORT": "Portfolio", "PORTFOLIO": "Portfolio", "RISK": "Risk",
+           "IDEAS": "Trade Ideas", "MARKETS": "Markets", "FUNDAMENTALS": "Fundamentals", "FA": "Fundamentals"}
+ALL_WORDS = sorted(set(NAV) | set(FUNCS) | {"HELP", "COMPARE"})
 
 
 @dataclass
@@ -63,7 +62,7 @@ def resolve(text: str) -> Command:
     toks = text.strip().upper().split()
     if not toks:
         return Command(False, error="Type a command, symbol, or question. HELP lists commands.")
-    if len(toks) > 4 and not toks[0] in ALL_WORDS:
+    if len(toks) > 4 and toks[0] not in ALL_WORDS and toks[0] not in REMOVED:
         return Command(True, view="ai", params={"ask": text.strip()}, message="Free-text question routed to the AI Research Desk.")
 
     head = toks[0]
@@ -77,10 +76,8 @@ def resolve(text: str) -> Command:
             return Command(False, error="COMPARE takes 2 to 4 distinct symbols.")
         return Command(True, view="charts", instrument_ids=[i.id for i in insts], params={"compare": [i.id for i in insts]},
                        message="Comparing on calendar-aligned daily bars (rebased to 100).")
-    if head in ("BUY", "SELL") and len(toks) > 1:
-        return _order_draft(head, toks[1:])
-    if head in ("ALERT", "ALERTS") and len(toks) > 1:
-        return _alert_draft(toks[1:])
+    if head in REMOVED:
+        return Command(False, error=f"'{head}' is not available: the {REMOVED[head]} section was removed from ATLAS. HELP lists the commands that exist.")
     if head == "AI":
         inst = _sym(toks[1]) if len(toks) > 1 else None
         return Command(True, view="ai", instrument_ids=[inst.id] if inst else [], params={"brief": bool(inst)})
@@ -117,10 +114,6 @@ def resolve(text: str) -> Command:
                        implemented=impl, phase=None if impl else phase,
                        message=(extra[1] if extra else (None if impl else note)))
 
-    if head in ("BUY", "SELL"):
-        return _order_draft(head, ["?"])      # bare command word: show usage, never treat it as a ticker
-    if head == "ALERT":
-        return _alert_draft(["?"])
     inst = _sym(head)
     if inst is None:
         s = _suggest(head)
@@ -144,56 +137,6 @@ def resolve(text: str) -> Command:
 def _desk_for(inst) -> str:
     """Which desk an instrument belongs on: BTC desk is BTC only, Equities desk is stocks and ETFs only, everything else (indices, macro series) goes to Charts."""
     return "btc" if inst.asset_class == "crypto" else "equities" if inst.asset_class in ("equity", "etf") else "charts"
-
-
-def _order_draft(side: str, toks: list[str]) -> Command:
-    """BUY AAPL 10 | BUY BTC 0.1 LMT 69000 SL 67000 | SELL BTC 0.1 STOP 68000. Returns a DRAFT for the paper ticket: nothing is sent."""
-    usage = "Usage: BUY|SELL <SYM> <qty> [LMT <price>] [STOP <price>] [SL <planned stop>]  (paper trading only; opens the ticket, sends nothing)"
-    if toks == ["?"]:
-        return Command(False, error=usage)
-    inst = _sym(toks[0])
-    if inst is None or len(toks) < 2:
-        return Command(False, error=(f"Unknown symbol '{toks[0]}'. " if inst is None else "") + usage, suggestions=_suggest(toks[0]))
-    try:
-        num = lambda t: float(t.replace(",", "").lstrip("$"))
-        qty, rest, d = num(toks[1]), toks[2:], {}
-        if qty <= 0 or len(rest) % 2:
-            raise ValueError
-        for k, v in zip(rest[::2], rest[1::2]):
-            key = {"LMT": "limit_price", "LIMIT": "limit_price", "STOP": "stop_price", "STP": "stop_price", "SL": "planned_stop"}.get(k)
-            if key is None or key in d:
-                raise ValueError
-            d[key] = num(v)
-    except ValueError:
-        return Command(False, error=usage)
-    typ = "stop_limit" if "limit_price" in d and "stop_price" in d else "limit" if "limit_price" in d else "stop" if "stop_price" in d else "market"
-    return Command(True, view="portfolio", instrument_ids=[inst.id], params={"order_draft": {"instrument_id": inst.id, "side": side.lower(), "qty": toks[1].replace(",", ""), "type": typ, **{k: str(v).rstrip("0").rstrip(".") if "." in str(v) else str(v) for k, v in d.items()}}},
-                   message="Order drafted in the paper ticket. Press Preview to run the risk checks; nothing is sent until you confirm.")
-
-
-def _alert_draft(toks: list[str]) -> Command:
-    """ALERT BTC ABOVE 70000 | ALERT AAPL RSI BELOW 30 | ALERT NVDA RVOL 3. Returns a DRAFT for the user to confirm."""
-    usage = "Usage: ALERT <SYM> ABOVE|BELOW <price> · ALERT <SYM> RSI ABOVE|BELOW <n> · ALERT <SYM> RVOL <x>"
-    if toks == ["?"]:
-        return Command(False, error=usage)
-    inst = _sym(toks[0])
-    if inst is None:
-        return Command(False, error=f"Unknown symbol '{toks[0]}'. {usage}", suggestions=_suggest(toks[0]))
-    rest = toks[1:]
-    try:
-        num = lambda t: float(t.replace(",", "").lstrip("$>=<"))
-        if len(rest) == 2 and rest[0] in ("ABOVE", "BELOW", ">", "<"):
-            draft = {"kind": "price", "instrument_id": inst.id, "op": "above" if rest[0] in ("ABOVE", ">") else "below", "level": num(rest[1])}
-        elif len(rest) == 3 and rest[0] == "RSI" and rest[1] in ("ABOVE", "BELOW"):
-            draft = {"kind": "rsi", "instrument_id": inst.id, "op": rest[1].lower(), "level": num(rest[2])}
-        elif len(rest) == 2 and rest[0] == "RVOL":
-            draft = {"kind": "rvol", "instrument_id": inst.id, "threshold": num(rest[1])}
-        else:
-            return Command(False, error=usage)
-    except ValueError:
-        return Command(False, error=f"Could not read the number. {usage}")
-    return Command(True, view="alerts", instrument_ids=[inst.id], params={"draft": draft},
-                   message="Alert drafted. Review it in the Alerts panel and press Create (nothing is created until you confirm).")
 
 
 def suggest(prefix: str, limit: int = 8) -> list[dict]:

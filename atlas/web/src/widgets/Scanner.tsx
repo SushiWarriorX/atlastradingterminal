@@ -28,7 +28,7 @@ const COLS: { key: string; label: string; r?: boolean; tip?: string }[] = [
 
 export function ScannerWidget() {
   const qc = useQueryClient();
-  const { select, setNotice, setAlertDraft, setWorkspace } = useStore();
+  const { select, setNotice } = useStore();
   const pendingScan = useStore((s) => s.pendingScan);
   const setPendingScan = useStore((s) => s.setPendingScan);
   const selected = useStore((s) => s.selected);
@@ -145,8 +145,6 @@ export function ScannerWidget() {
           <div className="toolbar">
             <button className="mini" onClick={() => setSpec({ ...spec, filters: [...spec.filters, { field: "rvol", op: ">=", value: 1.5 }] })}>+ rule</button>
             <button className="mini on" disabled={running} onClick={() => run({ spec }, label || spec.name, null)}>{running ? "running…" : "Run"}</button>
-            <button className="mini ai" title="Notify when NEW symbols start matching these rules (checked every 15 min)"
-              onClick={() => { setAlertDraft({ kind: "scan", spec, interval_seconds: 900, cooldown_seconds: 86400, name: `New matches: ${label || spec.name}` }); setWorkspace("alerts"); }}>Alert on new matches</button>
             <button className="mini" onClick={() => { const n = prompt("Save scan as", label || spec.name); if (n?.trim()) save.mutate(n.trim()); }}>Save</button>
           </div>
         </div>)}

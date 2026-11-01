@@ -63,7 +63,7 @@ export function AIWidget() {
       </div>
       <div className="toolbar">
         <button className="mini on ai" disabled={off || busy} title="Runs the technical, fundamental, macro and risk agents in parallel, then a chief that must address every computed conflict between them" onClick={() => deskRun.mutate()}>{deskRun.isPending ? "desk working…" : `Full desk: ${sym}`}</button>
-        {["fundamental", "macro", "risk"].map((a) => <button key={a} className="mini ai" disabled={off || busy} onClick={() => specRun.mutate(a)} title={a === "macro" ? "Rates, volatility and equity trend: not specific to the selected symbol" : a === "risk" ? "Describes risk in your paper portfolio; never sizes or trades" : "Computed ratios judged by the agent"}>{specRun.isPending && specRun.variables === a ? "…" : a}</button>)}
+        {["fundamental", "macro"].map((a) => <button key={a} className="mini ai" disabled={off || busy} onClick={() => specRun.mutate(a)} title={a === "macro" ? "Rates, volatility and equity trend: not specific to the selected symbol" : "Computed ratios judged by the agent"}>{specRun.isPending && specRun.variables === a ? "…" : a}</button>)}
       </div>
       <div className="chat">
         {!msgs.length && !report && !desk && !spec && <div className="dim small">Ask about the selected instrument. The desk calls read-only data tools; it cannot place orders.</div>}

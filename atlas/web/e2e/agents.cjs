@@ -24,8 +24,8 @@ fs.mkdirSync(S, { recursive: true });
   if (!/CAUTIOUS/.test(text)) throw new Error('chief stance missing');
   if (!/Conflicts \(computed in code\)/.test(text) || !/fundamental reads 'adverse' while technical reads 'bullish'/.test(text)) throw new Error('computed conflict not shown');
   if (!/How the chief weighs them/.test(text) || !/Weighing: fundamental reads/.test(text)) throw new Error('chief did not address the conflict');
-  for (const n of ['technical', 'fundamental', 'macro', 'risk']) if (!new RegExp(n + ':').test(text)) throw new Error('specialist missing: ' + n);
-  if (!/risk: no data/.test(text) || !/PARTIAL/.test(text)) throw new Error('empty portfolio must show risk as no data and the result as PARTIAL');
+  for (const n of ['technical', 'fundamental', 'macro']) if (!new RegExp(n + ':').test(text)) throw new Error('specialist missing: ' + n);
+  if (/PARTIAL/.test(text)) throw new Error('an empty portfolio is not a gap: the desk must not be PARTIAL');
   if (!/no agent can place or authorise an order/.test(text)) throw new Error('safety footer missing');
   await pg.screenshot({ path: S + '/agents-desk.png' });
 
@@ -38,9 +38,6 @@ fs.mkdirSync(S, { recursive: true });
   await pg.locator('.toolbar button', { hasText: /^macro$/ }).click();
   await pg.waitForSelector('.card:has-text("Reference tilt (computed)")', { timeout: 30000 });
   console.log('macro tilt:', (await pg.locator('.card:has-text("Reference tilt")').locator('.small').first().innerText()).replace(/\n/g, ' ').slice(0, 200));
-  await pg.locator('.toolbar button', { hasText: /^risk$/ }).click();
-  await pg.waitForSelector('.msg.sys:has-text("risk analysis no_data")', { timeout: 30000 });
-  console.log('risk (empty portfolio):', (await pg.locator('.msg.sys:has-text("risk analysis")').first().innerText()).replace(/\n/g, ' ').slice(0, 160));
 
   // 3. crypto: fundamentals are not applicable (not a failure) and the chief still answers from the rest
   await cmd('BTC'); await pg.waitForTimeout(500); await cmd('AI'); await pg.waitForSelector('.toolbar button');

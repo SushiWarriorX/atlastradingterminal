@@ -49,8 +49,6 @@ cd atlas/web && npm run typecheck && npm test     # types + formatting helpers
 # browser smoke test: demo backend + `npm run dev` running, and `npm i -g playwright` or similar available
 node atlas/web/e2e/smoke.cjs ./e2e-out
 node atlas/web/e2e/scanner.cjs ./e2e-out
-# alerts e2e needs a fast loop: ATLAS_DEMO=1 ATLAS_ALERT_SECONDS=2 python -m atlas_api
-node atlas/web/e2e/alerts.cjs ./e2e-out
 node atlas/web/e2e/analysis.cjs ./e2e-out   # compare overlay + multi-timeframe
 node atlas/web/e2e/hyperliquid.cjs ./e2e-out  # needs e2e/fake_hyperliquid.py; see the header of the script
 # agents e2e: start the backend with `python atlas/web/e2e/serve_fake_llm.py 8000` (scripted LLM) instead of `python -m atlas_api`
@@ -59,9 +57,6 @@ node atlas/web/e2e/derivatives.cjs ./e2e-out  # DEMO data
 node atlas/web/e2e/desks.cjs ./e2e-out         # desk rules (BTC only / equities only / per-chart assets), DEMO data
 node atlas/web/e2e/news.cjs ./e2e-out       # needs e2e/fake_rss.py; see the header of the script
 node atlas/web/e2e/backtest.cjs ./e2e-out   # backtester (demo data; saves a run, use a throwaway ATLAS_DB)
-# trading e2e (fresh DB): ATLAS_DEMO=1 ATLAS_ALERT_SECONDS=2 ATLAS_PAPER_SECONDS=2 python -m atlas_api
-node atlas/web/e2e/trading.cjs ./e2e-out    # portfolio, paper orders, risk limits, kill switch, scenarios
-# telegram e2e: see the header of atlas/web/e2e/telegram.cjs (uses a local fake Bot API, no real Telegram needed)
 ```
 
 ## Using it

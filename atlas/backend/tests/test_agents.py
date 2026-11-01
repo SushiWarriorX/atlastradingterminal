@@ -231,8 +231,8 @@ def test_chief_computes_conflicts_in_code_and_the_server_attaches_them(tmp_path)
     assert r["conflicts"] == [{"between": ["fundamental", "technical"], "views": {"fundamental": "adverse", "technical": "bullish"},
                                "text": "fundamental reads 'adverse' while technical reads 'bullish'"}]
     assert r["status"] in ("completed", "partial") and r["chief"]["stance"] == "cautious" and len(r["chief"]["conflicts_addressed"]) == 1
-    assert r["specialists"]["risk"]["status"] == "no_data" and "no positions" in " ".join(r["specialists"]["risk"]["data_limitations"])
-    assert r["status"] == "partial" and r["views"] == {"technical": "bullish", "fundamental": "adverse", "macro": "mixed"}
+    assert r["specialists"]["risk"]["status"] == "not_applicable" and "no positions" in " ".join(r["specialists"]["risk"]["data_limitations"])
+    assert r["status"] == "completed" and r["views"] == {"technical": "bullish", "fundamental": "adverse", "macro": "mixed"}      # an empty portfolio is not a gap
 
 
 def test_chief_that_ignores_a_conflict_is_rejected_then_corrected(tmp_path):

@@ -45,14 +45,12 @@ function TelegramSection() {
 function IbkrSection() {
   const qc = useQueryClient();
   const st = useQuery({ queryKey: ["ibkr"], queryFn: api.ibkrStatus, refetchInterval: 10_000 });
-  const [name, setName] = useState("IBKR");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const done = (text: string) => { setMsg({ ok: true, text }); for (const k of ["ibkr", "portfolios", "portfolio", "journal-trades", "journal-sources"]) qc.invalidateQueries({ queryKey: [k] }); };
   const fail = (e: unknown) => setMsg({ ok: false, text: e instanceof ApiFailure ? `${e.code}: ${e.message}` : String(e) });
   const connect = useMutation({ mutationFn: api.ibkrConnect, onSuccess: () => done("Connected."), onError: fail });
   const disconnect = useMutation({ mutationFn: api.ibkrDisconnect, onSuccess: () => done("Disconnected."), onError: fail });
-  const link = useMutation({ mutationFn: () => api.ibkrLink(name), onSuccess: (p) => done(`Linked "${p.name}" (${p.kind === "paper" ? "orders are routed to your IBKR paper account" : "read-only: it can be viewed but never traded"}).`), onError: fail });
-  const sync = useMutation({ mutationFn: api.ibkrSync, onSuccess: (r) => done(`Synced ${r.portfolios.length} portfolio(s); journal: ${r.journal.inserted} new execution(s), ${r.journal.duplicates} already known. ${r.journal.note}${r.portfolios.some((p) => p.unsupported.length) ? ` Not shown (unsupported): ${r.portfolios.flatMap((p) => p.unsupported).join(", ")}.` : ""}`), onError: fail });
+  const sync = useMutation({ mutationFn: api.ibkrSync, onSuccess: (r) => done(`Journal: ${r.journal.inserted} new execution(s), ${r.journal.duplicates} already known. ${r.journal.note}`), onError: fail });
   const d = st.data;
   return (
     <div className="tgbox">
@@ -70,9 +68,8 @@ function IbkrSection() {
           {d.last_error && <div className="note warn">Last error: {d.last_error}</div>}
           <div className="toolbar">
             {!d.connected ? <button className="mini on" disabled={connect.isPending} onClick={() => connect.mutate()}>{connect.isPending ? "connecting…" : "Connect"}</button> : <button className="mini" onClick={() => disconnect.mutate()}>Disconnect</button>}
-            <button className="mini" disabled={!d.connected || sync.isPending} onClick={() => sync.mutate()} title="Refresh linked portfolios and copy executions into the journal">Sync now</button>
+            <button className="mini" disabled={!d.connected || sync.isPending} onClick={() => sync.mutate()} title="Copy IBKR executions into the journal">Sync executions to journal</button>
           </div>
-          <div className="frow"><input className="w100" value={name} onChange={(e) => setName(e.target.value)} aria-label="IBKR portfolio name" /><button className="mini on" disabled={!d.connected || !name.trim() || link.isPending} onClick={() => link.mutate()}>Link this account as a portfolio</button></div>
           <div className="note">{d.note}. ATLAS never routes orders to a live account: paper mode refuses live accounts and live ports, and read-only mode opens the API connection read-only.</div>
         </>)}
       {msg && <div className={`note ${msg.ok ? "" : "warn"}`} onClick={() => setMsg(null)}>{msg.text}</div>}

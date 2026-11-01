@@ -9,9 +9,7 @@ export function useRunCommand() {
   const setHelp = useStore((s) => s.setHelp);
   const setScan = useStore((s) => s.setPendingScan);
   const setBt = useStore((s) => s.setPendingBacktest);
-  const setDraft = useStore((s) => s.setAlertDraft);
   const setCompare = useStore((s) => s.setPendingCompare);
-  const setTicket = useStore((s) => s.setTicketDraft);
   return async (text: string) => {
     try {
       const c = await api.command(text);
@@ -22,8 +20,6 @@ export function useRunCommand() {
       if (c.view === "scanner" && typeof c.params.preset === "string") setScan(c.params.preset);
       if (c.view === "backtest" && typeof c.params.preset === "string") setBt(c.params.preset);
       if (c.view === "charts" && Array.isArray(c.params.compare)) setCompare(c.params.compare as string[]);
-      if (c.view === "portfolio" && c.params.order_draft) setTicket(c.params.order_draft as Record<string, string>);
-      if (c.view === "alerts" && c.params.draft) setDraft(c.params.draft as Record<string, unknown>);
       if (c.view === "ai" && typeof c.params.ask === "string") setAsk(c.params.ask);
       if (c.view === "ai" && c.params.brief) setAsk("Give me a technical brief on the selected instrument with bull/bear readings and invalidation.");
       setNotice(!c.implemented ? `${c.message ?? "Not built yet"}${c.phase ? ` (roadmap Phase ${c.phase})` : ""}` : c.message);

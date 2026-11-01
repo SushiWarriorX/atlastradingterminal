@@ -95,7 +95,7 @@ def test_ai_unconfigured_is_503(client):
     ("BTC", "btc", True), ("BTC CHART", "charts", True), ("AAPL", "equities", True), ("NVDA TECH", "charts", True),
     ("NVDA NEWS", "news", True), ("BTC OI", "btc", True), ("BTC FUNDING", "btc", True),
     ("SCAN", "scanner", True), ("SCAN BREAKOUT", "scanner", True), ("MACRO", "macro", True), ("FED", "macro", True),
-    ("RISK", "risk", True), ("JOURNAL", "journal", True), ("PERF", "journal", True), ("PORT", "portfolio", True), ("BUY AAPL 10", "portfolio", True), ("SELL BTC 0.1 STOP 68000", "portfolio", True), ("AI BTC", "ai", True), ("COMPARE BTC QQQ", "charts", True), ("BTC MTF", "btc", True), ("NVDA MTF", "equities", True),
+    ("JOURNAL", "journal", True), ("PERF", "journal", True), ("AI BTC", "ai", True), ("COMPARE BTC QQQ", "charts", True), ("BTC MTF", "btc", True), ("NVDA MTF", "equities", True),
     ("HELP", "help", True), ("aapl gp", "charts", True),
 ])
 def test_commands(text, view, impl):

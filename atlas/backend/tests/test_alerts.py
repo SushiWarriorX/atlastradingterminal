@@ -372,10 +372,3 @@ def test_api_alerts_and_events_persist_across_restart(tmp_path):
         assert [e["delivery"] for e in ev] == ["suppressed_cooldown"]   # last_fired_at survived the restart, so the cooldown still applies
 
 
-def test_alert_command_creates_a_draft_not_an_alert():
-    c = commands.resolve("ALERT BTC ABOVE 70,000")
-    assert c.ok and c.view == "alerts" and c.params["draft"] == {"kind": "price", "instrument_id": "CRYPTO:COINBASE:BTC-USD:SPOT", "op": "above", "level": 70000.0}
-    assert commands.resolve("ALERT AAPL RSI BELOW 30").params["draft"]["level"] == 30.0
-    assert commands.resolve("ALERT NVDA RVOL 3").params["draft"]["kind"] == "rvol"
-    for bad in ("ALERT BTC SIDEWAYS 3", "ALERT BTC ABOVE abc", "ALERT ZZZZZZZ ABOVE 1"):
-        assert not commands.resolve(bad).ok

@@ -388,7 +388,10 @@ class AgentTeam:
                 return await self.specialist("fundamental", await fundamental_snapshot(inst, self.fundamentals))
             if name == "macro":
                 return await self.specialist("macro", await macro_snapshot(self.svc))
-            return await self.specialist("risk", await risk_snapshot(self.trading))
+            snap = await risk_snapshot(self.trading)
+            if not snap["facts"]:       # nothing to describe (no paper positions): not a failure and not a reason to call the whole desk partial
+                return {"status": "not_applicable", "error": "no portfolio positions to describe", "data_limitations": snap["data_limitations"]}
+            return await self.specialist("risk", snap)
         except ProviderUnavailable as e:
             return {"status": "unavailable", "error": e.message[:200]}
         except Exception as e:  # noqa: BLE001  one failing specialist must not sink the others

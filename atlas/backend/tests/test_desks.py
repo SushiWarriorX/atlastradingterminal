@@ -17,3 +17,15 @@ def test_removed_sections_are_gone_from_the_command_surface():
         c = commands.resolve(text)
         assert not (c.ok and c.view in ("markets", "fundamentals")), text
     assert "markets" not in commands.VIEWS and "fundamentals" not in commands.VIEWS
+
+
+@pytest.mark.parametrize("text", ["PORT", "PORTFOLIO", "RISK", "ALERTS", "ALERT BTC ABOVE 70000", "BUY AAPL 10", "SELL BTC 0.1 STOP 68000", "IDEAS", "BUY", "ALERT"])
+def test_removed_sections_give_a_clear_message_not_a_fake_ticker(text):
+    c = commands.resolve(text)
+    assert not c.ok and "removed from ATLAS" in c.error and c.view is None
+
+
+def test_removed_sections_are_not_views_or_suggestions():
+    for v in ("portfolio", "risk", "alerts", "ideas"):
+        assert v not in commands.VIEWS
+    assert not any(w in commands.ALL_WORDS for w in ("BUY", "SELL", "ALERT", "PORT", "RISK"))

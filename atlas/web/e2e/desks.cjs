@@ -18,7 +18,8 @@ fs.mkdirSync(S, { recursive: true });
   // 1. sidebar: Markets and Fundamentals are gone; Ctrl+2 still opens the BTC desk
   const items = await nav();
   console.log('nav:', items.join(' | '));
-  if (items.some(x => /MARKETS|FUNDAMENTALS/.test(x))) throw new Error('removed sections still in the sidebar');
+  if (items.some(x => /MARKETS|FUNDAMENTALS|TRADE IDEAS|PORTFOLIO|RISK|ALERTS/.test(x))) throw new Error('removed sections still in the sidebar');
+  if (await pg.locator('.chip.bell').count()) throw new Error('the alerts bell should be gone');
   if (items[0] !== 'OVERVIEW' || items[1] !== 'BTC INTELLIGENCE' || items[2] !== 'EQUITIES' || items[3] !== 'CHARTS') throw new Error('unexpected nav order');
   await pg.keyboard.press('Control+2'); await pg.waitForTimeout(800);
   if (!(await titles()).some(t => /CHART BTC-USD/.test(t))) throw new Error('Ctrl+2 did not open the BTC desk');

@@ -1,4 +1,4 @@
-export type WidgetType = "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "portfolio" | "ticket" | "orders" | "risklimits" | "riskanalytics" | "scenario" | "performance" | "mtf" | "alerts" | "alertevents" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
@@ -37,25 +37,6 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "scan", type: "scanner", x: 0, y: 0, w: 12, h: 20 },
     { i: "chart", type: "chart", x: 0, y: 20, w: 7, h: 13 },
     { i: "tech", type: "tech", x: 7, y: 20, w: 5, h: 13 },
-  ] },
-  alerts: { id: "alerts", name: "Alerts", widgets: [
-    { i: "rules", type: "alerts", x: 0, y: 0, w: 7, h: 22 },
-    { i: "events", type: "alertevents", x: 7, y: 0, w: 5, h: 22 },
-    { i: "chart", type: "chart", x: 0, y: 22, w: 7, h: 12 },
-    { i: "quote", type: "quote", x: 7, y: 22, w: 5, h: 12 },
-  ] },
-  portfolio: { id: "portfolio", name: "Portfolio & Paper Trading", widgets: [
-    { i: "pf", type: "portfolio", x: 0, y: 0, w: 7, h: 16 },
-    { i: "ticket", type: "ticket", x: 7, y: 0, w: 5, h: 22 },
-    { i: "orders", type: "orders", x: 0, y: 16, w: 7, h: 12 },
-    { i: "chart", type: "chart", x: 0, y: 28, w: 7, h: 12 },
-    { i: "quote", type: "quote", x: 7, y: 22, w: 5, h: 18 },
-  ] },
-  risk: { id: "risk", name: "Portfolio & Risk", widgets: [
-    { i: "limits", type: "risklimits", x: 0, y: 0, w: 5, h: 22 },
-    { i: "analytics", type: "riskanalytics", x: 5, y: 0, w: 7, h: 22 },
-    { i: "perf", type: "performance", x: 0, y: 22, w: 5, h: 13 },
-    { i: "scenario", type: "scenario", x: 5, y: 22, w: 7, h: 13 },
   ] },
   journal: { id: "journal", name: "Journal & Performance", widgets: [
     { i: "trades", type: "journaltrades", x: 0, y: 0, w: 7, h: 15 },
@@ -101,6 +82,6 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
 // Views without a workspace render a single "not built yet" panel driven by /api/meta/views.
 export const NAV: { view: string; label: string }[] = [
   ["overview", "OVERVIEW"], ["btc", "BTC INTELLIGENCE"], ["equities", "EQUITIES"], ["charts", "CHARTS"],
-  ["scanner", "SCANNER"], ["news", "NEWS"], ["macro", "MACRO"], ["ai", "AI DESK"], ["ideas", "TRADE IDEAS"], ["portfolio", "PORTFOLIO"],
-  ["risk", "RISK"], ["backtest", "BACKTEST"], ["journal", "JOURNAL"], ["alerts", "ALERTS"], ["settings", "SETTINGS"],
+  ["scanner", "SCANNER"], ["news", "NEWS"], ["macro", "MACRO"], ["ai", "AI DESK"],
+  ["backtest", "BACKTEST"], ["journal", "JOURNAL"], ["settings", "SETTINGS"],
 ].map(([view, label]) => ({ view, label }));

@@ -136,3 +136,10 @@
 - **Per-chart assets and the last stock are remembered in this browser only** (local storage), not in ATLAS's database, so another browser or a cleared cache starts fresh.
 - **The BTC desk's compare box still overlays other symbols** for correlation; it does not change the desk's asset.
 - Typing into a chart's symbol box keeps keyboard focus there, so the `/` shortcut types into the box: click elsewhere (or press Escape) before using the command bar.
+
+## Removed sections (Portfolio, Risk, Alerts, Trade Ideas)
+
+- **The backend engines still run.** The alert loop keeps evaluating any alert that already exists in the database and Telegram can still deliver it, but there is no screen to create, edit or see alerts any more. Set `ATLAS_ALERT_LOOP=0` to stop the loop. The paper-trading loop (`ATLAS_PAPER_LOOP`) is likewise still on by default and has nothing to do while no orders exist.
+- **The Settings page still shows the Telegram section.** It only matters for alerts, so it is now unused unless alerts are created through the API.
+- **No way to place a paper order or see a paper portfolio from the screen.** The journal can still import IBKR executions ("Sync executions to journal" in Settings), and the backtester has its own simulated account.
+- **Tests for the removed screens (alerts, Telegram, trading) were deleted;** their logic remains covered by the unit and API tests.

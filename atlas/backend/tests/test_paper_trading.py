@@ -613,15 +613,3 @@ def test_api_persists_orders_positions_and_limits_across_restart(tmp_path):
         assert retry["duplicate"] is True                                                                       # the idempotency key survives too
 
 
-def test_order_commands_only_draft_and_validate():
-    from atlas_api import commands
-
-    c = commands.resolve("BUY BTC 0.1 LMT 69000 SL 67000")
-    d = c.params["order_draft"]
-    assert c.ok and c.view == "portfolio" and d == {"instrument_id": BTC, "side": "buy", "qty": "0.1", "type": "limit", "limit_price": "69000", "planned_stop": "67000"}
-    assert "nothing is sent" in c.message
-    assert commands.resolve("SELL AAPL 5 STOP 180").params["order_draft"]["type"] == "stop"
-    assert commands.resolve("BUY AAPL 5 LMT 190 STOP 195").params["order_draft"]["type"] == "stop_limit"
-    assert commands.resolve("BUY AAPL 10").params["order_draft"]["type"] == "market"
-    for bad in ("BUY", "BUY AAPL", "BUY AAPL 0", "BUY AAPL -3", "BUY AAPL x", "BUY AAPL 10 LMT", "BUY AAPL 10 FOO 5", "BUY AAPL 10 LMT 1 LMT 2", "BUY ZZZZZZZ 10"):
-        assert not commands.resolve(bad).ok, bad

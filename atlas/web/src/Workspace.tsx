@@ -16,9 +16,6 @@ import { ScopeContext } from "./scope";
 import { DerivativesWidget } from "./widgets/Derivatives";
 import { MtfWidget } from "./widgets/Mtf";
 import { JournalEditorWidget, JournalImportWidget, JournalSourcesWidget, JournalTradesWidget, PerformanceWidget2 } from "./widgets/Journal";
-import { OrdersWidget, PortfolioWidget, TicketWidget } from "./widgets/Trading";
-import { PerformanceWidget, RiskAnalyticsWidget, RiskLimitsWidget, ScenarioWidget } from "./widgets/RiskUI";
-import { AlertEventsWidget, AlertsWidget } from "./widgets/Alerts";
 import { SettingsWidget } from "./widgets/Settings";
 
 const Grid = WidthProvider(RGL);
@@ -42,15 +39,6 @@ function render(w: WidgetCfg, view: string) {
     case "journalimport": return <JournalImportWidget />;
     case "journalsources": return <JournalSourcesWidget />;
     case "performance2": return <PerformanceWidget2 />;
-    case "portfolio": return <PortfolioWidget />;
-    case "ticket": return <TicketWidget />;
-    case "orders": return <OrdersWidget />;
-    case "risklimits": return <RiskLimitsWidget />;
-    case "riskanalytics": return <RiskAnalyticsWidget />;
-    case "scenario": return <ScenarioWidget />;
-    case "performance": return <PerformanceWidget />;
-    case "alerts": return <AlertsWidget />;
-    case "alertevents": return <AlertEventsWidget />;
     case "health": return <HealthWidget />;
     case "yields": return <YieldsWidget />;
     case "settings": return <SettingsWidget />;

@@ -30,7 +30,6 @@ function StripCell({ it }: { it: StripItem }) {
 export function TopBar() {
   const now = useNow();
   const every = useStore((s) => s.updateSeconds) * 1000;
-  const unread = useQuery({ queryKey: ["alert-events"], queryFn: () => api.alertEvents(100), refetchInterval: 8000 }).data?.unread ?? 0;
   const setWorkspace = useStore((s) => s.setWorkspace);
   const strip = useQuery({ queryKey: ["strip"], queryFn: api.strip, refetchInterval: every });
   const st = useQuery({ queryKey: ["status"], queryFn: api.status, refetchInterval: 15_000 });
@@ -55,7 +54,6 @@ export function TopBar() {
         <span className={`chip sess ${sess}`} title={st.data ? `Next open ${st.data.ny.next_open}` : ""}>US {sess.replace("_", " ")}{st.data?.ny.early_close ? " · early close" : ""}</span>
         <span className="chip" title={provs.map((p, i) => `${Object.keys(st.data!.providers)[i]}: ${p.consecutive_failures ? "failing" : p.ok ? "ok" : "idle"}`).join("\n")}><span className={`dot ${conn}`} /> DATA</span>
         <button className="chip" onClick={() => setWorkspace("news")} title={newsTip}><span className={`dot ${newsDot}`} /> NEWS {on.length ? `${okN}/${on.length}` : "—"}</button>
-        <button className={`chip bell ${unread ? "has" : ""}`} onClick={() => setWorkspace("alerts")} title="Alerts: unread notifications">🔔 {unread}</button>
         {st.data?.trading_halted && <span className="chip halted" title="Kill switch is on: no new orders">⛔ HALTED</span>}
         <span className="chip env" title="Paper trading only. No live broker connection exists in this build.">{st.data?.broker_env ?? "—"}</span>
         <span className="chip ai" title={st.data?.ai.model ?? "Set ANTHROPIC_API_KEY"}>AI {st.data?.ai.configured ? "READY" : "OFF"}</span>
