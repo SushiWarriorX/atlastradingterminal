@@ -1,5 +1,5 @@
 import type { CheckState_ } from "./health";
-import type { MacroOverview } from "./macro";
+import type { FedWatch, MacroOverview } from "./macro";
 export type Status = "LIVE" | "DELAYED" | "HISTORICAL" | "STALE" | "DEMO" | "UNAVAILABLE";
 
 export interface Prov {
@@ -62,6 +62,7 @@ const body = (m: string, b: unknown): RequestInit => ({ method: m, body: JSON.st
 
 export const api = {
   status: () => call<MarketStatus>("/api/market/status"),
+  macroFed: () => call<FedWatch>("/api/macro/fed"),
   macroOverview: () => call<MacroOverview>("/api/macro/overview"),
   healthCheckLast: () => call<CheckState_>("/api/health/check"),
   healthCheckRun: () => call<CheckState_>("/api/health/check", { method: "POST", headers: { "Content-Type": "application/json", "X-Atlas-Request": "health-check" } }),

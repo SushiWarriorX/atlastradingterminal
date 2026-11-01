@@ -27,14 +27,26 @@ SERIES = {
 }
 
 
+# Release series used by the Fed Watch tab (same tuple layout). Kept apart from SERIES so the dashboard's own requests are unchanged.
+RELEASE_SERIES = {
+    "PCEPI": ("PCE price index, all items", "index", "monthly", 80, "BEA releases it at the end of the following month, so 6-8 weeks old is normal"),
+    "PCEPILFE": ("Core PCE price index, excl. food & energy", "index", "monthly", 80, "same schedule as PCE"),
+    "PAYEMS": ("Nonfarm payroll employment", "thousand jobs", "monthly", 60, "BLS releases the Employment Situation on the first Friday of the next month, so up to ~5 weeks old is normal"),
+    "UNRATE": ("Unemployment rate", "%", "monthly", 60, "released with the Employment Situation report"),
+    "A191RL1Q225SBEA": ("Real GDP growth (annualized, quarterly)", "% annualized", "quarterly", 135, "dated the first day of the quarter; the first estimate comes ~1 month after quarter end and is revised twice"),
+    "WALCL": ("Fed total assets (balance sheet)", "$ millions", "weekly (Wednesday level)", 14, "released Thursdays with Wednesday data"),
+}
+ALL = {**SERIES, **RELEASE_SERIES}
+
+
 def instrument(sid: str) -> Instrument:
-    return Instrument(f"MACRO:FRED:{sid}", sid, SERIES[sid][0], "macro", "FRED", "fred", sid, currency=SERIES[sid][1])
+    return Instrument(f"MACRO:FRED:{sid}", sid, ALL[sid][0], "macro", "FRED", "fred", sid, currency=ALL[sid][1])
 
 
 def freshness(sid: str, obs: date, today: date) -> dict:
     age = (today - obs).days
-    limit, why = SERIES[sid][3], SERIES[sid][4]
-    return {"state": "CURRENT" if age <= limit else "OVERDUE", "age_days": age, "limit_days": limit, "rule": f"{SERIES[sid][2]}; overdue after {limit} days: {why}"}
+    limit, why = ALL[sid][3], ALL[sid][4]
+    return {"state": "CURRENT" if age <= limit else "OVERDUE", "age_days": age, "limit_days": limit, "rule": f"{ALL[sid][2]}; overdue after {limit} days: {why}"}
 
 
 # --- pure calculations (points are (date, value) ascending) ---------------------------------------------------------------------------
@@ -134,9 +146,9 @@ def curve_fact(y10: list[tuple[date, float]], y2: list[tuple[date, float]], toda
 def cpi_fact(sid: str, fid: str, pts: list[tuple[date, float]], today: date) -> dict:
     ys = yoy(pts)
     if not ys:
-        return _unavailable(fid, SERIES[sid][0], "needs the same month one year earlier; not enough matching data")
+        return _unavailable(fid, ALL[sid][0], "needs the same month one year earlier; not enough matching data")
     d, v = ys[-1]
-    f = {**_base(fid, SERIES[sid][0], "% year-over-year"), "series": sid, "value": v, "obs_date": d.isoformat(), "index_level": dict(pts)[d],
+    f = {**_base(fid, ALL[sid][0], "% year-over-year"), "series": sid, "value": v, "obs_date": d.isoformat(), "index_level": dict(pts)[d],
          "freshness": freshness(sid, d, today), "changes": [], "note": "Observation date is the reference month (dated the 1st); release comes about 2 weeks after that month ends."}
     prev = dict(ys).get(prev_month(d))
     if prev is not None:
@@ -233,6 +245,7 @@ def interpretations(F: dict[str, dict]) -> list[dict]:
 # --- service -----------------------------------------------------------------------------------------------------------------------------
 HISTORY_DAYS = {"DGS10": 400, "DGS2": 400, "DFEDTARL": 800, "DFEDTARU": 800, "DTWEXBGS": 400, "CPIAUCSL": 900, "CPILFESL": 900}
 CACHE_SECONDS = 1800.0
+FAIL_CACHE_SECONDS = 60.0      # partial failures are kept briefly (errors stay visible) so page loads do not refetch every series
 
 
 class MacroService:
@@ -249,8 +262,8 @@ class MacroService:
             if self._cache and self._cache[0] > time.monotonic():
                 return self._cache[1]
             res = await self._build(today or datetime.now(timezone.utc).date())
-            if res["facts"] and all("error" not in f for f in res["facts"]):
-                self._cache = (time.monotonic() + CACHE_SECONDS, res)          # only a fully successful result is cached
+            ok = all("error" not in f for f in res["facts"])
+            self._cache = (time.monotonic() + (CACHE_SECONDS if ok else FAIL_CACHE_SECONDS), res)
             return res
 
     async def _build(self, today: date) -> dict:
