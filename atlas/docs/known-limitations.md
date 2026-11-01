@@ -132,7 +132,7 @@
 
 ## Desks (BTC only, stocks/ETFs only, per-chart assets)
 
-- **"Equities only" means stocks and ETFs.** Indices (SPX, VIX) and macro series open on the Charts desk. An unlisted ticker is accepted as an unverified US stock, which is how a symbol such as `BTC` (a real Bitcoin ETF ticker) can be offered as an equity.
+- **"Equities only" means stocks and ETFs.** Indices (SPX, VIX) and macro series open on the Overview. An unlisted ticker is accepted as an unverified US stock, which is how a symbol such as `BTC` (a real Bitcoin ETF ticker) can be offered as an equity.
 - **Per-chart assets and the last stock are remembered in this browser only** (local storage), not in ATLAS's database, so another browser or a cleared cache starts fresh.
 - **The BTC desk's compare box still overlays other symbols** for correlation; it does not change the desk's asset.
 - Typing into a chart's symbol box keeps keyboard focus there, so the `/` shortcut types into the box: click elsewhere (or press Escape) before using the command bar.
@@ -143,3 +143,9 @@
 - **The Settings page still shows the Telegram section.** It only matters for alerts, so it is now unused unless alerts are created through the API.
 - **No way to place a paper order or see a paper portfolio from the screen.** The journal can still import IBKR executions ("Sync executions to journal" in Settings), and the backtester has its own simulated account.
 - **Tests for the removed screens (alerts, Telegram, trading) were deleted;** their logic remains covered by the unit and API tests.
+
+## Removed pages (Charts, AI Desk)
+
+- **There is no multi-chart page any more.** One chart on the Overview can change asset; the BTC and Equities pages each have their own fixed charts. Side-by-side charts of different assets are not possible.
+- **The AI panel lives on the Overview, BTC Intelligence and Macro pages.** On the BTC page it is locked to Bitcoin; elsewhere it follows the selected instrument. Typing `AI BTC` or a free-text question switches to the Overview, where the panel is small.
+- **Ctrl+1 to Ctrl+7 follow the sidebar order** (Overview, BTC, Equities, Scanner, News, Macro, Backtest), so the shortcuts changed again.

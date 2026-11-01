@@ -9,8 +9,8 @@ import { Workspace } from "./Workspace";
 // Ctrl+1..7 follow the sidebar order, so the ^n labels shown there are always right
 const HOTKEYS: Record<string, string> = Object.fromEntries(NAV.slice(0, 7).map((n, i) => [String(i + 1), n.view]));
 const HELP = [
-  ["BTC", "BTC desk"], ["BTC CHART", "BTC multi-chart"], ["AAPL", "equity desk for AAPL"], ["NVDA TECH", "technical levels for NVDA"],
-  ["AI BTC", "AI technical brief on BTC"], ["MACRO", "macro desk (yields)"], ["COMPARE BTC QQQ", "overlay rebased to 100 + correlation (daily/weekly)"], ["BTC MTF / NVDA MTF", "multi-timeframe structure and score"],
+  ["BTC", "BTC desk"], ["SPX", "indices and macro series open on the Overview chart"], ["AAPL", "equity desk for AAPL"], ["NVDA TECH", "technical levels for NVDA"],
+  ["AI BTC", "AI technical brief on BTC (AI panel on Overview)"], ["MACRO", "macro desk (yields)"], ["COMPARE BTC QQQ", "overlay on the Overview chart, rebased to 100 + correlation (daily/weekly)"], ["BTC MTF / NVDA MTF", "multi-timeframe structure and score"],
   ["SCAN BREAKOUT", "run a preset: BREAKOUT PULLBACK VOLUME RS REVERSAL COMPRESSION BREAKDOWN"], ["NEWS / AAPL NEWS", "RSS headlines (polled, DELAYED), near-duplicates grouped, feeds editable"], ["natural language", "5+ words routes to the AI desk"],
 ];
 

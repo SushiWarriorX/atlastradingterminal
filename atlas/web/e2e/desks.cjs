@@ -18,9 +18,9 @@ fs.mkdirSync(S, { recursive: true });
   // 1. sidebar: Markets and Fundamentals are gone; Ctrl+2 still opens the BTC desk
   const items = await nav();
   console.log('nav:', items.join(' | '));
-  if (items.some(x => /MARKETS|FUNDAMENTALS|TRADE IDEAS|PORTFOLIO|RISK|ALERTS/.test(x))) throw new Error('removed sections still in the sidebar');
+  if (items.some(x => /MARKETS|FUNDAMENTALS|TRADE IDEAS|PORTFOLIO|RISK|ALERTS|CHARTS|AI DESK/.test(x))) throw new Error('removed sections still in the sidebar');
   if (await pg.locator('.chip.bell').count()) throw new Error('the alerts bell should be gone');
-  if (items[0] !== 'OVERVIEW' || items[1] !== 'BTC INTELLIGENCE' || items[2] !== 'EQUITIES' || items[3] !== 'CHARTS') throw new Error('unexpected nav order');
+  if (items[0] !== 'OVERVIEW' || items[1] !== 'BTC INTELLIGENCE' || items[2] !== 'EQUITIES' || items[3] !== 'SCANNER') throw new Error('unexpected nav order');
   await pg.keyboard.press('Control+2'); await pg.waitForTimeout(800);
   if (!(await titles()).some(t => /CHART BTC-USD/.test(t))) throw new Error('Ctrl+2 did not open the BTC desk');
 
@@ -54,25 +54,26 @@ fs.mkdirSync(S, { recursive: true });
   console.log('equities picker accepts NVDA and refuses BTC: ok');
   await pg.screenshot({ path: S + '/desk-equities.png' });
 
-  // 4. indices are not stocks: SPX opens on Charts, not Equities
+  // 4. indices are not stocks: SPX opens on the Overview chart, not on Equities
   await cmd('SPX');
   await pg.waitForSelector('.panel-t:text("CHART SPX")', { timeout: 10000 });
-  if ((await pg.locator('.ws-bar span').first().innerText()) !== 'Multi-chart') throw new Error('SPX should open the Charts desk');
+  if ((await pg.locator('.ws-bar span').first().innerText()) !== 'Global Market Overview') throw new Error('SPX should open the Overview');
 
-  // 5. Charts: each chart changes asset independently, survives a reload, and can return to following the selection
+  // 5. The Overview chart can change asset on its own, remembers it across a reload, and can return to following the selection
   const boxes = pg.locator('input[aria-label="Chart symbol"]');
-  if ((await boxes.count()) !== 4) throw new Error('expected a symbol box on each of the 4 charts');
+  if ((await boxes.count()) !== 1) throw new Error('expected one symbol box on the Overview chart');
   await boxes.nth(0).fill('SPY'); await boxes.nth(0).press('Enter'); await pg.waitForSelector('.panel-t:text("CHART SPY 1d")', { timeout: 10000 });
-  await boxes.nth(1).fill('NVDA'); await boxes.nth(1).press('Enter'); await pg.waitForSelector('.panel-t:text("CHART NVDA 1h")', { timeout: 10000 });
-  t = await titles();
-  console.log('charts:', t.filter(x => /^CHART/.test(x)).join(' | '));
-  if (!t.some(x => /CHART SPY 1d/.test(x)) || !t.some(x => /CHART NVDA 1h/.test(x)) || !t.some(x => /CHART SPX 15m/.test(x))) throw new Error('charts did not change independently');
-  await pg.screenshot({ path: S + '/desk-charts.png' });
+  await pg.screenshot({ path: S + '/desk-overview.png' });
   await pg.reload(); await pg.waitForSelector('.topbar .cell'); await pg.waitForSelector('.panel-t:text("CHART SPY 1d")', { timeout: 10000 });
-  t = await titles();
-  if (!t.some(x => /CHART SPY 1d/.test(x)) || !t.some(x => /CHART NVDA 1h/.test(x))) throw new Error('chart assets were not remembered after reload');
   await pg.locator('button', { hasText: 'follow selection' }).first().click(); await pg.waitForSelector('.panel-t:text("CHART SPX 1d")', { timeout: 10000 });
-  if (!(await titles()).some(x => /CHART SPX 1d/.test(x))) throw new Error('"follow selection" did not return the chart to the selected instrument');
+  console.log('overview chart: own asset remembered, follow selection returns to SPX');
+
+  // 6. COMPARE and AI commands land on the Overview with their panels working
+  await cmd('COMPARE BTC QQQ');
+  await pg.waitForSelector('.cmpstats table', { timeout: 15000 });
+  await cmd('AI BTC');
+  await pg.waitForSelector('.panel.ai', { timeout: 10000 });
+  if ((await pg.locator('.ws-bar span').first().innerText()) !== 'Global Market Overview') throw new Error('AI BTC should open the Overview');
 
   console.log('HTTP errors:', JSON.stringify(httpErrors));
   if (httpErrors.length) throw new Error('unexpected HTTP errors');

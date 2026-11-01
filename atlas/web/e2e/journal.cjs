@@ -161,8 +161,9 @@ function bulk(n) {   // n closed round trips: even index wins +10, odd loses -5
   ensure(/Not configured/.test(ib) && /IBKR_MODE/.test(ib), 'IBKR help missing');
   await cmd('JOURNAL');
   await pg.locator('button', { hasText: 'Ask desk: best setups' }).click();
-  await pg.waitForSelector('.nav.on:has-text("AI DESK")');
-  console.log('ask-the-desk navigated to the AI desk');
+  await pg.waitForSelector('.nav.on:has-text("OVERVIEW")');
+  await pg.waitForSelector('.panel.ai');
+  console.log('ask-the-desk opened the AI panel on the Overview');
   await pg.screenshot({ path: S + '/journal.png' });
   httpErrors.splice(0, httpErrors.length, ...httpErrors.filter(e => !/PUT \/api\/journal\/notes/.test(e)));
   console.log('HTTP errors (excluding the deliberate bad-screenshot probe):', JSON.stringify(httpErrors));

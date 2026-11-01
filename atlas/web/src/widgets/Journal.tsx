@@ -255,7 +255,7 @@ export function PerformanceWidget2() {
     return () => c.remove();
   }, [d, theme]);
   const rows = useMemo<JGroupRow[]>(() => d?.groups[tab] ?? [], [d, tab]);
-  const ask = (t: string) => { setAsk(t); setWorkspace("ai"); };
+  const ask = (t: string) => { setAsk(t); setWorkspace("overview"); };
   return (
     <Panel title="PERFORMANCE ANALYSIS" right={d?.currency ? <span className="dim">{d.currency}</span> : null}>
       <div className="toolbar">

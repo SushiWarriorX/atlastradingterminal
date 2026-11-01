@@ -92,11 +92,11 @@ def test_ai_unconfigured_is_503(client):
 
 # --- command grammar -------------------------------------------------------
 @pytest.mark.parametrize("text,view,impl", [
-    ("BTC", "btc", True), ("BTC CHART", "charts", True), ("AAPL", "equities", True), ("NVDA TECH", "charts", True),
+    ("BTC", "btc", True), ("BTC CHART", "btc", True), ("AAPL", "equities", True), ("NVDA TECH", "equities", True),
     ("NVDA NEWS", "news", True), ("BTC OI", "btc", True), ("BTC FUNDING", "btc", True),
     ("SCAN", "scanner", True), ("SCAN BREAKOUT", "scanner", True), ("MACRO", "macro", True), ("FED", "macro", True),
-    ("JOURNAL", "journal", True), ("PERF", "journal", True), ("AI BTC", "ai", True), ("COMPARE BTC QQQ", "charts", True), ("BTC MTF", "btc", True), ("NVDA MTF", "equities", True),
-    ("HELP", "help", True), ("aapl gp", "charts", True),
+    ("JOURNAL", "journal", True), ("PERF", "journal", True), ("AI BTC", "overview", True), ("COMPARE BTC QQQ", "overview", True), ("BTC MTF", "btc", True), ("NVDA MTF", "equities", True),
+    ("HELP", "help", True), ("aapl gp", "equities", True),
 ])
 def test_commands(text, view, impl):
     c = commands.resolve(text)
@@ -110,4 +110,4 @@ def test_command_errors_suggest():
     assert not c.ok and "CHART" in c.suggestions
     assert not commands.resolve("   ").ok
     nl = commands.resolve("Why is BTC selling off today and what changed")
-    assert nl.view == "ai" and nl.params["ask"].startswith("Why is BTC")
+    assert nl.view == "overview" and nl.params["ask"].startswith("Why is BTC")

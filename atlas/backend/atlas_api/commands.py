@@ -11,29 +11,26 @@ VIEWS = {
     "overview": (True, None, "Global Market Overview"),
     "btc": (True, None, "BTC Trading Desk"),
     "equities": (True, None, "US Equity Trading Desk"),
-    "charts": (True, None, "Multi-chart"),
     "scanner": (True, None, "Equity scanner (daily bars, Yahoo)"),
     "news": (True, None, "News (RSS headlines, polled)"),
     "macro": (True, None, "Macro Research Desk"),
-    "ai": (True, None, "AI Research Desk"),
     "backtest": (True, None, "Backtester (daily bars, point-in-time rules)"),
     "journal": (True, None, "Trade journal and performance"),
     "settings": (True, None, "Settings"),
 }
-NAV = {"OVERVIEW": "overview", "BTC": "btc", "EQUITIES": "equities", "CHARTS": "charts",
+NAV = {"OVERVIEW": "overview", "BTC": "btc", "EQUITIES": "equities",
        "SCAN": "scanner", "SCANNER": "scanner", "NEWS": "news", "MACRO": "macro", "FED": "macro", "CPI": "macro",
-       "AI": "ai",
        "BACKTEST": "backtest", "BT": "backtest", "JOURNAL": "journal", "PERF": "journal", "PERFORMANCE": "journal", "SETTINGS": "settings"}
-FUNCS = {"MTF": "equities", "CHART": "charts", "GP": "charts", "NEWS": "news", "N": "news", "TECH": "charts",
-         "OI": "btc", "FUNDING": "btc", "DES": "equities", "AI": "ai"}
+FUNCS = {"MTF": "equities", "CHART": "equities", "GP": "equities", "NEWS": "news", "N": "news", "TECH": "equities",
+         "OI": "btc", "FUNDING": "btc", "DES": "equities", "AI": "overview"}
 MACRO_PARAMS = {"FED": "fed", "CPI": "inflation"}
 # Which sub-feature of an implemented view is missing -> honest message
 PARTIAL = {"FED": (5, "Fed dashboard (policy rate, FOMC calendar) not built; showing yields"),
            "CPI": (5, "CPI dashboard not built; showing yields")}
 # Words from sections that were removed: a clear message beats treating "BUY" or "RISK" as a ticker symbol.
 REMOVED = {"BUY": "Order drafting", "SELL": "Order drafting", "ALERT": "Alerts", "ALERTS": "Alerts", "PORT": "Portfolio", "PORTFOLIO": "Portfolio", "RISK": "Risk",
-           "IDEAS": "Trade Ideas", "MARKETS": "Markets", "FUNDAMENTALS": "Fundamentals", "FA": "Fundamentals"}
-ALL_WORDS = sorted(set(NAV) | set(FUNCS) | {"HELP", "COMPARE"})
+           "IDEAS": "Trade Ideas", "MARKETS": "Markets", "FUNDAMENTALS": "Fundamentals", "FA": "Fundamentals", "CHARTS": "Charts"}
+ALL_WORDS = sorted(set(NAV) | set(FUNCS) | {"HELP", "COMPARE", "AI"})
 
 
 @dataclass
@@ -63,7 +60,7 @@ def resolve(text: str) -> Command:
     if not toks:
         return Command(False, error="Type a command, symbol, or question. HELP lists commands.")
     if len(toks) > 4 and toks[0] not in ALL_WORDS and toks[0] not in REMOVED:
-        return Command(True, view="ai", params={"ask": text.strip()}, message="Free-text question routed to the AI Research Desk.")
+        return Command(True, view="overview", params={"ask": text.strip()}, message="Free-text question routed to the AI Research Desk panel.")
 
     head = toks[0]
     if head == "HELP":
@@ -74,13 +71,13 @@ def resolve(text: str) -> Command:
             return Command(False, error="Usage: COMPARE <SYM> <SYM>, e.g. COMPARE BTC QQQ")
         if len(insts) > 4 or len({i.id for i in insts}) != len(insts):
             return Command(False, error="COMPARE takes 2 to 4 distinct symbols.")
-        return Command(True, view="charts", instrument_ids=[i.id for i in insts], params={"compare": [i.id for i in insts]},
+        return Command(True, view="overview", instrument_ids=[i.id for i in insts], params={"compare": [i.id for i in insts]},
                        message="Comparing on calendar-aligned daily bars (rebased to 100).")
     if head in REMOVED:
         return Command(False, error=f"'{head}' is not available: the {REMOVED[head]} section was removed from ATLAS. HELP lists the commands that exist.")
     if head == "AI":
         inst = _sym(toks[1]) if len(toks) > 1 else None
-        return Command(True, view="ai", instrument_ids=[inst.id] if inst else [], params={"brief": bool(inst)})
+        return Command(True, view="overview", instrument_ids=[inst.id] if inst else [], params={"brief": bool(inst)})
     if head in PRESET_VIEWS and len(toks) > 1:
         return _preset_command(PRESET_VIEWS[head], toks)
     if head in NAV and head not in ("BTC",) or (head == "BTC" and len(toks) == 1):
@@ -132,8 +129,8 @@ def _preset_command(view: str, toks: list[str]) -> Command:
 
 
 def _desk_for(inst) -> str:
-    """Which desk an instrument belongs on: BTC desk is BTC only, Equities desk is stocks and ETFs only, everything else (indices, macro series) goes to Charts."""
-    return "btc" if inst.asset_class == "crypto" else "equities" if inst.asset_class in ("equity", "etf") else "charts"
+    """Which desk an instrument belongs on: BTC desk is BTC only, Equities desk is stocks and ETFs only, everything else (indices, macro series) goes to Overview."""
+    return "btc" if inst.asset_class == "crypto" else "equities" if inst.asset_class in ("equity", "etf") else "overview"
 
 
 def suggest(prefix: str, limit: int = 8) -> list[dict]:

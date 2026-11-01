@@ -19,9 +19,9 @@ export function useRunCommand() {
       if (c.view) setWorkspace(c.view);
       if (c.view === "scanner" && typeof c.params.preset === "string") setScan(c.params.preset);
       if (c.view === "backtest" && typeof c.params.preset === "string") setBt(c.params.preset);
-      if (c.view === "charts" && Array.isArray(c.params.compare)) setCompare(c.params.compare as string[]);
-      if (c.view === "ai" && typeof c.params.ask === "string") setAsk(c.params.ask);
-      if (c.view === "ai" && c.params.brief) setAsk("Give me a technical brief on the selected instrument with bull/bear readings and invalidation.");
+      if (Array.isArray(c.params.compare)) setCompare(c.params.compare as string[]);
+      if (typeof c.params.ask === "string") setAsk(c.params.ask);
+      if (c.params.brief) setAsk("Give me a technical brief on the selected instrument with bull/bear readings and invalidation.");
       setNotice(!c.implemented ? `${c.message ?? "Not built yet"}${c.phase ? ` (roadmap Phase ${c.phase})` : ""}` : c.message);
       return true;
     } catch (e) {

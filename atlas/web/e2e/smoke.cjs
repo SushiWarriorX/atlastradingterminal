@@ -45,8 +45,8 @@ fs.mkdirSync(S, { recursive: true });
   await pg.locator('.toolbar .mini', { hasText: /^4h$/ }).first().click();
   await pg.locator('.toolbar .mini', { hasText: 'BB(20,2)' }).first().click();
   await pg.waitForTimeout(1500);
-  // AI without key
-  await pg.keyboard.press('Control+7');
+  // AI without key (the Macro page, Ctrl+6, carries the AI panel)
+  await pg.keyboard.press('Control+6');
   await pg.waitForTimeout(1200);
   console.log('AI warning:', await pg.locator('.note.warn').first().innerText());
   // watchlist add + persistence across reload

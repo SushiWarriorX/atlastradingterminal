@@ -7,7 +7,7 @@ const un = (i: string, view: string, x: number, y: number, w: number, h: number)
 
 export const WORKSPACES: Record<string, WorkspaceDef> = {
   overview: { id: "overview", name: "Global Market Overview", widgets: [
-    { i: "chart", type: "chart", x: 0, y: 0, w: 7, h: 13 },
+    { i: "chart", type: "chart", x: 0, y: 0, w: 7, h: 13, props: { pick: "any" } },
     { i: "watch", type: "watchlist", x: 7, y: 0, w: 5, h: 13 },
     { i: "quote", type: "quote", x: 0, y: 13, w: 3, h: 11 },
     { i: "yields", type: "yields", x: 3, y: 13, w: 4, h: 6 },
@@ -56,23 +56,12 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "chart", type: "chart", x: 0, y: 34, w: 7, h: 13 },
     { i: "tech", type: "tech", x: 7, y: 34, w: 5, h: 13 },
   ] },
-  charts: { id: "charts", name: "Multi-chart", widgets: [
-    { i: "c1", type: "chart", x: 0, y: 0, w: 6, h: 12, props: { interval: "1d", pick: "any" } },
-    { i: "c2", type: "chart", x: 6, y: 0, w: 6, h: 12, props: { interval: "1h", pick: "any" } },
-    { i: "c3", type: "chart", x: 0, y: 12, w: 6, h: 12, props: { interval: "15m", pick: "any" } },
-    { i: "c4", type: "chart", x: 6, y: 12, w: 6, h: 12, props: { interval: "5m", pick: "any" } },
-  ] },
   macro: { id: "macro", name: "Macro Research Desk", widgets: [
     { i: "c10", type: "chart", x: 0, y: 0, w: 6, h: 12, props: { id: "MACRO:FRED:DGS10", title: "US 10Y YIELD (FRED, daily)" } },
     { i: "c2", type: "chart", x: 6, y: 0, w: 6, h: 12, props: { id: "MACRO:FRED:DGS2", title: "US 2Y YIELD (FRED, daily)" } },
     { i: "yields", type: "yields", x: 0, y: 12, w: 5, h: 7 },
     un("fed", "macro_fed", 5, 12, 7, 7),
     { i: "ai", type: "ai", x: 0, y: 19, w: 12, h: 10 },
-  ] },
-  ai: { id: "ai", name: "AI Research Desk", widgets: [
-    { i: "ai", type: "ai", x: 0, y: 0, w: 6, h: 24 },
-    { i: "chart", type: "chart", x: 6, y: 0, w: 6, h: 12 },
-    { i: "tech", type: "tech", x: 6, y: 12, w: 6, h: 12 },
   ] },
   settings: { id: "settings", name: "Settings", widgets: [
     { i: "settings", type: "settings", x: 0, y: 0, w: 6, h: 12 },
@@ -81,7 +70,7 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
 };
 // Views without a workspace render a single "not built yet" panel driven by /api/meta/views.
 export const NAV: { view: string; label: string }[] = [
-  ["overview", "OVERVIEW"], ["btc", "BTC INTELLIGENCE"], ["equities", "EQUITIES"], ["charts", "CHARTS"],
-  ["scanner", "SCANNER"], ["news", "NEWS"], ["macro", "MACRO"], ["ai", "AI DESK"],
+  ["overview", "OVERVIEW"], ["btc", "BTC INTELLIGENCE"], ["equities", "EQUITIES"],
+  ["scanner", "SCANNER"], ["news", "NEWS"], ["macro", "MACRO"],
   ["backtest", "BACKTEST"], ["journal", "JOURNAL"], ["settings", "SETTINGS"],
 ].map(([view, label]) => ({ view, label }));
