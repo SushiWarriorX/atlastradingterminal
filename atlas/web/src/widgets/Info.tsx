@@ -99,11 +99,11 @@ function ProviderCheck() {
           {run.isPending ? "Checking…" : left > 0 ? `Wait ${left}s` : "Run provider check"}</button>
       </div>
       {run.isError && <div className="note warn">{errText(run.error)}</div>}
-      {!res && !run.isPending && <div className="note">Not run yet. Pressing the button makes up to ~22 small read-only requests to real providers (no paid data, nothing saved).</div>}
+      {!res && !run.isPending && <div className="note">Not run yet. Pressing the button makes roughly 20 small read-only requests to real providers (an estimate; Yahoo's count is unknown). No paid data, nothing saved.</div>}
       {res && <>
         <table className="tbl"><thead><tr><th>Provider</th><th>Result</th><th title="Reachable / Right shape / Valid numbers">Reach·Shape·Data</th><th>Freshness</th><th>Last data</th><th>Explanation</th></tr></thead>
           <tbody>{res.rows.map((r) => <CheckLine key={r.provider} r={r} />)}</tbody></table>
-        <div className="note">Checked {ago(res.checked_at)} in {(res.duration_ms / 1000).toFixed(1)}s · at most {res.max_outbound_requests} requests. {res.note}</div>
+        <div className="note">Checked {ago(res.checked_at)} in {(res.duration_ms / 1000).toFixed(1)}s · about {res.estimated_requests} requests (estimate{res.unknown_request_providers.length ? `; ${res.unknown_request_providers.join(", ")} count unknown` : ""}). {res.note}</div>
       </>}
     </div>);
 }

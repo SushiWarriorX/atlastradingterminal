@@ -9,6 +9,7 @@ Every probe has a timeout and the whole run has bounded concurrency; request bud
 from __future__ import annotations
 
 import asyncio
+import copy
 import math
 import re
 import time
@@ -26,11 +27,17 @@ PROBE_TIMEOUT = 14.0          # seconds per probe (yfinance has its own 10 s req
 RUN_TIMEOUT = 30.0            # seconds for the whole run
 CONCURRENCY = 4
 COOLDOWN = 30.0               # seconds between runs
-MAX_FEEDS_CHECKED = 8
+MAX_FEEDS_CHECKED = 8      # feeds fetched per check; redirects are capped by the news client (3)
 DERIV_STALE_SECONDS = 300
 RSS_STALE_HOURS = 72
 
-BUDGET = {"coinbase": 2, "yahoo": 2, "fred": 1, "ibkr": 1, "hyperliquid": 1, "binance": 2, "bybit": 1, "okx": 4}   # outbound requests per probe
+# ESTIMATED outbound requests per probe when everything works (None = unknown). These are estimates, not enforced caps.
+ESTIMATE = {"coinbase": 2, "yahoo": None, "fred": 1, "ibkr": 2, "hyperliquid": 1, "binance": 2, "bybit": 1, "okx": 4}
+REQUEST_NOTE = {
+    "coinbase": "one attempt per call (retries are switched off for this check)", "fred": "one attempt (retries are switched off for this check)",
+    "yahoo": "unknown: the yfinance library makes several internal requests", "ibkr": "up to 2 attempts (live, then delayed) to your local IB Gateway",
+    "rss": "one per feed; a feed that redirects can take up to 4 (at most 3 redirects)",
+}
 _URL = re.compile(r"https?://\S+")
 
 
@@ -50,11 +57,22 @@ def row(key: str, label: str, group: str, state: str, *, connectivity="skipped",
         age = max(0, int((datetime.now(timezone.utc) - observed_at).total_seconds()))
     return {"provider": key, "label": label, "group": group, "state": state, "connectivity": connectivity, "structure": structure,
             "quality": quality, "freshness": freshness, "observed_at": observed_at.isoformat() if observed_at else None, "age_seconds": age,
-            "issues": issues or [], "error": error, "action": action, "request_budget": requests, "detail": detail}
+            "issues": issues or [], "error": error, "action": action, "estimated_requests": requests, "requests_note": REQUEST_NOTE.get(key), "detail": detail}
 
 
 def skipped(key, label, group, state, why, action=None):
     return row(key, label, group, state, error=why, action=action)
+
+
+def single_try(provider):
+    """For the check only: a copy of a retrying adapter that makes ONE attempt per call. The real adapter and its settings are left alone."""
+    http = getattr(provider, "http", None)
+    if http is None or getattr(http, "retries", 1) <= 1:
+        return provider
+    p = copy.copy(provider)
+    p.http = copy.copy(http)
+    p.http.retries = 1
+    return p
 
 
 def _err_kind(msg: str) -> str:
@@ -115,7 +133,7 @@ async def probe_quote(svc, key: str, label: str, group: str, provider, inst) -> 
         kind = _err_kind(e.message)
         return row(key, label, group, "UNAVAILABLE" if kind == "connectivity" else "INVALID",
                    connectivity="fail" if kind == "connectivity" else "pass", structure="fail" if kind == "structure" else "skipped",
-                   error=safe(e.message), action=_action_for(e.message, kind), requests=BUDGET[key])
+                   error=safe(e.message), action=_action_for(e.message, kind), requests=ESTIMATE[key])
     issues = quote_quality(q)
     st = q.prov.status.value
     action = None
@@ -125,7 +143,7 @@ async def probe_quote(svc, key: str, label: str, group: str, provider, inst) -> 
         action = "The newest price is old for the current market session. Retry; if it stays STALE during market hours the feed is lagging."
     return row(key, label, group, _state("pass", "pass", "fail" if issues else "pass", st), connectivity="pass", structure="pass",
                quality="fail" if issues else "pass", freshness=st, observed_at=q.prov.event_time, issues=issues, action=action,
-               requests=BUDGET[key], detail="; ".join(q.prov.quality)[:200] or None)
+               requests=ESTIMATE[key], detail="; ".join(q.prov.quality)[:200] or None)
 
 
 async def probe_venue(derivs, venue: str) -> dict:
@@ -136,9 +154,9 @@ async def probe_venue(derivs, venue: str) -> dict:
     except VenueError as e:
         if e.code == "shape":
             return row(key, label, "derivatives", "INVALID", connectivity="pass", structure="fail", error=safe(e.message),
-                       action=_action_for(e.message, "structure"), requests=BUDGET[venue])
+                       action=_action_for(e.message, "structure"), requests=ESTIMATE[venue])
         return row(key, label, "derivatives", "UNAVAILABLE", connectivity="fail", error=safe(e.message), action=_action_for(e.code + " " + e.message, "connectivity"),
-                   requests=BUDGET[venue])
+                   requests=ESTIMATE[venue])
     issues = []
     for f in ("mark", "index", "oi_btc"):
         if not _finite(r.get(f)) or r[f] <= 0:
@@ -159,7 +177,7 @@ async def probe_venue(derivs, venue: str) -> dict:
         fresh = "LIVE" if age <= DERIV_STALE_SECONDS else "STALE"
     q = "fail" if issues else "pass"
     return row(key, label, "derivatives", _state("pass", "pass", q, fresh), connectivity="pass", structure="pass", quality=q, freshness=fresh, observed_at=obs,
-               issues=issues, action=("Do not use this venue's numbers until fixed." if issues else None), requests=BUDGET[venue], detail="; ".join(r.get("notes") or [])[:200] or None)
+               issues=issues, action=("Do not use this venue's numbers until fixed." if issues else None), requests=ESTIMATE[venue], detail="; ".join(r.get("notes") or [])[:200] or None)
 
 
 async def probe_rss(news) -> dict:
@@ -257,16 +275,16 @@ async def run_checks(*, svc, provs: dict, ibkr_md, broker, derivs, news, demo: b
                 out[k] = skipped(k, lab, grp, "NOT_CONFIGURED", "This provider is not set up.", "Restart ATLAS normally.")
                 continue
             inst = I.by_symbol(sym) or I.resolve(sym)
-            add(k, lab, grp, (lambda p=p, k=k, lab=lab, grp=grp, inst=inst: probe_quote(svc, k, lab, grp, p, inst)), BUDGET[k])
+            add(k, lab, grp, (lambda p=p, k=k, lab=lab, grp=grp, inst=inst: probe_quote(svc, k, lab, grp, single_try(p), inst)), ESTIMATE[k])
         lab, grp = labels["ibkr"]
         if ibkr_md is None:
             out["ibkr"] = skipped("ibkr", lab, grp, "NOT_CONFIGURED", "IBKR market data is switched off.", "Set ATLAS_IBKR_DATA=1 (the Windows launcher does this with -Real) and connect IB Gateway.")
         elif not ibkr_md.available:
             out["ibkr"] = skipped("ibkr", lab, grp, "UNAVAILABLE", "IBKR is enabled but not connected.", "Start IB Gateway, then press Connect in Settings > IBKR.")
         else:
-            add("ibkr", lab, grp, lambda: probe_quote(svc, "ibkr", lab, grp, ibkr_md, I.by_symbol("SPY")), BUDGET["ibkr"])
+            add("ibkr", lab, grp, lambda: probe_quote(svc, "ibkr", lab, grp, ibkr_md, I.by_symbol("SPY")), ESTIMATE["ibkr"])
         for v in VENUES:
-            add(v, VENUE_LABELS[v], "derivatives", (lambda v=v: probe_venue(derivs, v)), BUDGET[v])
+            add(v, VENUE_LABELS[v], "derivatives", (lambda v=v: probe_venue(derivs, v)), ESTIMATE[v])
         add("rss", "RSS news feeds", "news", lambda: probe_rss(news), MAX_FEEDS_CHECKED)
         try:
             await asyncio.wait_for(asyncio.gather(*jobs), RUN_TIMEOUT)
@@ -278,5 +296,5 @@ async def run_checks(*, svc, provs: dict, ibkr_md, broker, derivs, news, demo: b
                 out.setdefault(k, skipped(k, k, "other", "UNAVAILABLE", "check did not finish in time", "Try again in a minute."))
     rows = [out[k] for k in order if k in out]
     return {"checked_at": datetime.now(timezone.utc).isoformat(), "duration_ms": int((time.monotonic() - started) * 1000), "demo": demo,
-            "max_outbound_requests": sum(r["request_budget"] for r in rows), "cooldown_seconds": int(COOLDOWN), "rows": rows,
-            "note": "Read-only check. Nothing was saved, no feed or setting was changed, and no order code was touched. 'OK' means the response was reachable, well-formed and valid at this moment."}
+            "estimated_requests": sum(r["estimated_requests"] or 0 for r in rows), "unknown_request_providers": [r["provider"] for r in rows if r["provider"] in ESTIMATE and ESTIMATE[r["provider"]] is None and r["state"] not in ("NOT_CONFIGURED", "DEMO")], "cooldown_seconds": int(COOLDOWN), "rows": rows,
+            "note": "Read-only check. Request counts are estimates. Nothing was saved, no feed or setting was changed, and no order code was touched. 'OK' means the response was reachable, well-formed and valid at this moment."}

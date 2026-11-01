@@ -73,7 +73,7 @@ def probe(provider, key="coinbase"):
 def test_healthy_quote_passes_all_four_checks():
     r, _ = probe(FakeQuoteProvider(quote=q()))
     assert (r["connectivity"], r["structure"], r["quality"], r["freshness"], r["state"]) == ("pass", "pass", "pass", "LIVE", "OK")
-    assert r["observed_at"] and r["age_seconds"] is not None and r["request_budget"] == 2
+    assert r["observed_at"] and r["age_seconds"] is not None and r["estimated_requests"] == 2
 
 
 @pytest.mark.parametrize("bad", [0.0, -5.0, float("nan"), float("inf")])
@@ -202,7 +202,7 @@ def test_real_venue_client_request_counts_stay_within_budget():
     for v in V.VENUES:
         before = len(seen)
         r = run(H.probe_venue(d, v))
-        assert len(seen) - before <= H.BUDGET[v], v
+        assert len(seen) - before <= H.ESTIMATE[v], v
         assert r["connectivity"] == "pass" and r["structure"] == "pass"
 
 
@@ -256,7 +256,7 @@ def test_ibkr_not_configured_vs_not_connected_vs_live():
     assert off["state"] == "NOT_CONFIGURED"
     s, _, md = ibkr_svc(FakeMD(), connected=False)
     dis = next(r for r in run(H.run_checks(ibkr_md=md, **{**common, "svc": s}))["rows"] if r["provider"] == "ibkr")
-    assert dis["state"] == "UNAVAILABLE" and "Connect" in dis["action"] and dis["request_budget"] == 0
+    assert dis["state"] == "UNAVAILABLE" and "Connect" in dis["action"] and dis["estimated_requests"] == 0
     ib = FakeMD(live=tick(last=500.0, bid=499.9, ask=500.1, time=datetime.now(timezone.utc)))
     s, _, md = ibkr_svc(ib)
     r = next(r for r in run(H.run_checks(ibkr_md=md, **{**common, "svc": s}))["rows"] if r["provider"] == "ibkr")
@@ -277,7 +277,7 @@ def test_demo_mode_makes_no_calls_and_is_labelled_demo():
     fv = FakeVenues(errs={v: AssertionError("no") for v in V.VENUES})
     out = run(H.run_checks(svc=MarketService({}), provs={"coinbase": p}, ibkr_md=None, broker=None, derivs=_derivs(fv), news=_news(lambda r: 1 / 0), demo=True))
     states = {r["provider"]: r["state"] for r in out["rows"]}
-    assert states["ibkr"] == "NOT_CONFIGURED" and {v for k, v in states.items() if k != "ibkr"} == {"DEMO"} and p.calls == 0 and fv.fetched == [] and out["max_outbound_requests"] == 0
+    assert states["ibkr"] == "NOT_CONFIGURED" and {v for k, v in states.items() if k != "ibkr"} == {"DEMO"} and p.calls == 0 and fv.fetched == [] and out["estimated_requests"] == 0
 
 
 def test_missing_provider_is_not_configured():
@@ -293,7 +293,7 @@ def test_full_run_does_not_modify_database_cache_or_counters():
     health_before = {k: dict(v) for k, v in svc.health.items()}
     out = run(H.run_checks(svc=svc, provs=good, ibkr_md=None, broker=None, derivs=d, news=n, demo=False))
     assert dump(d.db) == snap_d and dump(n.db) == snap_n and svc.health == health_before and svc._cache == {}
-    assert len(out["rows"]) == 9 and out["max_outbound_requests"] == sum(r["request_budget"] for r in out["rows"]) <= 22
+    assert len(out["rows"]) == 9 and out["estimated_requests"] == sum(r["estimated_requests"] or 0 for r in out["rows"]) and out["unknown_request_providers"] == ["yahoo"]
     assert {r["provider"] for r in out["rows"]} == {"coinbase", "yahoo", "ibkr", "fred", "hyperliquid", "binance", "bybit", "okx", "rss"}
 
 
@@ -380,4 +380,86 @@ def test_response_contains_no_secrets_or_urls(api):
 def test_demo_api_reports_demo_rows(tmp_path):
     with TestClient(create_app(db_path=str(tmp_path / "dm.db"), demo=True, alert_loop=False), base_url="http://localhost:8000") as c:
         d = c.post("/api/health/check", headers=HDR).json()["data"]["last"]
-        assert d["demo"] and {r["state"] for r in d["rows"]} == {"DEMO", "NOT_CONFIGURED"} and d["max_outbound_requests"] == 0
+        assert d["demo"] and {r["state"] for r in d["rows"]} == {"DEMO", "NOT_CONFIGURED"} and d["estimated_requests"] == 0
+
+
+# --- request counts: retries, redirects and honest reporting ------------------------------------------------------------------------------
+from atlas_api.providers.coinbase import CoinbaseProvider
+from atlas_api.providers.fred import FredProvider
+from atlas_api.providers.http import Http
+
+
+def counting_http(provider, hits, status=500):
+    def h(req):
+        hits.append(str(req.url))
+        return httpx.Response(status)
+    return Http("https://x.test", provider, min_interval=0, retries=3, client=httpx.AsyncClient(transport=httpx.MockTransport(h), base_url="https://x.test"))
+
+
+def test_coinbase_and_fred_make_one_attempt_per_call_during_the_check(monkeypatch):
+    monkeypatch.setattr(asyncio, "sleep", _fast_sleep)
+    hits: list[str] = []
+    cb = CoinbaseProvider(counting_http("coinbase", hits))
+    r = run(H.probe_quote(MarketService({"coinbase": cb}), "coinbase", "Coinbase", "crypto", H.single_try(cb), I.by_symbol("BTC")))
+    assert r["state"] == "UNAVAILABLE" and len(hits) == 2                      # ticker + stats, one attempt each (was up to 6)
+    hits.clear()
+    fr = FredProvider(counting_http("fred", hits))
+    run(H.probe_quote(MarketService({"fred": fr}), "fred", "FRED", "macro", H.single_try(fr), I.resolve("US10Y")))
+    assert len(hits) == 1                                                      # was up to 3
+
+
+def test_normal_app_retries_are_unchanged_by_the_check(monkeypatch):
+    monkeypatch.setattr(asyncio, "sleep", _fast_sleep)
+    hits: list[str] = []
+    cb = CoinbaseProvider(counting_http("coinbase", hits))
+    single = H.single_try(cb)
+    assert single is not cb and single.http.retries == 1 and cb.http.retries == 3 and single.http._client is cb.http._client
+    with pytest.raises(ProviderUnavailable):
+        run(cb.quote(I.by_symbol("BTC")))
+    assert len(hits) == 6                                                      # the normal path still retries 3 times per call
+    assert H.single_try(FakeQuoteProvider(quote=q())).__class__ is FakeQuoteProvider                      # providers without retries are passed through
+
+
+async def _fast_sleep(*_a, **_k):
+    return None
+
+
+def test_production_news_client_allows_at_most_three_redirects():
+    c = NewsService(DB("/tmp/hc_cfg%d.db" % time.time_ns())).client
+    assert c.follow_redirects is True and c.max_redirects == 3
+
+
+def redirecting_news(hops_needed, hits):
+    def h(req):
+        hits.append(str(req.url))
+        n = len(hits)
+        if n <= hops_needed:
+            return httpx.Response(302, headers={"location": f"https://feeds.test/hop{n}"})
+        return httpx.Response(200, content=rss())
+    prod = NewsService(DB("/tmp/hc_r%d.db" % time.time_ns())).client
+    n = NewsService(DB("/tmp/hc_rn%d.db" % time.time_ns()), httpx.AsyncClient(transport=httpx.MockTransport(h), follow_redirects=prod.follow_redirects, max_redirects=prod.max_redirects))
+    n.db.x("UPDATE news_feeds SET enabled=0 WHERE kind='rss' AND id NOT IN (SELECT MIN(id) FROM news_feeds WHERE kind='rss')")      # one feed keeps the count readable
+    return n
+
+
+def test_rss_feed_with_a_small_redirect_chain_still_works():
+    hits: list[str] = []
+    r = run(H.probe_rss(redirecting_news(2, hits)))
+    assert r["state"] == "OK" and len(hits) == 3
+
+
+def test_rss_redirects_are_capped_at_three_and_requests_stay_within_four_per_feed():
+    hits: list[str] = []
+    r = run(H.probe_rss(redirecting_news(50, hits)))
+    assert r["state"] == "UNAVAILABLE" and len(hits) <= 4 and "redirect" in " ".join([r["error"] or "", *r["issues"]]).lower()
+
+
+def test_request_reporting_is_labelled_as_an_estimate_with_unknowns_and_ibkr_attempts():
+    assert H.ESTIMATE["yahoo"] is None and H.ESTIMATE["ibkr"] == 2 and H.ESTIMATE["coinbase"] == 2
+    good = {"coinbase": FakeQuoteProvider("coinbase", q()), "yahoo": FakeQuoteProvider("yahoo", q(delay=900)), "fred": FakeQuoteProvider("fred", q())}
+    out = run(H.run_checks(svc=MarketService(good), provs=good, ibkr_md=None, broker=None, derivs=_derivs(), news=_news(), demo=False))
+    y = next(r for r in out["rows"] if r["provider"] == "yahoo")
+    assert y["estimated_requests"] is None and "unknown" in y["requests_note"]
+    assert "max_outbound_requests" not in out and "request_budget" not in y and "estimates" in out["note"]
+    assert "retries are switched off" in next(r for r in out["rows"] if r["provider"] == "coinbase")["requests_note"]
+    assert "2 attempts" in next(r for r in out["rows"] if r["provider"] == "ibkr")["requests_note"] and "4" in next(r for r in out["rows"] if r["provider"] == "rss")["requests_note"]

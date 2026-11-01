@@ -3,9 +3,9 @@ export type Step = "pass" | "fail" | "skipped";
 export interface CheckRow {
   provider: string; label: string; group: string; state: CheckState; connectivity: Step; structure: Step; quality: Step;
   freshness: string | null; observed_at: string | null; age_seconds: number | null; issues: string[]; error: string | null; action: string | null;
-  request_budget: number; detail: string | null; duration_ms?: number;
+  estimated_requests: number | null; requests_note: string | null; detail: string | null; duration_ms?: number;
 }
-export interface CheckResult { checked_at: string; duration_ms: number; demo: boolean; max_outbound_requests: number; cooldown_seconds: number; rows: CheckRow[]; note: string }
+export interface CheckResult { checked_at: string; duration_ms: number; demo: boolean; estimated_requests: number; unknown_request_providers: string[]; cooldown_seconds: number; rows: CheckRow[]; note: string }
 export interface CheckState_ { last: CheckResult | null; cooldown_left: number; running: boolean }
 
 /** Plain-English names. NOT CONFIGURED (not set up), UNAVAILABLE (set up but not answering) and DEMO (synthetic) are deliberately different. */
