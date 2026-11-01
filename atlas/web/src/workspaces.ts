@@ -59,9 +59,9 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
   macro: { id: "macro", name: "Macro Research Desk", widgets: [
     { i: "c10", type: "chart", x: 0, y: 0, w: 6, h: 12, props: { id: "MACRO:FRED:DGS10", title: "US 10Y YIELD (FRED, daily)" } },
     { i: "c2", type: "chart", x: 6, y: 0, w: 6, h: 12, props: { id: "MACRO:FRED:DGS2", title: "US 2Y YIELD (FRED, daily)" } },
-    un("fed", "macro_fed", 0, 12, 12, 16),                     // the Macro Dashboard panel (the placeholder id is kept so saved layouts pick it up)
-    { i: "yields", type: "yields", x: 0, y: 28, w: 5, h: 7 },
-    { i: "ai", type: "ai", x: 5, y: 28, w: 7, h: 10 },
+    un("fed", "macro_fed", 0, 12, 12, 24),                     // the Macro Dashboard panel (the placeholder id is kept so saved layouts pick it up)
+    { i: "yields", type: "yields", x: 0, y: 36, w: 5, h: 7 },
+    { i: "ai", type: "ai", x: 5, y: 36, w: 7, h: 10 },
   ] },
   settings: { id: "settings", name: "Settings", widgets: [
     { i: "settings", type: "settings", x: 0, y: 0, w: 6, h: 12 },

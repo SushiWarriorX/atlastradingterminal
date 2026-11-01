@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { fmtChange, fmtValue, MacroFact } from "../macro";
 import { ErrorBox, Panel } from "../ui";
+import { FedWatchTab } from "./FedWatch";
 
 function FactRow({ f }: { f: MacroFact }) {
   if (f.error) return <tr><td><b>{f.label}</b></td><td colSpan={5} className="down small">Unavailable: {f.error}</td></tr>;
@@ -22,8 +24,13 @@ function FactRow({ f }: { f: MacroFact }) {
 export function MacroDashboard() {
   const q = useQuery({ queryKey: ["macro"], queryFn: api.macroOverview, staleTime: 10 * 60_000, refetchInterval: 30 * 60_000 });
   const d = q.data;
+  const [tab, setTab] = useState<"indicators" | "fed">("indicators");
   return (
-    <Panel title="MACRO DASHBOARD">
+    <Panel title="MACRO DASHBOARD" right={<span>
+      <button className={`mini ${tab === "indicators" ? "on" : ""}`} onClick={() => setTab("indicators")}>Indicators</button>
+      <button className={`mini ${tab === "fed" ? "on" : ""}`} onClick={() => setTab("fed")}>Fed Watch</button></span>}>
+      {tab === "fed" && <FedWatchTab />}
+      {tab === "indicators" && <>
       {q.isError && <ErrorBox error={q.error} />}
       {q.isLoading && <div className="note">Loading FRED observations…</div>}
       {d?.demo && <div className="note warn">{d.notice}</div>}
@@ -40,6 +47,7 @@ export function MacroDashboard() {
             <div className="dim small">Keep in mind: {n.caveat} <span title="Facts this note is based on">· based on {n.based_on.join(", ")}</span></div>
           </div>))}
         <div className="note">{d.interpretation_note}</div>
+      </>}
       </>}
     </Panel>);
 }

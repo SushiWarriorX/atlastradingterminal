@@ -17,6 +17,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from . import commands, health_check, instruments as I
+from .fedwatch import FedWatchService
 from .macro import MacroService
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
 from .providers.ibkr_data import IBKRData
@@ -268,6 +269,14 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         if macro is None:
             raise ApiError("NOT_CONFIGURED", "The FRED provider is not set up.", 503)
         return ok(await macro.overview())
+
+    fedwatch = FedWatchService(provs.get("fred"), news, demo)
+
+    @app.get("/api/macro/fed")
+    async def macro_fed():
+        if not demo and provs.get("fred") is None:
+            raise ApiError("NOT_CONFIGURED", "The FRED provider is not set up.", 503)
+        return ok(await fedwatch.overview())
 
     @app.get("/api/market/status")
     async def market_status():
