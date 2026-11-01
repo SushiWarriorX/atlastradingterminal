@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import math
 import os
 import time
 from dataclasses import asdict
@@ -9,13 +10,13 @@ from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 
 import httpx
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from . import commands, instruments as I
+from . import commands, health_check, instruments as I
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
 from .providers.ibkr_data import IBKRData
 from .journal import hyperliquid as hl, importers as jimp, stats as jstats
@@ -217,6 +218,47 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     @app.get("/api/health")
     async def health():
         return ok({"status": "up", "time_utc": now()})
+
+    # --- provider health check (on demand, read-only, localhost-only) ----------------------------------------------
+    hc_state: dict = {"last": None, "started": None}
+    hc_lock = asyncio.Lock()
+    local_hosts = {"localhost", "127.0.0.1", "::1"}
+    local_origins = {f"http://{h}:{p}" for h in ("localhost", "127.0.0.1") for p in (5173, int(os.getenv("ATLAS_PORT", "8000")))}
+
+    def local_only(request: Request, *, mutating: bool) -> None:
+        """Refuse anything that is not the local web app: wrong Host (DNS rebinding), foreign Origin / cross-site fetch (CSRF), or missing marker header."""
+        host = (request.url.hostname or "").lower()
+        if host not in local_hosts:
+            raise ApiError("FORBIDDEN_HOST", "This request was not addressed to localhost, so it was refused.", 403)
+        origin = request.headers.get("origin")
+        if origin is not None and origin not in local_origins:
+            raise ApiError("FORBIDDEN_ORIGIN", "Requests from other websites are refused.", 403)
+        if request.headers.get("sec-fetch-site", "same-origin") not in ("same-origin", "same-site", "none"):
+            raise ApiError("FORBIDDEN_ORIGIN", "Cross-site requests are refused.", 403)
+        if mutating and request.headers.get("x-atlas-request") != "health-check":
+            raise ApiError("FORBIDDEN_ORIGIN", "Missing local-app marker header.", 403)
+
+    def hc_cooldown_left() -> int:
+        t = hc_state["started"]
+        return 0 if t is None else max(0, int(math.ceil(health_check.COOLDOWN - (time.monotonic() - t))))
+
+    @app.get("/api/health/check")
+    async def health_check_last(request: Request):
+        local_only(request, mutating=False)
+        return ok({"last": hc_state["last"], "cooldown_left": hc_cooldown_left(), "running": hc_lock.locked()})
+
+    @app.post("/api/health/check")
+    async def health_check_run(request: Request):
+        local_only(request, mutating=True)
+        if hc_lock.locked():
+            raise ApiError("BUSY", "A provider check is already running.", 409)
+        left = hc_cooldown_left()
+        if left:
+            raise ApiError("COOLDOWN", f"Please wait {left}s before running the check again.", 429)
+        async with hc_lock:
+            hc_state["started"] = time.monotonic()
+            hc_state["last"] = await health_check.run_checks(svc=svc, provs=provs, ibkr_md=ibkr_md, broker=broker, derivs=derivs, news=news, demo=demo)
+        return ok({"last": hc_state["last"], "cooldown_left": hc_cooldown_left(), "running": False})
 
     @app.get("/api/market/status")
     async def market_status():

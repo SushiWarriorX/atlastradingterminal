@@ -98,6 +98,10 @@ class MarketService:
         self._cache[key] = (time.monotonic() + _TTL[kind], val)
         return val
 
+    async def probe_quote(self, inst: Instrument, provider) -> Quote:
+        """One uncached quote from a specific provider, classified like a normal quote. Does not touch the cache or the health counters (used by the health check)."""
+        return self._finalize(inst, await provider.quote(inst))
+
     async def _try_chain(self, chain: list, call):
         """Ask each provider in order until one answers. A failed preferred provider is recorded and named in the result's quality notes;
         the last provider's failure is raised."""

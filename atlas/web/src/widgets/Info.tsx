@@ -1,5 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
-import { api } from "../api";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { api, errText } from "../api";
+import { CheckRow, STATE_HELP, STATE_TEXT, stateClass, stepText } from "../health";
 import { ago, dir, num, pct, px } from "../fmt";
 import { useStore } from "../store";
 import { useSelectedId } from "../scope";
@@ -62,6 +64,50 @@ export function TechWidget() {
   );
 }
 
+function CheckLine({ r }: { r: CheckRow }) {
+  return (
+    <tr>
+      <td><b>{r.label}</b></td>
+      <td title={STATE_HELP[r.state]} className={stateClass(r.state)}>{STATE_TEXT[r.state]}</td>
+      <td className="mono small" title="Connectivity / Structure / Data quality">{r.state === "NOT_CONFIGURED" || r.state === "DEMO" ? "–" : `${stepText(r.connectivity)} ${stepText(r.structure)} ${stepText(r.quality)}`}</td>
+      <td className="small">{r.freshness ?? "–"}</td>
+      <td className="dim small" title={r.observed_at ?? ""}>{r.observed_at ? `${ago(r.observed_at)}` : "–"}</td>
+      <td className="small">{r.error && <div className="down">{r.error}</div>}{r.issues.map((i) => <div key={i} className="warnc">{i}</div>)}{r.action && <div className="dim">→ {r.action}</div>}</td>
+    </tr>);
+}
+
+/** On-demand, read-only provider check (button). Nothing runs until you press it; the server enforces a 30 s cooldown. */
+function ProviderCheck() {
+  const qc = useQueryClient();
+  const last = useQuery({ queryKey: ["healthCheck"], queryFn: api.healthCheckLast, staleTime: Infinity });
+  const run = useMutation({ mutationFn: api.healthCheckRun, onSuccess: (d) => qc.setQueryData(["healthCheck"], d) });
+  const [left, setLeft] = useState(0);
+  const serverLeft = run.data?.cooldown_left ?? last.data?.cooldown_left ?? 0;
+  useEffect(() => {
+    setLeft(serverLeft);
+    if (!serverLeft) return;
+    const t = setInterval(() => setLeft((x) => Math.max(0, x - 1)), 1000);
+    return () => clearInterval(t);
+  }, [serverLeft, run.data?.last?.checked_at]);
+  const res = (run.data ?? last.data)?.last ?? null;
+  return (
+    <div className="check">
+      <div className="ws-bar" style={{ paddingLeft: 0 }}>
+        <span>PROVIDER CHECK</span>
+        <button className="mini" disabled={run.isPending || left > 0} onClick={() => run.mutate()}
+          title="Makes a few small read-only requests to each real data provider. Nothing is saved or changed.">
+          {run.isPending ? "Checking…" : left > 0 ? `Wait ${left}s` : "Run provider check"}</button>
+      </div>
+      {run.isError && <div className="note warn">{errText(run.error)}</div>}
+      {!res && !run.isPending && <div className="note">Not run yet. Pressing the button makes up to ~22 small read-only requests to real providers (no paid data, nothing saved).</div>}
+      {res && <>
+        <table className="tbl"><thead><tr><th>Provider</th><th>Result</th><th title="Reachable / Right shape / Valid numbers">Reach·Shape·Data</th><th>Freshness</th><th>Last data</th><th>Explanation</th></tr></thead>
+          <tbody>{res.rows.map((r) => <CheckLine key={r.provider} r={r} />)}</tbody></table>
+        <div className="note">Checked {ago(res.checked_at)} in {(res.duration_ms / 1000).toFixed(1)}s · at most {res.max_outbound_requests} requests. {res.note}</div>
+      </>}
+    </div>);
+}
+
 export function HealthWidget() {
   const st = useQuery({ queryKey: ["status"], queryFn: api.status, refetchInterval: 10_000 });
   return (
@@ -74,6 +120,7 @@ export function HealthWidget() {
               <td className="dim small">{p.entitlement}{p.delay_seconds ? ` · ~${p.delay_seconds / 60}m delay` : ""}</td>
               <td className="r mono">{p.ok}/{p.fail}</td><td className="dim">{ago(p.last_ok)}</td>
               <td className="down small" title={p.last_error ?? ""}>{p.last_error ? p.last_error.slice(0, 48) : ""}</td></tr>))}</tbody></table>
+        <ProviderCheck />
         <div className="note">Broker: <b>{st.data.broker_env}</b> · live trading {st.data.live_trading_enabled ? "ENABLED" : "disabled"} · NY session {st.data.ny.state}{st.data.ny.early_close ? " (early close)" : ""}</div>
         {st.data.demo_mode && <div className="note warn">DEMO MODE: all prices are synthetic.</div>}
       </>}
