@@ -54,6 +54,20 @@ def _streak(close: np.ndarray, up: bool) -> int:
     return n
 
 
+def _day(t: int) -> str:
+    return datetime.fromtimestamp(t, timezone.utc).date().isoformat()
+
+
+def _rs(stock_ret: float, c, sday: list[str], bday: dict[str, float], d: int) -> float | None:
+    """Stock return minus benchmark return over the SAME two trading dates. The benchmark must have a bar on both
+    the stock's last date and its date d bars earlier; otherwise the result is unavailable, never a shifted window."""
+    end, start = sday[-1], sday[-1 - d]
+    if end not in bday or start not in bday:
+        return None
+    b = _pct(bday[end], bday[start])
+    return None if b is None else stock_ret - b
+
+
 def compute(symbol: str, candles: list[Candle], bench: list[Candle] | None = None, sector: str | None = None) -> dict:
     n = len(candles)
     f: dict = {k: None for k in FIELDS}
@@ -84,13 +98,12 @@ def compute(symbol: str, candles: list[Candle], bench: list[Candle] | None = Non
             f[f"dist_sma{k}_pct"] = None if s is None else _pct(px, s)
     hi52, lo52 = float(h[-252:].max()), float(l[-252:].min())
     f["dist_52w_high_pct"], f["dist_52w_low_pct"] = _pct(px, hi52), _pct(px, lo52)
-    bret = {}
+    bday = {_day(x.time): x.close for x in bench} if bench else {}
+    sday = [_day(x.time) for x in candles]
     for name, d in (("5d", 5), ("21d", 21), ("63d", 63), ("126d", 126)):
         r = _pct(px, float(c[-1 - d])) if n > d else None
         f[f"ret_{name}"] = r
-        if bench and len(bench) > d:
-            bret[name] = _pct(bench[-1].close, bench[-1 - d].close)
-        f[f"rs_{name}"] = None if r is None or bret.get(name) is None else r - bret[name]
+        f[f"rs_{name}"] = None if r is None else _rs(r, c, sday, bday, d)
     hi20, lo20 = float(h[-21:-1].max()), float(l[-21:-1].min())
     f["breakout_20"], f["breakdown_20"] = bool(px > hi20), bool(px < lo20)
     lo, mid, up = ind.bollinger(c, 20, 2.0)

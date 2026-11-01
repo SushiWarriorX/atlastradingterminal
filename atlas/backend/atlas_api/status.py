@@ -10,7 +10,7 @@ EQUITY_TOLERANCE_SECONDS = 300  # on top of declared provider delay
 
 
 def classify(*, provider: str, asset_class: str, event_time: datetime | None, now: datetime,
-             delay_seconds: int | None, session: str | None) -> tuple[DataStatus, list[str]]:
+             delay_seconds: int | None, session: str | None, regular_hours_only: bool = False) -> tuple[DataStatus, list[str]]:
     if provider == "demo":
         return DataStatus.DEMO, ["synthetic demo data: not market data"]
     if asset_class == "macro":
@@ -24,6 +24,9 @@ def classify(*, provider: str, asset_class: str, event_time: datetime | None, no
         return DataStatus.LIVE, []
     if session in ("CLOSED", "HOLIDAY"):
         return DataStatus.HISTORICAL, ["market closed: showing last session"]
+    if regular_hours_only and session in ("PREMARKET", "AFTER_HOURS"):
+        # The provider only serves regular-session prices, so an old timestamp here is expected, not a broken feed.
+        return DataStatus.HISTORICAL, ["regular-session price; this provider has no pre-market/after-hours prices"]
     limit = (delay_seconds or 0) + EQUITY_TOLERANCE_SECONDS
     if age > limit:
         return DataStatus.STALE, [f"last event {int(age)}s ago (allowed {limit}s)"]

@@ -1,6 +1,7 @@
 """Market-data service: provider routing, caching, interval derivation, provenance classification, health."""
 from __future__ import annotations
 
+import asyncio
 import time
 from datetime import datetime, timezone
 
@@ -22,6 +23,7 @@ class MarketService:
     def __init__(self, providers: dict, demo: bool = False):
         self.providers, self.demo = providers, demo
         self._cache: dict[tuple, tuple[float, object]] = {}
+        self._inflight: dict[tuple, asyncio.Future] = {}
         self.health: dict[str, dict] = {n: {"ok": 0, "fail": 0, "last_ok": None, "last_error": None, "last_error_at": None,
                                              "consecutive_failures": 0} for n in providers}
 
@@ -70,14 +72,28 @@ class MarketService:
             prov.event_time = min(now, close)
         prov.session = sess
         prov.status, notes = classify(provider=prov.provider, asset_class=inst.asset_class, event_time=prov.event_time,
-                                      now=now, delay_seconds=prov.delay_seconds, session=sess)
+                                      now=now, delay_seconds=prov.delay_seconds, session=sess,
+                                      regular_hours_only=prov.provider == "yahoo" or isinstance(obj, OHLCV))
         prov.quality = [*prov.quality, *(n for n in notes if n not in prov.quality)]      # keep what the provider and the fallback chain said, add the classification
         return obj
 
     async def _cached(self, key: tuple, kind: str, fetch):
+        """TTL cache with request sharing: identical simultaneous calls make one provider call (a failure is shared by
+        those callers too, but never cached: the next call retries)."""
+        now = time.monotonic()
         hit = self._cache.get(key)
-        if hit and hit[0] > time.monotonic():
+        if hit and hit[0] > now:
             return hit[1]
+        task = self._inflight.get(key)
+        if task is None:
+            if len(self._cache) > 256:
+                self._cache = {k: v for k, v in self._cache.items() if v[0] > now}
+            task = asyncio.ensure_future(self._fill(key, kind, fetch))
+            self._inflight[key] = task
+            task.add_done_callback(lambda _t, k=key: self._inflight.pop(k, None))
+        return await asyncio.shield(task)
+
+    async def _fill(self, key: tuple, kind: str, fetch):
         val = await fetch()
         self._cache[key] = (time.monotonic() + _TTL[kind], val)
         return val
