@@ -23,13 +23,14 @@ export const fmtValue = (f: MacroFact): string => {
 // --- Fed Watch ---------------------------------------------------------------------------------------------------------------------------
 export interface FedEvent { id: string; type: string; title: string; meeting: string; at_utc: string; projections: boolean; source: string; link: string }
 export interface FedDecision {
-  meeting_end: string; announced_utc: string; outcome: "raised" | "cut" | "held" | null; change_bps?: number; note?: string;
+  meeting_end: string; announced_date?: string; announced_utc: string; effective_obs_date?: string | null; date_note?: string; outcome: "raised" | "cut" | "held" | null; change_bps?: number; note?: string;
   previous?: { lower: number; upper: number; obs_date: string }; new?: { lower: number; upper: number; obs_date: string };
 }
 export interface FedComm { type: string; type_label: string; title: string; link: string | null; summary: string; published_utc: string | null; feed: string; significant: boolean; why_it_matters: string }
 export interface FedRelease extends MacroFact { relevance?: string; consensus_note?: string; level?: number }
 export interface FedWatch {
   as_of: string; demo: boolean; notice?: string; links: Record<string, string>; scenarios: Record<"raised" | "cut" | "held", Record<"equities" | "bonds" | "dollar" | "crypto", string>>; scenario_note: string;
+  calendar?: { needs_update: boolean; last_meeting: string; link: string; message: string | null };
   upcoming: FedEvent[]; decisions: FedDecision[]; decisions_error?: string | null; communications: FedComm[]; feed_status: { feed: string; ok: boolean; items: number; error: string | null }[];
   releases: FedRelease[]; release_schedule: { series: string; label: string; name: string; date: string; at_utc: string | null }[]; schedule_note: string;
   balance_sheet: (MacroFact & { trend?: string; trend_rule?: string; why_it_matters?: string }) | null; errors: string[]; interpretation_note: string;

@@ -29,6 +29,7 @@ FEEDS = [("Fed: monetary policy", "https://www.federalreserve.gov/feeds/press_mo
          ("Fed: all press releases", "https://www.federalreserve.gov/feeds/press_all.xml"),
          ("Fed: speeches and testimony", "https://www.federalreserve.gov/feeds/speeches_and_testimony.xml")]
 CACHE_SECONDS = 900.0
+FAIL_CACHE_SECONDS = 60.0      # a result with a failed source is kept briefly (errors stay visible) so page loads do not refetch everything
 RULES = {"balance_sheet_flat_pct_13w": 0.5, "minutes_after_days": 21, "statement_et": "14:00", "press_conference_et": "14:30"}
 
 # FOMC meetings (first day, last day = decision day, has Summary of Economic Projections). Entered from the Fed's published calendar by hand:
@@ -48,11 +49,26 @@ def et_to_utc(d: date, hhmm: str) -> datetime:
     return datetime(d.year, d.month, d.day, h, m, tzinfo=NY).astimezone(timezone.utc)
 
 
+def meeting_label(start: date, end: date) -> str:
+    """'FOMC meeting Oct 27–28, 2026'. Built from .day, because day-without-zero strftime codes are not portable (they fail on Windows)."""
+    if start.month == end.month:
+        return f"FOMC meeting {start:%b} {start.day}–{end.day}, {end.year}"
+    return f"FOMC meeting {start:%b} {start.day}–{end:%b} {end.day}, {end.year}"
+
+
+def calendar_status(now: datetime) -> dict:
+    """The built-in table ends; when no future decision remains, say so instead of inventing dates."""
+    last = max(e for _, e, _ in MEETINGS)
+    needs = not any(datetime.fromisoformat(e["at_utc"]) > now for e in scheduled_events(now, 1000) if e["type"] == "statement")
+    return {"needs_update": needs, "last_meeting": last.isoformat(), "link": LINKS["fomc_calendar"],
+            "message": f"Schedule needs updating: the built-in FOMC table ends with the {last:%b} {last.day}, {last.year} meeting. See the official Fed calendar for later meetings." if needs else None}
+
+
 def scheduled_events(now: datetime, limit: int = 6) -> list[dict]:
     """Upcoming FOMC statement / press conference / minutes, in UTC (the browser converts to the user's timezone)."""
     out = []
     for start, end, sep in MEETINGS:
-        label = f"FOMC meeting {start:%b %-d}–{end:%-d, %Y}" if start.month == end.month else f"FOMC meeting {start:%b %-d}–{end:%b %-d, %Y}"
+        label = meeting_label(start, end)
         out += [
             {"id": f"statement-{end}", "type": "statement", "title": "FOMC statement and rate decision" + (" with projections (dot plot)" if sep else ""), "meeting": label,
              "at_utc": et_to_utc(end, RULES["statement_et"]).isoformat(), "projections": sep},
@@ -72,14 +88,18 @@ def decision(end: date, lo: list[tuple[date, float]], hi: list[tuple[date, float
     common = sorted(set(lom) & set(him))
     before = [d for d in common if d <= end - timedelta(days=1)]
     after = [d for d in common if end + timedelta(days=1) <= d <= end + timedelta(days=6)]
-    base = {"kind": "published_fact", "meeting_end": end.isoformat(), "announced_utc": et_to_utc(end, RULES["statement_et"]).isoformat()}
+    base = {"kind": "published_fact", "meeting_end": end.isoformat(), "announced_date": end.isoformat(), "announced_utc": et_to_utc(end, RULES["statement_et"]).isoformat()}
     if not before or not after:
         return {**base, "outcome": None, "note": "Decision not available yet: the target-range series has no observations on both sides of the meeting."}
     p, n = (lom[before[-1]], him[before[-1]]), (lom[after[0]], him[after[0]])
     delta = ((n[0] + n[1]) - (p[0] + p[1])) / 2 * 100
     outcome = "raised" if delta > 0 else "cut" if delta < 0 else "held"
     return {**base, "outcome": outcome, "previous": {"lower": p[0], "upper": p[1], "obs_date": before[-1].isoformat()},
-            "new": {"lower": n[0], "upper": n[1], "obs_date": after[0].isoformat()}, "change_bps": delta, "source": "FRED DFEDTARL/DFEDTARU (Federal Reserve)"}
+            "new": {"lower": n[0], "upper": n[1], "obs_date": after[0].isoformat()}, "change_bps": delta,
+            "announced_date": end.isoformat(), "effective_obs_date": after[0].isoformat() if outcome != "held" else None,
+            "date_note": ("The decision is announced on the meeting's last day at 2:00 pm ET. FRED dates are EFFECTIVE dates: the new range normally takes effect the next day, "
+                          "so the date it first appears in FRED is not the announcement time."),
+            "source": "FRED DFEDTARL/DFEDTARU (Federal Reserve)"}
 
 
 def decisions(lo, hi, today: date, count: int = 4) -> list[dict]:
@@ -293,7 +313,7 @@ class FedWatchService:
     async def overview(self, now: datetime | None = None) -> dict:
         now = now or datetime.now(timezone.utc)
         base = {"as_of": now.isoformat(), "demo": self.demo, "links": LINKS, "rules": RULES, "scenario_note": SCENARIO_NOTE, "scenarios": SCENARIOS,
-                "upcoming": scheduled_events(now), "interpretation_note": "Everything labelled 'why it matters' or 'scenario' is educational, rule-based text, not a prediction or advice."}
+                "upcoming": scheduled_events(now), "calendar": calendar_status(now), "interpretation_note": "Everything labelled 'why it matters' or 'scenario' is educational, rule-based text, not a prediction or advice."}
         if self.demo:
             return {**base, "decisions": [], "decisions_error": None, "communications": [], "feed_status": [], "releases": [], "release_schedule": [], "schedule_note": "",
                     "balance_sheet": None, "errors": [],
@@ -301,8 +321,7 @@ class FedWatchService:
         async with self._lock:
             if not (self._cache and self._cache[0] > time.monotonic()):
                 raw = await self._fetch(now.date())
-                if not raw["errors"]:
-                    self._cache = (time.monotonic() + CACHE_SECONDS, raw)
+                self._cache = (time.monotonic() + (FAIL_CACHE_SECONDS if raw["errors"] else CACHE_SECONDS), raw)
             else:
                 raw = self._cache[1]
         P, today = raw["P"], now.date()
@@ -346,5 +365,7 @@ class FedWatchService:
                 return [], f"BLS release calendar could not be read ({type(e).__name__ if not isinstance(e, FeedError) else str(e)[:60]}); see the official schedule links."
 
         fred_res, feed_res, (events, ics_err) = await asyncio.gather(asyncio.gather(*(fred_one(s) for s in FRED_IDS)), asyncio.gather(*(feed_one(n, u, "speeches" in u) for n, u in FEEDS)), ics())
+        if ics_err:
+            errors.append("BLS release calendar: unavailable")
         return {"P": dict(fred_res), "comms": communications([b for b, _ in feed_res])[:30], "feeds": [s for _, s in feed_res], "ics": events,
                 "ics_note": ics_err or "CPI and Employment dates come from the BLS calendar file. PCE and GDP release dates are not loaded; see the BEA schedule link.", "errors": errors}

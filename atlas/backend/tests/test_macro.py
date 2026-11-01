@@ -1,6 +1,7 @@
 """Macro dashboard: calculations, exact date matching, freshness by publication schedule, partial failure, demo, no order language."""
 import asyncio
 import re
+import time
 from datetime import date, datetime, timedelta, timezone
 
 import httpx
@@ -203,17 +204,24 @@ def test_curve_unavailable_when_one_yield_series_fails_but_the_other_still_shows
     assert "error" in by["curve"] and "error" in by["us2y"] and "value" in by["us10y"]
 
 
-def test_success_is_cached_but_failure_is_not():
+def test_success_is_cached_and_a_partial_failure_is_cached_only_briefly():
     calls: list[dict] = []
     svc = M.MacroService(fred_with(good, calls))
     run(svc.overview())
     n = len(calls)
     run(svc.overview())
-    assert len(calls) == n
-    bad = M.MacroService(fred_with(lambda r: httpx.Response(500), calls))
-    run(bad.overview())
+    assert len(calls) == n and svc._cache[0] - time.monotonic() > M.FAIL_CACHE_SECONDS            # full success: long cache
+    def h(req):
+        calls.append(dict(req.url.params))
+        return httpx.Response(500) if req.url.params["id"] == "CPILFESL" else good(req)
+    part = M.MacroService(fred_with(h, None))
+    first = run(part.overview())
     m = len(calls)
-    run(bad.overview())
+    second = run(part.overview())
+    assert len(calls) == m and any("error" in f for f in second["facts"]) and second is first          # short cache: no refetch, error still visible
+    assert part._cache[0] - time.monotonic() <= M.FAIL_CACHE_SECONDS
+    part._cache = (0.0, part._cache[1])                                                                # the short cache expires
+    run(part.overview())
     assert len(calls) > m
 
 

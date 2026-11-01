@@ -1,6 +1,8 @@
 """Fed Watch: calendar and timezones, decisions from the target range, classification and de-duplication, ICS parsing, release facts, partial failure."""
 import asyncio
+import pathlib
 import re
+import time
 from datetime import date, datetime, timedelta, timezone
 
 import httpx
@@ -279,7 +281,7 @@ def test_partial_failure_keeps_what_works_and_reports_the_rest():
     fred = FakeFred(fred_data(NOW.date()), fail=["PAYEMS", "WALCL"])
     news = FakeNews(news_pages(), fail=[F.FEEDS[1][1], F.BLS_ICS])
     o = run(F.FedWatchService(fred, news).overview(NOW))
-    assert len(o["errors"]) == 3 and any("PAYEMS" in e for e in o["errors"])
+    assert len(o["errors"]) == 4 and any("PAYEMS" in e for e in o["errors"]) and any("BLS" in e for e in o["errors"])
     assert "error" in o["balance_sheet"] and "error" in next(r for r in o["releases"] if r["id"] == "payrolls") and "value" in next(r for r in o["releases"] if r["id"] == "cpi")
     assert [s["ok"] for s in o["feed_status"]] == [True, False, True] and o["communications"] and o["release_schedule"] == [] and "could not be read" in o["schedule_note"]
     assert "://" not in " ".join(o["errors"])
@@ -290,18 +292,36 @@ def test_all_sources_failing_still_returns_the_calendar():
     assert o["upcoming"] and o["decisions"] == [] and o["decisions_error"] and o["communications"] == [] and o["balance_sheet"]["error"]
 
 
-def test_success_is_cached_for_a_while_but_failure_is_not():
+def test_success_is_cached_for_a_while():
     fred, news = FakeFred(fred_data(NOW.date())), FakeNews(news_pages())
     svc = F.FedWatchService(fred, news)
     run(svc.overview(NOW))
     n = len(fred.calls)
     o2 = run(svc.overview(NOW + timedelta(minutes=5)))
-    assert len(fred.calls) == n and o2["upcoming"]
-    bad = F.FedWatchService(FakeFred(fred_data(NOW.date()), fail=["WALCL"]), FakeNews(news_pages()))
-    run(bad.overview(NOW))
-    m = len(bad.fred.calls)
-    run(bad.overview(NOW))
-    assert len(bad.fred.calls) > m
+    assert len(fred.calls) == n and o2["upcoming"] and svc._cache[0] - time.monotonic() > F.FAIL_CACHE_SECONDS
+
+
+def test_partial_failure_is_cached_briefly_with_errors_still_visible_then_retried():
+    fred = FakeFred(fred_data(NOW.date()), fail=["WALCL"])
+    news = FakeNews(news_pages(), fail=[F.FEEDS[1][1]])
+    svc = F.FedWatchService(fred, news)
+    first = run(svc.overview(NOW))
+    f_calls, n_calls = len(fred.calls), len(news.calls)
+    for _ in range(5):                                                                              # five more page loads
+        again = run(svc.overview(NOW))
+    assert len(fred.calls) == f_calls and len(news.calls) == n_calls                                # nothing refetched
+    assert again["errors"] == first["errors"] and len(again["errors"]) == 2 and "error" in again["balance_sheet"]
+    assert svc._cache[0] - time.monotonic() <= F.FAIL_CACHE_SECONDS
+    svc._cache = (0.0, svc._cache[1])                                                               # the short cache expires
+    run(svc.overview(NOW))
+    assert len(fred.calls) > f_calls and len(news.calls) > n_calls
+
+
+def test_a_failed_bls_calendar_is_reported_and_also_only_cached_briefly():
+    svc = F.FedWatchService(FakeFred(fred_data(NOW.date())), FakeNews(news_pages(), fail=[F.BLS_ICS]))
+    o = run(svc.overview(NOW))
+    assert any("BLS release calendar" in e for e in o["errors"]) and "could not be read" in o["schedule_note"]
+    assert svc._cache[0] - time.monotonic() <= F.FAIL_CACHE_SECONDS
 
 
 def test_requests_use_a_start_date_and_only_the_planned_series():
@@ -355,3 +375,53 @@ def test_fed_watch_writes_nothing_to_the_database(tmp_path):
     before = {t: db.q(f"SELECT * FROM {t}") for t in [r[0] for r in db.q("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")]}
     run(F.FedWatchService(FakeFred(fred_data(NOW.date())), FakeNews(news_pages())).overview(NOW))
     assert {t: db.q(f"SELECT * FROM {t}") for t in before} == before
+
+
+# --- review fixes: portable dates, schedule end, announcement vs effective dates ----------------------------------------------------------
+def test_meeting_labels_are_portable_and_have_no_leading_zeros():
+    assert F.meeting_label(D(2026, 10, 27), D(2026, 10, 28)) == "FOMC meeting Oct 27–28, 2026"
+    assert F.meeting_label(D(2026, 3, 3), D(2026, 3, 4)) == "FOMC meeting Mar 3–4, 2026"
+    assert F.meeting_label(D(2026, 6, 30), D(2026, 7, 1)) == "FOMC meeting Jun 30–Jul 1, 2026"
+    labels = {e["meeting"] for e in F.scheduled_events(datetime(2024, 1, 1, tzinfo=timezone.utc), 100)}
+    assert "FOMC meeting Jan 28–29, 2025" in labels and not any(re.search(r"\b0\d", x) for x in labels)
+
+
+def test_no_platform_specific_strftime_codes_anywhere_in_the_backend():
+    bad = []
+    for f in pathlib.Path(F.__file__).parent.rglob("*.py"):
+        for i, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
+            if re.search(r"%-[a-zA-Z]|%#[a-zA-Z]|:%-[a-zA-Z]|:%#[a-zA-Z]", line):
+                bad.append(f"{f.name}:{i}")
+    assert bad == []                                                                                 # %-d / %#d work on only one operating system
+
+
+def test_schedule_end_shows_needs_updating_and_never_invents_meetings():
+    before = F.calendar_status(datetime(2026, 11, 1, tzinfo=timezone.utc))
+    assert before["needs_update"] is False and before["message"] is None
+    for when in (datetime(2026, 12, 9, 19, 1, tzinfo=timezone.utc), datetime(2026, 12, 20, tzinfo=timezone.utc), datetime(2027, 3, 1, tzinfo=timezone.utc)):
+        c = F.calendar_status(when)                                                                 # right after the last decision, while minutes remain, and later
+        assert c["needs_update"] is True and "Schedule needs updating" in c["message"] and c["link"] == F.LINKS["fomc_calendar"] and "Dec 9, 2026" in c["message"]
+    last = max(e for _, e, _ in F.MEETINGS)
+    late = F.scheduled_events(datetime(2027, 3, 1, tzinfo=timezone.utc))
+    assert late == []                                                                               # nothing after the table, nothing made up
+    ends = {datetime.fromisoformat(e["at_utc"]).date() for e in F.scheduled_events(datetime(2024, 1, 1, tzinfo=timezone.utc), 1000)}
+    assert max(ends) <= last + timedelta(days=F.RULES["minutes_after_days"] + 1)
+
+
+def test_overview_carries_the_calendar_status_even_with_no_future_meeting():
+    svc = F.FedWatchService(FakeFred(fred_data(NOW.date())), FakeNews(news_pages()))
+    o = run(svc.overview(datetime(2027, 3, 1, 12, tzinfo=timezone.utc)))
+    assert o["upcoming"] == [] and o["calendar"]["needs_update"] is True and o["decisions"]
+    assert run(F.FedWatchService(FakeFred(fred_data(NOW.date())), FakeNews(news_pages())).overview(NOW))["calendar"]["needs_update"] is False
+
+
+def test_decision_announcement_is_kept_apart_from_the_fred_effective_date():
+    lo, hi = ranges({D(2026, 3, 19): (3.75, 4.00)})
+    cut = F.decision(D(2026, 3, 18), lo, hi)
+    assert cut["announced_date"] == "2026-03-18" and cut["announced_utc"] == "2026-03-18T18:00:00+00:00"       # 2:00 pm EDT on the decision day
+    assert cut["effective_obs_date"] == "2026-03-19" and cut["effective_obs_date"] != cut["announced_date"]
+    assert cut["previous"]["obs_date"] == "2026-03-17" and cut["new"]["obs_date"] == "2026-03-19"
+    assert "EFFECTIVE" in cut["date_note"] and "not the announcement time" in cut["date_note"]
+    hold = F.decision(D(2026, 4, 29), lo, hi)
+    assert hold["effective_obs_date"] is None and hold["announced_date"] == "2026-04-29"
+    assert F.decision(D(2025, 10, 28), lo, hi).get("effective_obs_date") is None                  # unavailable decision: no dates implied

@@ -245,6 +245,7 @@ def interpretations(F: dict[str, dict]) -> list[dict]:
 # --- service -----------------------------------------------------------------------------------------------------------------------------
 HISTORY_DAYS = {"DGS10": 400, "DGS2": 400, "DFEDTARL": 800, "DFEDTARU": 800, "DTWEXBGS": 400, "CPIAUCSL": 900, "CPILFESL": 900}
 CACHE_SECONDS = 1800.0
+FAIL_CACHE_SECONDS = 60.0      # partial failures are kept briefly (errors stay visible) so page loads do not refetch every series
 
 
 class MacroService:
@@ -261,8 +262,8 @@ class MacroService:
             if self._cache and self._cache[0] > time.monotonic():
                 return self._cache[1]
             res = await self._build(today or datetime.now(timezone.utc).date())
-            if res["facts"] and all("error" not in f for f in res["facts"]):
-                self._cache = (time.monotonic() + CACHE_SECONDS, res)          # only a fully successful result is cached
+            ok = all("error" not in f for f in res["facts"])
+            self._cache = (time.monotonic() + (CACHE_SECONDS if ok else FAIL_CACHE_SECONDS), res)
             return res
 
     async def _build(self, today: date) -> dict:

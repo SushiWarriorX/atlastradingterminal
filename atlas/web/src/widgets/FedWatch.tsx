@@ -42,6 +42,7 @@ export function FedWatchTab() {
       <div className="note">Times are shown in your timezone ({TZ}). Sources: federalreserve.gov, FRED mirrors of BLS/BEA data. Nothing here is a prediction or advice.{d.demo && ` ${d.notice}`}</div>
 
       <div className="ws-bar" style={{ paddingLeft: 0 }}><span><Tag kind="Scheduled" />UPCOMING</span></div>
+      {d.calendar?.needs_update && <div className="note warn"><b>{d.calendar.message}</b> <a href={d.calendar.link} target="_blank" rel="noreferrer noopener">Official Fed calendar</a></div>}
       {next && <div className="bigpx mono" style={{ fontSize: 15 }}>{next.title}: <span className="up">{countdown(next.at_utc, now)}</span> <span className="dim small">· {localTime(next.at_utc)}</span></div>}
       <table className="tbl"><tbody>
         {d.upcoming.map((e) => (
@@ -55,13 +56,14 @@ export function FedWatchTab() {
 
       <div className="ws-bar" style={{ paddingLeft: 0 }}><span><Tag kind="Published fact" />RATE DECISIONS</span></div>
       {d.decisions_error && <div className="note warn">{d.decisions_error}</div>}
-      <table className="tbl"><thead><tr><th>Meeting decision</th><th>Result</th><th>Previous range</th><th>New range</th><th>Announced</th></tr></thead>
+      <table className="tbl"><thead><tr><th>Decision announced</th><th>Result</th><th title="The last FRED value before the meeting">Range before</th><th title="FRED dates are effective dates, not announcement times">Range after (first FRED date)</th><th>Announced at</th></tr></thead>
         <tbody>{d.decisions.map((x) => (
-          <tr key={x.meeting_end}><td className="mono">{x.meeting_end}</td>
+          <tr key={x.meeting_end}><td className="mono">{x.announced_date ?? x.meeting_end}</td>
             <td><b>{x.outcome ? OUTCOME_TEXT[x.outcome] : "n/a"}</b>{x.change_bps ? <span className="dim small"> {x.change_bps > 0 ? "+" : "−"}{Math.abs(x.change_bps).toFixed(0)} bps</span> : null}{x.note && <div className="dim small">{x.note}</div>}</td>
-            <td className="mono small">{x.previous ? `${x.previous.lower.toFixed(2)}–${x.previous.upper.toFixed(2)}%` : "–"}</td><td className="mono small">{x.new ? `${x.new.lower.toFixed(2)}–${x.new.upper.toFixed(2)}%` : "–"}</td>
+            <td className="mono small">{x.previous ? `${x.previous.lower.toFixed(2)}–${x.previous.upper.toFixed(2)}%` : "–"}{x.previous && <div className="dim">FRED {x.previous.obs_date}</div>}</td>
+            <td className="mono small">{x.new ? `${x.new.lower.toFixed(2)}–${x.new.upper.toFixed(2)}%` : "–"}{x.new && <div className="dim">{x.effective_obs_date ? `effective in FRED ${x.effective_obs_date}` : "no change"}</div>}</td>
             <td className="small">{localTime(x.announced_utc)}</td></tr>))}</tbody></table>
-      <div className="note">Computed from the Fed's published target-range series (FRED), compared before and after each meeting.</div>
+      <div className="note">Computed from the Fed's published target-range series (FRED), compared before and after each meeting. {d.decisions.find((x) => x.date_note)?.date_note}</div>
 
       <div className="ws-bar" style={{ paddingLeft: 0 }}><span><Tag kind="Interpretation" />POSSIBLE SCENARIOS</span>
         {(["raised", "cut", "held"] as const).map((k) => <button key={k} className={`mini ${scen === k ? "on" : ""}`} onClick={() => setPick(k)}>{OUTCOME_TEXT[k]}</button>)}</div>
