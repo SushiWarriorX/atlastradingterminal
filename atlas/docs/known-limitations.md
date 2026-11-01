@@ -161,3 +161,11 @@
 - Separate verdicts: connectivity, structure, freshness, data quality. A reachable provider with invalid numbers shows "Bad data", not OK.
 - `POST /api/health/check` accepts only localhost Host headers, local web-app Origins, non-cross-site fetches and the `X-Atlas-Request` marker header; 30 s cooldown; one run at a time; 14 s per probe, 30 s per run (probes are cancelled on timeout).
 - Limits: Yahoo is called through `yfinance` in a worker thread; a timed-out call is abandoned but the library's own 10 s request timeout ends it. The reach-vs-shape split for Yahoo/Coinbase/FRED/IBKR is inferred from the adapter's error text. Endpoint shapes for Hyperliquid/Binance/Bybit/OKX/RSS are still the documented ones, never verified against the live services until you run the check. The check does not work when ATLAS_HOST is not a localhost address.
+
+## Macro dashboard (Macro page > MACRO DASHBOARD)
+- Facts come from seven FRED CSV series (DGS10, DGS2, CPIAUCSL, CPILFESL, DFEDTARL, DFEDTARU, DTWEXBGS), fetched from a start date (about 1-2.5 years back) and cached for 30 minutes after a fully successful load. Series IDs and the CSV format were not checked against the live service by the build; use Settings > Run provider check and the dashboard itself on first use.
+- The curve is computed only on dates present in both yield series. CPI year-over-year needs the same calendar month one year earlier; a missing month gives no figure, never a neighbouring month. A skipped CPI release therefore blanks that month and the next month's change.
+- Freshness is judged per series against its publication schedule: daily yields overdue after 6 days, CPI after 80 days, the Fed target range after 7 days (an unchanged range is normal), the weekly-published dollar index after 14 days. These limits are estimates of the usual schedule, not official calendars.
+- The dollar row is the Fed's Nominal Broad U.S. Dollar Index, NOT the ICE DXY.
+- Interpretations are fixed, conditional, rule-based text (thresholds are listed in the API response under `rules` and are uncalibrated). There is no score, no prediction and no AI call. Demo mode shows an empty dashboard with a notice.
+- The AI macro agent keeps its own snapshot, which subtracts the latest value of each yield series without matching dates; it is unchanged.

@@ -17,6 +17,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from . import commands, health_check, instruments as I
+from .macro import MacroService
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
 from .providers.ibkr_data import IBKRData
 from .journal import hyperliquid as hl, importers as jimp, stats as jstats
@@ -259,6 +260,14 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             hc_state["started"] = time.monotonic()
             hc_state["last"] = await health_check.run_checks(svc=svc, provs=provs, ibkr_md=ibkr_md, broker=broker, derivs=derivs, news=news, demo=demo)
         return ok({"last": hc_state["last"], "cooldown_left": hc_cooldown_left(), "running": False})
+
+    macro = MacroService(provs.get("fred"), demo) if (demo or provs.get("fred")) else None
+
+    @app.get("/api/macro/overview")
+    async def macro_overview():
+        if macro is None:
+            raise ApiError("NOT_CONFIGURED", "The FRED provider is not set up.", 503)
+        return ok(await macro.overview())
 
     @app.get("/api/market/status")
     async def market_status():

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import csv
 import io
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from ..instruments import Instrument
 from ..models import Candle, OHLCV, Provenance, ProviderUnavailable, Quote
@@ -19,8 +19,12 @@ class FredProvider:
     def __init__(self, http: Http | None = None):
         self.http = http or Http("https://fred.stlouisfed.org", "fred", min_interval=0.5)
 
-    async def _series(self, inst: Instrument) -> list[tuple[datetime, float]]:
-        r = await self.http.get("/graph/fredgraph.csv", {"id": inst.provider_symbol})
+    async def series(self, inst: Instrument, start: date | None = None) -> list[tuple[datetime, float]]:
+        """Observations, optionally only those from `start` on (smaller download). Used by the macro dashboard."""
+        return await self._series(inst, start)
+
+    async def _series(self, inst: Instrument, start: date | None = None) -> list[tuple[datetime, float]]:
+        r = await self.http.get("/graph/fredgraph.csv", {"id": inst.provider_symbol, **({"cosd": start.isoformat()} if start else {})})
         rows = list(csv.reader(io.StringIO(r.text)))
         pts = []
         for date, val in rows[1:]:

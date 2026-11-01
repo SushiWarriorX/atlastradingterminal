@@ -17,6 +17,7 @@ import { DerivativesWidget } from "./widgets/Derivatives";
 import { MtfWidget } from "./widgets/Mtf";
 import { JournalEditorWidget, JournalImportWidget, JournalSourcesWidget, JournalTradesWidget, PerformanceWidget2 } from "./widgets/Journal";
 import { SettingsWidget } from "./widgets/Settings";
+import { MacroDashboard } from "./widgets/Macro";
 
 const Grid = WidthProvider(RGL);
 
@@ -42,7 +43,7 @@ function render(w: WidgetCfg, view: string) {
     case "health": return <HealthWidget />;
     case "yields": return <YieldsWidget />;
     case "settings": return <SettingsWidget />;
-    case "unavailable": return p.view === "news" ? <NewsWidget /> : p.view === "btc_deriv" ? <DerivativesWidget /> : <UnavailableWidget view={p.view} />;      // layouts saved before news existed still hold the placeholder
+    case "unavailable": return p.view === "macro_fed" ? <MacroDashboard /> : p.view === "news" ? <NewsWidget /> : p.view === "btc_deriv" ? <DerivativesWidget /> : <UnavailableWidget view={p.view} />;      // layouts saved before news existed still hold the placeholder
   }
 }
 
