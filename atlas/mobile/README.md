@@ -17,14 +17,22 @@ You need Node 20+ and the ATLAS backend running (see the main [README](../README
 
 ### 1. Start the ATLAS backend
 
-Try it with synthetic data first (everything is labelled **Demo**):
+**On Windows (the usual way).** Copy `local-settings.example.ps1` to `local-settings.ps1` (it is never uploaded) and add:
+
+```powershell
+$env:ATLAS_CORS_ORIGINS = "http://localhost:8081"      # only needed for the browser version of the app
+```
+
+Then double-click `start-windows.bat` (practice data, everything labelled **Demo**) or run `start-windows.bat -Real` (real data from Coinbase, Yahoo Finance and, if you set a key, FRED).
+
+**Mac or Linux:**
 
 ```bash
 cd atlas/backend
-ATLAS_DEMO=1 ATLAS_CORS_ORIGINS=http://localhost:8081 python -m atlas_api
+ATLAS_DEMO=1 ATLAS_CORS_ORIGINS=http://localhost:8081 python -m atlas_api     # drop ATLAS_DEMO=1 for real data
 ```
 
-Or run ATLAS normally (real data from Coinbase, Yahoo Finance and, if you set a key, FRED). `ATLAS_CORS_ORIGINS` is only needed when you open the app in a **browser**; the phone app does not use CORS.
+`ATLAS_CORS_ORIGINS` is only for opening the app in a **browser**; the phone app does not need it.
 
 ### 2. Start the app
 
@@ -44,13 +52,14 @@ On the first screen enter your server address:
 | Phone on the same Wi-Fi | `http://<your PC's IP address>:8000` |
 | Anywhere (recommended) | `https://<your cloud address>` from the [cloud guide](../docs/cloud-deploy.md) |
 
-For a phone on your Wi-Fi the backend must listen on the network and ask for a password. It refuses to do otherwise:
+For a phone on your Wi-Fi the backend must listen on the network and ask for a password (it refuses to do otherwise). On Windows add these two lines to `local-settings.ps1` and restart; on Mac or Linux set the same variables before `python -m atlas_api`:
 
-```bash
-ATLAS_HOST=0.0.0.0 ATLAS_AUTH_PASSWORD='a password of 12+ characters' python -m atlas_api
+```powershell
+$env:ATLAS_HOST = "0.0.0.0"
+$env:ATLAS_AUTH_PASSWORD = "a password of 12 or more characters"
 ```
 
-Allow Python through the Windows firewall when it asks. Plain `http://` sends your password and login token unencrypted over the Wi-Fi, so use it only at home; use the HTTPS cloud setup for anything else. To pre-fill the address, set `EXPO_PUBLIC_ATLAS_URL` before `npm start`.
+Your PC's address is the "IPv4 Address" shown by `ipconfig` (Windows) or `ifconfig` (Mac/Linux). Allow Python through the Windows firewall when it asks. Plain `http://` sends your password and login token unencrypted over the Wi-Fi, so use it only at home; use the HTTPS cloud setup for anything else. To pre-fill the address in the app, set `EXPO_PUBLIC_ATLAS_URL` before `npm start`.
 
 ### Tests
 
