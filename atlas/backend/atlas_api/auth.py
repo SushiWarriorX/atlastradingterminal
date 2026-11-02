@@ -14,6 +14,7 @@ import time
 MIN_PASSWORD = 12
 COOKIE = "atlas_session"
 MAX_AGE = 7 * 86400
+MOBILE_MAX_AGE = 30 * 86400
 MAX_FAILS, FAIL_WINDOW = 5, 300
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 PUBLIC_API = {"/api/auth/login", "/api/auth/logout", "/api/auth/status", "/api/health"}
@@ -39,8 +40,8 @@ class Auth:
     def check_password(self, given: str) -> bool:
         return hmac.compare_digest(hashlib.sha256(given.encode()).digest(), self._pw)
 
-    def make_token(self, now: float | None = None) -> str:
-        exp = str(int((now if now is not None else time.time()) + MAX_AGE))
+    def make_token(self, now: float | None = None, ttl: int = MAX_AGE) -> str:
+        exp = str(int((now if now is not None else time.time()) + ttl))
         return f"{exp}.{hmac.new(self._key, exp.encode(), hashlib.sha256).hexdigest()}"
 
     def valid_token(self, token: str | None, now: float | None = None) -> bool:
@@ -76,6 +77,13 @@ def _cookie(headers: list[tuple[bytes, bytes]]) -> str | None:
     return None
 
 
+def bearer(value: str | None) -> str | None:
+    """The token from an 'Authorization: Bearer <token>' header value."""
+    if value and value[:7].lower() == "bearer ":
+        return value[7:].strip() or None
+    return None
+
+
 def _header(headers, name: bytes) -> str | None:
     return next((v.decode("latin-1") for k, v in headers if k == name), None)
 
@@ -97,13 +105,15 @@ class AuthMiddleware:
         if scope["type"] == "http":
             method = scope.get("method", "GET")
             origin, site = _header(headers, b"origin"), _header(headers, b"sec-fetch-site")
-            if method not in ("GET", "HEAD", "OPTIONS") and ((origin is not None and origin not in self.origins) or site == "cross-site"):
+            tok = bearer(_header(headers, b"authorization"))
+            by_token = self.auth.valid_token(tok)         # a bearer token is not sent automatically by browsers, so it needs no cross-site check
+            if not by_token and method not in ("GET", "HEAD", "OPTIONS") and ((origin is not None and origin not in self.origins) or site == "cross-site"):
                 return await self._deny(send, 403, "FORBIDDEN_ORIGIN", "Requests from other websites are refused.")
             if method == "OPTIONS" or path in PUBLIC_API:
                 return await self.app(scope, receive, send)
-            if not self.auth.valid_token(_cookie(headers)):
+            if not by_token and not self.auth.valid_token(_cookie(headers)):
                 return await self._deny(send, 401, "AUTH_REQUIRED", "Please log in.")
-        elif not self.auth.valid_token(_cookie(headers)):
+        elif not (self.auth.valid_token(_cookie(headers)) or self.auth.valid_token(bearer(_header(headers, b"authorization")))):
             await send({"type": "websocket.close", "code": 1008})
             return
         return await self.app(scope, receive, send)

@@ -83,6 +83,12 @@ def normalize(info: dict, price: float | None = None, calendar: dict | None = No
     put("roe_pct", "Return on equity", _pct(num(info.get("returnOnEquity"))), "%", "reported fraction x 100")
     put("roa_pct", "Return on assets", _pct(num(info.get("returnOnAssets"))), "%", "reported fraction x 100")
 
+    ocf, fcf = num(info.get("operatingCashflow")), num(info.get("freeCashflow"))
+    fcfm, fcfm_n = _div(fcf, rev)
+    put("operating_cash_flow", "Operating cash flow (TTM)", ocf, "$", "reported")
+    put("free_cash_flow", "Free cash flow (TTM)", fcf, "$", "reported")
+    put("fcf_margin_pct", "Free cash flow margin", None if fcfm is None else fcfm * 100, "%", "free cash flow / trailing revenue x 100", fcfm_n)
+
     equity = bvps * shares if bvps is not None and shares is not None else None
     de, de_n = _div(debt, equity)
     put("cash", "Cash", cash, "$", "reported")
@@ -105,7 +111,8 @@ def normalize(info: dict, price: float | None = None, calendar: dict | None = No
 
     if is_fund:       # funds have no company financials: say so once instead of a wall of dashes
         for k in ("pe", "pe_forward", "ps", "pb", "ev_ebitda", "revenue", "revenue_growth_pct", "earnings_growth_pct", "gross_margin_pct", "operating_margin_pct",
-                  "profit_margin_pct", "roe_pct", "roa_pct", "debt_to_equity", "net_debt", "cash", "debt", "current_ratio", "payout_ratio_pct", "enterprise_value"):
+                  "profit_margin_pct", "roe_pct", "roa_pct", "debt_to_equity", "net_debt", "cash", "debt", "current_ratio", "payout_ratio_pct", "enterprise_value",
+                  "operating_cash_flow", "free_cash_flow", "fcf_margin_pct"):
             rows[k]["note"] = f"not applicable to a {kind}"
 
     nxt = None
@@ -126,6 +133,7 @@ def normalize(info: dict, price: float | None = None, calendar: dict | None = No
 
     groups = [("Valuation", ["pe", "pe_forward", "ps", "pb", "ev_ebitda", "market_cap", "enterprise_value"]),
               ("Growth and profitability", ["revenue", "revenue_growth_pct", "earnings_growth_pct", "gross_margin_pct", "operating_margin_pct", "profit_margin_pct", "roe_pct", "roa_pct"]),
+              ("Cash flow", ["operating_cash_flow", "free_cash_flow", "fcf_margin_pct"]),
               ("Balance sheet", ["cash", "debt", "net_debt", "debt_to_equity", "current_ratio"]),
               ("Dividend", ["dividend_rate", "dividend_yield_pct", "payout_ratio_pct"]),
               ("Share data", ["shares", "high_52w", "low_52w", "range_pos_pct"])]
