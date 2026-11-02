@@ -8,7 +8,7 @@ Honest ledger. "Verified" means exercised by an automated test or the browser sm
 |---|---|
 | Indicators: SMA, EMA, RSI (Wilder), ATR, MACD, Bollinger, VWAP, RVOL; NaN warm-up | `tests/test_core.py` (RSI checked against hand arithmetic from the Wilder example) |
 | NYSE session state incl. DST, holiday, early close | `tests/test_core.py` (EST/EDT open times, Thanksgiving, day-after-Thanksgiving 13:00 close) |
-| Data-status classification (LIVE/DELAYED/HISTORICAL/STALE/DEMO) | `tests/test_core.py` |
+| Data-status classification (LIVE/DELAYED/HISTORICAL/STALE/DEMO). While the market is closed or in extended hours a price is "market closed" only if it comes from the latest session or later; an older one is STALE (found by the Signal Mobile browser tests) | `tests/test_core.py` |
 | Interval derivation by resampling (4h, 2h, 30m, 3m, 1w) | `tests/test_core.py`, `tests/test_service.py` |
 | Coinbase/FRED parsing, retry/backoff, health counters (mocked HTTP) | `tests/test_service.py` |
 | UNAVAILABLE instead of synthetic data when a provider is missing or failing | `tests/test_api.py` |
@@ -65,6 +65,7 @@ Honest ledger. "Verified" means exercised by an automated test or the browser sm
 | IBKR executions flow into the journal (idempotent, commission-unset sentinel handled, multipliers, no double counting with local fills) | `tests/test_ibkr.py`, `tests/test_journal_api.py` |
 | AI `get_journal_stats` tool (read-only, desk only) carries per-group reliability and an instruction not to conclude from small samples | `tests/test_journal_api.py` |
 | UI: command bar, workspaces, charts with overlays, watchlist add/remove, reload persistence, theme, status badges, help | browser smoke run (`web/e2e/smoke.cjs`) against the demo backend, no JS errors |
+| **Signal Mobile** (phone app, Expo/React Native; branch `feature/signal-mobile`): Watchlist and Search tabs, one research screen per asset with a briefing and four agent rows (News, Technical, Macro, Fundamentals); stable asset ids so same-ticker assets (BTC the coin vs the BTC ETF) cannot be confused; server-side watchlist; phone login token; every number with source, time and freshness label; stale/partial/missing/offline states; demo data labelled and never mixed with live; no order route or control. Design, API and gaps: [signal-mobile.md](signal-mobile.md) | `tests/test_signal_*.py` (agents, orchestrator, API, asset registry, AI wording with a scripted model); 28 app unit tests; `mobile/e2e/signal.e2e.cjs`, 38 browser checks in six scenarios against a scripted backend. **Scripted data and demo mode only**: not run against live providers or on a physical phone. |
 
 ## Implemented but NOT verified against the real service
 
@@ -78,6 +79,7 @@ Honest ledger. "Verified" means exercised by an automated test or the browser sm
 - **Journal statistics on real trade history** (only synthetic and hand-built data so far).
 - `AnthropicLLM` against the real API (only the scripted fake was exercised), so prompt quality, JSON-compliance rate and token costs are unmeasured.
 - The AI desk's technical agent (now including the MTF block) has never been run with a real model.
+- **Signal Mobile against live data and real phones.** Coinbase, Yahoo, FRED, CoinGecko, mempool.space and the Nasdaq directory were never reached from the build environment, so the new adapters (CoinGecko, mempool.space, ETF holdings) were tested against hand-written sample payloads only. Only the web export of the app was driven (in a browser); no iOS or Android run. The optional AI wording layer has only seen a scripted model. Data-use terms of every source are unchecked (see [signal-mobile.md](signal-mobile.md#data-sources-and-terms-checklist)); Yahoo data should be treated as personal use only.
 
 ## Not built (shown in the UI as "Not built yet", never with fake data)
 

@@ -39,6 +39,8 @@ IBKR_ENABLED=1 IBKR_MODE=paper_trading IBKR_PORT=7497 python -m atlas_api
 
 Then **Settings > Interactive Brokers > Connect**, and **Link this account as a portfolio**. There is no mode that places orders on a live account. This was tested against a fake IBKR only: try it with a paper account and a single share first.
 
+**Signal Mobile (phone app, prototype).** A separate Expo/React Native app in `atlas/mobile` for Bitcoin, crypto tokens, US stocks and ETFs, with four research agents folded into one screen per asset. Research only: it cannot trade. See [mobile/README.md](mobile/README.md) to run it and [docs/signal-mobile.md](docs/signal-mobile.md) for the design, API and what is not verified yet.
+
 Live mode: drop `ATLAS_DEMO=1`. BTC comes from Coinbase's public API, equities/indices from Yahoo (delayed), yields from FRED. For the AI desk, `export ANTHROPIC_API_KEY=...` before starting the backend. `.env.example` lists every variable.
 
 ## Test it
@@ -57,6 +59,7 @@ node atlas/web/e2e/derivatives.cjs ./e2e-out  # DEMO data
 node atlas/web/e2e/desks.cjs ./e2e-out         # desk rules (BTC only / equities only / per-chart assets), DEMO data
 node atlas/web/e2e/news.cjs ./e2e-out       # needs e2e/fake_rss.py; see the header of the script
 node atlas/web/e2e/backtest.cjs ./e2e-out   # backtester (demo data; saves a run, use a throwaway ATLAS_DB)
+cd atlas/mobile && npm run typecheck && npm test   # Signal Mobile: types + unit tests; browser tests: see mobile/README.md
 ```
 
 ## Using it
