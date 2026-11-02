@@ -1,0 +1,10 @@
+.git
+.env
+**/node_modules
+**/.venv
+**/__pycache__
+**/*.db
+**/dist
+**/e2e-out
+atlas/web/e2e
+local-settings.ps1

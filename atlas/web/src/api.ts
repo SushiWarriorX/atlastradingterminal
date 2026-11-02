@@ -55,6 +55,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiFailure("BACKEND_UNREACHABLE", "Backend not reachable. Is the API running on :8000?", 0);
   }
   const j = await r.json().catch(() => null);
+  if (j?.error?.code === "AUTH_REQUIRED") window.dispatchEvent(new Event("atlas-auth-required"));      // the session ended: show the login screen
   if (!j || j.ok !== true) throw new ApiFailure(j?.error?.code ?? "ERROR", j?.error?.message ?? `HTTP ${r.status}`, r.status, j?.error ?? {});
   return j.data as T;
 }
@@ -62,6 +63,9 @@ const body = (m: string, b: unknown): RequestInit => ({ method: m, body: JSON.st
 
 export const api = {
   status: () => call<MarketStatus>("/api/market/status"),
+  authStatus: () => call<{ required: boolean; authenticated: boolean }>("/api/auth/status"),
+  login: (password: string) => call<{ required: boolean; authenticated: boolean }>("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) }),
+  logout: () => call<{ required: boolean; authenticated: boolean }>("/api/auth/logout", { method: "POST" }),
   macroFed: () => call<FedWatch>("/api/macro/fed"),
   macroOverview: () => call<MacroOverview>("/api/macro/overview"),
   healthCheckLast: () => call<CheckState_>("/api/health/check"),

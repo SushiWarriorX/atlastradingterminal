@@ -8,3 +8,5 @@ dist/
 e2e-out/
 .pytest_cache/
 local-settings.ps1
+
+.env

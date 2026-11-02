@@ -80,6 +80,7 @@ function IbkrSection() {
 export function SettingsWidget() {
   const { theme, setTheme, updateSeconds, setUpdateSeconds } = useStore();
   const st = useQuery({ queryKey: ["status"], queryFn: api.status });
+  const auth = useQuery({ queryKey: ["auth"], queryFn: api.authStatus, staleTime: 60_000 });
   return (
     <Panel title="SETTINGS">
       <table className="tbl kv"><tbody>
@@ -90,6 +91,7 @@ export function SettingsWidget() {
         <tr><td>Broker environment</td><td className="r mono">{st.data?.broker_env ?? "—"}</td></tr>
         <tr><td>Live trading</td><td className="r mono">{st.data?.live_trading_enabled ? "ENABLED" : "disabled (no order routes in this build)"}</td></tr>
         <tr><td>AI model</td><td className="r mono">{st.data?.ai.model ?? "not configured"}</td></tr>
+        {auth.data?.required && <tr><td>Login session</td><td className="r"><button className="mini" onClick={() => api.logout().then(() => window.dispatchEvent(new Event("atlas-auth-required")))}>Log out</button></td></tr>}
         <tr><td>Data mode</td><td className="r mono">{st.data?.demo_mode ? "DEMO (synthetic)" : "live providers"}</td></tr>
       </tbody></table>
       <IbkrSection />
