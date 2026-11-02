@@ -10,13 +10,13 @@ from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 
 import httpx
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from . import commands, health_check, instruments as I
+from . import auth as authmod, commands, health_check, instruments as I
 from .fedwatch import FedWatchService
 from .macro import MacroService
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
@@ -71,7 +71,7 @@ def ok(data):
     return {"ok": True, "data": data}
 
 
-def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None, fundamentals_provider=None, deriv_client=None) -> FastAPI:
+def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None, fundamentals_provider=None, deriv_client=None, auth_password: str | None = None) -> FastAPI:
     demo = os.getenv("ATLAS_DEMO") == "1" if demo is None else demo
     db = DB(db_path or os.getenv("ATLAS_DB", "atlas.db"))
     provs = providers if providers is not None else {"coinbase": CoinbaseProvider(), "yahoo": YahooProvider(), "fred": FredProvider()}
@@ -184,6 +184,40 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     app.state.broker = broker
     app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
                        allow_methods=["*"], allow_headers=["*"])
+    # Cloud hosting (optional): password login, plus the public hostname allowed in the Host/Origin checks. Both are off for the local setup.
+    auth = authmod.Auth(auth_password if auth_password is not None else os.getenv("ATLAS_AUTH_PASSWORD"))
+    public_name = (os.getenv("ATLAS_ALLOWED_HOST") or "").strip().lower()                  # "atlas.example.com" (a port may be added for testing: "localhost:8000")
+    public_host = public_name.rsplit(":", 1)[0] if public_name.count(":") == 1 else public_name
+    public_origins = {f"https://{public_name}", f"http://{public_name}"} if public_name else set()
+    app.add_middleware(authmod.AuthMiddleware, auth=auth, allowed_origins={"http://localhost:5173", "http://127.0.0.1:5173", *public_origins})
+
+    class LoginBody(BaseModel):
+        password: str = Field(max_length=200)
+
+    @app.get("/api/auth/status")
+    async def auth_status(request: Request):
+        return ok({"required": auth.enabled, "authenticated": (not auth.enabled) or auth.valid_token(request.cookies.get(authmod.COOKIE))})
+
+    @app.post("/api/auth/login")
+    async def auth_login(b: LoginBody, request: Request, response: Response):
+        if not auth.enabled:
+            return ok({"required": False, "authenticated": True})
+        ip = request.client.host if request.client else "unknown"
+        wait = auth.retry_after(ip)
+        if wait:
+            raise ApiError("TOO_MANY_ATTEMPTS", f"Too many failed attempts. Try again in {wait}s.", 429)
+        if not auth.check_password(b.password):
+            auth.record_failure(ip)
+            await asyncio.sleep(0.5)
+            raise ApiError("BAD_PASSWORD", "Wrong password.", 401)
+        auth.clear_failures(ip)
+        response.set_cookie(authmod.COOKIE, auth.make_token(), max_age=authmod.MAX_AGE, httponly=True, samesite="strict", secure=request.url.scheme == "https", path="/")
+        return ok({"required": True, "authenticated": True})
+
+    @app.post("/api/auth/logout")
+    async def auth_logout(response: Response):
+        response.delete_cookie(authmod.COOKIE, path="/")
+        return ok({"required": auth.enabled, "authenticated": False})
 
     @app.exception_handler(ApiError)
     async def _api_err(_, e: ApiError):
@@ -224,8 +258,8 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     # --- provider health check (on demand, read-only, localhost-only) ----------------------------------------------
     hc_state: dict = {"last": None, "started": None}
     hc_lock = asyncio.Lock()
-    local_hosts = {"localhost", "127.0.0.1", "::1"}
-    local_origins = {f"http://{h}:{p}" for h in ("localhost", "127.0.0.1") for p in (5173, int(os.getenv("ATLAS_PORT", "8000")))}
+    local_hosts = {"localhost", "127.0.0.1", "::1", *([public_host] if public_host else [])}
+    local_origins = {f"http://{h}:{p}" for h in ("localhost", "127.0.0.1") for p in (5173, int(os.getenv("ATLAS_PORT", "8000")))} | public_origins
 
     def local_only(request: Request, *, mutating: bool) -> None:
         """Refuse anything that is not the local web app: wrong Host (DNS rebinding), foreign Origin / cross-site fetch (CSRF), or missing marker header."""
@@ -1293,5 +1327,10 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             pass
         finally:
             task.cancel()
+
+    dist = os.getenv("ATLAS_WEB_DIST")
+    if dist and os.path.isdir(dist):                       # cloud: one server serves both the API and the built web app (same origin, no CORS)
+        from fastapi.staticfiles import StaticFiles
+        app.mount("/", StaticFiles(directory=dist, html=True), name="web")
 
     return app

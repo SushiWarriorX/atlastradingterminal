@@ -1,0 +1,31 @@
+# ATLAS in the cloud: the app (private, no published port) behind Caddy, which adds HTTPS. Start with:  docker compose up -d --build
+services:
+  atlas:
+    build: .
+    restart: unless-stopped
+    env_file: .env                          # ATLAS_AUTH_PASSWORD and optional API keys: never committed
+    environment:
+      ATLAS_ALLOWED_HOST: ${ATLAS_DOMAIN:?set ATLAS_DOMAIN in .env}
+      ATLAS_FORWARDED_ALLOW_IPS: "*"        # safe: only the Caddy container can reach this one
+    volumes:
+      - atlas-data:/data                    # the database (journal, notes, saved runs) lives here and survives rebuilds
+    expose:
+      - "8000"
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - atlas
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      ATLAS_DOMAIN: ${ATLAS_DOMAIN:?set ATLAS_DOMAIN in .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+volumes:
+  atlas-data:
+  caddy-data:
+  caddy-config:
