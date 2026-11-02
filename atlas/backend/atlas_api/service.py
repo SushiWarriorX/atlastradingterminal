@@ -63,7 +63,9 @@ class MarketService:
 
     def _finalize(self, inst: Instrument, obj):
         now = datetime.now(timezone.utc)
-        sess = session_state(now)["state"] if inst.is_equity_like else None
+        si = session_state(now) if inst.is_equity_like else None
+        sess = si["state"] if si else None
+        last_open = datetime.fromisoformat(si["last_open"]) if si and si.get("last_open") else None      # absent when a test fakes the session
         prov = obj.prov
         if isinstance(obj, OHLCV) and obj.candles and inst.asset_class != "macro" and obj.interval in BAR_SECONDS:
             # A bar's open time says nothing about freshness: a forming bar is current as of now, and a closed
@@ -73,7 +75,7 @@ class MarketService:
         prov.session = sess
         prov.status, notes = classify(provider=prov.provider, asset_class=inst.asset_class, event_time=prov.event_time,
                                       now=now, delay_seconds=prov.delay_seconds, session=sess,
-                                      regular_hours_only=prov.provider == "yahoo" or isinstance(obj, OHLCV))
+                                      regular_hours_only=prov.provider == "yahoo" or isinstance(obj, OHLCV), last_open=last_open)
         prov.quality = [*prov.quality, *(n for n in notes if n not in prov.quality)]      # keep what the provider and the fallback chain said, add the classification
         return obj
 

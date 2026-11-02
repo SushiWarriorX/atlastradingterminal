@@ -88,7 +88,7 @@ def scenario_text(driver: str, sign: int, label: str) -> str:
     name = {"yields": "the 10-year yield keeps rising", "usd": "the dollar keeps strengthening", "liquidity": "the Fed's balance sheet keeps growing",
             "inflation": "inflation stays high", "curve": "the yield curve steepens"}[driver]
     back = {"yields": "yields fall back", "usd": "the dollar weakens", "liquidity": "the balance sheet shrinks", "inflation": "inflation cools", "curve": "the curve flattens or inverts"}[driver]
-    return (f"Scenario: if {name}, {L} have tended to feel it as a force that can {up} them; if {back}, that has tended to {down} them. "
+    return (f"Scenario: if {name}, that has tended to {up} {L}; if {back}, that has tended to {down} {L}. "
             "Reactions differ by period, and the reason behind the move matters.")
 
 
@@ -211,11 +211,13 @@ def _points(a, exp, used, contrib, events, F, now) -> list[Point]:
             nm = "The 10-year yield" if d == "yields" else "The broad dollar index"
             add("changed", f"{nm} {word} {t.replace('+', '').replace('-', '')} over about a month.", 64, keymap[d], f"macro-{d}-move")
         if c > 0:
-            add("supports", {"yields": "Falling yields" if s < 0 else "Rising yields", "usd": "A weaker dollar" if s < 0 else "A stronger dollar", "liquidity": "Growing Fed liquidity", "inflation": "Cooling inflation" if s < 0 else "High inflation",
-                             "curve": "A steeper yield curve"}[d] + f" has tended to help {L} ({t}).", 58, keymap[d], f"macro-{d}-tail")
+            subj = {"yields": "Falling yields" if s < 0 else "Rising yields", "usd": "A weaker dollar" if s < 0 else "A stronger dollar", "liquidity": "Growing Fed liquidity", "inflation": "Cooling inflation" if s < 0 else "High inflation",
+                    "curve": "A steeper yield curve"}[d]
+            add("supports", f"{subj} {'have' if subj.endswith('yields') else 'has'} tended to help {L} ({t}).", 58, keymap[d], f"macro-{d}-tail")
         elif c < 0:
-            add("risk", {"yields": "Rising yields" if s > 0 else "Falling yields", "usd": "A stronger dollar" if s > 0 else "A weaker dollar", "liquidity": "A shrinking Fed balance sheet", "inflation": "High inflation" if s > 0 else "Low inflation",
-                         "curve": "An inverted yield curve"}[d] + f" has tended to weigh on {L} ({t}).", 66, keymap[d], f"macro-{d}-head")
+            subj = {"yields": "Rising yields" if s > 0 else "Falling yields", "usd": "A stronger dollar" if s > 0 else "A weaker dollar", "liquidity": "A shrinking Fed balance sheet", "inflation": "High inflation" if s > 0 else "Low inflation",
+                    "curve": "An inverted yield curve"}[d]
+            add("risk", f"{subj} {'have' if subj.endswith('yields') else 'has'} tended to weigh on {L} ({t}).", 66, keymap[d], f"macro-{d}-head")
     fomc = next((e for e in events if e.id.startswith("statement")), None)
     if fomc and fomc.at_utc:
         days = (datetime.fromisoformat(fomc.at_utc) - now).total_seconds() / 86400

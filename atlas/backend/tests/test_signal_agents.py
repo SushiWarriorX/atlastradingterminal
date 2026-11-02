@@ -95,6 +95,17 @@ def test_stale_data_keeps_its_stale_label_and_timestamp_in_the_sources():
     assert f.sources[0].status == "STALE" and f.sources[0].as_of and f.data_as_of == f.sources[0].as_of
 
 
+def test_stale_prices_are_never_presented_as_a_current_reading():
+    f = run(TechnicalAgent().run(ctx_for(AAPL, svc=make_svc(ScriptProvider(drift=0.004, age=3 * 86400))[0])))
+    assert f.stance == "insufficient" and re.match(r"Prices are out of date \(latest data \d+d ago\), so no current technical reading is given\. As of then: ", f.takeaway)
+    assert "Not rated while the price data is stale" in f.stance_rule and re.match(r"The latest price data is \d+d ago", f.limitations[0])
+    assert [p.kind for p in f.points] == ["risk"] and "stale" in f.points[0].text and f.points[0].priority >= 90          # the briefing carries only the warning
+    assert f.status == "partial" and any(m.what == "Current prices" for m in f.missing) and f.sources[0].status == "STALE"
+    no_orders(f)
+    fresh = run(TechnicalAgent().run(ctx_for(AAPL, svc=make_svc(ScriptProvider(drift=0.004))[0])))
+    assert fresh.stance == "supportive" and "out of date" not in fresh.takeaway                                          # an ordinary read is untouched
+
+
 def test_relative_strength_is_vs_spy_for_stocks_vs_bitcoin_for_tokens_and_absent_for_the_benchmark_itself():
     svc = make_svc(ScriptProvider(drift=0.004))[0]
     stock = run(TechnicalAgent().run(ctx_for(AAPL, svc=svc)))
@@ -150,6 +161,10 @@ def test_quiet_news_and_failing_feeds_are_told_apart():
     assert sick.status == "partial" and any("Only 3 of 7 news feeds are responding" in l for l in sick.limitations)
     never = run(NewsAgent().run(ctx_for(AAPL, news=FakeNews([], meta={"feeds_ok": 0, "never_fetched": 7}))))
     assert never.status == "unavailable" and "not been fetched" in never.takeaway
+    down = run(NewsAgent().run(ctx_for(AAPL, news=FakeNews([], meta={"feeds_ok": 0, "never_fetched": 0}))))              # every feed failing is an outage, not a quiet day
+    assert down.status == "unavailable" and "can't tell whether there is news" in down.takeaway and "none of the 7 news feeds responded" in down.error and "No headlines" not in down.takeaway
+    old = run(NewsAgent().run(ctx_for(AAPL, news=FakeNews([story(1, "Apple posts record revenue", hours_ago=30)], meta={"feeds_ok": 0, "never_fetched": 0}))))
+    assert old.status == "partial" and old.stories and any("Only 0 of 7 news feeds are responding" in l for l in old.limitations)      # older stored stories still show, flagged
 
 
 def test_headline_store_and_symbol_feed_failures_are_reported_not_hidden():
@@ -185,6 +200,14 @@ def test_macro_is_framed_by_the_assets_exposure_not_a_generic_dashboard():
     dollar = run(MacroAgent().run(ctx_for(UUP)))
     assert dollar.stance == "supportive" and "dollar fund" in dollar.takeaway                                                    # the same data reads the other way for a dollar fund
     assert exposure_for(A.describe(UUP)).drivers["usd"] == 1 and exposure_for(A.describe(BTC)).drivers["usd"] == -1
+
+
+def test_macro_sentences_agree_in_number_for_stocks_funds_and_tokens():
+    for asset in (AAPL, UUP, SPY, BTC):
+        f = run(MacroAgent().run(ctx_for(asset)))
+        text = " ".join([f.takeaway, *(i.text for i in f.interpretations), *(p.text for p in f.points)])
+        assert not re.search(r"\byields has\b|\bstocks? have tended to feel\b|\bstock (has|have)\b|\bfund (has|have)\b|\bstocks has\b", text), (asset, text)
+    assert "weigh on growth-oriented stocks" in " ".join(p.text for p in run(MacroAgent().run(ctx_for(AAPL))).points)
 
 
 def test_macro_facts_are_official_dated_and_separate_from_interpretation():

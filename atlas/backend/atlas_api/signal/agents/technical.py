@@ -8,12 +8,12 @@ from datetime import datetime, timezone
 import numpy as np
 
 from ... import indicators as ind
-from ...models import Candle, ProviderUnavailable
+from ...models import Candle, DataStatus, ProviderUnavailable
 from ...mtf_service import run_mtf
 from .. import fmt
 from ..assets import Asset
 from ..models import Finding, Interpretation, Level, Missing, Point, Source
-from .common import Ctx, iso, mk_fact, provider_source, unavailable
+from .common import Ctx, ago, iso, mk_fact, provider_source, unavailable
 
 TF_NAME = {"1w": "Weekly", "1d": "Daily", "4h": "4-hour", "1h": "1-hour", "15m": "15-minute"}
 TF_SHORT = {"1w": "1W", "1d": "1D", "4h": "4H", "1h": "1H", "15m": "15m"}
@@ -165,7 +165,16 @@ class TechnicalAgent:
         limits = [SOURCE_CAVEAT, "Levels are computed from past swings and averages; price can pass through any level."]
         if daily.prov.provider == "yahoo":
             limits.append("Yahoo Finance data is unofficial and about 15 minutes delayed; intraday timeframes use delayed bars.")
-        return Finding(agent="technical", status="ok" if not missing else "partial", stance=stance, stance_rule=STANCE_RULE, takeaway=takeaway, facts=facts, interpretations=interp,
+        rule = STANCE_RULE
+        if daily.prov.status == DataStatus.STALE:
+            # Old prices must never read like a current view: say so first, give no stance, and let the briefing carry only this warning.
+            age = ago(ctx.now, daily.prov.event_time)
+            stance, rule = "insufficient", STANCE_RULE + " Not rated while the price data is stale."
+            takeaway = f"Prices are out of date (latest data {age}), so no current technical reading is given. As of then: {takeaway}"
+            pts = [Point(kind="risk", agent="technical", text=f"Price data for {a.symbol} is stale (latest {age}): technical readings are not current.", fact_keys=["trend_1d"], priority=95, dedupe_key="stale-prices")]
+            missing.append(Missing(what="Current prices", why=f"the latest bars are from {age}; the provider has not updated since"))
+            limits.insert(0, f"The latest price data is {age}. Everything here describes the market as it was then, not now.")
+        return Finding(agent="technical", status="ok" if not missing else "partial", stance=stance, stance_rule=rule, takeaway=takeaway, facts=facts, interpretations=interp,
                        levels=levels, missing=missing, sources=sources, limitations=limits, points=pts, data_as_of=asof, demo=ctx.demo)
 
 

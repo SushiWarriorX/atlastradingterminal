@@ -98,6 +98,26 @@ def test_sessions_dst_and_calendar():
     assert session_state(utc(2026, 11, 27, 18, 1))["state"] == "AFTER_HOURS"    # 13:01 ET
 
 
+def test_session_state_reports_the_open_of_the_latest_session():
+    assert session_state(utc(2026, 3, 9, 21, 50))["last_open"] == "2026-03-09T13:30:00+00:00"        # Monday evening: today's open
+    assert session_state(utc(2026, 3, 9, 12, 0))["last_open"] == "2026-03-06T14:30:00+00:00"         # Monday pre-market: Friday's open (EST then)
+    assert session_state(utc(2026, 3, 7, 15, 0))["last_open"] == "2026-03-06T14:30:00+00:00"         # Saturday
+    assert session_state(utc(2026, 11, 26, 15, 0))["last_open"] == "2026-11-25T14:30:00+00:00"       # Thanksgiving: Wednesday's open
+
+
+def test_a_closed_market_does_not_hide_a_price_older_than_the_latest_session():
+    f = lambda now, event, session, last_open, **k: classify(**{"provider": "yahoo", "asset_class": "equity", "event_time": event, "now": now, "delay_seconds": 900,
+                                                                  "session": session, "regular_hours_only": True, "last_open": last_open, **k})[0]
+    mon_eve, mon_open = utc(2026, 3, 9, 21, 50), utc(2026, 3, 9, 13, 30)
+    assert f(mon_eve, utc(2026, 3, 9, 20, 0), "AFTER_HOURS", mon_open) == DataStatus.HISTORICAL        # today's close: "market closed"
+    assert f(mon_eve, utc(2026, 3, 6, 21, 0), "AFTER_HOURS", mon_open) == DataStatus.STALE             # Friday's close: all of Monday's session is missing
+    sat, fri_open = utc(2026, 3, 7, 15, 0), utc(2026, 3, 6, 14, 30)
+    assert f(sat, utc(2026, 3, 6, 21, 0), "CLOSED", fri_open) == DataStatus.HISTORICAL                   # Friday's close on a Saturday is as fresh as it gets
+    assert f(sat, utc(2026, 3, 5, 21, 0), "CLOSED", fri_open) == DataStatus.STALE                        # Thursday's close on a Saturday is not
+    assert f(sat, utc(2026, 3, 6, 21, 0), "CLOSED", None) == DataStatus.HISTORICAL                       # no session info: the old behaviour
+    assert classify(provider="coinbase", asset_class="crypto", event_time=utc(2026, 3, 6, 21, 0), now=sat, delay_seconds=0, session=None, last_open=fri_open)[0] == DataStatus.STALE      # crypto never trades "after close"
+
+
 def test_classify_rules():
     now = utc(2026, 3, 9, 15, 0)
     f = lambda **k: classify(**{"provider": "yahoo", "asset_class": "equity", "event_time": now, "now": now,

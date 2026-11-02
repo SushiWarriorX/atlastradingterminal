@@ -74,7 +74,7 @@ def ok(data):
     return {"ok": True, "data": data}
 
 
-def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None, fundamentals_provider=None, deriv_client=None, auth_password: str | None = None) -> FastAPI:
+def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None, fundamentals_provider=None, deriv_client=None, auth_password: str | None = None, signal_registry=None, signal_parts: dict | None = None) -> FastAPI:
     demo = os.getenv("ATLAS_DEMO") == "1" if demo is None else demo
     db = DB(db_path or os.getenv("ATLAS_DB", "atlas.db"))
     provs = providers if providers is not None else {"coinbase": CoinbaseProvider(), "yahoo": YahooProvider(), "fred": FredProvider()}
@@ -312,7 +312,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         return ok(await macro.overview())
 
     fedwatch = FedWatchService(provs.get("fred"), news, demo)
-    signal = SignalService(db=db, svc=svc, news=news, fundamentals=fundamentals, macro=macro, fedwatch=fedwatch, demo=demo, llm=llm)       # Signal Mobile research API (read-only)
+    signal = SignalService(db=db, svc=svc, news=news, fundamentals=fundamentals, macro=macro, fedwatch=fedwatch, demo=demo, llm=llm, registry=signal_registry, **(signal_parts or {}))       # Signal Mobile research API (read-only); the last two are test hooks
     signal_routes.register(app, signal, ok)
 
     @app.get("/api/macro/fed")

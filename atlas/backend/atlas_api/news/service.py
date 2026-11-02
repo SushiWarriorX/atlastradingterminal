@@ -195,6 +195,13 @@ class NewsService:
                 cur = c.execute("INSERT OR IGNORE INTO news_items(feed_id,uid,title,link,summary,published,fetched_at,symbols) VALUES(?,?,?,?,?,?,?,?)",
                                 (feed_id, it.uid, it.title, it.link, it.summary, it.published.isoformat() if it.published else None, fetched, json.dumps(syms)))
                 new += cur.rowcount
+                if cur.rowcount == 0 and force_symbol:
+                    # All per-symbol feeds share one feed row, so a story that two symbols' feeds both carry is stored once. Add this symbol to its tags
+                    # instead of dropping it, otherwise the second symbol would never see the story.
+                    row = c.execute("SELECT id, symbols FROM news_items WHERE feed_id=? AND uid=?", (feed_id, it.uid)).fetchone()
+                    have = json.loads(row["symbols"]) if row else []
+                    if row and force_symbol not in have:
+                        c.execute("UPDATE news_items SET symbols=? WHERE id=?", (json.dumps([*have, force_symbol][:8]), row["id"]))
         return new
 
     async def _refresh_row(self, row, url: str | None = None, force_symbol: str | None = None) -> dict:

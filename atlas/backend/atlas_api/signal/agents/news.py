@@ -176,6 +176,11 @@ class NewsAgent:
         if not ctx.demo and feeds_on and meta.get("never_fetched", 0) >= feeds_on:
             return Finding(agent="news", status="unavailable", takeaway="News feeds have not been fetched yet. Try again in a minute.", error="no feed has been fetched yet",
                            missing=[Missing(what="Headlines", why="no RSS feed has been fetched yet")], sources=[], limitations=limits, demo=ctx.demo)
+        if not ctx.demo and feeds_on and feeds_ok == 0 and not stories:
+            # Every feed is failing and nothing is stored: that is an outage, not a quiet news day, so do not say "no headlines".
+            return Finding(agent="news", status="unavailable", takeaway=f"News feeds are not responding right now, so Signal can't tell whether there is news about {a.symbol}.",
+                           error=f"none of the {feeds_on} news feeds responded", missing=[Missing(what="Headlines", why=f"none of the {feeds_on} news feeds responded")],
+                           sources=[], limitations=[l for l in limits if not l.startswith("Only ")] + notes, demo=ctx.demo)
         if notes or (feeds_on and feeds_ok < feeds_on and not ctx.demo):
             status = "partial"
         if n_asset == 0:
