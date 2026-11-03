@@ -9,12 +9,12 @@ import { AgentRow } from "../../components/AgentRow";
 import { BriefingCard } from "../../components/BriefingCard";
 import { FreshnessLine } from "../../components/FreshnessLine";
 import { PriceChart, type Scrub } from "../../components/PriceChart";
-import { Banner, Chip, ErrorState, IconButton, Skeleton, TextButton, Txt } from "../../components/ui";
+import { Banner, Chip, ErrorState, IconButton, Skeleton, Tag, TextButton, Txt } from "../../components/ui";
 import { AGENT_ORDER } from "../../lib/briefing";
 import { directionOf, formatPct, formatPrice, localDateTime, providerName, TYPE_LABEL } from "../../lib/format";
 import { describeFreshness } from "../../lib/freshness";
 import { useAddToWatchlist, useAsset, useChart, useNow, useRefreshAgent, useRemoveFromWatchlist, useResearch } from "../../state/queries";
-import { color, dirColor, space } from "../../theme";
+import { color, dirColor, radius, space } from "../../theme";
 
 const RANGES: ChartRange[] = ["1D", "1W", "1M", "3M", "1Y", "5Y"];
 const decode = (v: string | undefined) => { try { return v ? decodeURIComponent(v) : ""; } catch { return v ?? ""; } };
@@ -65,7 +65,7 @@ export default function AssetScreen() {
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: space.md, paddingVertical: space.sm }}>
         <IconButton name="chevron-back" size={26} label="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} testID="back" />
         <Txt variant="small" testID="asset-bar-symbol">{a?.symbol ?? ""}</Txt>
-        <IconButton name={saved ? "star" : "star-outline"} size={24} tint={saved ? color.warn : color.text} label={saved ? "Remove from watchlist" : "Add to watchlist"} onPress={toggleSave} testID="watch-toggle" disabled={!a || add.isPending || remove.isPending} />
+        <IconButton name={saved ? "star" : "star-outline"} size={24} tint={color.text} label={saved ? "Remove from watchlist" : "Add to watchlist"} onPress={toggleSave} testID="watch-toggle" disabled={!a || add.isPending || remove.isPending} />
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + space.xxl }} refreshControl={<RefreshControl refreshing={false} onRefresh={pullRefresh} tintColor={color.accent} />} testID="asset-scroll">
         <View style={{ paddingHorizontal: space.lg, gap: space.md }}>
@@ -75,7 +75,7 @@ export default function AssetScreen() {
           {a ? (
             <View>
               <Txt variant="title" numberOfLines={2} testID="asset-name">{a.name}</Txt>
-              <Txt variant="small" testID="asset-sub">{a.symbol} · {TYPE_LABEL[a.type]} · {a.venue}</Txt>
+              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6, marginTop: 4 }} testID="asset-sub"><Txt variant="small" style={{ fontWeight: "600" }}>{a.symbol}</Txt><Tag label={TYPE_LABEL[a.type]} /><Tag label={a.venue} /></View>
               <Txt variant="tiny" testID="asset-id">{a.id}</Txt>
               {a.support === "unverified" && <Txt variant="tiny" c={color.warn} style={{ marginTop: 2 }}>Unverified listing: {a.note ?? "type and exchange are not confirmed, so some research may not apply."}</Txt>}
             </View>
@@ -118,9 +118,9 @@ export default function AssetScreen() {
         <View style={{ paddingHorizontal: space.lg, gap: space.md, marginTop: space.xl }}>
           <BriefingCard research={research.data} loading={research.isLoading} now={now} />
           {research.isError && !research.data ? <Banner tone="warn" title="Research unavailable" testID="research-error" action={<TextButton label="Retry" onPress={() => research.refetch()} />}>{research.error instanceof Error ? research.error.message : "Something went wrong."}</Banner> : null}
-          <View style={{ gap: space.md }}>
-            {AGENT_ORDER.map((ag) => (
-              <AgentRow key={ag} agent={ag} finding={research.data?.findings[ag]} now={now} expanded={!!open[ag]} onToggle={() => setOpen((o) => ({ ...o, [ag]: !o[ag] }))}
+          <View style={{ backgroundColor: color.surface, borderRadius: radius.lg, overflow: "hidden" }}>
+            {AGENT_ORDER.map((ag, i) => (
+              <AgentRow key={ag} first={i === 0} agent={ag} finding={research.data?.findings[ag]} now={now} expanded={!!open[ag]} onToggle={() => setOpen((o) => ({ ...o, [ag]: !o[ag] }))}
                 onRefresh={() => refreshAgent(ag)} refreshing={refreshing === ag} refreshMessage={msgs[ag] ?? null} />
             ))}
           </View>

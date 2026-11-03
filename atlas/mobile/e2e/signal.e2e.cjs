@@ -241,8 +241,8 @@ async function healthy(browser) {
         match(row, /trend|Uptrend|Downtrend|Sideways|range/i, `takeaway in ${id}`);
         assert((await page.locator(T(`row-${id}`)).locator("svg").count()) > 0, `sparkline in ${id}`);
       }
-      match(await page.locator(T(`row-${ID.btc}`)).innerText(), /BTC · Crypto/);
-      match(await page.locator(T(`row-${ID.btcEtf}`)).innerText(), /BTC · ETF/);
+      match(await page.locator(T(`row-${ID.btc}`)).innerText(), /BTC\s+Crypto/);
+      match(await page.locator(T(`row-${ID.btcEtf}`)).innerText(), /BTC\s+ETF/);
       await shot(page, "03-watchlist");
     });
 
@@ -277,7 +277,7 @@ async function healthy(browser) {
     await check("Bitcoin the coin: identity, price, freshness with source and time, chart ranges", async () => {
       await openFromWatchlist(page, ID.btc);
       eq(await inner(page, "asset-name"), "Bitcoin");
-      eq(await inner(page, "asset-sub"), "BTC · Crypto · Coinbase spot (USD)");
+      eq((await inner(page, "asset-sub")).replace(/\s+/g, " "), "BTC Crypto Coinbase spot (USD)");
       eq(await inner(page, "asset-id"), ID.btc);
       await page.waitForSelector(T("asset-price"));
       match(await inner(page, "asset-price"), /^\$[\d,]+\.\d{2}$/);
@@ -328,7 +328,7 @@ async function healthy(browser) {
       await page.goto(`${WEB_ORIGIN}/asset/${encodeURIComponent(ID.btcEtf)}`);
       await page.waitForSelector(T("asset-name"));
       eq(await inner(page, "asset-name"), "Grayscale Bitcoin Mini Trust ETF");
-      eq(await inner(page, "asset-sub"), "BTC · ETF · NYSE Arca");
+      eq((await inner(page, "asset-sub")).replace(/\s+/g, " "), "BTC ETF NYSE Arca");
       eq(await inner(page, "asset-id"), ID.btcEtf);
       await page.waitForSelector(T("asset-price"));
       assert((await inner(page, "asset-price")) !== coinPrice, "the ETF and the coin must not share a price");

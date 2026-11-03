@@ -7,7 +7,7 @@ import { color, dirColor, space } from "../theme";
 import { Avatar } from "./Avatar";
 import { FreshDot } from "./FreshnessLine";
 import { Sparkline } from "./Sparkline";
-import { IconButton, Skeleton, Txt } from "./ui";
+import { IconButton, Skeleton, Tag, Txt } from "./ui";
 
 interface Props {
   row: WatchRow; now: number; editing: boolean; canUp: boolean; canDown: boolean;
@@ -29,8 +29,9 @@ export function WatchRowItem({ row, now, editing, canUp, canDown, onOpen, onRemo
         <View style={s.mid}>
           <Txt variant="h2" numberOfLines={1}>{asset.name}</Txt>
           <View style={s.sub}>
-            <Txt variant="small" numberOfLines={1}>{asset.symbol} · {TYPE_LABEL[asset.type]}</Txt>
-            {asset.support === "unverified" && <Txt variant="tiny" c={color.warn}> · unverified</Txt>}
+            <Txt variant="small" numberOfLines={1} style={{ marginRight: 6 }}>{asset.symbol}</Txt>
+            <Tag label={TYPE_LABEL[asset.type]} />
+            {asset.support === "unverified" && <View style={{ marginLeft: 6 }}><Tag label="Unverified" tint={color.warn} /></View>}
           </View>
           {row.takeaway ? <Txt variant="tiny" numberOfLines={1} style={{ marginTop: 3 }}>{row.takeaway.text}</Txt> : error ? <Txt variant="tiny" c={color.warn} numberOfLines={1} style={{ marginTop: 3 }}>{error.message}</Txt> : null}
         </View>

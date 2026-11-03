@@ -12,15 +12,15 @@ const ICON: Record<AgentName, React.ComponentProps<typeof Ionicons>["name"]> = {
 const KIND_LABEL: Record<Story["kind"], string | null> = { reporting: null, opinion: "Opinion", unconfirmed: "Unconfirmed report" };
 const open = (u: string | null) => { const s = safeUrl(u); if (s) Linking.openURL(s).catch(() => undefined); };
 
-interface Props { agent: AgentName; finding: Finding | undefined; now: number; expanded: boolean; onToggle: () => void; onRefresh: () => void; refreshing: boolean; refreshMessage: string | null }
+interface Props { first?: boolean; agent: AgentName; finding: Finding | undefined; now: number; expanded: boolean; onToggle: () => void; onRefresh: () => void; refreshing: boolean; refreshMessage: string | null }
 
 /** One agent: name, one clear takeaway and when it was last updated. Opening it reveals the evidence: readings, figures with sources, links, and what is missing. */
-export function AgentRow({ agent, finding, now, expanded, onToggle, onRefresh, refreshing, refreshMessage }: Props) {
+export function AgentRow({ first, agent, finding, now, expanded, onToggle, onRefresh, refreshing, refreshMessage }: Props) {
   const kind = rowKind(finding);
   const f = finding;
   const stance = f?.stance && f.stance !== "insufficient" ? f.stance : null;
   return (
-    <View style={s.wrap} testID={`agent-${agent}`}>
+    <View style={[s.wrap, !first && s.sep]} testID={`agent-${agent}`}>
       <Pressable onPress={onToggle} accessibilityRole="button" accessibilityState={{ expanded }} accessibilityLabel={`${AGENT_TITLE[agent]}. ${f?.takeaway ?? "Loading"}`} style={({ pressed }) => [s.head, pressed && { opacity: 0.75 }]} testID={`agent-toggle-${agent}`}>
         <View style={s.icon}><Ionicons name={ICON[agent]} size={19} color={color.text} /></View>
         <View style={{ flex: 1, minWidth: 0 }}>
@@ -165,7 +165,8 @@ function StoryItem({ st, now }: { st: Story; now: number }) {
 }
 
 const s = StyleSheet.create({
-  wrap: { backgroundColor: color.surface, borderRadius: radius.lg, overflow: "hidden" },
+  wrap: { overflow: "hidden" },
+  sep: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
   head: { flexDirection: "row", alignItems: "flex-start", gap: space.md, padding: space.lg },
   icon: { width: 38, height: 38, borderRadius: 19, backgroundColor: color.surface2, alignItems: "center", justifyContent: "center" },
   body: { paddingHorizontal: space.lg, paddingBottom: space.lg },

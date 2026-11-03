@@ -21,6 +21,11 @@ export function Card({ style, children }: { style?: StyleProp<ViewStyle>; childr
   return <View style={[s.card, style]}>{children}</View>;
 }
 
+/** A small outlined tag, used for facts about an asset (its type, where it trades) instead of a dot-joined string. */
+export function Tag({ label, tint }: { label: string; tint?: string }) {
+  return <View style={[s.tag, tint ? { borderColor: tint + "66" } : null]}><Text style={{ color: tint ?? color.dim, fontSize: font.xs + 1, fontWeight: "600" }}>{label}</Text></View>;
+}
+
 export function Divider() {
   return <View style={s.divider} />;
 }
@@ -111,6 +116,7 @@ export function ErrorState({ title, body, onRetry, extra, testID }: { title: str
 
 const s = StyleSheet.create({
   card: { backgroundColor: color.surface, borderRadius: radius.lg, padding: space.xl - 4 },
+  tag: { borderWidth: 1, borderColor: color.border, borderRadius: 7, paddingHorizontal: 7, paddingVertical: 1 },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: color.border, marginLeft: 78 },
   iconBtn: { padding: 4, alignItems: "center", justifyContent: "center" },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: "transparent" },
