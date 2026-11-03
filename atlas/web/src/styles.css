@@ -178,3 +178,4 @@ body { font: 12.5px/1.4 "Inter", system-ui, -apple-system, "Segoe UI", sans-seri
 .stat-r { margin-left: auto; display: flex; align-items: center; padding: 0 4px; }
 .toolbar-main { padding: 2px 0 8px; gap: 2px; } .toolbar-main .ohlc { margin-left: auto; }
 .toolbar-tools { padding: 0 0 8px; gap: 3px; }
+.range-bar { display: flex; gap: 2px; padding: 8px 0 2px; } .mini.ico { padding: 3px 8px; display: inline-flex; align-items: center; }

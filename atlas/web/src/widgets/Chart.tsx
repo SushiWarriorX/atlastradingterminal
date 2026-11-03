@@ -29,6 +29,17 @@ const loadPin = (k: string): string | null => { try { return localStorage.getIte
 const savePin = (k: string, id: string | null) => { try { if (id) localStorage.setItem(PIN + k, id); else localStorage.removeItem(PIN + k); } catch { /* per-viewer convenience only */ } };
 
 /** pick="any": this chart has its own asset (type a symbol to change it). pick="equity": typing changes the Equities desk's stock/ETF. No pick: the asset is fixed by the desk. */
+const RANGES = [
+  { l: "1D", iv: "5m", span: 86_400 }, { l: "1W", iv: "1h", span: 7 * 86_400 }, { l: "1M", iv: "4h", span: 30 * 86_400 },
+  { l: "3M", iv: "1d", span: 90 * 86_400 }, { l: "1Y", iv: "1d", span: 365 * 86_400 },
+];
+const TYPE_ICON: Record<string, JSX.Element> = {
+  candles: <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M4 2v12M12 4v10"/><rect x="2.5" y="5" width="3" height="6" fill="currentColor"/><rect x="10.5" y="7" width="3" height="5" fill="currentColor"/></svg>,
+  bars: <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M4 2v12M2 5h2M4 11h2M12 3v11M10 6h2M12 12h2"/></svg>,
+  line: <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1.5 12l4-5 3 3 6-7"/></svg>,
+  area: <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" stroke="currentColor" strokeWidth="1.2"><path d="M1.5 12l4-5 3 3 6-7V14H1.5z" fillOpacity=".35"/><path d="M1.5 12l4-5 3 3 6-7" fill="none"/></svg>,
+};
+
 export function ChartWidget({ instrumentId, defaultInterval = "1d", title, wid, pick }: { instrumentId?: string; defaultInterval?: string; title?: string; wid?: string; pick?: "any" | "equity" }) {
   const selected = useSelectedId();
   const [pinned, setPinned] = useState<string | null>(() => (pick === "any" && wid ? loadPin(wid) : null));
@@ -56,6 +67,8 @@ export function ChartWidget({ instrumentId, defaultInterval = "1d", title, wid, 
   const [interval, setIv] = useState(defaultInterval);
   const [type, setType] = useState<ChartType>("candles");
   const [tools, setTools] = useState(false);
+  const [range, setRange] = useState<string | null>(null);
+  const pendingSpan = useRef<number | null>(null);
   const [log, setLog] = useState(false);
   const [on, setOn] = useState<string[]>(["sma20"]);
   const [full, setFull] = useState(false);
@@ -137,7 +150,11 @@ export function ChartWidget({ instrumentId, defaultInterval = "1d", title, wid, 
       ? d.candles.map((x) => ({ time: t(x), open: x.open, high: x.high, low: x.low, close: x.close }))
       : d.candles.map((x) => ({ time: t(x), value: x.close })));
     vol.current?.setData(d.candles.map((x) => ({ time: t(x), value: x.volume, color: x.close >= x.open ? css("--vol-up") : css("--vol-down") })));
-    if (first) c.timeScale().fitContent();
+    if (pendingSpan.current !== null && d.candles.length) {
+      const end = d.candles[d.candles.length - 1].time;
+      c.timeScale().setVisibleRange({ from: Math.max(d.candles[0].time, end - pendingSpan.current) as UTCTimestamp, to: end as UTCTimestamp });
+      pendingSpan.current = null;
+    } else if (first) c.timeScale().fitContent();
   }, [ohlcv.data, type, theme, id, interval]);
 
   // indicator overlays
@@ -159,6 +176,15 @@ export function ChartWidget({ instrumentId, defaultInterval = "1d", title, wid, 
     }
   }, [ind.data, on, theme]);
 
+  const pickRange = (r: typeof RANGES[number]) => {
+    const iv = supported.includes(r.iv) ? r.iv : supported.includes("1d") ? "1d" : supported[0];
+    setRange(r.l);
+    pendingSpan.current = r.span;
+    if (iv === interval) {
+      const cs = ohlcv.data?.candles;
+      if (cs?.length && chart.current) { const end = cs[cs.length - 1].time; chart.current.timeScale().setVisibleRange({ from: Math.max(cs[0].time, end - r.span) as UTCTimestamp, to: end as UTCTimestamp }); pendingSpan.current = null; }
+    } else setIv(iv);
+  };
   const last = ohlcv.data?.candles.at(-1);
   const shot = () => {
     const canvas = chart.current?.takeScreenshot();
@@ -192,7 +218,7 @@ export function ChartWidget({ instrumentId, defaultInterval = "1d", title, wid, 
       </div>
       {tools && (
         <div className="toolbar toolbar-tools">
-          {(["candles", "bars", "line", "area"] as ChartType[]).map((t) => <button key={t} className={`mini ${t === type ? "on" : ""}`} onClick={() => setType(t)}>{t}</button>)}
+          {(["candles", "bars", "line", "area"] as ChartType[]).map((t) => <button key={t} className={`mini ico ${t === type ? "on" : ""}`} onClick={() => setType(t)} title={t} aria-label={t}>{TYPE_ICON[t]}</button>)}
           <button className={`mini ${log ? "on" : ""}`} onClick={() => setLog(!log)}>log</button>
           <span className="sep" />
           {Object.entries(OVERLAYS).map(([k, o]) => (
@@ -205,6 +231,7 @@ export function ChartWidget({ instrumentId, defaultInterval = "1d", title, wid, 
       {cmp.length > 0 && <div className="toolbar">{cmp.map((c) => <button key={c} className="mini on" onClick={() => setCmp(cmp.filter((x) => x !== c))} title="Remove from comparison">{c.split(":")[2]} ✕</button>)}</div>}
       {cmp.length > 0 && <CompareView ids={[id, ...cmp]} interval={cmpIv} onInterval={setCmpIv} />}
       <div className="chart-host" ref={host} style={cmp.length ? { display: "none" } : undefined} />
+      {!cmp.length && !noData && <div className="range-bar" data-testid="range-bar">{RANGES.map((r) => <button key={r.l} className={`mini ${range === r.l ? "on" : ""}`} onClick={() => pickRange(r)} title={`Show the last ${r.l}`}>{r.l}</button>)}</div>}
       {!cmp.length && noData && <div className="chart-overlay"><ErrorBox error={noData} /></div>}
       {ind.isError && <div className="note">Indicators unavailable: {(ind.error as Error).message}</div>}
     </Panel>
