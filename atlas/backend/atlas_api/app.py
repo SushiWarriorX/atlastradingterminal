@@ -1,4 +1,5 @@
 import asyncio
+from typing import Literal
 import json
 import logging
 import math
@@ -18,6 +19,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from . import auth as authmod, commands, health_check, instruments as I
 from .fedwatch import FedWatchService
+from .signal import routes as signal_routes
+from .signal.service import SignalService
 from .macro import MacroService
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
 from .providers.ibkr_data import IBKRData
@@ -71,7 +74,7 @@ def ok(data):
     return {"ok": True, "data": data}
 
 
-def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None, fundamentals_provider=None, deriv_client=None, auth_password: str | None = None) -> FastAPI:
+def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None, fundamentals_provider=None, deriv_client=None, auth_password: str | None = None, signal_registry=None, signal_parts: dict | None = None) -> FastAPI:
     demo = os.getenv("ATLAS_DEMO") == "1" if demo is None else demo
     db = DB(db_path or os.getenv("ATLAS_DB", "atlas.db"))
     provs = providers if providers is not None else {"coinbase": CoinbaseProvider(), "yahoo": YahooProvider(), "fred": FredProvider()}
@@ -182,21 +185,23 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     app.state.fundamentals = fundamentals
     app.state.derivs = derivs
     app.state.broker = broker
-    app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    extra_origins = [o.strip() for o in (os.getenv("ATLAS_CORS_ORIGINS") or "").split(",") if o.strip().startswith(("http://", "https://"))]       # opt-in, e.g. the Signal Mobile web build
+    app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", *extra_origins],
                        allow_methods=["*"], allow_headers=["*"])
     # Cloud hosting (optional): password login, plus the public hostname allowed in the Host/Origin checks. Both are off for the local setup.
     auth = authmod.Auth(auth_password if auth_password is not None else os.getenv("ATLAS_AUTH_PASSWORD"))
     public_name = (os.getenv("ATLAS_ALLOWED_HOST") or "").strip().lower()                  # "atlas.example.com" (a port may be added for testing: "localhost:8000")
     public_host = public_name.rsplit(":", 1)[0] if public_name.count(":") == 1 else public_name
     public_origins = {f"https://{public_name}", f"http://{public_name}"} if public_name else set()
-    app.add_middleware(authmod.AuthMiddleware, auth=auth, allowed_origins={"http://localhost:5173", "http://127.0.0.1:5173", *public_origins})
+    app.add_middleware(authmod.AuthMiddleware, auth=auth, allowed_origins={"http://localhost:5173", "http://127.0.0.1:5173", *public_origins, *extra_origins})
 
     class LoginBody(BaseModel):
         password: str = Field(max_length=200)
+        client: Literal["web", "mobile"] = "web"      # a native app gets a bearer token to keep in secure storage; the web app gets an HttpOnly cookie
 
     @app.get("/api/auth/status")
     async def auth_status(request: Request):
-        return ok({"required": auth.enabled, "authenticated": (not auth.enabled) or auth.valid_token(request.cookies.get(authmod.COOKIE))})
+        return ok({"required": auth.enabled, "authenticated": (not auth.enabled) or auth.valid_token(request.cookies.get(authmod.COOKIE)) or auth.valid_token(authmod.bearer(request.headers.get("authorization")))})
 
     @app.post("/api/auth/login")
     async def auth_login(b: LoginBody, request: Request, response: Response):
@@ -211,6 +216,8 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             await asyncio.sleep(0.5)
             raise ApiError("BAD_PASSWORD", "Wrong password.", 401)
         auth.clear_failures(ip)
+        if b.client == "mobile":
+            return ok({"required": True, "authenticated": True, "token": auth.make_token(ttl=authmod.MOBILE_MAX_AGE), "expires_in": authmod.MOBILE_MAX_AGE})
         response.set_cookie(authmod.COOKIE, auth.make_token(), max_age=authmod.MAX_AGE, httponly=True, samesite="strict", secure=request.url.scheme == "https", path="/")
         return ok({"required": True, "authenticated": True})
 
@@ -305,6 +312,8 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         return ok(await macro.overview())
 
     fedwatch = FedWatchService(provs.get("fred"), news, demo)
+    signal = SignalService(db=db, svc=svc, news=news, fundamentals=fundamentals, macro=macro, fedwatch=fedwatch, demo=demo, llm=llm, registry=signal_registry, **(signal_parts or {}))       # Signal Mobile research API (read-only); the last two are test hooks
+    signal_routes.register(app, signal, ok)
 
     @app.get("/api/macro/fed")
     async def macro_fed():

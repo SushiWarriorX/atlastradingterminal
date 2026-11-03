@@ -1,4 +1,6 @@
 """Cloud login: off by default, signed expiring cookie, throttling, CSRF, websocket, public host, static web, refusal to run open."""
+import time
+
 import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
@@ -171,3 +173,58 @@ def test_public_host_may_include_a_port_for_testing(tmp_path, monkeypatch):
         assert c.post("/api/auth/login", json={"password": PW}, headers=h).status_code == 200
         assert c.post("/api/health/check", headers={**h, "X-Atlas-Request": "health-check"}).status_code == 200
         assert c.post("/api/auth/login", json={"password": PW}, headers={"Origin": "https://atlas.example.com"}).status_code == 403
+
+
+# --- mobile: bearer tokens and opt-in CORS ---------------------------------------------------------------------------------------------------
+def mobile_login(c, password=PW):
+    r = c.post("/api/auth/login", json={"password": password, "client": "mobile"})
+    return r
+
+
+def test_mobile_login_returns_a_long_lived_token_and_sets_no_cookie(tmp_path):
+    with client(tmp_path) as c:
+        r = mobile_login(c)
+        d = r.json()["data"]
+        assert r.status_code == 200 and d["authenticated"] is True and d["expires_in"] == A.MOBILE_MAX_AGE and "set-cookie" not in r.headers
+        assert A.Auth(PW).valid_token(d["token"], now=time.time() + 29 * 86400) and not A.Auth(PW).valid_token(d["token"], now=time.time() + 31 * 86400)
+        assert "token" not in c.post("/api/auth/login", json={"password": PW}).json()["data"]                  # the web login never hands the token to page scripts
+        assert mobile_login(c, "wrong password here").status_code == 401
+
+
+def test_bearer_token_unlocks_the_api_without_cookies_and_bad_tokens_do_not(tmp_path):
+    with client(tmp_path) as c:
+        tok = mobile_login(c).json()["data"]["token"]
+        c.cookies.clear()
+        assert c.get("/api/signal/meta").status_code == 401
+        ok = c.get("/api/signal/meta", headers={"Authorization": f"Bearer {tok}"})
+        assert ok.status_code == 200 and ok.json()["data"]["live_trading"] is False
+        assert c.get("/api/auth/status", headers={"Authorization": f"Bearer {tok}"}).json()["data"]["authenticated"] is True
+        for bad in (f"Bearer {tok}x", "Bearer ", "Bearer", "Basic abc", tok, "Bearer 9999999999." + "0" * 64):
+            assert c.get("/api/signal/meta", headers={"Authorization": bad}).status_code == 401, bad
+        other = A.Auth("a completely different password").make_token(ttl=A.MOBILE_MAX_AGE)
+        assert c.get("/api/signal/meta", headers={"Authorization": f"Bearer {other}"}).status_code == 401
+        with c.websocket_connect("/ws/market-data", headers={"Authorization": f"Bearer {tok}"}) as ws:          # websockets accept the token too
+            ws.send_json({"subscribe": []})
+
+
+def test_bearer_requests_skip_the_browser_cross_site_check_but_cookies_still_need_it(tmp_path):
+    with client(tmp_path) as c:
+        tok = mobile_login(c).json()["data"]["token"]
+        h = {"Authorization": f"Bearer {tok}", "Origin": "http://localhost:8081"}
+        assert c.post("/api/signal/watchlist", json={"id": "EQUITY:NASDAQ:AAPL"}, headers=h).status_code == 200           # a token is not sent automatically by browsers: no CSRF risk
+        c.post("/api/auth/login", json={"password": PW})                                                                # cookie session
+        assert c.post("/api/signal/watchlist", json={"id": "ETF:ARCA:SPY"}, headers={"Origin": "http://localhost:8081"}).status_code == 403   # cookies need the origin check
+
+
+def test_cors_is_closed_by_default_and_opt_in_for_listed_origins(tmp_path, monkeypatch):
+    ask = {"Origin": "http://localhost:8081", "Access-Control-Request-Method": "GET", "Access-Control-Request-Headers": "authorization"}
+    monkeypatch.delenv("ATLAS_CORS_ORIGINS", raising=False)
+    with client(tmp_path, name="c1.db") as c:
+        assert "access-control-allow-origin" not in c.options("/api/signal/meta", headers=ask).headers
+    monkeypatch.setenv("ATLAS_CORS_ORIGINS", "http://localhost:8081, https://signal.example.com, not-a-url")
+    with client(tmp_path, name="c2.db") as c:
+        r = c.options("/api/signal/meta", headers=ask)
+        assert r.headers["access-control-allow-origin"] == "http://localhost:8081" and "authorization" in r.headers["access-control-allow-headers"].lower()
+        assert "access-control-allow-origin" not in c.options("/api/signal/meta", headers={**ask, "Origin": "https://evil.example"}).headers
+        assert c.post("/api/auth/login", json={"password": PW, "client": "mobile"}, headers={"Origin": "http://localhost:8081"}).status_code == 200   # the listed origin may log in
+        assert c.post("/api/auth/login", json={"password": PW, "client": "mobile"}, headers={"Origin": "https://evil.example"}).status_code == 403

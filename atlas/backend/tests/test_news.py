@@ -237,6 +237,22 @@ def test_symbol_feed_tags_forced_symbol_and_is_cached(db):
     assert run(s.refresh_symbol("AAPL; rm -rf", "X")) is None                                  # malformed symbol never reaches a URL
 
 
+def test_a_story_carried_by_two_symbol_feeds_is_tagged_for_both_symbols(db):
+    def feed(sym):
+        return f"https://feeds.finance.yahoo.com/rss/2.0/headline?s={sym}&region=US&lang=en-US"
+    body = rss([("Chipmakers rally as demand grows", "https://y/shared", "shared-1", "Thu, 30 Oct 2026 11:00:00 GMT", "")])
+    s, _ = svc(db, {feed("AAPL"): (200, body, {}), feed("MSFT"): (200, body, {})})
+    s._seed()
+    run(s.refresh_symbol("AAPL", "AAPL"))
+    r = run(s.refresh_symbol("MSFT", "MSFT"))
+    assert r["ok"] and r["new"] == 0                                                           # the same story, stored once
+    assert len(db.q("SELECT id FROM news_items")) == 1
+    for sym in ("AAPL", "MSFT"):
+        assert [i["title"] for i in s.items(sym, hours=24 * 3650)["items"]] == ["Chipmakers rally as demand grows"], sym
+    run(s.refresh_symbol("MSFT", "MSFT", force=True))                                          # tagging again changes nothing
+    assert json.loads(db.q("SELECT symbols FROM news_items")[0][0]) == ["AAPL", "MSFT"]
+
+
 def test_feed_management_rules(db):
     s, _ = svc(db, {})
     f = s.add_feed("A", A)

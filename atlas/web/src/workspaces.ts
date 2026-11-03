@@ -7,13 +7,9 @@ const un = (i: string, view: string, x: number, y: number, w: number, h: number)
 
 export const WORKSPACES: Record<string, WorkspaceDef> = {
   overview: { id: "overview", name: "Global Market Overview", widgets: [
-    { i: "chart", type: "chart", x: 0, y: 0, w: 7, h: 13, props: { pick: "any" } },
-    { i: "watch", type: "watchlist", x: 7, y: 0, w: 5, h: 13 },
-    { i: "quote", type: "quote", x: 0, y: 13, w: 3, h: 11 },
-    { i: "yields", type: "yields", x: 3, y: 13, w: 4, h: 6 },
-    { i: "health", type: "health", x: 3, y: 19, w: 4, h: 7 },
-    { i: "news", type: "news", x: 7, y: 13, w: 5, h: 6 },
-    { i: "ai", type: "ai", x: 7, y: 19, w: 5, h: 10 },
+    { i: "chart", type: "chart", x: 0, y: 0, w: 9, h: 22, props: { pick: "any" } },
+    { i: "watch", type: "watchlist", x: 9, y: 0, w: 3, h: 11 },
+    { i: "quote", type: "quote", x: 9, y: 11, w: 3, h: 11 },
   ] },
   btc: { id: "btc", name: "BTC Intelligence (Bitcoin only)", scope: "btc", widgets: [
     { i: "c1h", type: "chart", x: 0, y: 0, w: 8, h: 13, props: { id: BTC, interval: "1h" } },

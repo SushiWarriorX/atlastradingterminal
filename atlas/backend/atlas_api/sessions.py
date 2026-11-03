@@ -43,6 +43,7 @@ def session_state(now: datetime | None = None) -> dict:
             info["state"] = "CLOSED"
         info["session_open"], info["session_close"] = o.isoformat(), c.isoformat()
     info["next_open"] = _next_open(now).isoformat()
+    info["last_open"] = cal.previous_open(pd.Timestamp(now)).to_pydatetime().isoformat()      # open of the most recent session that has started (today's, once it has opened)
     return info
 
 
