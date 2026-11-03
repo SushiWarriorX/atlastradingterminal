@@ -169,3 +169,10 @@ body { font: 12.5px/1.4 "Inter", system-ui, -apple-system, "Segoe UI", sans-seri
 .panel-b a { color: var(--text); text-decoration-color: var(--dim); }
 .news-item { border-bottom: 0; padding: 8px 0; } .news-h a:hover { color: var(--info); }
 ::-webkit-scrollbar { width: 8px; height: 8px; } ::-webkit-scrollbar-thumb { background: #26262d; border-radius: 8px; } ::-webkit-scrollbar-track { background: transparent; }
+
+.stats-strip { display: flex; align-items: stretch; gap: 8px; padding: 2px 2px 8px; overflow-x: auto; }
+.stat-id { display: flex; flex-direction: column; justify-content: center; padding: 0 12px 0 4px; min-width: 120px; } .stat-id b { font-size: 17px; letter-spacing: -.01em; }
+.stat { display: flex; flex-direction: column; justify-content: center; gap: 2px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 7px 14px; min-width: 96px; white-space: nowrap; }
+.stat-l { font-size: 10.5px; color: var(--dim); } .stat-v { font-size: 14px; font-weight: 600; }
+.stat-px .stat-v { font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+.stat-r { margin-left: auto; display: flex; align-items: center; padding: 0 4px; }

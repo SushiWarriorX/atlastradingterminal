@@ -18,6 +18,7 @@ import { MtfWidget } from "./widgets/Mtf";
 import { JournalEditorWidget, JournalImportWidget, JournalSourcesWidget, JournalTradesWidget, PerformanceWidget2 } from "./widgets/Journal";
 import { SettingsWidget } from "./widgets/Settings";
 import { MacroDashboard } from "./widgets/Macro";
+import { StatsStrip } from "./widgets/StatsStrip";
 
 const Grid = WidthProvider(RGL);
 
@@ -73,6 +74,7 @@ export function Workspace({ view }: { view: string }) {
     <ScopeContext.Provider value={def.scope ?? null}>
     <div className="ws">
       <div className="ws-bar"><span>{def.name}</span><span className="dim small">drag headers to move · drag corners to resize · layout is saved</span><button className="mini" onClick={reset}>reset layout</button></div>
+      {view === "overview" && <StatsStrip />}
       <Grid className="layout" layout={layout} cols={12} rowHeight={30} margin={[6, 6]} draggableHandle=".panel-h" draggableCancel="button,input,select,textarea,a,label" onLayoutChange={onChange} compactType="vertical" key={`${view}-${saved.dataUpdatedAt}`}>
         {def.widgets.map((w) => <div key={w.i}>{render(w, view)}</div>)}
       </Grid>
