@@ -176,3 +176,5 @@ body { font: 12.5px/1.4 "Inter", system-ui, -apple-system, "Segoe UI", sans-seri
 .stat-l { font-size: 10.5px; color: var(--dim); } .stat-v { font-size: 14px; font-weight: 600; }
 .stat-px .stat-v { font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
 .stat-r { margin-left: auto; display: flex; align-items: center; padding: 0 4px; }
+.toolbar-main { padding: 2px 0 8px; gap: 2px; } .toolbar-main .ohlc { margin-left: auto; }
+.toolbar-tools { padding: 0 0 8px; gap: 3px; }

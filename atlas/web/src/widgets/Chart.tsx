@@ -55,6 +55,7 @@ export function ChartWidget({ instrumentId, defaultInterval = "1d", title, wid, 
   const id = instrumentId ?? pinned ?? selected;
   const [interval, setIv] = useState(defaultInterval);
   const [type, setType] = useState<ChartType>("candles");
+  const [tools, setTools] = useState(false);
   const [log, setLog] = useState(false);
   const [on, setOn] = useState<string[]>(["sma20"]);
   const [full, setFull] = useState(false);
@@ -183,21 +184,25 @@ export function ChartWidget({ instrumentId, defaultInterval = "1d", title, wid, 
           {symMsg && <span className="warnc small">{symMsg}</span>}
           <span className="dim small">{pick === "equity" ? "stocks and ETFs only" : pinned ? "own asset" : "follows the selected instrument"}</span>
         </div>)}
-      <div className="toolbar">
+      <div className="toolbar toolbar-main">
         {supported.map((i) => <button key={i} className={`mini ${i === interval ? "on" : ""}`} onClick={() => setIv(i)}>{i}</button>)}
         <span className="sep" />
-        {(["candles", "bars", "line", "area"] as ChartType[]).map((t) => <button key={t} className={`mini ${t === type ? "on" : ""}`} onClick={() => setType(t)}>{t}</button>)}
-        <button className={`mini ${log ? "on" : ""}`} onClick={() => setLog(!log)}>log</button>
-        <span className="sep" />
-        {Object.entries(OVERLAYS).map(([k, o]) => (
-          <button key={k} className={`mini ${on.includes(k) ? "on" : ""}`} style={on.includes(k) ? { borderColor: o.color, color: o.color } : undefined}
-            disabled={ohlcv.data?.line_only} onClick={() => setOn(on.includes(k) ? on.filter((x) => x !== k) : [...on, k])}>{o.label}</button>))}
-        <span className="sep" />
-        <input className="w80" value={cmpIn} onChange={(e) => setCmpIn(e.target.value.toUpperCase())} onKeyDown={(e) => e.key === "Enter" && addCompare()} placeholder="compare…" aria-label="Compare symbol" />
-        {cmp.map((c) => <button key={c} className="mini on" onClick={() => setCmp(cmp.filter((x) => x !== c))} title="Remove from comparison">{c.split(":")[2]} ✕</button>)}
-        <button className="mini" onClick={shot} title="Download PNG">png</button>
+        <button className={`mini ${tools || on.length || cmp.length ? "on" : ""}`} onClick={() => setTools(!tools)} title="Chart style, indicators, compare and download">Indicators{on.length + cmp.length ? ` · ${on.length + cmp.length}` : ""}</button>
         {last && <span className="ohlc mono">O {px(last.open)} H {px(last.high)} L {px(last.low)} C {px(last.close)}</span>}
       </div>
+      {tools && (
+        <div className="toolbar toolbar-tools">
+          {(["candles", "bars", "line", "area"] as ChartType[]).map((t) => <button key={t} className={`mini ${t === type ? "on" : ""}`} onClick={() => setType(t)}>{t}</button>)}
+          <button className={`mini ${log ? "on" : ""}`} onClick={() => setLog(!log)}>log</button>
+          <span className="sep" />
+          {Object.entries(OVERLAYS).map(([k, o]) => (
+            <button key={k} className={`mini ${on.includes(k) ? "on" : ""}`} style={on.includes(k) ? { color: o.color } : undefined}
+              disabled={ohlcv.data?.line_only} onClick={() => setOn(on.includes(k) ? on.filter((x) => x !== k) : [...on, k])}>{o.label}</button>))}
+          <span className="sep" />
+          <input className="w80" value={cmpIn} onChange={(e) => setCmpIn(e.target.value.toUpperCase())} onKeyDown={(e) => e.key === "Enter" && addCompare()} placeholder="compare…" aria-label="Compare symbol" />
+          <button className="mini" onClick={shot} title="Download PNG">png</button>
+        </div>)}
+      {cmp.length > 0 && <div className="toolbar">{cmp.map((c) => <button key={c} className="mini on" onClick={() => setCmp(cmp.filter((x) => x !== c))} title="Remove from comparison">{c.split(":")[2]} ✕</button>)}</div>}
       {cmp.length > 0 && <CompareView ids={[id, ...cmp]} interval={cmpIv} onInterval={setCmpIv} />}
       <div className="chart-host" ref={host} style={cmp.length ? { display: "none" } : undefined} />
       {!cmp.length && noData && <div className="chart-overlay"><ErrorBox error={noData} /></div>}
