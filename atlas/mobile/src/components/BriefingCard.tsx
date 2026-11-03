@@ -9,7 +9,7 @@ import { Card, Skeleton, TextButton, Txt } from "./ui";
 const COLLAPSED_LINES = 2;
 
 const ICON = { changed: "swap-vertical", supports: "trending-up", risks: "alert-circle-outline", watch: "eye-outline" } as const;
-const TINT = { changed: color.accent, supports: color.up, risks: color.warn, watch: color.dim } as const;
+const TINT = { changed: color.text, supports: color.up, risks: color.warn, watch: color.dim } as const;
 
 /** "What matters now": the combined briefing of the four agents, as four short answers. Disagreements between agents are shown, not smoothed over. */
 export function BriefingCard({ research, loading, now }: { research: ResearchResponse | undefined; loading: boolean; now: number }) {
@@ -28,7 +28,7 @@ export function BriefingCard({ research, loading, now }: { research: ResearchRes
   return (
     <Card>
       <Txt variant="label">What matters now</Txt>
-      <Txt variant="h2" style={{ marginTop: space.sm }} testID="briefing-headline">{b.headline}</Txt>
+      <Txt variant="title" style={{ marginTop: space.xs, fontSize: 24, lineHeight: 30 }} testID="briefing-headline">{b.headline}</Txt>
       {b.disagreements.map((d) => (
         <View key={d.agents.join("-")} style={{ flexDirection: "row", gap: space.sm, marginTop: space.md }} testID="briefing-disagreement">
           <Ionicons name="git-compare-outline" size={16} color={color.accent} style={{ marginTop: 2 }} />

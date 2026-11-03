@@ -76,7 +76,7 @@ export default function SearchScreen() {
 }
 
 const s = StyleSheet.create({
-  inputWrap: { flexDirection: "row", alignItems: "center", gap: space.sm, marginHorizontal: space.lg, marginBottom: space.md, paddingHorizontal: space.md, backgroundColor: color.surface, borderRadius: radius.md, borderWidth: 1, borderColor: color.border },
+  inputWrap: { flexDirection: "row", alignItems: "center", gap: space.sm, marginHorizontal: space.lg, marginBottom: space.md, paddingHorizontal: space.md, backgroundColor: color.surface, borderRadius: 16 },
   input: { flex: 1, color: color.text, fontSize: font.md, paddingVertical: 12 },
   sectionHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: space.lg, paddingVertical: space.sm },
 });

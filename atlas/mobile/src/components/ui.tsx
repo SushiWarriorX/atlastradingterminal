@@ -5,13 +5,13 @@ import { color, font, radius, space } from "../theme";
 
 type Variant = "hero" | "title" | "h2" | "body" | "small" | "tiny" | "label";
 const V: Record<Variant, TextStyle> = {
-  hero: { fontSize: font.hero, fontWeight: "700", color: color.text, letterSpacing: -0.5 },
-  title: { fontSize: font.xxl, fontWeight: "700", color: color.text, letterSpacing: -0.3 },
-  h2: { fontSize: font.lg, fontWeight: "600", color: color.text },
+  hero: { fontSize: font.hero, fontWeight: "700", color: color.text, letterSpacing: -1.2, fontVariant: ["tabular-nums"] },
+  title: { fontSize: font.xxl, fontWeight: "700", color: color.text, letterSpacing: -0.8 },
+  h2: { fontSize: font.lg, fontWeight: "600", color: color.text, letterSpacing: -0.2 },
   body: { fontSize: font.md, color: color.text, lineHeight: 21 },
   small: { fontSize: font.sm, color: color.dim, lineHeight: 18 },
   tiny: { fontSize: font.xs, color: color.faint, lineHeight: 15 },
-  label: { fontSize: font.xs, color: color.dim, fontWeight: "600", letterSpacing: 0.8, textTransform: "uppercase" },
+  label: { fontSize: font.sm, color: color.dim, fontWeight: "600" },
 };
 export function Txt({ variant = "body", c, style, ...rest }: TextProps & { variant?: Variant; c?: string }) {
   return <Text {...rest} style={[V[variant], c ? { color: c } : null, style]} />;
@@ -61,9 +61,9 @@ export function PrimaryButton({ label, onPress, busy, testID, disabled }: { labe
 export function Banner({ tone, title, children, action, testID }: { tone: "demo" | "warn" | "info"; title: string; children?: React.ReactNode; action?: React.ReactNode; testID?: string }) {
   const c = tone === "demo" ? color.demo : tone === "warn" ? color.warn : color.accent;
   return (
-    <View style={[s.banner, { borderColor: c + "55", backgroundColor: c + "14" }]} testID={testID} accessibilityRole="alert">
+    <View style={[s.banner, { backgroundColor: c + "1F" }]} testID={testID} accessibilityRole="alert">
       <View style={{ flex: 1 }}>
-        <Text style={{ color: c, fontSize: font.sm, fontWeight: "700" }}>{title}</Text>
+        <Text style={{ color: c, fontSize: font.sm, fontWeight: "600" }}>{title}</Text>
         {children ? <Text style={{ color: color.dim, fontSize: font.sm, lineHeight: 18, marginTop: 2 }}>{children}</Text> : null}
       </View>
       {action}
@@ -87,7 +87,7 @@ export function Spinner({ label }: { label?: string }) {
 export function EmptyState({ icon, title, body, action, testID }: { icon: React.ComponentProps<typeof Ionicons>["name"]; title: string; body: string; action?: React.ReactNode; testID?: string }) {
   return (
     <View style={s.empty} testID={testID}>
-      <View style={s.emptyIcon}><Ionicons name={icon} size={30} color={color.accent} /></View>
+      <View style={s.emptyIcon}><Ionicons name={icon} size={28} color={color.text} /></View>
       <Txt variant="h2" style={{ textAlign: "center" }}>{title}</Txt>
       <Txt variant="small" style={{ textAlign: "center", marginTop: space.xs, maxWidth: 300 }}>{body}</Txt>
       {action ? <View style={{ marginTop: space.lg }}>{action}</View> : null}
@@ -98,7 +98,7 @@ export function EmptyState({ icon, title, body, action, testID }: { icon: React.
 export function ErrorState({ title, body, onRetry, extra, testID }: { title: string; body: string; onRetry?: () => void; extra?: React.ReactNode; testID?: string }) {
   return (
     <View style={s.empty} testID={testID}>
-      <View style={[s.emptyIcon, { backgroundColor: color.down + "18" }]}><Ionicons name="cloud-offline-outline" size={30} color={color.down} /></View>
+      <View style={s.emptyIcon}><Ionicons name="cloud-offline-outline" size={30} color={color.down} /></View>
       <Txt variant="h2" style={{ textAlign: "center" }}>{title}</Txt>
       <Txt variant="small" style={{ textAlign: "center", marginTop: space.xs, maxWidth: 320 }}>{body}</Txt>
       <View style={{ marginTop: space.lg, gap: space.md, alignItems: "center" }}>
@@ -110,16 +110,16 @@ export function ErrorState({ title, body, onRetry, extra, testID }: { title: str
 }
 
 const s = StyleSheet.create({
-  card: { backgroundColor: color.surface, borderRadius: radius.lg, padding: space.lg, borderWidth: StyleSheet.hairlineWidth, borderColor: color.border },
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: color.border },
+  card: { backgroundColor: color.surface, borderRadius: radius.lg, padding: space.xl - 4 },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: color.border, marginLeft: 78 },
   iconBtn: { padding: 4, alignItems: "center", justifyContent: "center" },
-  chip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: radius.pill, backgroundColor: "transparent" },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: "transparent" },
   chipOn: { backgroundColor: color.surface2 },
   chipText: { color: color.dim, fontSize: font.sm, fontWeight: "600" },
-  primary: { backgroundColor: color.accent, borderRadius: radius.md, paddingVertical: 13, paddingHorizontal: 22, alignItems: "center", justifyContent: "center", minWidth: 120 },
-  primaryText: { color: "#0B0B10", fontSize: font.md, fontWeight: "700" },
-  banner: { flexDirection: "row", alignItems: "center", gap: space.md, borderWidth: 1, borderRadius: radius.md, paddingVertical: 10, paddingHorizontal: space.md },
+  primary: { backgroundColor: color.accent, borderRadius: radius.pill, paddingVertical: 15, paddingHorizontal: 28, alignItems: "center", justifyContent: "center", minWidth: 140 },
+  primaryText: { color: "#FFFFFF", fontSize: font.md, fontWeight: "600" },
+  banner: { flexDirection: "row", alignItems: "center", gap: space.md, borderRadius: 18, paddingVertical: 12, paddingHorizontal: space.lg },
   center: { alignItems: "center", justifyContent: "center", padding: space.xl },
   empty: { alignItems: "center", justifyContent: "center", paddingHorizontal: space.xl, paddingVertical: 56 },
-  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: color.accent + "18", alignItems: "center", justifyContent: "center", marginBottom: space.lg },
+  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: color.surface2, alignItems: "center", justifyContent: "center", marginBottom: space.lg },
 });

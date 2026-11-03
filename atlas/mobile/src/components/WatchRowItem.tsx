@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { WatchRow } from "../api/types";
@@ -33,24 +32,24 @@ export function WatchRowItem({ row, now, editing, canUp, canDown, onOpen, onRemo
             <Txt variant="small" numberOfLines={1}>{asset.symbol} · {TYPE_LABEL[asset.type]}</Txt>
             {asset.support === "unverified" && <Txt variant="tiny" c={color.warn}> · unverified</Txt>}
           </View>
-          {row.takeaway ? <Txt variant="tiny" numberOfLines={1} style={{ marginTop: 2 }}>{row.takeaway.text}</Txt> : error ? <Txt variant="tiny" c={color.warn} numberOfLines={1} style={{ marginTop: 2 }}>{error.message}</Txt> : null}
+          {row.takeaway ? <Txt variant="tiny" numberOfLines={1} style={{ marginTop: 3 }}>{row.takeaway.text}</Txt> : error ? <Txt variant="tiny" c={color.warn} numberOfLines={1} style={{ marginTop: 3 }}>{error.message}</Txt> : null}
         </View>
+        {!editing && quote && row.spark ? <View style={s.spark}><Sparkline values={row.spark} tint={tint === color.dim ? color.text : tint} width={56} height={28} /></View> : null}
         {!editing && (
           <View style={s.right}>
             {quote ? (
               <>
                 <View style={s.priceLine}>
-                  <FreshDot tone={fresh.tone} size={7} />
-                  <Txt variant="h2" testID={`price-${asset.id}`}>{quote.display}</Txt>
+                  <FreshDot tone={fresh.tone} size={6} />
+                  <Txt variant="h2" testID={`price-${asset.id}`} style={{ fontVariant: ["tabular-nums"] }}>{quote.display}</Txt>
                 </View>
-                <Txt variant="small" c={tint} style={{ fontWeight: "600" }}>{formatPct(quote.change_pct)}</Txt>
+                <Txt variant="small" c={tint} style={{ fontWeight: "600", marginTop: 2 }}>{formatPct(quote.change_pct)}</Txt>
               </>
             ) : row.loading ? (
               <View style={{ alignItems: "flex-end", gap: 6 }} testID={`loading-${asset.id}`}><Skeleton w={72} h={18} /><Skeleton w={44} h={12} /></View>
             ) : (
               <Txt variant="small" c={color.warn} style={{ fontWeight: "600" }}>Unavailable</Txt>
             )}
-            {quote && row.spark ? <View style={{ marginTop: 2 }}><Sparkline values={row.spark} tint={tint === color.dim ? color.accent : tint} /></View> : null}
           </View>
         )}
       </Pressable>
@@ -68,10 +67,11 @@ export const providerLine = (row: WatchRow) => (row.quote ? providerName(row.quo
 
 const s = StyleSheet.create({
   wrap: { flexDirection: "row", alignItems: "center", gap: space.sm, paddingHorizontal: space.lg },
-  row: { flex: 1, flexDirection: "row", alignItems: "center", gap: space.md, paddingVertical: space.md },
+  row: { flex: 1, flexDirection: "row", alignItems: "center", gap: space.md, paddingVertical: 14 },
   mid: { flex: 1, minWidth: 0 },
-  sub: { flexDirection: "row", alignItems: "center" },
-  right: { alignItems: "flex-end", minWidth: 96 },
+  sub: { flexDirection: "row", alignItems: "center", marginTop: 1 },
+  spark: { width: 56 },
+  right: { alignItems: "flex-end", minWidth: 84 },
   priceLine: { flexDirection: "row", alignItems: "center", gap: 6 },
   edit: { flexDirection: "row", gap: 2 },
 });

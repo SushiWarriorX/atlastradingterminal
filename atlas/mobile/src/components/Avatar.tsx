@@ -1,13 +1,14 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { hueFor, initials } from "../lib/format";
+import { color } from "../theme";
+import { initials } from "../lib/format";
 
-/** A round tile with the asset's initials. The colour comes from the stable asset ID, so two assets that share a ticker are visibly different. */
-export function Avatar({ id, symbol, size = 44 }: { id: string; symbol: string; size?: number }) {
-  const h = hueFor(id);
+/** A neutral tile with the asset's initials. ETFs are rounded squares and everything else is a circle, so two assets that share a ticker still look different. */
+export function Avatar({ id, symbol, size = 46 }: { id: string; symbol: string; size?: number }) {
+  const etf = id.startsWith("ETF:");
   return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: `hsl(${h}, 45%, 22%)`, borderWidth: 1, borderColor: `hsl(${h}, 55%, 38%)`, alignItems: "center", justifyContent: "center" }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <Text style={{ color: `hsl(${h}, 80%, 82%)`, fontWeight: "700", fontSize: size * 0.32, letterSpacing: 0.3 }}>{initials(symbol)}</Text>
+    <View style={{ width: size, height: size, borderRadius: etf ? size * 0.3 : size / 2, backgroundColor: color.surface2, alignItems: "center", justifyContent: "center" }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <Text style={{ color: color.text, fontWeight: "700", fontSize: size * 0.3, letterSpacing: -0.2 }}>{initials(symbol)}</Text>
     </View>
   );
 }

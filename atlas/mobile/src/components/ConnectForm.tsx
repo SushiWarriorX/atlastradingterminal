@@ -38,5 +38,5 @@ export function ConnectForm({ initialUrl, submitLabel = "Connect", onDone }: { i
 export const noOutline = Platform.OS === "web" ? ({ outlineStyle: "none" } as object) : {};
 
 const s = StyleSheet.create({
-  input: { backgroundColor: color.surface, borderColor: color.border, borderWidth: 1, borderRadius: radius.md, color: color.text, paddingHorizontal: space.md, paddingVertical: 12, fontSize: font.md },
+  input: { backgroundColor: color.surface, borderRadius: 16, color: color.text, paddingHorizontal: space.md, paddingVertical: 14, fontSize: font.md },
 });

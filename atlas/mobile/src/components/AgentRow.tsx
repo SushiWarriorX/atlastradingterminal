@@ -22,11 +22,11 @@ export function AgentRow({ agent, finding, now, expanded, onToggle, onRefresh, r
   return (
     <View style={s.wrap} testID={`agent-${agent}`}>
       <Pressable onPress={onToggle} accessibilityRole="button" accessibilityState={{ expanded }} accessibilityLabel={`${AGENT_TITLE[agent]}. ${f?.takeaway ?? "Loading"}`} style={({ pressed }) => [s.head, pressed && { opacity: 0.75 }]} testID={`agent-toggle-${agent}`}>
-        <View style={s.icon}><Ionicons name={ICON[agent]} size={18} color={color.accent} /></View>
+        <View style={s.icon}><Ionicons name={ICON[agent]} size={19} color={color.text} /></View>
         <View style={{ flex: 1, minWidth: 0 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
             <Txt variant="h2">{AGENT_TITLE[agent]}</Txt>
-            {stance && <Txt variant="tiny" c={stanceColor(stance)} style={{ fontWeight: "700" }} testID={`stance-${agent}`}>{STANCE_LABEL[stance]}</Txt>}
+            {stance && <View style={{ backgroundColor: stanceColor(stance) + "26", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}><Txt variant="tiny" c={stanceColor(stance)} style={{ fontWeight: "700" }} testID={`stance-${agent}`}>{STANCE_LABEL[stance]}</Txt></View>}
             {f?.demo && <Txt variant="tiny" c={color.demo} style={{ fontWeight: "700" }}>DEMO</Txt>}
           </View>
           {kind === "pending" ? (
@@ -61,7 +61,7 @@ function Details({ f, now, onRefresh, refreshing, refreshMessage }: { f: Finding
       )}
       {f.explanation && (
         <View style={s.explain} testID="explanation">
-          <Txt variant="label" c={color.accent}>In plain words</Txt>
+          <Txt variant="label" c={color.text}>In plain words</Txt>
           <Txt variant="body" style={{ marginTop: 4 }}>{f.explanation.text}</Txt>
           <Txt variant="tiny" style={{ marginTop: 4 }}>AI-written ({f.explanation.model}). {f.explanation.note}</Txt>
         </View>
@@ -165,11 +165,11 @@ function StoryItem({ st, now }: { st: Story; now: number }) {
 }
 
 const s = StyleSheet.create({
-  wrap: { backgroundColor: color.surface, borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, borderColor: color.border, overflow: "hidden" },
+  wrap: { backgroundColor: color.surface, borderRadius: radius.lg, overflow: "hidden" },
   head: { flexDirection: "row", alignItems: "flex-start", gap: space.md, padding: space.lg },
-  icon: { width: 34, height: 34, borderRadius: 17, backgroundColor: color.accent + "18", alignItems: "center", justifyContent: "center" },
-  body: { paddingHorizontal: space.lg, paddingBottom: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
-  explain: { marginTop: space.lg, padding: space.md, borderRadius: radius.md, backgroundColor: color.accent + "12", borderWidth: 1, borderColor: color.accent + "33" },
+  icon: { width: 38, height: 38, borderRadius: 19, backgroundColor: color.surface2, alignItems: "center", justifyContent: "center" },
+  body: { paddingHorizontal: space.lg, paddingBottom: space.lg },
+  explain: { marginTop: space.lg, padding: space.md, borderRadius: radius.md, backgroundColor: color.surface2 },
   kv: { flexDirection: "row", alignItems: "center", paddingVertical: 4, gap: space.sm },
   fact: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 6, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
 });

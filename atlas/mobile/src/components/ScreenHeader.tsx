@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
-import { space } from "../theme";
+import { color, space } from "../theme";
 import { IconButton, Txt } from "./ui";
 
 /** Large title with the small profile icon that opens Settings. Settings is the only thing behind it: there are exactly two tabs. */
@@ -14,7 +14,7 @@ export function ScreenHeader({ title, subtitle, right }: { title: string; subtit
       </View>
       <View style={{ flexDirection: "row", alignItems: "center", gap: space.md }}>
         {right}
-        <IconButton name="person-circle-outline" size={30} label="Settings" onPress={() => router.push("/settings")} testID="profile-button" />
+        <IconButton name="person-circle" size={36} tint={color.faint} label="Settings" onPress={() => router.push("/settings")} testID="profile-button" />
       </View>
     </View>
   );
