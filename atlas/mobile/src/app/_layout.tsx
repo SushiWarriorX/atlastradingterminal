@@ -6,7 +6,10 @@ import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ConnectScreen } from "../components/ConnectScreen";
 import { Spinner } from "../components/ui";
+import { DesktopShell } from "../components/DesktopShell";
 import { ConnectionProvider, useConnection } from "../state/connection";
+import { useIsWide } from "../state/layout";
+import { SelectionProvider } from "../state/selection";
 import { color } from "../theme";
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 5_000, refetchOnReconnect: true } } });
@@ -18,8 +21,10 @@ if (Platform.OS === "web" && typeof document !== "undefined") {
 
 function Gate() {
   const { status } = useConnection();
+  const wide = useIsWide();
   if (status === "loading") return <Spinner label="Starting…" />;
   if (status === "needs_server" || status === "needs_login") return <ConnectScreen />;
+  if (wide) return <DesktopShell />;
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bg } }}>
       <Stack.Screen name="(tabs)" />
@@ -35,7 +40,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ConnectionProvider>
           <StatusBar style="light" />
-          <Gate />
+          <SelectionProvider><Gate /></SelectionProvider>
         </ConnectionProvider>
       </QueryClientProvider>
     </SafeAreaProvider>

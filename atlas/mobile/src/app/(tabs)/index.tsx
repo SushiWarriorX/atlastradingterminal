@@ -8,6 +8,8 @@ import { Banner, Divider, EmptyState, ErrorState, PrimaryButton, Skeleton, TextB
 import { localClock, relativeTime } from "../../lib/format";
 import { describeFreshness, summarizeTones } from "../../lib/freshness";
 import { idsOf, moveId, settledRows } from "../../lib/watchlist";
+import { useIsWide } from "../../state/layout";
+import { useOpenAsset, useGoToSearch } from "../../state/selection";
 import { useMeta, useNow, useRemoveFromWatchlist, useReorderWatchlist, useWatchlist } from "../../state/queries";
 import { color, space } from "../../theme";
 
@@ -16,6 +18,9 @@ export default function WatchlistScreen() {
   const now = useNow(15_000);
   const meta = useMeta();
   const wl = useWatchlist();
+  const wide = useIsWide();
+  const openAsset = useOpenAsset();
+  const goSearch = useGoToSearch();
   const remove = useRemoveFromWatchlist();
   const reorder = useReorderWatchlist();
   const [editing, setEditing] = useState(false);
@@ -42,9 +47,9 @@ export default function WatchlistScreen() {
   if (!wl.cacheLoaded || (wl.isLoading && !wl.data)) {
     body = <View style={{ paddingHorizontal: space.lg, gap: space.lg, paddingTop: space.md }} testID="watchlist-loading">{[0, 1, 2, 3, 4].map((i) => <View key={i} style={{ flexDirection: "row", gap: space.md, alignItems: "center" }}><Skeleton w={44} h={44} r={22} /><View style={{ flex: 1, gap: 8 }}><Skeleton w="55%" h={15} /><Skeleton w="35%" h={11} /></View><Skeleton w={70} h={28} /></View>)}</View>;
   } else if (wl.isError && !wl.data) {
-    body = <ErrorState testID="watchlist-error" title="Can't reach your Signal server" body={wl.error instanceof Error ? wl.error.message : "Something went wrong."} onRetry={() => wl.refetch()} extra={<TextButton label="Check connection settings" onPress={() => router.push("/settings")} />} />;
+    body = <ErrorState testID="watchlist-error" title="Can't reach your Signal server" body={wl.error instanceof Error ? wl.error.message : "Something went wrong."} onRetry={() => wl.refetch()} extra={wide ? undefined : <TextButton label="Check connection settings" onPress={() => router.push("/settings")} />} />;
   } else if (items.length === 0) {
-    body = <EmptyState testID="watchlist-empty" icon="star-outline" title="Your watchlist is empty" body="Search for Bitcoin, other crypto, US stocks or ETFs and tap + to save them here." action={<PrimaryButton label="Search assets" onPress={() => router.navigate("/search")} testID="empty-search" />} />;
+    body = <EmptyState testID="watchlist-empty" icon="star-outline" title="Your watchlist is empty" body="Search for Bitcoin, other crypto, US stocks or ETFs and tap + to save them here." action={<PrimaryButton label="Search assets" onPress={goSearch} testID="empty-search" />} />;
   }
 
   return (
@@ -61,7 +66,7 @@ export default function WatchlistScreen() {
         contentContainerStyle={{ paddingBottom: space.xxl }}
         renderItem={({ item, index }) => (
           <WatchRowItem row={item} now={now} editing={editing} canUp={index > 0} canDown={index < items.length - 1}
-            onOpen={() => router.push({ pathname: "/asset/[id]", params: { id: item.asset.id } })}
+            onOpen={() => openAsset(item.asset.id)}
             onRemove={() => remove.mutate(item.asset.id, { onError: failMsg })}
             onMove={(dir) => reorder.mutate(moveId(ids, item.asset.id, dir), { onError: failMsg })} />
         )}

@@ -4,6 +4,7 @@ A simple, fast phone app for researching **Bitcoin, crypto tokens, US stocks and
 
 **Research and paper trading only.** The app cannot place trades, connect to a brokerage or hold money, and the backend has no route that could. Nothing in it is financial advice.
 
+- On a wide screen (a desktop browser, 1000px or more) it shows three panes side by side: watchlist or search on the left, the research in the middle, the News agent's stories on the right, with a ticker strip on top. On a phone it stays one screen at a time.
 - Two tabs: **Watchlist** (home) and **Search**. Settings sit behind the small profile icon.
 - Tap an asset for one continuous research screen: price and freshness, a chart, a **What matters now** briefing, and four expandable agent rows.
 - Every market number shows where it came from, when, and an honest label: *Live, Delayed, Market closed, Stale, Demo* or *Unavailable*.
@@ -65,7 +66,7 @@ Your PC's address is the "IPv4 Address" shown by `ipconfig` (Windows) or `ifconf
 
 ```bash
 npm run typecheck      # TypeScript
-npm test               # 28 unit tests (formatting, freshness wording, watchlist edits, per-server query keys, the API client)
+npm test               # 29 unit tests (formatting, freshness wording, watchlist edits, per-server query keys, the API client)
 ```
 
 Browser tests drive the real app (web export, phone-sized) against the real backend with scripted prices, news and directory data. No network or accounts are needed:

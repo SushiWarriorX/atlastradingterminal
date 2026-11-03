@@ -201,3 +201,12 @@ describe("query keys", () => {
     expect(JSON.stringify(keys("x").asset("CRYPTO:COINBASE:BTC-USD:SPOT"))).not.toBe(JSON.stringify(keys("x").asset("ETF:ARCA:BTC")));      // two assets with one ticker
   });
 });
+
+describe("wide layout", () => {
+  it("switches to three panes at 1000px and keeps the phone layout below", async () => {
+    const { isWide, WIDE_MIN } = await import("./layout");
+    expect(WIDE_MIN).toBe(1000);
+    expect([390, 768, 999].map(isWide)).toEqual([false, false, false]);
+    expect([1000, 1440].map(isWide)).toEqual([true, true]);
+  });
+});

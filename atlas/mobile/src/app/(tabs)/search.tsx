@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,6 +9,7 @@ import { noOutline } from "../../components/ConnectForm";
 import { Banner, Divider, EmptyState, ErrorState, Skeleton, TextButton, Txt } from "../../components/ui";
 import { idsOf } from "../../lib/watchlist";
 import { useAddToWatchlist, useDebounced, useRecents, useRemoveFromWatchlist, useSearch, useWatchlist } from "../../state/queries";
+import { useOpenAsset } from "../../state/selection";
 import { color, font, radius, space } from "../../theme";
 
 export default function SearchScreen() {
@@ -26,9 +26,10 @@ export default function SearchScreen() {
   const typing = q.trim().length > 0;
   const waiting = typing && (q.trim() !== debounced.trim() || search.isFetching);
 
+  const openAsset = useOpenAsset();
   function open(a: Asset) {
     recents.add(a);
-    router.push({ pathname: "/asset/[id]", params: { id: a.id } });
+    openAsset(a.id);
   }
   function toggle(a: Asset) {
     setNotice(null);

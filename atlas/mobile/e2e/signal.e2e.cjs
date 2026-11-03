@@ -442,6 +442,35 @@ async function healthy(browser) {
       await waitRows(page, [ID.btc, ID.btcEtf, ID.aapl]);
     });
 
+    await check("wide screens: watchlist on the left, research in the middle, news on the right, a ticker on top, and still no trading", async () => {
+      const d = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "en-US", timezoneId: "UTC" });
+      const w = await d.newPage();
+      w.setDefaultTimeout(20000);
+      livePage = w;
+      try {
+        await connectTo(w, be.url);
+        await w.waitForSelector(T("ticker"));
+        await w.waitForSelector(T("pane-watchlist"));
+        await w.waitForSelector(T("news-panel"));
+        await waitRows(w, [ID.btc, ID.btcEtf, ID.aapl]);
+        await w.locator(T(`row-${ID.aapl}`)).locator('[role="button"]').first().click();
+        await w.waitForFunction(() => document.querySelector('[data-testid="asset-name"]')?.textContent === "Apple Inc.");
+        await w.waitForSelector(T("story-1"), { timeout: 30000 }).catch(() => undefined);
+        await w.waitForFunction(() => document.querySelectorAll('[data-testid="news-panel"] [data-testid^="story-"]').length > 0, null, { timeout: 30000 });
+        const x = async (id) => (await w.locator(T(id)).first().boundingBox()).x;
+        const left = await x(`row-${ID.aapl}`), mid = await x("asset-name"), right = await x("news-panel");
+        assert(left < mid && mid < right, `panes must run left to right (x: ${left}, ${mid}, ${right})`);
+        match(await inner(w, "news-panel"), /Yahoo Finance \(per symbol\)/, "stories name their source");
+        eq((await clickableNames(w)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls on the wide layout");
+        await shot(w, "10-wide");
+        await w.click(T("pane-search"));
+        await w.waitForSelector(T("search-input"));
+        await w.click(T("profile-button"));
+        await w.waitForSelector(T("settings-drawer"));
+        await shot(w, "11-wide-settings");
+      } finally { await d.close(); livePage = page; }
+    });
+
     await check("no uncaught errors in the browser during the whole run", async () => { eq(S.pageErrors, [], "uncaught page errors"); });
   } finally {
     await S.ctx.close().catch(() => undefined);

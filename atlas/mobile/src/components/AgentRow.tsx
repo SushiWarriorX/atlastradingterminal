@@ -146,7 +146,7 @@ function Details({ f, now, onRefresh, refreshing, refreshMessage }: { f: Finding
   );
 }
 
-function StoryItem({ st, now }: { st: Story; now: number }) {
+export function StoryItem({ st, now }: { st: Story; now: number }) {
   const label = KIND_LABEL[st.kind];
   const url = safeUrl(st.link);
   return (
