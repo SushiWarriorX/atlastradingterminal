@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import type { AgentName, Asset, ChartRange, JournalFilters, ResearchResponse, WatchlistResponse } from "../api/types";
+import type { AgentName, Asset, ChartRange, JournalFilters, LabRunBody, ResearchResponse, WatchlistResponse } from "../api/types";
 import { keys } from "../lib/keys";
 import { pushRecent } from "../lib/recents";
 import { applyAdd, applyRemove, applyReorder } from "../lib/watchlist";
@@ -139,4 +139,9 @@ export function useStockResearch(symbol: string, enabled: boolean) {
 export function useEarnings(days: number, enabled: boolean) {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).earnings(days), queryFn: () => need(api).earnings(days), enabled: !!api && enabled, staleTime: 10 * 60_000, retry: 0 });
+}
+
+export function useLabRun() {
+  const { api } = useConnection();
+  return useMutation({ mutationFn: (body: LabRunBody) => need(api).labRun(body) });
 }

@@ -45,6 +45,11 @@ class DB:
             self.conn.commit()
             return cur.lastrowid or 0
 
+    def xmany(self, sql: str, rows) -> None:
+        with self.lock:
+            self.conn.executemany(sql, rows)
+            self.conn.commit()
+
     @contextmanager
     def tx(self):
         """One atomic transaction. Yields the raw connection: use conn.execute inside (not self.x, which commits)."""

@@ -743,6 +743,28 @@ async function demo(browser) {
       await page.click(T("profile-button")); await page.waitForSelector(T("settings-title"));
       match(await text(page), /Demo mode/);
     });
+    await check("BTC Strategy Lab on a demo server: collapsed, runs five strategies, labels the data as synthetic, says what it is not, never offers a trade", async () => {
+      await page.goto(WEB_ORIGIN); await ready(page);
+      await page.click(V("tab-btc"));
+      await page.waitForSelector(V("lab-card"));
+      assert(!(await present(page, "lab-run")), "the lab stays collapsed until asked for");
+      await page.click(V("lab-toggle"));
+      await page.click(V("lab-run"));
+      await page.waitForSelector(V("lab-results"), { timeout: 60000 });
+      const t = await inner(page, "lab-results");
+      match(t, /synthetic/i, "demo prices are labelled synthetic");
+      eq(await page.locator('[data-testid^="lab-row-"]:visible').count(), 5, "five strategies by default");
+      match(t, /not a forecast|Past results do not predict/i);
+      match(t, /(No reliable|Weak|Moderate) evidence/);
+      await page.locator('[data-testid^="lab-row-"]:visible').first().click();
+      match(await text(page), /Right now \(/, "current rule state is shown");
+      noMatch(await text(page), FORECASTS, "no forecasts");
+      await page.click(V("lab-perp")); await page.click(V("lab-lev-3")); await page.click(V("lab-run"));
+      await page.waitForFunction(() => /perp/i.test(document.body.innerText) || /funding/i.test(document.body.innerText), null, { timeout: 60000 });
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the lab");
+      await shot(page, "15-strategy-lab");
+      await toStocks(page); await page.click(V("profile-button")); await page.waitForSelector(T("settings-title"));      // leave the app where the next check expects it
+    });
     await check("switching to a live server drops the demo list and every demo label; nothing carries over", async () => {
       await page.fill(T("server-url"), liveBe.url);
       await page.click(T("connect-submit"));

@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError } from "../api/client";
 import type { AgentName, ChartRange } from "../api/types";
 import { StockResearchCard } from "./StockResearchCard";
+import { StrategyLabCard } from "./StrategyLabCard";
+import { BTC_ID } from "../state/selection";
 import { AgentRow } from "./AgentRow";
 import { BriefingCard } from "./BriefingCard";
 import { FreshnessLine } from "./FreshnessLine";
@@ -123,6 +125,7 @@ export function AssetView({ id, embedded, hideBack }: { id: string; embedded?: b
             ))}
           </View>
           {a?.type === "stock" ? <StockResearchCard symbol={a.symbol} /> : null}
+          {a?.id === BTC_ID ? <StrategyLabCard /> : null}
           <View style={{ flexDirection: "row", gap: space.sm, alignItems: "flex-start", marginTop: space.md }}>
             <Ionicons name="information-circle-outline" size={16} color={color.faint} />
             <Txt variant="tiny" style={{ flex: 1 }}>Research only. Signal cannot place trades, and nothing here is financial advice. Figures are calculated by the server from the sources shown; written explanations only describe them.</Txt>

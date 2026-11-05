@@ -149,3 +149,15 @@ export interface StockResearchData {
   news: { title: string; link: string | null; feed: string; published: string | null }[]; errors: string[]; gaps: string[];
 }
 export interface EarningsData { as_of: string; window_days: number; items: { symbol: string; name: string | null; instrument_id: string; date: string; days_away: number; sector: string | null }[]; checked: number; errors: string[]; note: string }
+
+export interface LabMetrics { net_return_pct: number | null; sharpe: number | null; max_drawdown_pct: number | null; win_rate_pct: number | null; profit_factor: number | null; trades: number; no_losing_trades?: boolean }
+export interface LabResult {
+  id: string; name: string; family: string;
+  out_of_sample: LabMetrics; walk_forward: LabMetrics; buy_and_hold: { out_of_sample: LabMetrics };
+  robustness: { share_positive: number; doubled_costs_oos_return_pct: number };
+  evidence: { level: "none" | "weak" | "moderate"; reasons: string[] };
+  now: { rule_position: string; conditions: { rule: string; met: boolean | null; value: string }[]; as_of: string; note: string };
+  curve: { strategy: number[]; buy_and_hold: number[] };
+}
+export interface LabRunData { settings: { timeframe: string; market: string; leverage: number }; period: { from: string; to: string; bars: number }; results: LabResult[]; skipped: { id: string; reason: string }[]; notes: string[]; caveats: string[]; data: { demo: boolean; source: string; status: string; notes: string[] } }
+export interface LabRunBody { strategies?: string[]; timeframe: string; market: string; leverage: number; long_short: boolean }

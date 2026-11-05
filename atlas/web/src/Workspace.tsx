@@ -19,6 +19,7 @@ import { JournalEditorWidget, JournalImportWidget, JournalSourcesWidget, Journal
 import { SettingsWidget } from "./widgets/Settings";
 import { MacroDashboard } from "./widgets/Macro";
 import { StatsStrip } from "./widgets/StatsStrip";
+import { BtcLabWidget } from "./widgets/BtcLab";
 import { EarningsWidget, StockResearchWidget } from "./widgets/StockResearch";
 import { JournalQuickWidget } from "./widgets/JournalQuick";
 
@@ -38,6 +39,7 @@ function render(w: WidgetCfg, view: string) {
     case "derivatives": return <DerivativesWidget />;
     case "newsfeeds": return <NewsFeedsWidget />;
     case "mtf": return <MtfWidget />;
+    case "btclab": return <BtcLabWidget />;
     case "stockresearch": return <StockResearchWidget />;
     case "earnings": return <EarningsWidget />;
     case "journalquick": return <JournalQuickWidget />;

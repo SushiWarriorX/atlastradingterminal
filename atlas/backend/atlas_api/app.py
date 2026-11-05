@@ -23,6 +23,9 @@ from .signal import routes as signal_routes
 from .signal.service import SignalService
 from .macro import MacroService
 from .macro_brief import MacroBriefService
+from .btclab.data import BtcData
+from .btclab.evaluate import LabError
+from .btclab.service import LabService, RunIn as LabRunIn
 from .stocks.edgar import EdgarClient
 from .stocks.research import StockResearch
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
@@ -995,6 +998,28 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         return ok(await fundamentals.get(inst, force=refresh))
 
     stock_research = StockResearch(EdgarClient(db), fundamentals, news, demo)
+
+    lab = LabService(BtcData(db), demo)
+
+    @app.get("/api/btclab/strategies")
+    async def btclab_strategies():
+        return ok({"strategies": lab.listing(), **lab.status()})
+
+    @app.post("/api/btclab/data/refresh")
+    async def btclab_refresh():
+        try:
+            return ok(await lab.refresh(["1d", "1h"]))
+        except LabError as e:
+            raise ApiError("DATA_UNAVAILABLE", str(e), 503)
+
+    @app.post("/api/btclab/run")
+    async def btclab_run(b: LabRunIn):
+        try:
+            res = await lab.run(b)
+        except LabError as e:
+            raise ApiError("LAB_UNAVAILABLE", str(e), 503)
+        db.audit("user", "btclab_run", {"strategies": b.strategies, "timeframe": b.timeframe, "market": b.market, "leverage": b.leverage})
+        return ok(res)
 
     @app.get("/api/stocks/earnings")
     async def stocks_earnings(symbols: str = "", days: int = 30):
