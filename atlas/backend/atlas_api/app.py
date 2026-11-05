@@ -23,6 +23,7 @@ from .signal import routes as signal_routes
 from .signal.service import SignalService
 from .macro import MacroService
 from .macro_brief import MacroBriefService
+from .discover.service import DiscoverService
 from .btclab.data import BtcData
 from .btclab.evaluate import LabError
 from .btclab.service import LabService, RunIn as LabRunIn
@@ -998,6 +999,20 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         return ok(await fundamentals.get(inst, force=refresh))
 
     stock_research = StockResearch(EdgarClient(db), fundamentals, news, demo)
+
+    discover = DiscoverService(db, bars, stock_research.edgar, demo)
+
+    @app.get("/api/discover/shortlist")
+    async def discover_shortlist(refresh: bool = False):
+        return ok(await discover.shortlist(refresh))
+
+    @app.get("/api/discover/ranked")
+    async def discover_ranked(sector: str | None = None, min_score: float = 0, max_pe: float | None = None, min_growth: float | None = None, limit: int = 25):
+        return ok(discover.ranked(sector, min_score, max_pe, min_growth, limit))
+
+    @app.get("/api/discover/method")
+    async def discover_method():
+        return ok(discover.method())
 
     lab = LabService(BtcData(db), demo)
 

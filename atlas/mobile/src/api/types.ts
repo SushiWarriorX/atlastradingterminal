@@ -161,3 +161,17 @@ export interface LabResult {
 }
 export interface LabRunData { settings: { timeframe: string; market: string; leverage: number }; period: { from: string; to: string; bars: number }; results: LabResult[]; skipped: { id: string; reason: string }[]; notes: string[]; caveats: string[]; data: { demo: boolean; source: string; status: string; notes: string[] } }
 export interface LabRunBody { strategies?: string[]; timeframe: string; market: string; leverage: number; long_short: boolean }
+
+export interface DiscoverPick {
+  symbol: string; name: string | null; sector: string | null; asset_id: string; score: number; coverage: number; of: number; rank?: number;
+  factors: Record<string, { score: number } | null>;
+  reasons: string[]; risks: string[]; evidence: { label: string; value: number | null; unit: string; source: string; as_of: string }[];
+  pe: number | null; revenue_growth_pct: number | null;
+}
+export interface DiscoverData {
+  asof: string; created_at: string; demo: boolean; shortlist: DiscoverPick[]; ranked: DiscoverPick[]; stale_notice?: string; notes: string[];
+  universe: { name: string; size: number; priced: number; liquid: number; scored: number };
+  data: { prices: string; prices_status: string; prices_as_of: string | null; fundamentals: string };
+  method: { weights: Record<string, number>; scales: Record<string, string>; steps: string[]; note: string };
+  gaps: string[]; disclaimer: string;
+}

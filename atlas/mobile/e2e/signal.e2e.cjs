@@ -551,10 +551,6 @@ async function healthy(browser) {
       await page.click(V("back"));
     });
 
-    await check("Discover is an honest placeholder, not invented data", async () => {
-      await page.click(T("tab-discover")); await page.waitForSelector(V("discover-soon"));
-    });
-
     await check("no uncaught errors in the browser during the whole run", async () => { eq(S.pageErrors, [], "uncaught page errors"); });
   } finally {
     await S.ctx.close().catch(() => undefined);
@@ -765,6 +761,30 @@ async function demo(browser) {
       await shot(page, "15-strategy-lab");
       await toStocks(page); await page.click(V("profile-button")); await page.waitForSelector(T("settings-title"));      // leave the app where the next check expects it
     });
+    await check("Discover on a demo server: five picks with reasons, risks, evidence and dates, a visible method, save to watchlist, no trade buttons", async () => {
+      await page.goto(WEB_ORIGIN); await ready(page);
+      await page.click(V("tab-discover"));
+      await page.waitForSelector(V("discover-body"), { timeout: 90000 });
+      await page.waitForSelector(V("discover-demo"));
+      const picks = await page.$$eval('[data-testid^="pick-"]:not([data-testid^="pick-more"]):not([data-testid^="pick-save"])', (els) => els.map((e) => e.getAttribute("data-testid")));
+      assert(picks.length >= 1 && picks.length <= 5, `between one and five picks (got ${picks.length})`);
+      const t = await text(page);
+      match(t, /Why it ranks well/); match(t, /Risks to weigh/); match(t, /Not a recommendation, rating or forecast/);
+      match(t, /Not included:/); match(t, /Earnings surprises, IPO calendars/);
+      noMatch(t, FORECASTS, "no forecasts");
+      const sym = picks[0].slice(5);
+      await page.click(V(`pick-more-${sym}`));
+      match(await text(page), /Score breakdown/); match(await text(page), /as of \d{4}-\d{2}-\d{2}/, "evidence carries dates");
+      await page.click(V("discover-how"));
+      await page.waitForSelector(V("discover-method"));
+      match(await inner(page, "discover-method"), /Growth .* 25%/s, "weights are shown");
+      await page.click(V(`pick-save-${sym}`));
+      await page.waitForFunction((s2) => /On your watchlist/.test(document.querySelector(`[data-testid="pick-save-${s2}"]`)?.innerText ?? ""), sym, { timeout: 15000 });
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in Discover");
+      await shot(page, "16-discover");
+      await toStocks(page); await page.click(V("profile-button")); await page.waitForSelector(T("settings-title"));
+    });
+
     await check("switching to a live server drops the demo list and every demo label; nothing carries over", async () => {
       await page.fill(T("server-url"), liveBe.url);
       await page.click(T("connect-submit"));

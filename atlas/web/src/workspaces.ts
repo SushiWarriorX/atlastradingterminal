@@ -1,4 +1,4 @@
-export type WidgetType = "btclab" | "stockresearch" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "discover" | "btclab" | "stockresearch" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
@@ -32,10 +32,11 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "mtf", type: "mtf", x: 0, y: 62, w: 12, h: 16 },
     { i: "news", type: "news", x: 0, y: 78, w: 12, h: 10 },
   ] },
-  scanner: { id: "scanner", name: "Equity Scanner", widgets: [
-    { i: "scan", type: "scanner", x: 0, y: 0, w: 12, h: 20 },
-    { i: "chart", type: "chart", x: 0, y: 20, w: 7, h: 13 },
-    { i: "tech", type: "tech", x: 7, y: 20, w: 5, h: 13 },
+  scanner: { id: "scanner", name: "Discover and Equity Scanner", widgets: [
+    { i: "disc", type: "discover", x: 0, y: 0, w: 12, h: 34 },
+    { i: "scan", type: "scanner", x: 0, y: 34, w: 12, h: 20 },
+    { i: "chart", type: "chart", x: 0, y: 54, w: 7, h: 13 },
+    { i: "tech", type: "tech", x: 7, y: 54, w: 5, h: 13 },
   ] },
   journal: { id: "journal", name: "Journal", widgets: [
     { i: "quick", type: "journalquick", x: 0, y: 0, w: 12, h: 30 },

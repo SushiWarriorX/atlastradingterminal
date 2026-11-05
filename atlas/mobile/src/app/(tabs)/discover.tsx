@@ -1,6 +1,10 @@
 import React from "react";
-import { ComingSoon } from "../../components/ComingSoon";
+import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { DiscoverView } from "../../components/DiscoverView";
+import { color } from "../../theme";
 
 export default function DiscoverScreen() {
-  return <ComingSoon testID="discover-soon" title="Discover" icon="compass-outline" body="A daily shortlist of US stocks worth researching, with the reasons, evidence and risks, will appear here. This part is not wired up yet." />;
+  const insets = useSafeAreaInsets();
+  return <View style={{ flex: 1, backgroundColor: color.bg, paddingTop: insets.top }}><DiscoverView /></View>;
 }

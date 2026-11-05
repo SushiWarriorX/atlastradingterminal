@@ -1,4 +1,4 @@
-import type { LabRunBody, LabRunData, EarningsData, StockResearchData, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
+import type { DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
 
 /** A failure with a code the UI can act on. `network` means we never got an answer. */
 export class ApiError extends Error {
@@ -73,6 +73,7 @@ export function createApi(opts: ClientOptions) {
     asset: (id: string) => call<AssetHeader>(`/api/signal/asset/${enc(id)}`),
     chart: (id: string, range: ChartRange) => call<ChartResponse>(`/api/signal/chart/${enc(id)}?range=${range}`),
     research: (id: string, wait = 4) => call<ResearchResponse>(`/api/signal/research/${enc(id)}?wait=${wait}`, { timeoutMs: 40_000 }),
+    discover: (refresh = false) => call<DiscoverData>(`/api/discover/shortlist?refresh=${refresh}`, { timeoutMs: 120_000 }),
     labRun: (body: LabRunBody) => call<LabRunData>("/api/btclab/run", { method: "POST", body, timeoutMs: 180_000 }),
     stockResearch: (symbol: string) => call<StockResearchData>(`/api/stocks/${encodeURIComponent(symbol)}/research`, { timeoutMs: 60_000 }),
     earnings: (days: number) => call<EarningsData>(`/api/stocks/earnings?days=${days}`, { timeoutMs: 60_000 }),

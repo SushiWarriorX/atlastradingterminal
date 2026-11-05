@@ -6,6 +6,7 @@ import WatchlistScreen from "../app/(tabs)/index";
 import { useWatchlist } from "../state/queries";
 import { BTC_ID, DESTS, useSelection } from "../state/selection";
 import { color, radius, space } from "../theme";
+import { DiscoverView } from "./DiscoverView";
 import { MacroView } from "./MacroView";
 import { JournalView } from "./JournalView";
 import { AssetView } from "./AssetView";
@@ -69,11 +70,7 @@ export function DesktopShell() {
         ) : dest === "macro" ? (
           <Panel><MacroView /></Panel>
         ) : (
-          <Panel><View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: space.sm, padding: space.xl }} testID={`${dest}-soon`}>
-            <Ionicons name="compass-outline" size={28} color={color.faint} />
-            <Txt variant="h2">Discover is not built yet</Txt>
-            <Txt variant="small" style={{ textAlign: "center", maxWidth: 420 }}>A daily shortlist of US stocks worth researching, with reasons, evidence and risks, will appear here.</Txt>
-          </View></Panel>
+          <Panel><DiscoverView /></Panel>
         )}
       </View>
       {settings && (

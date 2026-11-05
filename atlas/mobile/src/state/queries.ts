@@ -145,3 +145,8 @@ export function useLabRun() {
   const { api } = useConnection();
   return useMutation({ mutationFn: (body: LabRunBody) => need(api).labRun(body) });
 }
+
+export function useDiscover() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).discover, queryFn: () => need(api).discover(false), enabled: !!api, staleTime: 30 * 60_000, retry: 0 });
+}
