@@ -6,7 +6,7 @@ import { useAddToWatchlist, useDiscover, useRemoveFromWatchlist, useWatchlist } 
 import { useOpenAsset } from "../state/selection";
 import { color, radius, space } from "../theme";
 import { ScreenHeader } from "./ScreenHeader";
-import { Banner, Divider, ErrorState, PrimaryButton, Skeleton, Tag, TextButton, Txt } from "./ui";
+import { Banner, Divider, ErrorState, GCard, PrimaryButton, Skeleton, Tag, TextButton, Txt } from "./ui";
 
 const FACTOR: Record<string, string> = { growth: "Growth", profitability: "Profitability", momentum: "Momentum", valuation: "Valuation", balance_sheet: "Balance sheet", liquidity: "Liquidity" };
 const num = (v: number | null, u: string) => (v === null ? "n/a" : `${v.toFixed(1)}${u === "%" ? "%" : u === "x" ? "x" : ""}`);
@@ -14,10 +14,10 @@ const num = (v: number | null, u: string) => (v === null ? "n/a" : `${v.toFixed(
 function Card({ p, saved, onToggle, onOpen }: { p: DiscoverPick; saved: boolean; onToggle: () => void; onOpen: () => void }) {
   const [more, setMore] = useState(false);
   return (
-    <View style={{ backgroundColor: color.surface, borderRadius: radius.lg, padding: space.lg, gap: space.sm }} testID={`pick-${p.symbol}`}>
+    <GCard style={{ padding: space.lg, gap: space.sm }} testID={`pick-${p.symbol}`}>
       <Pressable onPress={onOpen} accessibilityRole="button" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <View style={{ flex: 1 }}><Txt variant="h2">#{p.rank} {p.symbol}</Txt><Txt variant="tiny">{p.name} · {p.sector}</Txt></View>
-        <View style={{ alignItems: "flex-end" }}><Txt variant="h2">{p.score.toFixed(0)}<Txt variant="tiny">/100</Txt></Txt><Txt variant="tiny">{p.coverage} of {p.of} factors</Txt></View>
+        <View style={{ alignItems: "flex-end" }}><Txt variant="h2" c={p.score >= 80 ? color.up : p.score >= 65 ? color.accent3 : color.warn} style={{ fontSize: 26 }}>{p.score.toFixed(0)}<Txt variant="tiny">/100</Txt></Txt><Txt variant="tiny">{p.coverage} of {p.of} factors</Txt></View>
       </Pressable>
       <Txt variant="label">Why it ranks well</Txt>
       {p.reasons.map((r, i) => <Txt key={i} variant="small">• {r}</Txt>)}
@@ -34,7 +34,7 @@ function Card({ p, saved, onToggle, onOpen }: { p: DiscoverPick; saved: boolean;
         <TextButton label={more ? "Hide evidence" : "Show evidence"} onPress={() => setMore(!more)} testID={`pick-more-${p.symbol}`} />
         <TextButton label={saved ? "On your watchlist · remove" : "Add to watchlist"} onPress={onToggle} testID={`pick-save-${p.symbol}`} />
       </View>
-    </View>
+    </GCard>
   );
 }
 

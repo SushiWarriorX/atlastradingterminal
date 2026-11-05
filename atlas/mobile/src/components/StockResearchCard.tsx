@@ -3,7 +3,7 @@ import { Linking, Pressable, View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useStockResearch } from "../state/queries";
 import { color, radius, space } from "../theme";
-import { Banner, Divider, Skeleton, Tag, Txt } from "./ui";
+import { Banner, Divider, Skeleton, Tag, Txt, GCard } from "./ui";
 
 const money = (x: number | null) => (x === null ? "n/a" : `${x < 0 ? "−" : ""}$${(Math.abs(x) / 1e9).toFixed(2)}B`);
 const pc = (x: number | null) => (x === null ? "n/a" : `${x.toFixed(1)}%`);
@@ -20,7 +20,7 @@ export function StockResearchCard({ symbol }: { symbol: string }) {
   const d = q.data;
   const last = d?.financials.years[d.financials.years.length - 1];
   return (
-    <View style={{ backgroundColor: color.surface, borderRadius: radius.lg, padding: space.lg, gap: space.md }} testID="stock-card">
+    <GCard style={{ padding: space.lg, gap: space.md }} testID="stock-card">
       <Pressable onPress={() => setShown(!shown)} accessibilityRole="button" testID="stock-toggle" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <View style={{ flex: 1 }}><Txt variant="h2">Company deep-dive</Txt><Txt variant="tiny">Filings, valuation, earnings, bull and bear points</Txt></View>
         <Txt variant="small" c={color.accent}>{shown ? "Hide" : "Show"}</Txt>
@@ -65,6 +65,6 @@ export function StockResearchCard({ symbol }: { symbol: string }) {
             {d.errors.length > 0 && <Banner tone="warn" title="Some sources failed">{d.errors.join(" ")}</Banner>}
             <Txt variant="tiny">Not shown: {d.gaps.join(" ")}</Txt>
           </View>))}
-    </View>
+    </GCard>
   );
 }

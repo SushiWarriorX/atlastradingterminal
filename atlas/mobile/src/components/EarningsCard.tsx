@@ -3,7 +3,7 @@ import { Pressable, View } from "react-native";
 import { useEarnings } from "../state/queries";
 import { useOpenAsset } from "../state/selection";
 import { color, radius, space } from "../theme";
-import { Chip, Txt } from "./ui";
+import { Chip, Txt, GCard } from "./ui";
 
 const WINDOWS = [7, 14, 30, 60];
 
@@ -15,7 +15,7 @@ export function EarningsCard() {
   const open = useOpenAsset();
   const d = q.data;
   return (
-    <View style={{ backgroundColor: color.surface, borderRadius: radius.lg, padding: space.lg, gap: space.sm }} testID="earnings-card">
+    <GCard style={{ padding: space.lg, gap: space.sm }} testID="earnings-card">
       <Pressable onPress={() => setShown(!shown)} accessibilityRole="button" testID="earnings-toggle" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <View style={{ flex: 1 }}><Txt variant="h2">Earnings calendar</Txt><Txt variant="tiny">Next report dates for your watchlist stocks</Txt></View>
         <Txt variant="small" c={color.accent}>{shown ? "Hide" : "Show"}</Txt>
@@ -33,6 +33,6 @@ export function EarningsCard() {
               </Pressable>))}
           <Txt variant="tiny">Dates come from Yahoo Finance (unofficial, delayed). Confirm with the company.{d?.errors.length ? ` Could not check: ${d.errors.join("; ")}` : ""}</Txt>
         </View>)}
-    </View>
+    </GCard>
   );
 }

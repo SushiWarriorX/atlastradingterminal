@@ -10,7 +10,7 @@ import { useIsWide } from "../state/layout";
 import { color, font, radius, space } from "../theme";
 import { noOutline } from "./ConnectForm";
 import { ScreenHeader } from "./ScreenHeader";
-import { Chip, Divider, EmptyState, ErrorState, IconButton, PrimaryButton, Skeleton, Tag, TextButton, Txt } from "./ui";
+import { Chip, Divider, GCard, EmptyState, ErrorState, IconButton, PrimaryButton, Skeleton, Tag, TextButton, Txt } from "./ui";
 
 const FILTERS: { key: NonNullable<JournalFilters["status"]>; label: string }[] = [{ key: "", label: "All" }, { key: "open", label: "Open" }, { key: "closed", label: "Closed" }, { key: "note", label: "Notes" }];
 const today = () => new Date().toISOString().slice(0, 10);
@@ -29,7 +29,7 @@ export function JournalView() {
       <ScreenHeader title="Journal" subtitle={log.data ? `${log.data.total} ${log.data.total === 1 ? "entry" : "entries"}` : undefined} right={<IconButton name="add-circle" size={32} tint={color.accent} label="Add an entry" onPress={() => setEditing("new")} testID="journal-add" />} />
       <View style={{ paddingHorizontal: space.lg, gap: space.md, paddingBottom: space.sm }}>
         {st && st.n > 0 && (
-          <View testID="journal-stats">
+          <GCard testID="journal-stats" style={{ padding: space.lg }}>
             <View style={{ flexDirection: "row", gap: space.xl }}>
               <Stat label="Closed" value={String(st.n)} />
               <Stat label="Net P&L" value={signed(st.net_pnl)} tint={(st.net_pnl ?? 0) >= 0 ? color.up : color.down} />
@@ -37,7 +37,7 @@ export function JournalView() {
               {wide && <Stat label="Profit factor" value={st.profit_factor == null ? "—" : st.profit_factor.toFixed(2)} />}
             </View>
             {st.note ? <Txt variant="tiny" c={color.warn} style={{ marginTop: 4 }}>{st.note}</Txt> : null}
-          </View>)}
+          </GCard>)}
         <View style={s.search}>
           <Ionicons name="search" size={16} color={color.faint} />
           <TextInput value={filters.q ?? ""} onChangeText={(q) => setFilters({ ...filters, q })} placeholder="Search notes and symbols" placeholderTextColor={color.faint} style={[s.input, noOutline]} testID="journal-search" accessibilityLabel="Search journal" />

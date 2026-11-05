@@ -3,6 +3,7 @@ import React from "react";
 import { View } from "react-native";
 import { useIsWide } from "../state/layout";
 import { color, space } from "../theme";
+import { TopGlow } from "./Gradient";
 import { IconButton, Txt } from "./ui";
 
 /** Large title with the small profile icon that opens Settings. Settings is the only thing behind it: there are five tabs: BTC, Stocks, Macro, Discover, Journal. */
@@ -10,6 +11,7 @@ export function ScreenHeader({ title, subtitle, right, back }: { title: string; 
   const wide = useIsWide();
   return (
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: space.lg, paddingTop: wide ? 0 : space.md, paddingBottom: space.sm }}>
+      <TopGlow />
       {back ? <IconButton name="chevron-back" size={26} label="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} testID="search-back" /> : null}
       <View style={{ flex: 1 }}>
         <Txt variant="title" testID="screen-title">{title}</Txt>

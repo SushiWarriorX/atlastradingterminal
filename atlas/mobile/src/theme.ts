@@ -1,10 +1,15 @@
 import type { Tone } from "./lib/freshness";
 import type { Stance } from "./api/types";
 
-// Black and white with one blue for actions. Green/red only for direction, amber only for "pay attention", light blue only for demo data.
+// Deep midnight with a violet-to-teal accent. Green/red for direction, amber for "pay attention", sky blue for demo data.
 export const color = {
-  bg: "#000000", surface: "#141414", surface2: "#1F1F1F", border: "#262626", text: "#FFFFFF", dim: "#8E8E93", faint: "#5F5F64",
-  accent: "#2E7BFF", up: "#20C27B", down: "#F25C54", warn: "#F2A93B", demo: "#4DA3FF", live: "#20C27B",
+  bg: "#07070F", surface: "#12121F", surface2: "#1C1C33", border: "#2A2A4A", text: "#FFFFFF", dim: "#A0A0BC", faint: "#6C6C8C",
+  accent: "#8B7BFF", accent2: "#3B82F6", accent3: "#14D9C5", up: "#22D3A0", down: "#FF5D7A", warn: "#FFB547", demo: "#4DA3FF", live: "#22D3A0",
+};
+export const grad = {
+  accent: ["#7C5CFF", "#3B82F6", "#14D9C5"] as const,       // buttons, active tabs, highlights
+  card: ["#1E1B3A", "#14142A", "#101022"] as const,         // cards: a faint violet-to-navy slope
+  good: ["#0F3D36", "#12121F"] as const, warn: ["#3D2E10", "#12121F"] as const, bad: ["#3D1220", "#12121F"] as const,
 };
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
 export const radius = { sm: 8, md: 14, lg: 22, pill: 999 };

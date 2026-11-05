@@ -4,7 +4,7 @@ import type { LabResult } from "../api/types";
 import { signed } from "../lib/journal";
 import { useLabRun } from "../state/queries";
 import { color, radius, space } from "../theme";
-import { Banner, Chip, Divider, PrimaryButton, Tag, Txt } from "./ui";
+import { Banner, Chip, Divider, PrimaryButton, Tag, Txt, GCard } from "./ui";
 import { Sparkline } from "./Sparkline";
 
 const LEVEL = { none: "No reliable evidence", weak: "Weak evidence", moderate: "Moderate evidence" } as const;
@@ -19,7 +19,7 @@ function Row({ r, open, onToggle }: { r: LabResult; open: boolean; onToggle: () 
           <View style={{ flex: 1 }}><Txt variant="body">{r.name}</Txt><Txt variant="tiny">{r.family} · {o.trades} out-of-sample trade{o.trades === 1 ? "" : "s"}</Txt></View>
           <View style={{ alignItems: "flex-end" }}><Txt variant="h2" c={(o.net_return_pct ?? 0) >= 0 ? color.up : color.down}>{pc(o.net_return_pct, 0)}</Txt><Txt variant="tiny">out of sample</Txt></View>
         </View>
-        <Tag label={LEVEL[r.evidence.level]} tint={r.evidence.level === "none" ? color.warn : undefined} />
+        <Tag label={LEVEL[r.evidence.level]} tint={r.evidence.level === "none" ? color.warn : r.evidence.level === "weak" ? color.accent2 : color.up} />
       </Pressable>
       {open && (
         <View style={{ gap: space.sm, paddingBottom: space.md }} testID={`lab-detail-${r.id}`}>
@@ -47,7 +47,7 @@ export function StrategyLabCard() {
   const d = run.data;
   const go = () => { setOpenId(null); run.mutate({ timeframe: tf, market, leverage: market === "perp" ? lev : 1, long_short: false }); };
   return (
-    <View style={{ backgroundColor: color.surface, borderRadius: radius.lg, padding: space.lg, gap: space.md }} testID="lab-card">
+    <GCard style={{ padding: space.lg, gap: space.md }} testID="lab-card">
       <Pressable onPress={() => setShown(!shown)} accessibilityRole="button" testID="lab-toggle" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <View style={{ flex: 1 }}><Txt variant="h2">Strategy Lab</Txt><Txt variant="tiny">Five tested BTC rules, compared after costs</Txt></View>
         <Txt variant="small" c={color.accent}>{shown ? "Hide" : "Show"}</Txt>
@@ -75,6 +75,6 @@ export function StrategyLabCard() {
               <Txt variant="tiny" style={{ marginTop: 6 }}>{d.caveats.join(" ")}</Txt>
             </View>)}
         </View>)}
-    </View>
+    </GCard>
   );
 }

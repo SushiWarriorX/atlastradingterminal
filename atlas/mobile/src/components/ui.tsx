@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from "react-native";
-import { color, font, radius, space } from "../theme";
+import { color, font, grad, radius, space } from "../theme";
+import { Gradient } from "./Gradient";
 
 type Variant = "hero" | "title" | "h2" | "body" | "small" | "tiny" | "label";
 const V: Record<Variant, TextStyle> = {
@@ -18,12 +19,17 @@ export function Txt({ variant = "body", c, style, ...rest }: TextProps & { varia
 }
 
 export function Card({ style, children }: { style?: StyleProp<ViewStyle>; children: React.ReactNode }) {
-  return <View style={[s.card, style]}>{children}</View>;
+  return <GCard style={[s.card, style]}>{children}</GCard>;
+}
+
+/** A card with a faint violet-to-navy gradient and a thin tinted border. `tone` washes it green, amber or red. */
+export function GCard({ style, children, tone, testID }: { style?: StyleProp<ViewStyle>; children?: React.ReactNode; tone?: "good" | "warn" | "bad"; testID?: string }) {
+  return <Gradient colors={tone ? grad[tone] : grad.card} from={[0, 0]} to={[1, 1]} style={[{ borderRadius: radius.lg, borderWidth: 1, borderColor: color.border }, style]} testID={testID}>{children}</Gradient>;
 }
 
 /** A small outlined tag, used for facts about an asset (its type, where it trades) instead of a dot-joined string. */
 export function Tag({ label, tint }: { label: string; tint?: string }) {
-  return <View style={[s.tag, tint ? { borderColor: tint + "66" } : null]}><Text style={{ color: tint ?? color.dim, fontSize: font.xs + 1, fontWeight: "600" }}>{label}</Text></View>;
+  return <View style={[s.tag, tint ? { borderColor: tint + "88", backgroundColor: tint + "22" } : { backgroundColor: color.accent + "1A", borderColor: color.accent + "55" }]}><Text style={{ color: tint ?? color.accent, fontSize: font.xs + 1, fontWeight: "700" }}>{label}</Text></View>;
 }
 
 export function Divider() {
@@ -40,8 +46,9 @@ export function IconButton({ name, onPress, label, tint = color.text, size = 22,
 
 export function Chip({ label, active, onPress, testID }: { label: string; active?: boolean; onPress: () => void; testID?: string }) {
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: !!active }} testID={testID} style={[s.chip, active && s.chipOn]}>
-      <Text style={[s.chipText, active && { color: color.text }]}>{label}</Text>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: !!active }} testID={testID}>
+      {active ? <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={s.chip}><Text style={[s.chipText, { color: "#FFFFFF" }]}>{label}</Text></Gradient>
+        : <View style={[s.chip, { backgroundColor: color.surface2 }]}><Text style={s.chipText}>{label}</Text></View>}
     </Pressable>
   );
 }
@@ -56,8 +63,10 @@ export function TextButton({ label, onPress, tint = color.accent, testID, disabl
 
 export function PrimaryButton({ label, onPress, busy, testID, disabled }: { label: string; onPress: () => void; busy?: boolean; testID?: string; disabled?: boolean }) {
   return (
-    <Pressable onPress={onPress} disabled={busy || disabled} accessibilityRole="button" testID={testID} style={({ pressed }) => [s.primary, (pressed || busy || disabled) && { opacity: 0.7 }]}>
-      {busy ? <ActivityIndicator color={color.text} /> : <Text style={s.primaryText}>{label}</Text>}
+    <Pressable onPress={onPress} disabled={busy || disabled} accessibilityRole="button" testID={testID} style={({ pressed }) => [(pressed || busy || disabled) && { opacity: 0.7 }]}>
+      <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={s.primary}>
+        {busy ? <ActivityIndicator color={color.text} /> : <Text style={s.primaryText}>{label}</Text>}
+      </Gradient>
     </Pressable>
   );
 }
@@ -115,17 +124,17 @@ export function ErrorState({ title, body, onRetry, extra, testID }: { title: str
 }
 
 const s = StyleSheet.create({
-  card: { backgroundColor: color.surface, borderRadius: radius.lg, padding: space.xl - 4 },
+  card: { padding: space.xl - 4 },
   tag: { borderWidth: 1, borderColor: color.border, borderRadius: 7, paddingHorizontal: 7, paddingVertical: 1 },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: color.border, marginLeft: 78 },
   iconBtn: { padding: 4, alignItems: "center", justifyContent: "center" },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: "transparent" },
   chipOn: { backgroundColor: color.surface2 },
   chipText: { color: color.dim, fontSize: font.sm, fontWeight: "600" },
-  primary: { backgroundColor: color.accent, borderRadius: radius.pill, paddingVertical: 15, paddingHorizontal: 28, alignItems: "center", justifyContent: "center", minWidth: 140 },
-  primaryText: { color: "#FFFFFF", fontSize: font.md, fontWeight: "600" },
+  primary: { borderRadius: radius.pill, paddingVertical: 15, paddingHorizontal: 28, alignItems: "center", justifyContent: "center", minWidth: 140 },
+  primaryText: { color: "#FFFFFF", fontSize: font.md, fontWeight: "700" },
   banner: { flexDirection: "row", alignItems: "center", gap: space.md, borderRadius: 18, paddingVertical: 12, paddingHorizontal: space.lg },
   center: { alignItems: "center", justifyContent: "center", padding: space.xl },
   empty: { alignItems: "center", justifyContent: "center", paddingHorizontal: space.xl, paddingVertical: 56 },
-  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: color.surface2, alignItems: "center", justifyContent: "center", marginBottom: space.lg },
+  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: color.accent + "26", borderWidth: 1, borderColor: color.accent + "55", alignItems: "center", justifyContent: "center", marginBottom: space.lg },
 });
