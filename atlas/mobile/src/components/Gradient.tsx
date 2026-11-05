@@ -20,7 +20,13 @@ export function Gradient({ colors, from = [0, 0], to = [1, 1], style, children, 
   );
 }
 
-/** Revolut-style screens are flat black, so there is no glow any more. Kept as a no-op so screens need no change. */
-export function TopGlow(_: { height?: number }) {
-  return null;
+/** Colour wash at the top of a screen: violet and pink on the left, teal on the right, fading to the background. Purely decorative. */
+export function TopGlow({ height = 300 }: { height?: number }) {
+  return (
+    <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height }}>
+      <Gradient colors={["rgba(122,92,255,0.60)", "rgba(61,123,255,0.26)", "rgba(5,5,13,0)"]} from={[0, 0]} to={[0.3, 1]} style={StyleSheet.absoluteFill} />
+      <Gradient colors={["rgba(22,217,198,0.38)", "rgba(22,217,198,0)"]} from={[1, 0]} to={[0.4, 0.8]} style={StyleSheet.absoluteFill} />
+      <Gradient colors={["rgba(255,95,162,0.22)", "rgba(255,95,162,0)"]} from={[0.5, 0]} to={[0.5, 0.6]} style={StyleSheet.absoluteFill} />
+    </View>
+  );
 }

@@ -4,7 +4,7 @@ import type { Asset, DiscoverPick } from "../api/types";
 import { idsOf } from "../lib/watchlist";
 import { useAddToWatchlist, useDiscover, useRemoveFromWatchlist, useWatchlist } from "../state/queries";
 import { useOpenAsset } from "../state/selection";
-import { color, radius, space } from "../theme";
+import { color, grad, radius, space } from "../theme";
 import { ScreenHeader } from "./ScreenHeader";
 import { Banner, Divider, ErrorState, GCard, PrimaryButton, Skeleton, Tag, TextButton, Txt } from "./ui";
 
@@ -14,7 +14,7 @@ const num = (v: number | null, u: string) => (v === null ? "n/a" : `${v.toFixed(
 function Card({ p, saved, onToggle, onOpen }: { p: DiscoverPick; saved: boolean; onToggle: () => void; onOpen: () => void }) {
   const [more, setMore] = useState(false);
   return (
-    <GCard style={{ padding: space.lg, gap: space.sm }} testID={`pick-${p.symbol}`}>
+    <GCard colors={p.rank === 1 ? grad.hot : undefined} style={{ padding: space.lg, gap: space.sm }} testID={`pick-${p.symbol}`}>
       <Pressable onPress={onOpen} accessibilityRole="button" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <View style={{ flex: 1 }}><Txt variant="h2">#{p.rank} {p.symbol}</Txt><Txt variant="tiny">{p.name} · {p.sector}</Txt></View>
         <View style={{ alignItems: "flex-end" }}><Txt variant="h2" c={p.score >= 80 ? color.up : p.score >= 65 ? color.accent3 : color.warn} style={{ fontSize: 26 }}>{p.score.toFixed(0)}<Txt variant="tiny">/100</Txt></Txt><Txt variant="tiny">{p.coverage} of {p.of} factors</Txt></View>

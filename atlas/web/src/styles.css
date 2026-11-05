@@ -185,34 +185,46 @@ body { font: 12.5px/1.4 "Inter", system-ui, -apple-system, "Segoe UI", sans-seri
 .jq-more label { display: flex; flex-direction: column; gap: 2px; font-size: 10.5px; color: var(--dim); } .jq-more .jq-wide { grid-column: 1 / -1; }
 .jq-more textarea { width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; font: inherit; resize: vertical; }
 
-/* ---- Revolut-style look (dark theme): true black, charcoal panels, one blue-violet accent, pill buttons, Figtree type. Light theme is untouched. ---- */
+/* ---- Revolut-style shapes and type with a violet-blue-teal colour gradient (dark theme). Light theme is untouched. ---- */
 :root:not([data-theme="light"]) {
-  --bg: #000000; --panel: #191c1f; --panel2: #26292e; --border: #2c3036; --grid: #22262a; --text: #ffffff; --dim: #8d969e;
-  --accent: #6f75f5; --accent-fade: rgba(111,117,245,.16); --up: #00c28c; --down: #ff5a66; --info: #4da3ff; --ai: #8f94ff; --warn: #f5a524;
-  --vol: #26292e; --vol-up: rgba(0,194,140,.34); --vol-down: rgba(255,90,102,.34); --btn: #494fdf;
+  --bg: #05050d; --panel: #12142a; --panel2: #1e2245; --border: #2f3566; --grid: #1c2040; --text: #ffffff; --dim: #9a9fc4;
+  --accent: #8f8cff; --accent-fade: rgba(143,140,255,.18); --up: #00d4a0; --down: #ff5f7e; --info: #4da3ff; --ai: #b39dff; --warn: #ffb84d;
+  --vol: #1e2245; --vol-up: rgba(0,212,160,.36); --vol-down: rgba(255,95,126,.36); --btn: #5b5ff0;
+  --grad: linear-gradient(135deg, #7a5cff 0%, #3d7bff 55%, #16d9c6 100%);
+  --grad-soft: linear-gradient(135deg, rgba(122,92,255,.30), rgba(61,123,255,.16) 55%, rgba(22,217,198,.18));
 }
 :root:not([data-theme="light"]) body, :root:not([data-theme="light"]) button, :root:not([data-theme="light"]) input, :root:not([data-theme="light"]) select, :root:not([data-theme="light"]) textarea { font-family: "Figtree", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
-:root:not([data-theme="light"]) body { background: #000; }
-:root:not([data-theme="light"]) .side { background: #000; }
+:root:not([data-theme="light"]) body {
+  background:
+    radial-gradient(1100px 560px at 6% -14%, rgba(122,92,255,.50), transparent 60%),
+    radial-gradient(900px 520px at 100% -8%, rgba(22,217,198,.30), transparent 55%),
+    radial-gradient(700px 420px at 55% -10%, rgba(255,95,162,.16), transparent 60%),
+    radial-gradient(800px 500px at 70% 115%, rgba(61,123,255,.20), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+:root:not([data-theme="light"]) .side { background: linear-gradient(180deg, rgba(122,92,255,.18), rgba(5,5,13,0) 55%); }
 :root:not([data-theme="light"]) .nav { border-radius: 999px; font-weight: 600; }
-:root:not([data-theme="light"]) .nav.on { background: var(--btn); color: #fff; }
-:root:not([data-theme="light"]) .nav:hover:not(.on) { background: var(--panel); color: var(--text); }
-:root:not([data-theme="light"]) .panel { background: var(--panel); border: 0; border-radius: 20px; }
-:root:not([data-theme="light"]) .panel-h { background: transparent; border-bottom: 1px solid var(--border); padding: 8px 14px; }
-:root:not([data-theme="light"]) .panel-t { color: var(--text); font-weight: 700; font-size: 11.5px; letter-spacing: .08em; }
+:root:not([data-theme="light"]) .nav.on { background: var(--grad); color: #fff; box-shadow: 0 6px 20px rgba(91,95,240,.45); }
+:root:not([data-theme="light"]) .nav:hover:not(.on) { background: var(--grad-soft); color: var(--text); }
+:root:not([data-theme="light"]) .panel { background: linear-gradient(160deg, rgba(122,92,255,.20), rgba(18,20,42,0) 45%), linear-gradient(0deg, rgba(22,217,198,.05), rgba(22,217,198,0) 30%), var(--panel); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+:root:not([data-theme="light"]) .panel-h { background: linear-gradient(90deg, rgba(122,92,255,.38), rgba(61,123,255,.18) 55%, rgba(22,217,198,.16)); border-bottom: 1px solid var(--border); padding: 8px 14px; }
+:root:not([data-theme="light"]) .panel-t { background: linear-gradient(90deg, #ffffff, #b9b6ff 60%, #7ff3e6); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; font-size: 11.5px; letter-spacing: .08em; }
 :root:not([data-theme="light"]) .mini { background: var(--panel2); border: 1px solid var(--border); border-radius: 999px; padding: 4px 14px; font-weight: 600; color: var(--text); font-size: 11.5px; }
-:root:not([data-theme="light"]) .mini:hover:not(:disabled) { background: #31353b; border-color: var(--accent); }
-:root:not([data-theme="light"]) .mini.on { background: var(--btn); border-color: var(--btn); color: #fff; }
-:root:not([data-theme="light"]) .pill { border-radius: 999px; padding: 1px 10px; border: 1px solid rgba(111,117,245,.5); color: var(--accent); background: rgba(111,117,245,.12); font-weight: 600; }
-:root:not([data-theme="light"]) .pill.warn { border-color: rgba(245,165,36,.55); color: var(--warn); background: rgba(245,165,36,.12); }
-:root:not([data-theme="light"]) .badge.LIVE { background: rgba(0,194,140,.16); color: var(--up); }
-:root:not([data-theme="light"]) .badge.DELAYED { background: rgba(245,165,36,.14); color: var(--warn); }
-:root:not([data-theme="light"]) .badge.HISTORICAL { background: rgba(77,163,255,.16); color: var(--info); }
-:root:not([data-theme="light"]) .badge.DEMO { background: var(--btn); color: #fff; }
-:root:not([data-theme="light"]) .badge.UNAVAILABLE { background: rgba(255,90,102,.16); color: var(--down); }
-:root:not([data-theme="light"]) .stats-strip { background: var(--panel); border-radius: 16px; }
-:root:not([data-theme="light"]) .note[data-testid^="pick-"], :root:not([data-theme="light"]) .note[data-testid^="lab-detail"] { background: var(--panel2); border-radius: 14px; padding: 12px 14px; margin: 8px 0; }
-:root:not([data-theme="light"]) .tbl tr.sel td, :root:not([data-theme="light"]) .tbl tbody tr:hover td { background: rgba(255,255,255,.04); }
+:root:not([data-theme="light"]) .mini:hover:not(:disabled) { background: #2a2f5c; border-color: var(--accent); }
+:root:not([data-theme="light"]) .mini.on { background: var(--grad); border-color: transparent; color: #fff; box-shadow: 0 4px 14px rgba(91,95,240,.45); }
+:root:not([data-theme="light"]) .pill { border-radius: 999px; padding: 1px 10px; border: 1px solid rgba(143,140,255,.55); color: var(--accent); background: rgba(143,140,255,.14); font-weight: 600; }
+:root:not([data-theme="light"]) .pill.warn { border-color: rgba(255,184,77,.6); color: var(--warn); background: rgba(255,184,77,.14); }
+:root:not([data-theme="light"]) .badge.LIVE { background: rgba(0,212,160,.18); color: var(--up); }
+:root:not([data-theme="light"]) .badge.DELAYED { background: rgba(255,184,77,.16); color: var(--warn); }
+:root:not([data-theme="light"]) .badge.HISTORICAL { background: rgba(77,163,255,.18); color: var(--info); }
+:root:not([data-theme="light"]) .badge.DEMO { background: var(--grad); color: #fff; }
+:root:not([data-theme="light"]) .badge.UNAVAILABLE { background: rgba(255,95,126,.18); color: var(--down); }
+:root:not([data-theme="light"]) .stats-strip { background: var(--grad-soft); border: 1px solid var(--border); border-radius: 16px; }
+:root:not([data-theme="light"]) .note[data-testid^="pick-"], :root:not([data-theme="light"]) .note[data-testid^="lab-detail"] { background: var(--grad-soft); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin: 8px 0; }
+:root:not([data-theme="light"]) .note[data-testid="pick-"]:first-of-type { background: linear-gradient(135deg, rgba(255,95,162,.30), rgba(122,92,255,.28) 55%, rgba(61,123,255,.22)); }
+:root:not([data-theme="light"]) .tbl tr.sel td, :root:not([data-theme="light"]) .tbl tbody tr:hover td { background: rgba(143,140,255,.10); }
+:root:not([data-theme="light"]) .ws-bar span:first-child { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; }
 :root:not([data-theme="light"]) .up { color: var(--up); } :root:not([data-theme="light"]) .down { color: var(--down); }
-:root:not([data-theme="light"]) input, :root:not([data-theme="light"]) select, :root:not([data-theme="light"]) textarea { background: var(--panel2); border: 1px solid transparent; border-radius: 12px; padding: 4px 10px; }
-:root:not([data-theme="light"]) input:focus, :root:not([data-theme="light"]) select:focus, :root:not([data-theme="light"]) textarea:focus { outline: none; border-color: var(--btn); }
+:root:not([data-theme="light"]) input, :root:not([data-theme="light"]) select, :root:not([data-theme="light"]) textarea { background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 12px; padding: 4px 10px; }
+:root:not([data-theme="light"]) input:focus, :root:not([data-theme="light"]) select:focus, :root:not([data-theme="light"]) textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(143,140,255,.25); }

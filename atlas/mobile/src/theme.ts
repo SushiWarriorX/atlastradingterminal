@@ -3,14 +3,15 @@ import type { Stance } from "./api/types";
 
 // Revolut-style: true black, charcoal cards, one blue-violet accent. Green/red for direction, amber for "pay attention", sky blue for demo data.
 export const color = {
-  bg: "#000000", surface: "#191C1F", surface2: "#26292E", border: "#2C3036", text: "#FFFFFF", dim: "#8D969E", faint: "#6B7279",
+  bg: "#05050D", surface: "#161A2E", surface2: "#222747", border: "#2F3566", text: "#FFFFFF", dim: "#8D969E", faint: "#6B7279",
   accent: "#6F75F5", accent2: "#0666EB", accent3: "#4DA3FF", up: "#00C28C", down: "#FF5A66", warn: "#F5A524", demo: "#4DA3FF", live: "#00C28C",
-  button: "#494FDF",
+  button: "#5B5FF0",
 };
 export const grad = {
-  accent: ["#4F55F1", "#494FDF"] as const,                  // primary buttons and the active chip: solid Revolut blue-violet
-  card: ["#191C1F", "#191C1F"] as const,                    // flat charcoal cards
-  good: ["#0D2D26", "#191C1F"] as const, warn: ["#33270F", "#191C1F"] as const, bad: ["#33121A", "#191C1F"] as const,
+  accent: ["#7A5CFF", "#3D7BFF", "#16D9C6"] as const,       // buttons, active chips and tabs: violet to blue to teal
+  card: ["#2B2478", "#1A1F4F", "#12162E"] as const,         // cards: indigo fading to navy
+  hot: ["#8A2A6B", "#41268F", "#1B2F7A"] as const,          // highlight card: deep magenta to violet to navy, dark enough for white text
+  good: ["#0C5A49", "#123246", "#12162E"] as const, warn: ["#6A4310", "#2A2030", "#12162E"] as const, bad: ["#6A1830", "#2A1A38", "#12162E"] as const,
 };
 // Figtree: a free geometric typeface that is the closest match to Revolut's licensed Aeonik. Custom fonts need one family per weight.
 export const fonts = { regular: "Figtree_400Regular", medium: "Figtree_500Medium", semibold: "Figtree_600SemiBold", bold: "Figtree_700Bold" };

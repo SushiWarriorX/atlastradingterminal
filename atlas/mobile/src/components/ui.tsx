@@ -24,8 +24,8 @@ export function Card({ style, children }: { style?: StyleProp<ViewStyle>; childr
 }
 
 /** A card with a faint violet-to-navy gradient and a thin tinted border. `tone` washes it green, amber or red. */
-export function GCard({ style, children, tone, testID }: { style?: StyleProp<ViewStyle>; children?: React.ReactNode; tone?: "good" | "warn" | "bad"; testID?: string }) {
-  return <Gradient colors={tone ? grad[tone] : grad.card} from={[0, 0]} to={[1, 1]} style={[{ borderRadius: radius.lg, borderWidth: 1, borderColor: color.border }, style]} testID={testID}>{children}</Gradient>;
+export function GCard({ style, children, tone, colors, testID }: { style?: StyleProp<ViewStyle>; children?: React.ReactNode; tone?: "good" | "warn" | "bad"; colors?: readonly string[]; testID?: string }) {
+  return <Gradient colors={colors ?? (tone ? grad[tone] : grad.card)} from={[0, 0]} to={[1, 1]} style={[{ borderRadius: radius.lg, borderWidth: 1, borderColor: color.border }, style]} testID={testID}>{children}</Gradient>;
 }
 
 /** A small outlined tag, used for facts about an asset (its type, where it trades) instead of a dot-joined string. */
@@ -56,17 +56,19 @@ export function Chip({ label, active, onPress, testID }: { label: string; active
 
 /** A real button: a rounded pill with a tinted fill. `solid` makes it the filled main action. */
 export function TextButton({ label, onPress, tint = color.accent, testID, disabled, solid }: { label: string; onPress: () => void; tint?: string; testID?: string; disabled?: boolean; solid?: boolean }) {
-  const filled = solid ? (tint === color.accent ? color.button : tint) : tint + "26";
+  const box = { borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 9, alignItems: "center" as const, justifyContent: "center" as const };
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" testID={testID} disabled={disabled} hitSlop={6} style={({ pressed }) => [{ backgroundColor: filled, borderColor: solid ? "transparent" : tint + "66", borderWidth: 1, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 9, alignItems: "center", justifyContent: "center" }, pressed && { opacity: 0.7 }, disabled && { opacity: 0.4 }]}>
-      <Text style={{ color: solid ? "#FFFFFF" : tint, fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text>
+    <Pressable onPress={onPress} accessibilityRole="button" testID={testID} disabled={disabled} hitSlop={6} style={({ pressed }) => [pressed && { opacity: 0.7 }, disabled && { opacity: 0.4 }]}>
+      {solid && tint === color.accent
+        ? <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={box}><Text style={{ color: "#FFFFFF", fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></Gradient>
+        : <View style={[box, { backgroundColor: solid ? tint : tint + "2E", borderColor: solid ? "transparent" : tint + "77", borderWidth: 1 }]}><Text style={{ color: solid ? "#FFFFFF" : tint, fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></View>}
     </Pressable>
   );
 }
 
 /** The small "Show / Hide" button on a collapsible card. */
 export function Pill({ label }: { label: string }) {
-  return <View style={{ backgroundColor: color.button, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 8 }}><Text style={{ color: "#FFFFFF", fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></View>;
+  return <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={{ borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 8 }}><Text style={{ color: "#FFFFFF", fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></Gradient>;
 }
 
 export function PrimaryButton({ label, onPress, busy, testID, disabled }: { label: string; onPress: () => void; busy?: boolean; testID?: string; disabled?: boolean }) {
@@ -109,7 +111,7 @@ export function Spinner({ label }: { label?: string }) {
 export function EmptyState({ icon, title, body, action, testID }: { icon: React.ComponentProps<typeof Ionicons>["name"]; title: string; body: string; action?: React.ReactNode; testID?: string }) {
   return (
     <View style={s.empty} testID={testID}>
-      <View style={s.emptyIcon}><Ionicons name={icon} size={28} color={color.text} /></View>
+      <Gradient colors={grad.accent} style={s.emptyIcon}><Ionicons name={icon} size={28} color="#FFFFFF" /></Gradient>
       <Txt variant="h2" style={{ textAlign: "center" }}>{title}</Txt>
       <Txt variant="small" style={{ textAlign: "center", marginTop: space.xs, maxWidth: 300 }}>{body}</Txt>
       {action ? <View style={{ marginTop: space.lg }}>{action}</View> : null}
@@ -120,7 +122,7 @@ export function EmptyState({ icon, title, body, action, testID }: { icon: React.
 export function ErrorState({ title, body, onRetry, extra, testID }: { title: string; body: string; onRetry?: () => void; extra?: React.ReactNode; testID?: string }) {
   return (
     <View style={s.empty} testID={testID}>
-      <View style={s.emptyIcon}><Ionicons name="cloud-offline-outline" size={30} color={color.down} /></View>
+      <View style={[s.emptyIcon, { backgroundColor: color.down + "26" }]}><Ionicons name="cloud-offline-outline" size={30} color={color.down} /></View>
       <Txt variant="h2" style={{ textAlign: "center" }}>{title}</Txt>
       <Txt variant="small" style={{ textAlign: "center", marginTop: space.xs, maxWidth: 320 }}>{body}</Txt>
       <View style={{ marginTop: space.lg, gap: space.md, alignItems: "center" }}>
@@ -144,5 +146,5 @@ const s = StyleSheet.create({
   banner: { flexDirection: "row", alignItems: "center", gap: space.md, borderRadius: 18, paddingVertical: 12, paddingHorizontal: space.lg },
   center: { alignItems: "center", justifyContent: "center", padding: space.xl },
   empty: { alignItems: "center", justifyContent: "center", paddingHorizontal: space.xl, paddingVertical: 56 },
-  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: color.accent + "26", borderWidth: 1, borderColor: color.accent + "55", alignItems: "center", justifyContent: "center", marginBottom: space.lg },
+  emptyIcon: { width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center", marginBottom: space.lg },
 });
