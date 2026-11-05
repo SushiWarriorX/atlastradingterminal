@@ -1,6 +1,10 @@
 import React from "react";
-import { ComingSoon } from "../../components/ComingSoon";
+import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { MacroView } from "../../components/MacroView";
+import { color } from "../../theme";
 
 export default function MacroScreen() {
-  return <ComingSoon testID="macro-soon" title="Macro" icon="globe-outline" body="Fed decisions, inflation, jobs, Treasury yields and what is coming up will appear here, each with its source and date. This part is not wired up yet." />;
+  const insets = useSafeAreaInsets();
+  return <View style={{ flex: 1, backgroundColor: color.bg, paddingTop: insets.top }}><MacroView /></View>;
 }

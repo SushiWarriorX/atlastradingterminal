@@ -53,3 +53,9 @@ export const localTime = (iso: string | null, tz?: string): string => {
 };
 
 export const OUTCOME_TEXT: Record<"raised" | "cut" | "held", string> = { raised: "Raised rates", cut: "Cut rates", held: "Held rates" };
+
+export interface BriefItem { kind: "fact" | "interpretation"; title: string; detail: string; source: string; link?: string | null; based_on?: string[] }
+export interface BriefIndicator { id: string; label: string; available: boolean; reason?: string; value?: number | string | null; unit?: string | null; obs_date?: string | null; change?: { label: string; value: number; unit: string } | null; freshness?: string | null; source?: string; note?: string | null }
+export interface BriefEvent { kind: "scheduled"; date: string; at_utc: string | null; title: string; source: string; link?: string | null }
+export interface BriefHeadline { kind: "headline"; feed: string; title: string; link: string | null; published: string | null; topic: string; topic_label: string; implication: string; implication_kind: string }
+export interface MacroBrief { as_of: string; demo: boolean; today: BriefItem[]; indicators: BriefIndicator[]; upcoming: BriefEvent[]; headlines: BriefHeadline[]; topics: Record<string, string>; calendar_warning: string | null; errors: string[]; gaps: string[]; notice: string | null; labels: Record<string, string> }

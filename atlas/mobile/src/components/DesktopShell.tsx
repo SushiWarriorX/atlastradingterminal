@@ -6,6 +6,7 @@ import WatchlistScreen from "../app/(tabs)/index";
 import { useWatchlist } from "../state/queries";
 import { BTC_ID, DESTS, useSelection } from "../state/selection";
 import { color, radius, space } from "../theme";
+import { MacroView } from "./MacroView";
 import { JournalView } from "./JournalView";
 import { AssetView } from "./AssetView";
 import { NewsPanel } from "./NewsPanel";
@@ -65,11 +66,13 @@ export function DesktopShell() {
           <Panel width={360}><NewsPanel id={BTC_ID} /></Panel>
         </> : dest === "journal" ? (
           <Panel><JournalView /></Panel>
+        ) : dest === "macro" ? (
+          <Panel><MacroView /></Panel>
         ) : (
           <Panel><View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: space.sm, padding: space.xl }} testID={`${dest}-soon`}>
-            <Ionicons name={dest === "macro" ? "globe-outline" : "compass-outline"} size={28} color={color.faint} />
-            <Txt variant="h2">{dest === "macro" ? "Macro" : "Discover"} is not built yet</Txt>
-            <Txt variant="small" style={{ textAlign: "center", maxWidth: 420 }}>{dest === "macro" ? "Fed decisions, inflation, jobs, yields and upcoming events will appear here, each with its source and date." : "A daily shortlist of US stocks worth researching, with reasons, evidence and risks, will appear here."}</Txt>
+            <Ionicons name="compass-outline" size={28} color={color.faint} />
+            <Txt variant="h2">Discover is not built yet</Txt>
+            <Txt variant="small" style={{ textAlign: "center", maxWidth: 420 }}>A daily shortlist of US stocks worth researching, with reasons, evidence and risks, will appear here.</Txt>
           </View></Panel>
         )}
       </View>

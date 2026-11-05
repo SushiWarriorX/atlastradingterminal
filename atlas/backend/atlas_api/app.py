@@ -22,6 +22,7 @@ from .fedwatch import FedWatchService
 from .signal import routes as signal_routes
 from .signal.service import SignalService
 from .macro import MacroService
+from .macro_brief import MacroBriefService
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
 from .providers.ibkr_data import IBKRData
 from .journal import entries as jent, hyperliquid as hl, importers as jimp, stats as jstats
@@ -322,6 +323,12 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         if not demo and provs.get("fred") is None:
             raise ApiError("NOT_CONFIGURED", "The FRED provider is not set up.", 503)
         return ok(await fedwatch.overview())
+
+    macro_brief = MacroBriefService(macro, fedwatch, news, demo)
+
+    @app.get("/api/macro/brief")
+    async def macro_brief_route():
+        return ok(await macro_brief.overview())      # works without a FRED key: it then says the indicators are unavailable instead of failing
 
     @app.get("/api/market/status")
     async def market_status():

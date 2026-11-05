@@ -1,5 +1,5 @@
 import type { CheckState_ } from "./health";
-import type { FedWatch, MacroOverview } from "./macro";
+import type { FedWatch, MacroBrief, MacroOverview } from "./macro";
 export type Status = "LIVE" | "DELAYED" | "HISTORICAL" | "STALE" | "DEMO" | "UNAVAILABLE";
 
 export interface Prov {
@@ -67,6 +67,7 @@ export const api = {
   login: (password: string) => call<{ required: boolean; authenticated: boolean }>("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) }),
   logout: () => call<{ required: boolean; authenticated: boolean }>("/api/auth/logout", { method: "POST" }),
   macroFed: () => call<FedWatch>("/api/macro/fed"),
+  macroBrief: () => call<MacroBrief>("/api/macro/brief"),
   macroOverview: () => call<MacroOverview>("/api/macro/overview"),
   healthCheckLast: () => call<CheckState_>("/api/health/check"),
   healthCheckRun: () => call<CheckState_>("/api/health/check", { method: "POST", headers: { "Content-Type": "application/json", "X-Atlas-Request": "health-check" } }),

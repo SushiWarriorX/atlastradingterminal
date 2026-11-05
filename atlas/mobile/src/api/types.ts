@@ -128,3 +128,9 @@ export interface JournalEntry {
 export interface JournalStats { n: number; reliable: boolean; note?: string | null; wins?: number; losses?: number; win_rate?: number; net_pnl?: number; profit_factor?: number | null }
 export interface JournalLog { items: JournalEntry[]; total: number; stats: JournalStats }
 export type JournalFilters = { q?: string; status?: "" | "open" | "closed" | "note" };
+
+export interface MacroBriefItem { kind: "fact" | "interpretation"; title: string; detail: string; source: string; link?: string | null }
+export interface MacroIndicator { id: string; label: string; available: boolean; reason?: string; value?: number | string | null; unit?: string | null; obs_date?: string | null; change?: { label: string; value: number; unit: string } | null; freshness?: string | null }
+export interface MacroEvent { date: string; at_utc: string | null; title: string; source: string; link?: string | null }
+export interface MacroHeadline { feed: string; title: string; link: string | null; published: string | null; topic: string; topic_label: string; implication: string; implication_kind: string }
+export interface MacroBriefData { as_of: string; demo: boolean; today: MacroBriefItem[]; indicators: MacroIndicator[]; upcoming: MacroEvent[]; headlines: MacroHeadline[]; topics: Record<string, string>; calendar_warning: string | null; errors: string[]; gaps: string[]; notice: string | null }

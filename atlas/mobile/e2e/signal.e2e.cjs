@@ -518,8 +518,19 @@ async function healthy(browser) {
       await shot(page, "12-journal");
     });
 
-    await check("Macro and Discover are honest placeholders, not invented data", async () => {
-      await page.click(T("tab-macro")); await page.waitForSelector(V("macro-soon"));
+    await check("Macro: what matters today, indicators and headlines are labelled, gaps are listed, and a missing FRED key is said plainly", async () => {
+      await page.click(T("tab-macro"));
+      await page.waitForSelector(V("macro-brief"));
+      const t = await text(page);
+      match(t, /What matters today/); match(t, /Key indicators/); match(t, /Upcoming/); match(t, /Headlines/);
+      match(t, /No official indicators loaded|Unavailable/, "missing indicators are said, not invented");
+      match(t, /Consensus forecasts .* not shown/, "the gaps are listed");
+      noMatch(t, FORECASTS, "no forecasts");
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls on Macro");
+      await shot(page, "13-macro");
+    });
+
+    await check("Discover is an honest placeholder, not invented data", async () => {
       await page.click(T("tab-discover")); await page.waitForSelector(V("discover-soon"));
     });
 

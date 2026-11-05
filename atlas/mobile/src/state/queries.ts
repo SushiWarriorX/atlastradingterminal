@@ -125,3 +125,8 @@ export function useJournalDelete() {
   const qc = useQueryClient();
   return useMutation({ mutationFn: (id: string) => need(api).journalDelete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["journal", baseUrl] }) });
 }
+
+export function useMacroBrief() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).macro, queryFn: () => need(api).macroBrief(), enabled: !!api, staleTime: 5 * 60_000, refetchInterval: 10 * 60_000, retry: 1 });
+}
