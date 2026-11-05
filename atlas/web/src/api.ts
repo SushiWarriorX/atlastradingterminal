@@ -130,6 +130,11 @@ export const api = {
   journalManual: (b: Record<string, string>) => call<{ inserted: number }>("/api/journal/executions", body("POST", b)),
   journalDelete: (source: string) => call<{ executions_deleted: number }>(`/api/journal/source?source=${encodeURIComponent(source)}&confirm=true`, { method: "DELETE" }),
   journalHyperliquid: (address: string) => call<HyperliquidSync>("/api/journal/hyperliquid/sync", body("POST", { address })),
+  journalLog: (q: Record<string, string>) => call<JLog>(`/api/journal/log?${new URLSearchParams(Object.entries(q).filter(([, v]) => v) as [string, string][])}`),
+  entryGet: (id: string) => call<JEntry>(`/api/journal/entries/${id.split(":")[1]}`),
+  entryCreate: (b: Record<string, string | null>) => call<JEntry>("/api/journal/entries", body("POST", b)),
+  entryUpdate: (id: string, b: Record<string, string | null>) => call<JEntry>(`/api/journal/entries/${id.split(":")[1]}`, body("PUT", b)),
+  entryDelete: (id: string) => call<{ deleted: boolean }>(`/api/journal/entries/${id.split(":")[1]}`, { method: "DELETE" }),
   journalSync: () => call<Record<string, unknown>>("/api/journal/sync", { method: "POST" }),
   journalTrades: (q: { source?: string; status?: string; symbol?: string }) => call<{ trades: JTrade[]; total: number }>(`/api/journal/trades?${new URLSearchParams(Object.entries(q).filter(([, v]) => v) as [string, string][])}`),
   journalTrade: (key: string) => call<{ trade: JTrade; note: JNote | null; executions: JExec[] }>(`/api/journal/trade?key=${encodeURIComponent(key)}`),
@@ -196,6 +201,15 @@ export interface DerivVenue {
   funding_8h_pct?: number; funding_annual_pct?: number; oi_btc?: number; oi_usd?: number; age_seconds?: number | null; notes?: string[]; error?: { code: string; message: string };
 }
 export interface Pctile { available: boolean; pctile?: number; points?: number; have?: number; need?: number }
+export interface JEntry {
+  id: string; origin: "manual" | "imported"; editable: boolean; symbol: string; asset_class: string; direction: "long" | "short";
+  size: string | null; entry_price: string | null; exit_price: string | null; entry_at: string; exit_at: string | null; fees: string | null; planned_stop: string | null;
+  note: string | null; thesis: string | null; risk_plan: string | null; outcome: string | null; has_screenshot: boolean; screenshot?: string | null;
+  status: "note" | "open" | "closed"; gross_pnl: string | null; net_pnl: string | null; net_pnl_num: number | null; return_pct: number | null; r_multiple: number | null;
+  holding_seconds: number | null; pnl_missing: string[];
+}
+export interface JLogStats { n: number; reliable: boolean; note?: string | null; wins?: number; losses?: number; win_rate?: number; net_pnl?: number; profit_factor?: number | null; profit_factor_note?: string | null; max_drawdown?: number; best?: number; worst?: number }
+export interface JLog { items: JEntry[]; total: number; stats: JLogStats; filters: Record<string, string | null> }
 export interface DerivSnapshot {
   venues: DerivVenue[]; as_of: string; demo: boolean; history_points: number; notes: string[];
   aggregate: {

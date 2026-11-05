@@ -179,3 +179,8 @@ body { font: 12.5px/1.4 "Inter", system-ui, -apple-system, "Segoe UI", sans-seri
 .toolbar-main { padding: 2px 0 8px; gap: 2px; } .toolbar-main .ohlc { margin-left: auto; }
 .toolbar-tools { padding: 0 0 8px; gap: 3px; }
 .range-bar { display: flex; gap: 2px; padding: 8px 0 2px; } .mini.ico { padding: 3px 8px; display: inline-flex; align-items: center; }
+.jq-stats { padding-bottom: 8px; align-items: flex-end; } .jq-stats b { font-size: 16px; }
+.jq-form { display: flex; flex-direction: column; gap: 6px; padding: 2px 0 10px; } .jq-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.jq-note { flex: 1; min-width: 220px; } .jq-more { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px 12px; padding: 6px 0; }
+.jq-more label { display: flex; flex-direction: column; gap: 2px; font-size: 10.5px; color: var(--dim); } .jq-more .jq-wide { grid-column: 1 / -1; }
+.jq-more textarea { width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; font: inherit; resize: vertical; }

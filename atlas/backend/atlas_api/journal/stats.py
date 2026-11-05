@@ -93,7 +93,7 @@ def summary(trades: list[dict]) -> dict:
     out["expectancy_note"] = None if ci is None else (
         "The 95% interval for expectancy INCLUDES zero: these trades do not show a statistically reliable edge." if ci[0] <= 0 <= ci[1]
         else "The 95% interval for expectancy excludes zero. That is still descriptive: it does not guarantee future results.")
-    out["note"] = None if n >= MIN_SAMPLE else f"only {n} trades: treat every figure here as anecdotal (need {MIN_SAMPLE}+ for even rough conclusions)"
+    out["note"] = None if n >= MIN_SAMPLE else f"only {n} trade{'' if n == 1 else 's'}: treat every figure here as anecdotal (need {MIN_SAMPLE}+ for even rough conclusions)"
     return out
 
 

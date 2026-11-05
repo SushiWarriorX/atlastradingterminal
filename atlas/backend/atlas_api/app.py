@@ -24,7 +24,7 @@ from .signal.service import SignalService
 from .macro import MacroService
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
 from .providers.ibkr_data import IBKRData
-from .journal import hyperliquid as hl, importers as jimp, stats as jstats
+from .journal import entries as jent, hyperliquid as hl, importers as jimp, stats as jstats
 from .journal.matching import Exec
 from .journal.store import JournalError, JournalStore
 from .news.service import NewsError, NewsService
@@ -84,6 +84,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     if llm is None and os.getenv("ANTHROPIC_API_KEY"):
         llm = AnthropicLLM(os.environ["ANTHROPIC_API_KEY"], os.getenv("ATLAS_MODEL", "claude-sonnet-5-5"))
     journal = JournalStore(db)
+    journal_entries = jent.EntryStore(db)
     news = NewsService(db, news_client, allow_local=os.getenv("ATLAS_NEWS_ALLOW_LOCAL") == "1", user_agent=os.getenv("ATLAS_NEWS_USER_AGENT", "ATLAS-Terminal/0.1 (personal research)"),
                        symbol_url=os.getenv("ATLAS_NEWS_SYMBOL_URL") or None)
     derivs = DerivativesService(db, deriv_client, demo)
@@ -314,6 +315,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     fedwatch = FedWatchService(provs.get("fred"), news, demo)
     signal = SignalService(db=db, svc=svc, news=news, fundamentals=fundamentals, macro=macro, fedwatch=fedwatch, demo=demo, llm=llm, registry=signal_registry, **(signal_parts or {}))       # Signal Mobile research API (read-only); the last two are test hooks
     signal_routes.register(app, signal, ok)
+    jent.register(app, ok, journal, journal_entries)           # simple journal entries: write a trade down like a note
 
     @app.get("/api/macro/fed")
     async def macro_fed():

@@ -1,4 +1,4 @@
-export type WidgetType = "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
@@ -34,7 +34,10 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "chart", type: "chart", x: 0, y: 20, w: 7, h: 13 },
     { i: "tech", type: "tech", x: 7, y: 20, w: 5, h: 13 },
   ] },
-  journal: { id: "journal", name: "Journal & Performance", widgets: [
+  journal: { id: "journal", name: "Journal", widgets: [
+    { i: "quick", type: "journalquick", x: 0, y: 0, w: 12, h: 30 },
+  ] },
+  "journal-advanced": { id: "journal-advanced", name: "Journal: imports and detailed analytics", widgets: [
     { i: "trades", type: "journaltrades", x: 0, y: 0, w: 7, h: 15 },
     { i: "editor", type: "journaleditor", x: 7, y: 0, w: 5, h: 22 },
     { i: "perf", type: "performance2", x: 0, y: 15, w: 7, h: 22 },
@@ -66,7 +69,6 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
 };
 // Views without a workspace render a single "not built yet" panel driven by /api/meta/views.
 export const NAV: { view: string; label: string }[] = [
-  ["overview", "OVERVIEW"], ["btc", "BTC INTELLIGENCE"], ["equities", "EQUITIES"],
-  ["scanner", "SCANNER"], ["news", "NEWS"], ["macro", "MACRO"],
-  ["backtest", "BACKTEST"], ["journal", "JOURNAL"], ["settings", "SETTINGS"],
+  ["overview", "OVERVIEW"], ["btc", "BTC"], ["equities", "STOCKS"], ["macro", "MACRO"], ["scanner", "DISCOVER"], ["journal", "JOURNAL"],
+  ["news", "NEWS"], ["backtest", "BACKTEST"], ["settings", "SETTINGS"],
 ].map(([view, label]) => ({ view, label }));
