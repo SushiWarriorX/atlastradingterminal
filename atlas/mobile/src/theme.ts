@@ -1,17 +1,17 @@
 import type { Tone } from "./lib/freshness";
 import type { Stance } from "./api/types";
 
-// Revolut-style: true black, charcoal cards, one blue-violet accent. Green/red for direction, amber for "pay attention", sky blue for demo data.
+// Silver and graphite: near-black base, brushed-steel cards, bright silver accent. Green/red for direction, amber for "pay attention", sky blue for demo data.
 export const color = {
-  bg: "#05050D", surface: "#161A2E", surface2: "#222747", border: "#2F3566", text: "#FFFFFF", dim: "#8D969E", faint: "#6B7279",
-  accent: "#6F75F5", accent2: "#0666EB", accent3: "#4DA3FF", up: "#00C28C", down: "#FF5A66", warn: "#F5A524", demo: "#4DA3FF", live: "#00C28C",
-  button: "#5B5FF0",
+  bg: "#08090B", surface: "#17191D", surface2: "#252930", border: "#3A3F48", text: "#FFFFFF", dim: "#A7ADB8", faint: "#727985",
+  accent: "#D5D9E0", accent2: "#9AA1AD", accent3: "#EEF1F5", up: "#00C28C", down: "#FF5A66", warn: "#F5A524", demo: "#6DB3FF", live: "#00C28C",
+  button: "#C4C9D1", onSilver: "#0B0C0E",
 };
 export const grad = {
-  accent: ["#7A5CFF", "#3D7BFF", "#16D9C6"] as const,       // buttons, active chips and tabs: violet to blue to teal
-  card: ["#2B2478", "#1A1F4F", "#12162E"] as const,         // cards: indigo fading to navy
-  hot: ["#8A2A6B", "#41268F", "#1B2F7A"] as const,          // highlight card: deep magenta to violet to navy, dark enough for white text
-  good: ["#0C5A49", "#123246", "#12162E"] as const, warn: ["#6A4310", "#2A2030", "#12162E"] as const, bad: ["#6A1830", "#2A1A38", "#12162E"] as const,
+  accent: ["#F6F8FB", "#C5CAD3", "#8C929D"] as const,       // buttons, active chips: polished silver, light to dark
+  card: ["#2F333A", "#1E2126", "#14161A"] as const,         // cards: brushed steel fading to graphite
+  hot: ["#6A707B", "#3A3E46", "#1E2126"] as const,          // highlight card: brighter steel sheen, still dark enough for white text
+  good: ["#0F4A3E", "#1C2227", "#14161A"] as const, warn: ["#5A3F12", "#25221F", "#14161A"] as const, bad: ["#5A1B2B", "#251C20", "#14161A"] as const,
 };
 // Figtree: a free geometric typeface that is the closest match to Revolut's licensed Aeonik. Custom fonts need one family per weight.
 export const fonts = { regular: "Figtree_400Regular", medium: "Figtree_500Medium", semibold: "Figtree_600SemiBold", bold: "Figtree_700Bold" };

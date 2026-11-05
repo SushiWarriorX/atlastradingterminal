@@ -48,7 +48,7 @@ export function IconButton({ name, onPress, label, tint = color.text, size = 22,
 export function Chip({ label, active, onPress, testID }: { label: string; active?: boolean; onPress: () => void; testID?: string }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: !!active }} testID={testID}>
-      {active ? <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={s.chip}><Text style={[s.chipText, { color: "#FFFFFF" }]}>{label}</Text></Gradient>
+      {active ? <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={s.chip}><Text style={[s.chipText, { color: color.onSilver }]}>{label}</Text></Gradient>
         : <View style={[s.chip, { backgroundColor: color.surface2 }]}><Text style={s.chipText}>{label}</Text></View>}
     </Pressable>
   );
@@ -60,7 +60,7 @@ export function TextButton({ label, onPress, tint = color.accent, testID, disabl
   return (
     <Pressable onPress={onPress} accessibilityRole="button" testID={testID} disabled={disabled} hitSlop={6} style={({ pressed }) => [pressed && { opacity: 0.7 }, disabled && { opacity: 0.4 }]}>
       {solid && tint === color.accent
-        ? <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={box}><Text style={{ color: "#FFFFFF", fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></Gradient>
+        ? <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={box}><Text style={{ color: color.onSilver, fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></Gradient>
         : <View style={[box, { backgroundColor: solid ? tint : tint + "2E", borderColor: solid ? "transparent" : tint + "77", borderWidth: 1 }]}><Text style={{ color: solid ? "#FFFFFF" : tint, fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></View>}
     </Pressable>
   );
@@ -68,7 +68,7 @@ export function TextButton({ label, onPress, tint = color.accent, testID, disabl
 
 /** The small "Show / Hide" button on a collapsible card. */
 export function Pill({ label }: { label: string }) {
-  return <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={{ borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 8 }}><Text style={{ color: "#FFFFFF", fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></Gradient>;
+  return <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={{ borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 8 }}><Text style={{ color: color.onSilver, fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></Gradient>;
 }
 
 export function PrimaryButton({ label, onPress, busy, testID, disabled }: { label: string; onPress: () => void; busy?: boolean; testID?: string; disabled?: boolean }) {
@@ -111,7 +111,7 @@ export function Spinner({ label }: { label?: string }) {
 export function EmptyState({ icon, title, body, action, testID }: { icon: React.ComponentProps<typeof Ionicons>["name"]; title: string; body: string; action?: React.ReactNode; testID?: string }) {
   return (
     <View style={s.empty} testID={testID}>
-      <Gradient colors={grad.accent} style={s.emptyIcon}><Ionicons name={icon} size={28} color="#FFFFFF" /></Gradient>
+      <Gradient colors={grad.accent} style={s.emptyIcon}><Ionicons name={icon} size={28} color={color.onSilver} /></Gradient>
       <Txt variant="h2" style={{ textAlign: "center" }}>{title}</Txt>
       <Txt variant="small" style={{ textAlign: "center", marginTop: space.xs, maxWidth: 300 }}>{body}</Txt>
       {action ? <View style={{ marginTop: space.lg }}>{action}</View> : null}
@@ -142,7 +142,7 @@ const s = StyleSheet.create({
   chipOn: { backgroundColor: color.surface2 },
   chipText: { color: color.dim, fontSize: font.sm, fontFamily: famFor(600) },
   primary: { borderRadius: radius.pill, paddingVertical: 17, paddingHorizontal: 28, alignItems: "center", justifyContent: "center", minWidth: 160 },
-  primaryText: { color: "#FFFFFF", fontSize: font.lg, fontFamily: famFor(700) },
+  primaryText: { color: color.onSilver, fontSize: font.lg, fontFamily: famFor(700) },
   banner: { flexDirection: "row", alignItems: "center", gap: space.md, borderRadius: 18, paddingVertical: 12, paddingHorizontal: space.lg },
   center: { alignItems: "center", justifyContent: "center", padding: space.xl },
   empty: { alignItems: "center", justifyContent: "center", paddingHorizontal: space.xl, paddingVertical: 56 },
