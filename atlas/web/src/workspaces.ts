@@ -32,11 +32,12 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "mtf", type: "mtf", x: 0, y: 62, w: 12, h: 16 },
     { i: "news", type: "news", x: 0, y: 78, w: 12, h: 10 },
   ] },
-  scanner: { id: "scanner", name: "Discover and Equity Scanner", widgets: [
+  scanner: { id: "scanner", name: "Discover, Scanner and Backtester", widgets: [
     { i: "disc", type: "discover", x: 0, y: 0, w: 12, h: 34 },
     { i: "scan", type: "scanner", x: 0, y: 34, w: 12, h: 20 },
-    { i: "chart", type: "chart", x: 0, y: 54, w: 7, h: 13 },
-    { i: "tech", type: "tech", x: 7, y: 54, w: 5, h: 13 },
+    { i: "bt", type: "backtest", x: 0, y: 54, w: 12, h: 34 },
+    { i: "chart", type: "chart", x: 0, y: 88, w: 7, h: 13 },
+    { i: "tech", type: "tech", x: 7, y: 88, w: 5, h: 13 },
   ] },
   journal: { id: "journal", name: "Journal", widgets: [
     { i: "quick", type: "journalquick", x: 0, y: 0, w: 12, h: 30 },
@@ -54,11 +55,6 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "chart", type: "chart", x: 0, y: 24, w: 7, h: 12 },
     { i: "quote", type: "quote", x: 7, y: 24, w: 5, h: 12 },
   ] },
-  backtest: { id: "backtest", name: "Backtester", widgets: [
-    { i: "bt", type: "backtest", x: 0, y: 0, w: 12, h: 34 },
-    { i: "chart", type: "chart", x: 0, y: 34, w: 7, h: 13 },
-    { i: "tech", type: "tech", x: 7, y: 34, w: 5, h: 13 },
-  ] },
   macro: { id: "macro", name: "Macro Research Desk", widgets: [
     { i: "c10", type: "chart", x: 0, y: 0, w: 6, h: 12, props: { id: "MACRO:FRED:DGS10", title: "US 10Y YIELD (FRED, daily)" } },
     { i: "c2", type: "chart", x: 6, y: 0, w: 6, h: 12, props: { id: "MACRO:FRED:DGS2", title: "US 2Y YIELD (FRED, daily)" } },
@@ -74,5 +70,5 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
 // Views without a workspace render a single "not built yet" panel driven by /api/meta/views.
 export const NAV: { view: string; label: string }[] = [
   ["overview", "OVERVIEW"], ["btc", "BTC"], ["equities", "STOCKS"], ["macro", "MACRO"], ["scanner", "DISCOVER"], ["journal", "JOURNAL"],
-  ["news", "NEWS"], ["backtest", "BACKTEST"], ["settings", "SETTINGS"],
+  ["news", "NEWS"], ["settings", "SETTINGS"],
 ].map(([view, label]) => ({ view, label }));
