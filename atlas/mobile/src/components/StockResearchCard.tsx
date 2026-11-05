@@ -3,7 +3,7 @@ import { Linking, Pressable, View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useStockResearch } from "../state/queries";
 import { color, radius, space } from "../theme";
-import { Banner, Divider, Skeleton, Tag, Txt, GCard } from "./ui";
+import { Banner, Divider, Skeleton, Tag, Txt, GCard, Pill } from "./ui";
 
 const money = (x: number | null) => (x === null ? "n/a" : `${x < 0 ? "−" : ""}$${(Math.abs(x) / 1e9).toFixed(2)}B`);
 const pc = (x: number | null) => (x === null ? "n/a" : `${x.toFixed(1)}%`);
@@ -23,7 +23,7 @@ export function StockResearchCard({ symbol }: { symbol: string }) {
     <GCard style={{ padding: space.lg, gap: space.md }} testID="stock-card">
       <Pressable onPress={() => setShown(!shown)} accessibilityRole="button" testID="stock-toggle" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <View style={{ flex: 1 }}><Txt variant="h2">Company deep-dive</Txt><Txt variant="tiny">Filings, valuation, earnings, bull and bear points</Txt></View>
-        <Txt variant="small" c={color.accent}>{shown ? "Hide" : "Show"}</Txt>
+        <Pill label={shown ? "Hide" : "Show"} />
       </Pressable>
       {shown && (q.isLoading ? <View style={{ gap: space.md }}>{[0, 1, 2].map((i) => <Skeleton key={i} h={36} />)}</View>
         : q.isError || !d ? <Banner tone="warn" title="Couldn't load the deep-dive" testID="stock-error">{q.error instanceof Error ? q.error.message : "Something went wrong."}</Banner>

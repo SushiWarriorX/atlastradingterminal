@@ -11,7 +11,7 @@ import { idsOf } from "../lib/watchlist";
 import { useAddToWatchlist, useDebounced, useRecents, useRemoveFromWatchlist, useSearch, useWatchlist } from "../state/queries";
 import { useIsWide } from "../state/layout";
 import { useOpenAsset } from "../state/selection";
-import { color, font, radius, space } from "../theme";
+import { color, font, radius, space, fonts } from "../theme";
 
 export default function SearchScreen() {
   const wide = useIsWide();
@@ -80,6 +80,6 @@ export default function SearchScreen() {
 
 const s = StyleSheet.create({
   inputWrap: { flexDirection: "row", alignItems: "center", gap: space.sm, marginHorizontal: space.lg, marginBottom: space.md, paddingHorizontal: space.md, backgroundColor: color.surface, borderRadius: 16 },
-  input: { flex: 1, color: color.text, fontSize: font.md, paddingVertical: 12 },
+  input: { flex: 1, color: color.text, fontFamily: fonts.regular, fontSize: font.md, paddingVertical: 12 },
   sectionHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: space.lg, paddingVertical: space.sm },
 });

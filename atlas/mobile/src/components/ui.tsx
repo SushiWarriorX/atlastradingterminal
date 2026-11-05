@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from "react-native";
-import { color, font, grad, radius, space } from "../theme";
+import { color, famFor, font, grad, radius, space } from "../theme";
 import { Gradient } from "./Gradient";
 
 type Variant = "hero" | "title" | "h2" | "body" | "small" | "tiny" | "label";
@@ -15,7 +15,8 @@ const V: Record<Variant, TextStyle> = {
   label: { fontSize: font.sm, color: color.dim, fontWeight: "600" },
 };
 export function Txt({ variant = "body", c, style, ...rest }: TextProps & { variant?: Variant; c?: string }) {
-  return <Text {...rest} style={[V[variant], c ? { color: c } : null, style]} />;
+  const flat = StyleSheet.flatten([V[variant], c ? { color: c } : null, style]) as TextStyle;
+  return <Text {...rest} style={[flat, { fontFamily: famFor(flat.fontWeight), fontWeight: undefined }]} />;
 }
 
 export function Card({ style, children }: { style?: StyleProp<ViewStyle>; children: React.ReactNode }) {
@@ -29,7 +30,7 @@ export function GCard({ style, children, tone, testID }: { style?: StyleProp<Vie
 
 /** A small outlined tag, used for facts about an asset (its type, where it trades) instead of a dot-joined string. */
 export function Tag({ label, tint }: { label: string; tint?: string }) {
-  return <View style={[s.tag, tint ? { borderColor: tint + "88", backgroundColor: tint + "22" } : { backgroundColor: color.accent + "1A", borderColor: color.accent + "55" }]}><Text style={{ color: tint ?? color.accent, fontSize: font.xs + 1, fontWeight: "700" }}>{label}</Text></View>;
+  return <View style={[s.tag, tint ? { borderColor: tint + "88", backgroundColor: tint + "22" } : { backgroundColor: color.accent + "1A", borderColor: color.accent + "55" }]}><Text style={{ color: tint ?? color.accent, fontSize: font.xs + 1, fontFamily: famFor(700) }}>{label}</Text></View>;
 }
 
 export function Divider() {
@@ -53,12 +54,19 @@ export function Chip({ label, active, onPress, testID }: { label: string; active
   );
 }
 
-export function TextButton({ label, onPress, tint = color.accent, testID, disabled }: { label: string; onPress: () => void; tint?: string; testID?: string; disabled?: boolean }) {
+/** A real button: a rounded pill with a tinted fill. `solid` makes it the filled main action. */
+export function TextButton({ label, onPress, tint = color.accent, testID, disabled, solid }: { label: string; onPress: () => void; tint?: string; testID?: string; disabled?: boolean; solid?: boolean }) {
+  const filled = solid ? (tint === color.accent ? color.button : tint) : tint + "26";
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" testID={testID} disabled={disabled} hitSlop={8} style={({ pressed }) => [pressed && { opacity: 0.6 }, disabled && { opacity: 0.4 }]}>
-      <Text style={{ color: tint, fontSize: font.sm, fontWeight: "600" }}>{label}</Text>
+    <Pressable onPress={onPress} accessibilityRole="button" testID={testID} disabled={disabled} hitSlop={6} style={({ pressed }) => [{ backgroundColor: filled, borderColor: solid ? "transparent" : tint + "66", borderWidth: 1, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 9, alignItems: "center", justifyContent: "center" }, pressed && { opacity: 0.7 }, disabled && { opacity: 0.4 }]}>
+      <Text style={{ color: solid ? "#FFFFFF" : tint, fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text>
     </Pressable>
   );
+}
+
+/** The small "Show / Hide" button on a collapsible card. */
+export function Pill({ label }: { label: string }) {
+  return <View style={{ backgroundColor: color.button, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 8 }}><Text style={{ color: "#FFFFFF", fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></View>;
 }
 
 export function PrimaryButton({ label, onPress, busy, testID, disabled }: { label: string; onPress: () => void; busy?: boolean; testID?: string; disabled?: boolean }) {
@@ -77,8 +85,8 @@ export function Banner({ tone, title, children, action, testID }: { tone: "demo"
   return (
     <View style={[s.banner, { backgroundColor: c + "1F" }]} testID={testID} accessibilityRole="alert">
       <View style={{ flex: 1 }}>
-        <Text style={{ color: c, fontSize: font.sm, fontWeight: "600" }}>{title}</Text>
-        {children ? <Text style={{ color: color.dim, fontSize: font.sm, lineHeight: 18, marginTop: 2 }}>{children}</Text> : null}
+        <Text style={{ color: c, fontSize: font.sm, fontFamily: famFor(600) }}>{title}</Text>
+        {children ? <Text style={{ color: color.dim, fontSize: font.sm, lineHeight: 18, marginTop: 2, fontFamily: famFor(400) }}>{children}</Text> : null}
       </View>
       {action}
     </View>
@@ -130,9 +138,9 @@ const s = StyleSheet.create({
   iconBtn: { padding: 4, alignItems: "center", justifyContent: "center" },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: "transparent" },
   chipOn: { backgroundColor: color.surface2 },
-  chipText: { color: color.dim, fontSize: font.sm, fontWeight: "600" },
-  primary: { borderRadius: radius.pill, paddingVertical: 15, paddingHorizontal: 28, alignItems: "center", justifyContent: "center", minWidth: 140 },
-  primaryText: { color: "#FFFFFF", fontSize: font.md, fontWeight: "700" },
+  chipText: { color: color.dim, fontSize: font.sm, fontFamily: famFor(600) },
+  primary: { borderRadius: radius.pill, paddingVertical: 17, paddingHorizontal: 28, alignItems: "center", justifyContent: "center", minWidth: 160 },
+  primaryText: { color: "#FFFFFF", fontSize: font.lg, fontFamily: famFor(700) },
   banner: { flexDirection: "row", alignItems: "center", gap: space.md, borderRadius: 18, paddingVertical: 12, paddingHorizontal: space.lg },
   center: { alignItems: "center", justifyContent: "center", padding: space.xl },
   empty: { alignItems: "center", justifyContent: "center", paddingHorizontal: space.xl, paddingVertical: 56 },

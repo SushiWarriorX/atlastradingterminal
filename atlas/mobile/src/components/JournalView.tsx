@@ -7,7 +7,7 @@ import type { JournalEntry, JournalFilters } from "../api/types";
 import { blankForm, fromEntry, missingText, resultText, signed, toBody, type JournalForm } from "../lib/journal";
 import { useJournal, useJournalDelete, useJournalSave } from "../state/queries";
 import { useIsWide } from "../state/layout";
-import { color, font, radius, space } from "../theme";
+import { color, font, radius, space, fonts } from "../theme";
 import { noOutline } from "./ConnectForm";
 import { ScreenHeader } from "./ScreenHeader";
 import { Chip, Divider, GCard, EmptyState, ErrorState, IconButton, PrimaryButton, Skeleton, Tag, TextButton, Txt } from "./ui";
@@ -157,6 +157,6 @@ function Field({ label, value, onChange, placeholder, multiline, keyboard, testI
 const s = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: space.md, paddingHorizontal: space.lg, paddingVertical: 14 },
   search: { flexDirection: "row", alignItems: "center", gap: space.sm, paddingHorizontal: space.md, backgroundColor: color.surface, borderRadius: 16 },
-  input: { flex: 1, color: color.text, fontSize: font.md, paddingVertical: 11 },
-  field: { backgroundColor: color.surface, borderRadius: 14, color: color.text, paddingHorizontal: space.md, paddingVertical: 12, fontSize: font.md },
+  input: { flex: 1, color: color.text, fontFamily: fonts.regular, fontSize: font.md, paddingVertical: 11 },
+  field: { backgroundColor: color.surface, borderRadius: 14, color: color.text, fontFamily: fonts.regular, paddingHorizontal: space.md, paddingVertical: 12, fontSize: font.md },
 });

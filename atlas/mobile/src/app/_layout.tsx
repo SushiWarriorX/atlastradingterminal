@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold, useFonts } from "@expo-google-fonts/figtree";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ConnectScreen } from "../components/ConnectScreen";
 import { Spinner } from "../components/ui";
@@ -36,6 +37,8 @@ function Gate() {
 }
 
 export default function RootLayout() {
+  const [loaded, fontError] = useFonts({ Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold });
+  if (!loaded && !fontError) return <View style={{ flex: 1, backgroundColor: color.bg }} />;      // a blink of black while the font loads; if it fails the system font is used
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>

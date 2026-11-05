@@ -185,43 +185,34 @@ body { font: 12.5px/1.4 "Inter", system-ui, -apple-system, "Segoe UI", sans-seri
 .jq-more label { display: flex; flex-direction: column; gap: 2px; font-size: 10.5px; color: var(--dim); } .jq-more .jq-wide { grid-column: 1 / -1; }
 .jq-more textarea { width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; font: inherit; resize: vertical; }
 
-/* ---- Colour refresh (dark theme): violet-to-teal accent gradient, soft glows, tinted panels. Light theme is untouched. ---- */
+/* ---- Revolut-style look (dark theme): true black, charcoal panels, one blue-violet accent, pill buttons, Figtree type. Light theme is untouched. ---- */
 :root:not([data-theme="light"]) {
-  --bg: #07070f; --panel: #0e0e1b; --panel2: #16162b; --border: #25254a; --grid: #1a1a33; --text: #f4f4fc; --dim: #9090ad;
-  --accent: #9d8cff; --accent-fade: rgba(157,140,255,.14); --up: #22d3a0; --down: #ff5d7a; --info: #4da3ff; --ai: #b69cff; --warn: #ffb547;
-  --vol: #20203d; --vol-up: rgba(34,211,160,.34); --vol-down: rgba(255,93,122,.34);
-  --grad: linear-gradient(135deg, #7c5cff 0%, #3b82f6 55%, #14d9c5 100%);
-  --grad-soft: linear-gradient(135deg, rgba(124,92,255,.22), rgba(59,130,246,.12) 55%, rgba(20,217,197,.14));
+  --bg: #000000; --panel: #191c1f; --panel2: #26292e; --border: #2c3036; --grid: #22262a; --text: #ffffff; --dim: #8d969e;
+  --accent: #6f75f5; --accent-fade: rgba(111,117,245,.16); --up: #00c28c; --down: #ff5a66; --info: #4da3ff; --ai: #8f94ff; --warn: #f5a524;
+  --vol: #26292e; --vol-up: rgba(0,194,140,.34); --vol-down: rgba(255,90,102,.34); --btn: #494fdf;
 }
-:root:not([data-theme="light"]) body {
-  background:
-    radial-gradient(1000px 520px at 8% -12%, rgba(124,92,255,.28), transparent 60%),
-    radial-gradient(900px 520px at 100% -5%, rgba(20,217,197,.16), transparent 55%),
-    radial-gradient(700px 500px at 60% 110%, rgba(59,130,246,.12), transparent 60%),
-    var(--bg);
-  background-attachment: fixed;
-}
-:root:not([data-theme="light"]) .side { background: linear-gradient(180deg, rgba(124,92,255,.10), rgba(7,7,15,0) 45%); }
-:root:not([data-theme="light"]) .nav.on { background: var(--grad); color: #fff; box-shadow: 0 4px 18px rgba(91,110,255,.35); }
-:root:not([data-theme="light"]) .nav:hover:not(.on) { background: var(--grad-soft); color: var(--text); }
-:root:not([data-theme="light"]) .panel { background: linear-gradient(180deg, rgba(124,92,255,.07), rgba(14,14,27,0) 38%), var(--panel); border-color: var(--border); box-shadow: 0 6px 24px rgba(0,0,0,.35); }
-:root:not([data-theme="light"]) .panel-h { background: linear-gradient(90deg, rgba(124,92,255,.22), rgba(59,130,246,.10) 55%, rgba(20,217,197,.10)); border-bottom-color: var(--border); }
-:root:not([data-theme="light"]) .panel-t { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; }
-:root:not([data-theme="light"]) .mini { border-color: var(--border); border-radius: 8px; padding: 1px 9px; }
-:root:not([data-theme="light"]) .mini:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
-:root:not([data-theme="light"]) .mini.on { background: var(--grad); color: #fff; border-color: transparent; box-shadow: 0 3px 12px rgba(91,110,255,.35); }
-:root:not([data-theme="light"]) .pill { border-radius: 999px; padding: 1px 9px; border-color: rgba(157,140,255,.55); color: var(--accent); background: rgba(157,140,255,.10); }
-:root:not([data-theme="light"]) .pill.warn { border-color: rgba(255,181,71,.6); color: var(--warn); background: rgba(255,181,71,.10); }
-:root:not([data-theme="light"]) .badge.LIVE { background: rgba(34,211,160,.16); color: var(--up); }
-:root:not([data-theme="light"]) .badge.DELAYED { background: rgba(255,181,71,.14); color: var(--warn); }
+:root:not([data-theme="light"]) body, :root:not([data-theme="light"]) button, :root:not([data-theme="light"]) input, :root:not([data-theme="light"]) select, :root:not([data-theme="light"]) textarea { font-family: "Figtree", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+:root:not([data-theme="light"]) body { background: #000; }
+:root:not([data-theme="light"]) .side { background: #000; }
+:root:not([data-theme="light"]) .nav { border-radius: 999px; font-weight: 600; }
+:root:not([data-theme="light"]) .nav.on { background: var(--btn); color: #fff; }
+:root:not([data-theme="light"]) .nav:hover:not(.on) { background: var(--panel); color: var(--text); }
+:root:not([data-theme="light"]) .panel { background: var(--panel); border: 0; border-radius: 20px; }
+:root:not([data-theme="light"]) .panel-h { background: transparent; border-bottom: 1px solid var(--border); padding: 8px 14px; }
+:root:not([data-theme="light"]) .panel-t { color: var(--text); font-weight: 700; font-size: 11.5px; letter-spacing: .08em; }
+:root:not([data-theme="light"]) .mini { background: var(--panel2); border: 1px solid var(--border); border-radius: 999px; padding: 4px 14px; font-weight: 600; color: var(--text); font-size: 11.5px; }
+:root:not([data-theme="light"]) .mini:hover:not(:disabled) { background: #31353b; border-color: var(--accent); }
+:root:not([data-theme="light"]) .mini.on { background: var(--btn); border-color: var(--btn); color: #fff; }
+:root:not([data-theme="light"]) .pill { border-radius: 999px; padding: 1px 10px; border: 1px solid rgba(111,117,245,.5); color: var(--accent); background: rgba(111,117,245,.12); font-weight: 600; }
+:root:not([data-theme="light"]) .pill.warn { border-color: rgba(245,165,36,.55); color: var(--warn); background: rgba(245,165,36,.12); }
+:root:not([data-theme="light"]) .badge.LIVE { background: rgba(0,194,140,.16); color: var(--up); }
+:root:not([data-theme="light"]) .badge.DELAYED { background: rgba(245,165,36,.14); color: var(--warn); }
 :root:not([data-theme="light"]) .badge.HISTORICAL { background: rgba(77,163,255,.16); color: var(--info); }
-:root:not([data-theme="light"]) .badge.DEMO { background: var(--grad); color: #fff; }
-:root:not([data-theme="light"]) .badge.UNAVAILABLE { background: rgba(255,93,122,.16); color: var(--down); }
-:root:not([data-theme="light"]) .stats-strip { background: var(--grad-soft); border: 1px solid var(--border); border-radius: 14px; }
-:root:not([data-theme="light"]) .note { color: var(--dim); }
-:root:not([data-theme="light"]) .note[data-testid^="pick-"], :root:not([data-theme="light"]) .note[data-testid^="lab-detail"] { background: var(--grad-soft); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
-:root:not([data-theme="light"]) .tbl tr.sel td, :root:not([data-theme="light"]) .tbl tbody tr:hover td { background: rgba(157,140,255,.08); }
-:root:not([data-theme="light"]) .ws-bar span:first-child { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 700; }
+:root:not([data-theme="light"]) .badge.DEMO { background: var(--btn); color: #fff; }
+:root:not([data-theme="light"]) .badge.UNAVAILABLE { background: rgba(255,90,102,.16); color: var(--down); }
+:root:not([data-theme="light"]) .stats-strip { background: var(--panel); border-radius: 16px; }
+:root:not([data-theme="light"]) .note[data-testid^="pick-"], :root:not([data-theme="light"]) .note[data-testid^="lab-detail"] { background: var(--panel2); border-radius: 14px; padding: 12px 14px; margin: 8px 0; }
+:root:not([data-theme="light"]) .tbl tr.sel td, :root:not([data-theme="light"]) .tbl tbody tr:hover td { background: rgba(255,255,255,.04); }
 :root:not([data-theme="light"]) .up { color: var(--up); } :root:not([data-theme="light"]) .down { color: var(--down); }
-:root:not([data-theme="light"]) input, :root:not([data-theme="light"]) select, :root:not([data-theme="light"]) textarea { background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 8px; }
-:root:not([data-theme="light"]) input:focus, :root:not([data-theme="light"]) select:focus, :root:not([data-theme="light"]) textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(157,140,255,.2); }
+:root:not([data-theme="light"]) input, :root:not([data-theme="light"]) select, :root:not([data-theme="light"]) textarea { background: var(--panel2); border: 1px solid transparent; border-radius: 12px; padding: 4px 10px; }
+:root:not([data-theme="light"]) input:focus, :root:not([data-theme="light"]) select:focus, :root:not([data-theme="light"]) textarea:focus { outline: none; border-color: var(--btn); }

@@ -4,7 +4,7 @@ import type { LabResult } from "../api/types";
 import { signed } from "../lib/journal";
 import { useLabRun } from "../state/queries";
 import { color, radius, space } from "../theme";
-import { Banner, Chip, Divider, PrimaryButton, Tag, Txt, GCard } from "./ui";
+import { Banner, Chip, Divider, PrimaryButton, Tag, Txt, GCard, Pill } from "./ui";
 import { Sparkline } from "./Sparkline";
 
 const LEVEL = { none: "No reliable evidence", weak: "Weak evidence", moderate: "Moderate evidence" } as const;
@@ -50,7 +50,7 @@ export function StrategyLabCard() {
     <GCard style={{ padding: space.lg, gap: space.md }} testID="lab-card">
       <Pressable onPress={() => setShown(!shown)} accessibilityRole="button" testID="lab-toggle" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <View style={{ flex: 1 }}><Txt variant="h2">Strategy Lab</Txt><Txt variant="tiny">Five tested BTC rules, compared after costs</Txt></View>
-        <Txt variant="small" c={color.accent}>{shown ? "Hide" : "Show"}</Txt>
+        <Pill label={shown ? "Hide" : "Show"} />
       </Pressable>
       {shown && (
         <View style={{ gap: space.md }}>

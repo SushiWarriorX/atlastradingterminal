@@ -30,9 +30,9 @@ function Card({ p, saved, onToggle, onOpen }: { p: DiscoverPick; saved: boolean;
           <Txt variant="label" style={{ marginTop: 6 }}>Score breakdown</Txt>
           <Txt variant="small">{Object.entries(FACTOR).map(([k, l]) => `${l} ${p.factors[k] ? p.factors[k]!.score.toFixed(0) : "n/a"}`).join(" · ")}</Txt>
         </View>)}
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm, marginTop: space.xs }}>
         <TextButton label={more ? "Hide evidence" : "Show evidence"} onPress={() => setMore(!more)} testID={`pick-more-${p.symbol}`} />
-        <TextButton label={saved ? "On your watchlist · remove" : "Add to watchlist"} onPress={onToggle} testID={`pick-save-${p.symbol}`} />
+        <TextButton solid={!saved} label={saved ? "On your watchlist · remove" : "Add to watchlist"} onPress={onToggle} testID={`pick-save-${p.symbol}`} />
       </View>
     </GCard>
   );
