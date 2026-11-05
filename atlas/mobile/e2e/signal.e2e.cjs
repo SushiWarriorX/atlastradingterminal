@@ -140,7 +140,7 @@ async function waitRows(page, ids, ms = 25000) {
   eq(got, ids, "watchlist rows");
 }
 async function openFromWatchlist(page, id) {
-  await page.click(T("tab-stocks"));
+  await toStocks(page);
   await page.waitForSelector(T(`row-${id}`));
   await page.locator(T(`row-${id}`)).locator('[role="button"]').first().click();
   await page.waitForSelector(T("asset-name"));
@@ -151,10 +151,14 @@ async function expand(page, agent) {
   await page.waitForSelector(T(`refresh-${agent}`));
   return inner(page, `agent-${agent}`);
 }
+async function toStocks(page) {            // search is a screen over the tabs on a phone: step back out of it first
+  if (await present(page, "search-back")) await page.click(V("search-back"));
+  await page.click(V("tab-stocks"));
+}
 async function gotoSearch(page) {
   if (await present(page, "search-input")) return;
-  await page.click(T("tab-stocks"));
-  await page.click(T("open-search"));
+  await toStocks(page);
+  await page.click(V("open-search"));
   await page.waitForSelector(T("search-input"));
 }
 async function search(page, q) {
@@ -193,7 +197,7 @@ async function healthy(browser) {
       await page.fill(T("server-url"), be.url);
       await page.click(T("connect-submit"));
       await page.waitForSelector(T("tab-stocks"));
-      await page.click(T("tab-stocks"));
+      await toStocks(page);
       await page.waitForSelector(T("watchlist-empty"));
       const tabs = await page.$$eval('[data-testid^="tab-"]', (els) => els.map((e) => e.innerText.replace(/[^A-Za-z]+/g, "")));
       eq(tabs, ["BTC", "Stocks", "Macro", "Discover", "Journal"], "the only tabs");
@@ -239,7 +243,7 @@ async function healthy(browser) {
     });
 
     await check("the watchlist shows each saved asset with name, type, price, change, sparkline and a takeaway", async () => {
-      await page.click(T("tab-stocks"));
+      await toStocks(page);
       await waitRows(page, [ID.btc, ID.btcEtf, ID.solCoin, ID.aapl]);
       for (const id of [ID.btc, ID.btcEtf, ID.aapl]) {
         await page.waitForSelector(T(`price-${id}`));
@@ -422,7 +426,7 @@ async function healthy(browser) {
     });
 
     await check("settings sit behind the profile icon and say what mode the server is in", async () => {
-      await page.click(T("tab-stocks"));
+      await toStocks(page);
       await page.click(T("profile-button"));
       await page.waitForSelector(T("settings-title"));
       eq(await inner(page, "settings-server"), be.url);
@@ -692,7 +696,7 @@ async function demo(browser) {
       await connectTo(page, demoBe.url); await ready(page);
       await search(page, "bitcoin"); await addFromSearch(page, ID.btc);
       await search(page, "aapl"); await addFromSearch(page, ID.aapl);
-      await page.click(T("tab-stocks"));
+      await toStocks(page);
       await waitRows(page, [ID.btc, ID.aapl]);
       await page.waitForSelector(V("demo-banner"));
       await shot(page, "01-demo-watchlist");

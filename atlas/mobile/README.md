@@ -5,7 +5,7 @@ A simple, fast phone app for researching **Bitcoin, crypto tokens, US stocks and
 **Research and paper trading only.** The app cannot place trades, connect to a brokerage or hold money, and the backend has no route that could. Nothing in it is financial advice.
 
 - On a wide screen (a desktop browser, 1000px or more) it shows three panes side by side: watchlist or search on the left, the research in the middle, the News agent's stories on the right, with a ticker strip on top. On a phone it stays one screen at a time.
-- Two tabs: **Watchlist** (home) and **Search**. Settings sit behind the small profile icon.
+- Five tabs: **BTC**, **Stocks** (your watchlist, with a search button), **Macro**, **Discover** and **Journal**. Macro and Discover are honest placeholders until they are built. Settings sit behind the small profile icon. The Journal is a simple list of your own trades and notes: a symbol is enough, and P&L is calculated when size, entry and exit are filled in.
 - Tap an asset for one continuous research screen: price and freshness, a chart, a **What matters now** briefing, and four expandable agent rows.
 - Every market number shows where it came from, when, and an honest label: *Live, Delayed, Market closed, Stale, Demo* or *Unavailable*.
 - Numbers are calculated by the server. The app only displays them.
@@ -81,7 +81,7 @@ SIGNAL_E2E_SHOTS=/tmp/shots node e2e/signal.e2e.cjs  # also save screenshots
 
 | Scenario | What it proves |
 | --- | --- |
-| `healthy` | Connect flow; two tabs only; search tells **Bitcoin the coin from the Bitcoin ETF** (and SOL the token from SOL the stock); the watchlist survives a reload, a brand-new browser profile, reordering and removal because it lives on the server; asset identity; chart ranges; briefing; each agent's evidence, sources and "not available" list; hostile headlines stay inert; disagreeing agents are both shown; no trading controls and no provider requests from the app; offline mode keeps the saved list and says so. |
+| `healthy` | Connect flow; five tabs; search tells **Bitcoin the coin from the Bitcoin ETF** (and SOL the token from SOL the stock); the watchlist survives a reload, a brand-new browser profile, reordering and removal because it lives on the server; asset identity; chart ranges; briefing; each agent's evidence, sources and "not available" list; hostile headlines stay inert; disagreeing agents are both shown; no trading controls and no provider requests from the app; offline mode keeps the saved list and says so. |
 | `stale` | Three-day-old prices are labelled stale on the list, the asset screen and in the Technical agent, which declines to give a current reading. |
 | `partial` | With News, Fundamentals and Macro down, price, chart and Technical still work and the screen says "Based on 1 of 4 agents". |
 | `missing` | With no prices and no charts, rows say *Unavailable*, the chart offers a retry, and research that does not need prices still loads. |
