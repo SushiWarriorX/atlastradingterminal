@@ -124,7 +124,7 @@ const V = (id) => `${T(id)}:visible`;
 const inner = (page, testId) => page.locator(V(testId)).first().innerText();
 const present = async (page, testId) => (await page.locator(V(testId)).count()) > 0;
 const rowIds = (page) => page.$$eval('[data-testid^="row-"]', (els) => els.map((e) => e.getAttribute("data-testid").slice(4)));
-const ready = (page) => page.waitForSelector(T("tab-watchlist"), { timeout: 25000 });
+const ready = (page) => page.waitForSelector(T("tab-stocks"), { timeout: 25000 });
 
 async function connectTo(page, url, password) {
   await page.goto(WEB_ORIGIN);
@@ -140,7 +140,7 @@ async function waitRows(page, ids, ms = 25000) {
   eq(got, ids, "watchlist rows");
 }
 async function openFromWatchlist(page, id) {
-  await page.click(T("tab-watchlist"));
+  await page.click(T("tab-stocks"));
   await page.waitForSelector(T(`row-${id}`));
   await page.locator(T(`row-${id}`)).locator('[role="button"]').first().click();
   await page.waitForSelector(T("asset-name"));
@@ -151,8 +151,14 @@ async function expand(page, agent) {
   await page.waitForSelector(T(`refresh-${agent}`));
   return inner(page, `agent-${agent}`);
 }
+async function gotoSearch(page) {
+  if (await present(page, "search-input")) return;
+  await page.click(T("tab-stocks"));
+  await page.click(T("open-search"));
+  await page.waitForSelector(T("search-input"));
+}
 async function search(page, q) {
-  await page.click(T("tab-search"));
+  await gotoSearch(page);
   const answered = page.waitForResponse((r) => r.url().includes(`/api/signal/search?q=${encodeURIComponent(q)}`), { timeout: 20000 });
   await page.fill(T("search-input"), q);
   await answered;
@@ -180,15 +186,17 @@ async function healthy(browser) {
       await page.click(T("connect-submit"));
       await page.waitForSelector(V("connect-error"));
       match(await inner(page, "connect-error"), /reach|connect|server|address/i);
-      assert(!(await present(page, "tab-watchlist")), "must stay on the connect screen");
+      assert(!(await present(page, "tab-stocks")), "must stay on the connect screen");
     });
 
-    await check("connects and shows an honest empty watchlist with exactly two tabs and a profile icon", async () => {
+    await check("connects and shows an honest empty watchlist under five tabs and a profile icon", async () => {
       await page.fill(T("server-url"), be.url);
       await page.click(T("connect-submit"));
+      await page.waitForSelector(T("tab-stocks"));
+      await page.click(T("tab-stocks"));
       await page.waitForSelector(T("watchlist-empty"));
       const tabs = await page.$$eval('[data-testid^="tab-"]', (els) => els.map((e) => e.innerText.replace(/[^A-Za-z]+/g, "")));
-      eq(tabs, ["Watchlist", "Search"], "the only tabs");
+      eq(tabs, ["BTC", "Stocks", "Macro", "Discover", "Journal"], "the only tabs");
       assert(await present(page, "profile-button"), "settings must sit behind the profile icon");
       assert(!(await present(page, "demo-banner")), "no demo label on a live server");
       await shot(page, "01-empty-watchlist");
@@ -231,7 +239,7 @@ async function healthy(browser) {
     });
 
     await check("the watchlist shows each saved asset with name, type, price, change, sparkline and a takeaway", async () => {
-      await page.click(T("tab-watchlist"));
+      await page.click(T("tab-stocks"));
       await waitRows(page, [ID.btc, ID.btcEtf, ID.solCoin, ID.aapl]);
       for (const id of [ID.btc, ID.btcEtf, ID.aapl]) {
         await page.waitForSelector(T(`price-${id}`));
@@ -398,7 +406,7 @@ async function healthy(browser) {
       bad.push(...(await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)));          // asset screen, every agent that was opened
       await page.click(T("back"));
       bad.push(...(await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)));          // watchlist
-      await page.click(T("tab-search"));
+      await gotoSearch(page);
       bad.push(...(await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)));          // search
       eq(bad, [], "trading controls");
       const probe = await api(be, "/api/signal/orders", { method: "POST", body: {} });
@@ -414,7 +422,7 @@ async function healthy(browser) {
     });
 
     await check("settings sit behind the profile icon and say what mode the server is in", async () => {
-      await page.click(T("tab-watchlist"));
+      await page.click(T("tab-stocks"));
       await page.click(T("profile-button"));
       await page.waitForSelector(T("settings-title"));
       eq(await inner(page, "settings-server"), be.url);
@@ -422,7 +430,7 @@ async function healthy(browser) {
       noMatch(await text(page), /Demo mode/);
       await shot(page, "08-settings");
       await page.click(T("settings-close"));
-      await page.waitForSelector(T("tab-watchlist"));
+      await page.waitForSelector(T("tab-stocks"));
     });
 
     await check("offline: the saved list is shown with a clear notice; the server's return clears it; nothing is lost", async () => {
@@ -450,6 +458,8 @@ async function healthy(browser) {
       try {
         await connectTo(w, be.url);
         await w.waitForSelector(T("ticker"));
+        for (const d of ["btc", "stocks", "macro", "discover", "journal"]) assert(await present(w, `nav-${d}`), `top navigation must offer ${d}`);
+        await w.click(T("nav-stocks"));
         await w.waitForSelector(T("pane-watchlist"));
         await w.waitForSelector(T("news-panel"));
         await waitRows(w, [ID.btc, ID.btcEtf, ID.aapl]);
@@ -469,6 +479,44 @@ async function healthy(browser) {
         await w.waitForSelector(T("settings-drawer"));
         await shot(w, "11-wide-settings");
       } finally { await d.close(); livePage = page; }
+    });
+
+    await check("Journal tab: a note, then a trade with exact P&L, filter, edit and delete", async () => {
+      await page.click(T("tab-journal"));
+      await page.waitForSelector(T("journal-empty"));
+      await page.click(T("journal-empty-add"));
+      await page.fill(T("f-symbol"), "btc");
+      await page.fill(T("f-note"), "Watching the 200 day average");
+      await page.click(T("entry-save"));
+      await page.waitForSelector(V("journal-list"));
+      assert(await page.locator('[data-testid^="entry-e:"]').count() === 1, "one entry after saving a bare note");
+      await page.click(T("journal-add"));
+      await page.fill(T("f-symbol"), "aapl");
+      await page.fill(T("f-size"), "10");
+      await page.fill(T("f-entry"), "100");
+      await page.fill(T("f-exit"), "110");
+      await page.click(T("entry-save"));
+      await page.waitForSelector(V("journal-stats"));
+      const st = await inner(page, "journal-stats");
+      match(st, /\+100\.00/, "net P&L is 10 x (110 - 100)");
+      match(await text(page), /\+10\.00%/, "return on cost");
+      await page.click(T("journal-filter-note"));
+      await sleep(400);
+      eq(await page.locator('[data-testid^="entry-e:"]').count(), 1, "notes filter");
+      await page.click(T("journal-filter-all"));
+      await sleep(300);
+      await page.locator('[data-testid^="entry-e:"]').first().click();
+      await page.waitForSelector(T("entry-delete"));
+      await page.click(T("entry-delete"));
+      await sleep(500);
+      eq(await page.locator('[data-testid^="entry-e:"]').count(), 1, "one entry left after a delete");
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the journal");
+      await shot(page, "12-journal");
+    });
+
+    await check("Macro and Discover are honest placeholders, not invented data", async () => {
+      await page.click(T("tab-macro")); await page.waitForSelector(V("macro-soon"));
+      await page.click(T("tab-discover")); await page.waitForSelector(V("discover-soon"));
     });
 
     await check("no uncaught errors in the browser during the whole run", async () => { eq(S.pageErrors, [], "uncaught page errors"); });
@@ -601,7 +649,7 @@ async function login(browser) {
       await connectTo(page, be.url, "wrong password");
       await page.waitForSelector(V("connect-error"));
       match(await inner(page, "connect-error"), /password|incorrect|wrong|invalid/i);
-      assert(!(await present(page, "tab-watchlist")), "must stay on the connect screen");
+      assert(!(await present(page, "tab-stocks")), "must stay on the connect screen");
     });
     await check("the right password logs in, and the login survives a reload", async () => {
       await page.fill(T("server-password"), "correct horse battery");
@@ -628,7 +676,7 @@ async function login(browser) {
       be = await startBackend(["--db", db, "--password", "a different password"], { port: be.port });
       await page.reload();
       await page.waitForSelector(T("connect-title"), { timeout: 30000 });
-      assert(!(await present(page, "tab-watchlist")), "must not show the app with a rejected login");
+      assert(!(await present(page, "tab-stocks")), "must not show the app with a rejected login");
     });
   } finally { await S.ctx.close().catch(() => undefined); await be.stop(); }
 }
@@ -644,7 +692,7 @@ async function demo(browser) {
       await connectTo(page, demoBe.url); await ready(page);
       await search(page, "bitcoin"); await addFromSearch(page, ID.btc);
       await search(page, "aapl"); await addFromSearch(page, ID.aapl);
-      await page.click(T("tab-watchlist"));
+      await page.click(T("tab-stocks"));
       await waitRows(page, [ID.btc, ID.aapl]);
       await page.waitForSelector(V("demo-banner"));
       await shot(page, "01-demo-watchlist");

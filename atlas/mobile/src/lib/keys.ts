@@ -8,4 +8,5 @@ export const keys = (base: string | null) => ({
   asset: (id: string) => ["asset", base, id] as const,
   chart: (id: string, r: ChartRange) => ["chart", base, id, r] as const,
   research: (id: string) => ["research", base, id] as const,
+  journal: (filters: object) => ["journal", base, filters] as const,
 });

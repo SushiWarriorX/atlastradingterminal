@@ -29,6 +29,7 @@ function Gate() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bg } }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="asset/[id]" />
+      <Stack.Screen name="search" />
       <Stack.Screen name="settings" options={{ presentation: "modal" }} />
     </Stack>
   );

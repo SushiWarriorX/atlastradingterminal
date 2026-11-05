@@ -116,3 +116,15 @@ export interface Meta {
 }
 export interface AuthStatus { required: boolean; authenticated: boolean }
 export interface LoginResult extends AuthStatus { token?: string; expires_in?: number }
+
+// --- journal (the simple entries; shared with the terminal) ---------------------------------------------------------------------------
+export interface JournalEntry {
+  id: string; origin: "manual" | "imported"; editable: boolean; symbol: string; asset_class: string; direction: "long" | "short";
+  size: string | null; entry_price: string | null; exit_price: string | null; entry_at: string; exit_at: string | null; fees: string | null; planned_stop: string | null;
+  note: string | null; thesis: string | null; risk_plan: string | null; outcome: string | null; has_screenshot: boolean; screenshot?: string | null;
+  status: "note" | "open" | "closed"; gross_pnl: string | null; net_pnl: string | null; net_pnl_num: number | null; return_pct: number | null; r_multiple: number | null;
+  holding_seconds: number | null; pnl_missing: string[];
+}
+export interface JournalStats { n: number; reliable: boolean; note?: string | null; wins?: number; losses?: number; win_rate?: number; net_pnl?: number; profit_factor?: number | null }
+export interface JournalLog { items: JournalEntry[]; total: number; stats: JournalStats }
+export type JournalFilters = { q?: string; status?: "" | "open" | "closed" | "note" };

@@ -7,6 +7,7 @@ import { keys } from "./keys";
 import { safeUrl } from "./links";
 import { MAX_RECENTS, parseRecents, pushRecent } from "./recents";
 import { applyAdd, applyRemove, applyReorder, idsOf, moveId, settledRows } from "./watchlist";
+import { blankForm, fromEntry, missingText, resultText, signed, toBody } from "./journal";
 
 const NOW = Date.parse("2026-12-01T12:00:00Z");
 const asset = (id: string, symbol: string, type: Asset["type"] = "stock", venue = "Nasdaq"): Asset => ({ id, symbol, name: symbol + " Inc", type, venue, support: "supported", note: null });
@@ -208,5 +209,36 @@ describe("wide layout", () => {
     expect(WIDE_MIN).toBe(1000);
     expect([390, 768, 999].map(isWide)).toEqual([false, false, false]);
     expect([1000, 1440].map(isWide)).toEqual([true, true]);
+  });
+});
+
+describe("journal form helpers", () => {
+  const entry = (o: Partial<import("../api/types").JournalEntry> = {}) => ({ id: "e:1", origin: "manual", editable: true, symbol: "AAPL", direction: "long", status: "closed", size: "10", entry_price: "100", exit_price: "110", entry_at: "2026-01-02T00:00:00Z", exit_at: null, fees: "0", planned_stop: null, note: null, thesis: null, risk_plan: null, outcome: null, screenshot: null, net_pnl_num: 100, return_pct: 10, pnl_missing: [], ...o }) as import("../api/types").JournalEntry;
+  it("a new entry sends only what was filled in", () => {
+    const f = { ...blankForm("2026-03-01"), symbol: " btc ", note: "idea" };
+    expect(toBody(f, false)).toEqual({ symbol: "btc", direction: "long", entry_at: "2026-03-01", note: "idea" });
+  });
+  it("an edit sends emptied optional fields as null so they are cleared, but never clears the symbol or date", () => {
+    const f = { ...fromEntry(entry({ note: "x" })), note: "", symbol: "" };
+    const b = toBody(f, true);
+    expect(b.note).toBeNull();
+    expect(b.exit_price).toBe("110");
+    expect("symbol" in b).toBe(false);
+  });
+  it("round-trips an entry through the form", () => {
+    expect(fromEntry(entry({ fees: "0" })).fees).toBe("");
+    expect(fromEntry(entry()).entry_at).toBe("2026-01-02");
+  });
+  it("signed uses a real minus and shows a dash for missing", () => {
+    expect(signed(5)).toBe("+5.00");
+    expect(signed(-5)).toBe("−5.00");
+    expect(signed(null)).toBe("—");
+  });
+  it("result and missing text", () => {
+    expect(resultText(entry())).toBe("+100.00");
+    expect(resultText(entry({ status: "open", net_pnl_num: null }))).toBe("Open");
+    expect(resultText(entry({ status: "note" }))).toBe("");
+    expect(missingText(entry({ status: "open", pnl_missing: ["exit price"] }))).toBe("P&L needs the exit price.");
+    expect(missingText(entry({ status: "note", pnl_missing: ["size"] }))).toBeNull();
   });
 });

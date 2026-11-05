@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import type { AgentName, Asset, ChartRange, ResearchResponse, WatchlistResponse } from "../api/types";
+import type { AgentName, Asset, ChartRange, JournalFilters, ResearchResponse, WatchlistResponse } from "../api/types";
 import { keys } from "../lib/keys";
 import { pushRecent } from "../lib/recents";
 import { applyAdd, applyRemove, applyReorder } from "../lib/watchlist";
@@ -104,4 +104,24 @@ export function useRecents() {
   const add = (a: Asset) => setList((cur) => { const n = pushRecent(cur, a); storage.setRecents(n, baseUrl); return n; });
   const clear = () => { setList([]); storage.setRecents([], baseUrl); };
   return { list, add, clear };
+}
+
+export function useJournal(filters: JournalFilters) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).journal(filters), queryFn: () => need(api).journalLog(filters), enabled: !!api, refetchInterval: 30_000, retry: 1 });
+}
+
+export function useJournalSave() {
+  const { api, baseUrl } = useConnection();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string | null; body: Record<string, string | null> }) => (id ? need(api).journalUpdate(id, body) : need(api).journalCreate(body)),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["journal", baseUrl] }),
+  });
+}
+
+export function useJournalDelete() {
+  const { api, baseUrl } = useConnection();
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (id: string) => need(api).journalDelete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["journal", baseUrl] }) });
 }

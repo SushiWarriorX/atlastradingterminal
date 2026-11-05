@@ -4,7 +4,7 @@ import { FlatList, RefreshControl, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { WatchRowItem } from "../../components/WatchRowItem";
-import { Banner, Divider, EmptyState, ErrorState, PrimaryButton, Skeleton, TextButton, Txt } from "../../components/ui";
+import { Banner, Divider, EmptyState, ErrorState, IconButton, PrimaryButton, Skeleton, TextButton, Txt } from "../../components/ui";
 import { localClock, relativeTime } from "../../lib/format";
 import { describeFreshness, summarizeTones } from "../../lib/freshness";
 import { idsOf, moveId, settledRows } from "../../lib/watchlist";
@@ -54,8 +54,8 @@ export default function WatchlistScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: color.bg, paddingTop: insets.top }}>
-      <ScreenHeader title="Watchlist" subtitle={updated ? `${items.length} asset${items.length === 1 ? "" : "s"} · updated ${localClock(new Date(updated).toISOString())}` : undefined}
-        right={items.length > 0 ? <TextButton label={editing ? "Done" : "Edit"} onPress={() => setEditing((e) => !e)} testID="edit-toggle" /> : undefined} />
+      <ScreenHeader title="Stocks" subtitle={updated ? `Watchlist · ${items.length} asset${items.length === 1 ? "" : "s"} · updated ${localClock(new Date(updated).toISOString())}` : undefined}
+        right={<>{items.length > 0 ? <TextButton label={editing ? "Done" : "Edit"} onPress={() => setEditing((e) => !e)} testID="edit-toggle" /> : null}{wide ? null : <IconButton name="search" size={24} label="Search assets" onPress={goSearch} testID="open-search" />}</>} />
       <FlatList
         data={body ? [] : items}
         keyExtractor={(r) => r.asset.id}
