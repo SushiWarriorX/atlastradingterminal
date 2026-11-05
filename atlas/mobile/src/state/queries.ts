@@ -130,3 +130,13 @@ export function useMacroBrief() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).macro, queryFn: () => need(api).macroBrief(), enabled: !!api, staleTime: 5 * 60_000, refetchInterval: 10 * 60_000, retry: 1 });
 }
+
+export function useStockResearch(symbol: string, enabled: boolean) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).stock(symbol), queryFn: () => need(api).stockResearch(symbol), enabled: !!api && enabled, staleTime: 10 * 60_000, retry: 0 });
+}
+
+export function useEarnings(days: number, enabled: boolean) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).earnings(days), queryFn: () => need(api).earnings(days), enabled: !!api && enabled, staleTime: 10 * 60_000, retry: 0 });
+}

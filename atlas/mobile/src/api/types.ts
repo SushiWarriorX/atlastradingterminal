@@ -134,3 +134,18 @@ export interface MacroIndicator { id: string; label: string; available: boolean;
 export interface MacroEvent { date: string; at_utc: string | null; title: string; source: string; link?: string | null }
 export interface MacroHeadline { feed: string; title: string; link: string | null; published: string | null; topic: string; topic_label: string; implication: string; implication_kind: string }
 export interface MacroBriefData { as_of: string; demo: boolean; today: MacroBriefItem[]; indicators: MacroIndicator[]; upcoming: MacroEvent[]; headlines: MacroHeadline[]; topics: Record<string, string>; calendar_warning: string | null; errors: string[]; gaps: string[]; notice: string | null }
+
+export interface StockYear { end: string; revenue: number | null; revenue_growth_pct: number | null; operating_margin_pct: number | null; net_margin_pct: number | null; net_income: number | null; free_cash_flow: number | null; net_cash: number | null; debt_to_equity: number | null }
+export interface StockCase { id: string; text: string; based_on: string[]; kind: string }
+export interface StockResearchData {
+  symbol: string; as_of: string; demo: boolean;
+  company: { name: string | null; sector: string | null; industry: string | null; sic_description: string | null; source: string };
+  financials: { available: boolean; years: StockYear[]; revenue_cagr: { value_pct: number; from: string; to: string } | null; source: string; note: string };
+  valuation: { rows: { key: string; label: string; value: number | null; unit: string; note: string | null }[]; source: string | null; status: string | null } | null;
+  earnings: { next_date: string | null; source: string; guidance: { reason: string }; consensus: { reason: string } };
+  bull: StockCase[]; bear: StockCase[]; case_note: string;
+  catalysts: { date: string; title: string; source: string; link: string | null }[];
+  filings: { form: string; filed: string; link: string | null; items: { item: string; meaning: string }[] }[];
+  news: { title: string; link: string | null; feed: string; published: string | null }[]; errors: string[]; gaps: string[];
+}
+export interface EarningsData { as_of: string; window_days: number; items: { symbol: string; name: string | null; instrument_id: string; date: string; days_away: number; sector: string | null }[]; checked: number; errors: string[]; note: string }

@@ -530,6 +530,27 @@ async function healthy(browser) {
       await shot(page, "13-macro");
     });
 
+    await check("Stock deep-dive: collapsed by default, then filings status, valuation, earnings, rule-based points and the gaps are labelled", async () => {
+      await toStocks(page);
+      await page.waitForSelector(V("earnings-card"));
+      await page.click(V("earnings-toggle"));
+      await page.waitForSelector(V("earnings-empty"), { timeout: 30000 }).catch(() => page.waitForSelector(V("earn-row-AAPL"), { timeout: 5000 }));
+      await openFromWatchlist(page, ID.aapl);
+      await page.waitForSelector(V("stock-card"));
+      assert(!(await present(page, "stock-body")), "the deep-dive must stay collapsed until asked for");
+      await page.click(V("stock-toggle"));
+      await page.waitForSelector(V("stock-body"), { timeout: 45000 });
+      const t = await text(page);
+      match(t, /Company deep-dive/); match(t, /Financials \(annual filings\)/); match(t, /Bull points/); match(t, /Bear points/);
+      match(t, /Interpretation \(rule-based\)/); match(t, /Guidance and analyst consensus .* not available/i, "the gaps are listed");
+      match(t, /SEC filings are off|No filing data loaded|Demo/i, "missing SEC contact is said plainly, not papered over");
+      const points = (await page.$$eval("div", (els) => els.map((e) => e.innerText || "").filter((x) => x.startsWith("•")))).join(" ");
+      noMatch(points, FORECASTS, "bull and bear points make no forecasts");       // (headlines are quoted third-party text and are checked separately)
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the deep-dive");
+      await shot(page, "14-stock-deep-dive");
+      await page.click(V("back"));
+    });
+
     await check("Discover is an honest placeholder, not invented data", async () => {
       await page.click(T("tab-discover")); await page.waitForSelector(V("discover-soon"));
     });

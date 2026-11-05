@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { FlatList, RefreshControl, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { EarningsCard } from "../../components/EarningsCard";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { WatchRowItem } from "../../components/WatchRowItem";
 import { Banner, Divider, EmptyState, ErrorState, IconButton, PrimaryButton, Skeleton, TextButton, Txt } from "../../components/ui";
@@ -36,6 +37,7 @@ export default function WatchlistScreen() {
 
   const header = (
     <View style={{ gap: space.sm, paddingHorizontal: space.lg, paddingBottom: space.sm }}>
+      {items.length > 0 && <EarningsCard />}
       {demo && <Banner tone="demo" title="Demo data" testID="demo-banner">Prices and research here are synthetic, for trying the app. They are not real market data.</Banner>}
       {offline && <Banner tone="warn" title="Can't reach the server" testID="offline-banner" action={<TextButton label="Retry" onPress={() => { void wl.refetch(); }} testID="offline-retry" />}>Showing your last list{updated ? ` from ${relativeTime(new Date(updated).toISOString(), now)}` : ""}. Prices may be out of date.</Banner>}
       {!offline && problems ? <Banner tone="warn" title={problems} testID="stale-banner">Some prices are not current. Check the dot next to each price.</Banner> : null}

@@ -1,4 +1,4 @@
-import type { JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
+import type { EarningsData, StockResearchData, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
 
 /** A failure with a code the UI can act on. `network` means we never got an answer. */
 export class ApiError extends Error {
@@ -73,6 +73,8 @@ export function createApi(opts: ClientOptions) {
     asset: (id: string) => call<AssetHeader>(`/api/signal/asset/${enc(id)}`),
     chart: (id: string, range: ChartRange) => call<ChartResponse>(`/api/signal/chart/${enc(id)}?range=${range}`),
     research: (id: string, wait = 4) => call<ResearchResponse>(`/api/signal/research/${enc(id)}?wait=${wait}`, { timeoutMs: 40_000 }),
+    stockResearch: (symbol: string) => call<StockResearchData>(`/api/stocks/${encodeURIComponent(symbol)}/research`, { timeoutMs: 60_000 }),
+    earnings: (days: number) => call<EarningsData>(`/api/stocks/earnings?days=${days}`, { timeoutMs: 60_000 }),
     macroBrief: () => call<MacroBriefData>("/api/macro/brief", { timeoutMs: 40_000 }),
     journalLog: (f: JournalFilters = {}) => call<JournalLog>(`/api/journal/log?${new URLSearchParams(Object.entries(f).filter(([, v]) => v) as [string, string][])}`),
     journalGet: (id: string) => call<JournalEntry>(`/api/journal/entries/${id.split(":")[1]}`),

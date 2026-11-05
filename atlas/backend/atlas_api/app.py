@@ -23,6 +23,8 @@ from .signal import routes as signal_routes
 from .signal.service import SignalService
 from .macro import MacroService
 from .macro_brief import MacroBriefService
+from .stocks.edgar import EdgarClient
+from .stocks.research import StockResearch
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
 from .providers.ibkr_data import IBKRData
 from .journal import entries as jent, hyperliquid as hl, importers as jimp, stats as jstats
@@ -991,6 +993,30 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         if inst is None:
             raise ApiError("UNKNOWN_INSTRUMENT", f"unknown instrument '{token[:40]}'", 404)
         return ok(await fundamentals.get(inst, force=refresh))
+
+    stock_research = StockResearch(EdgarClient(db), fundamentals, news, demo)
+
+    @app.get("/api/stocks/earnings")
+    async def stocks_earnings(symbols: str = "", days: int = 30):
+        """Next earnings dates for the symbols asked about (default: the equities on the watchlist)."""
+        names = [x.strip().upper() for x in symbols.split(",") if x.strip()][:40]
+        insts = []
+        for n in names:
+            inst = I.resolve(n)
+            if inst is not None and inst.asset_class == "equity":
+                insts.append(inst)
+        if not names:
+            insts = [i for i in (I.resolve(r["symbol"]) for r in db.q("SELECT symbol FROM signal_watchlist WHERE asset_type='stock' ORDER BY position")) if i is not None and i.asset_class == "equity"][:40]
+        return ok(await stock_research.earnings_calendar(insts, max(1, min(days, 120))))
+
+    @app.get("/api/stocks/{token}/research")
+    async def stocks_research(token: str):
+        inst = I.resolve(token)
+        if inst is None:
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown instrument '{token[:40]}'", 404)
+        if inst.asset_class != "equity":
+            raise ApiError("NOT_APPLICABLE", f"stock research applies to US stocks, not {inst.asset_class} instruments", 422)
+        return ok(await stock_research.research(inst))
 
     # --- news -----------------------------------------------------------------
     @app.exception_handler(NewsError)
