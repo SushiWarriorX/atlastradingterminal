@@ -523,7 +523,9 @@ async function healthy(browser) {
       await page.waitForSelector(V("macro-brief"));
       const t = await text(page);
       match(t, /What matters today/); match(t, /Key indicators/); match(t, /Upcoming/); match(t, /Headlines/);
-      match(t, /No official indicators loaded|Unavailable/, "missing indicators are said, not invented");
+      match(t, /Official indicators could not be loaded right now/, "missing indicators are said once, in plain words, not invented");
+      assert(!/Unavailable: unavailable/i.test(t), "no 'Unavailable: unavailable (CODE)' wording");
+      eq((t.match(/Unavailable:/g) || []).length, 0, "no wall of 'Unavailable:' rows; the one plain message replaces them");
       match(t, /Consensus forecasts .* not shown/, "the gaps are listed");
       noMatch(t, FORECASTS, "no forecasts");
       eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls on Macro");

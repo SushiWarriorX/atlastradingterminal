@@ -57,6 +57,24 @@ def headline(feed: str, title: str, link: str | None, published: str | None) -> 
             "implication": why, "implication_kind": "Interpretation (rule-based, about the topic, not this specific story)"}
 
 
+def clean_reason(err: str) -> str:
+    """'unavailable (CPIAUCSL)' -> 'no data came back'. Raw series codes mean nothing to a beginner; the technical detail stays in `errors`."""
+    e = str(err)
+    if e.startswith("unavailable ("):
+        return "no data came back from the source"
+    return e[:140]
+
+
+def indicators_note(ind: list[dict], demo: bool) -> str | None:
+    """When NO indicator could be loaded, say so once in plain words instead of listing every one as unavailable."""
+    if any(i["available"] for i in ind):
+        return None
+    if demo:
+        return "Demo mode: official indicators are not shown because they would not be real."
+    return ("Official indicators could not be loaded right now, so none are shown. They come from FRED (the St. Louis Fed). "
+            "Check your internet connection and try again in a few minutes; the technical detail is listed under 'Some sources failed'.")
+
+
 def indicators(macro: dict, fed: dict) -> list[dict]:
     """Official observations as one flat list: value, unit, latest change, observation date and how current it is. Unavailable ones say why."""
     pool = {f["id"]: f for f in (macro.get("facts") or [])}
@@ -70,7 +88,7 @@ def indicators(macro: dict, fed: dict) -> list[dict]:
         if f is None:
             continue
         if "error" in f:
-            out.append({"id": fid, "label": f.get("label", fid), "available": False, "reason": f["error"]})
+            out.append({"id": fid, "label": f.get("label", fid), "available": False, "reason": clean_reason(f["error"])})
             continue
         if fid == "fed":
             value, unit = f"{f['lower']:.2f}–{f['upper']:.2f}", "%"
@@ -115,6 +133,10 @@ def today_items(ind: list[dict], fed: dict, macro: dict, events: list[dict], tod
 def build(macro: dict, fed: dict, stories: list[dict], now: datetime) -> dict:
     today = now.astimezone(timezone.utc).date()
     ind = indicators(macro, fed)
+    demo = bool(macro.get("demo") or fed.get("demo"))
+    note = indicators_note(ind, demo)
+    if note:
+        ind = []                                                  # one clear message beats a wall of "unavailable" rows
     ev = upcoming(fed, today)
     heads = []
     seen = set()
@@ -126,7 +148,7 @@ def build(macro: dict, fed: dict, stories: list[dict], now: datetime) -> dict:
             heads.append(h)
     heads.sort(key=lambda h: h["published"] or "", reverse=True)
     errors = list(fed.get("errors") or [])
-    return {"as_of": now.isoformat(), "demo": bool(macro.get("demo") or fed.get("demo")), "today": today_items(ind, fed, macro, ev, today), "indicators": ind, "upcoming": ev,
+    return {"as_of": now.isoformat(), "demo": bool(macro.get("demo") or fed.get("demo")), "today": today_items(ind, fed, macro, ev, today), "indicators": ind, "indicators_note": note, "upcoming": ev,
             "headlines": heads[:40], "topics": {k: v[0] for k, v in TOPICS.items()}, "calendar_warning": (fed.get("calendar") or {}).get("message"),
             "errors": errors, "gaps": GAPS, "notice": (macro.get("notice") or fed.get("notice")),
             "labels": {"fact": "An official observation or scheduled date, with source and date.", "interpretation": "Fixed, conditional, rule-based text. Not a prediction, signal or advice.", "headline": "Title and link as published by the named feed."}}

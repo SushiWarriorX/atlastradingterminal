@@ -49,7 +49,7 @@ def test_indicators_have_dates_freshness_and_unavailable_ones_say_why():
     assert ind["us10y"]["value"] == 4.2 and ind["us10y"]["obs_date"] == "2026-03-16" and ind["us10y"]["freshness"] == "CURRENT"
     assert ind["us10y"]["change"]["label"].startswith("vs ~1 month")
     assert ind["fed"]["value"] == "3.50–3.75"
-    assert ind["usd"]["available"] is False and "DTWEXBGS" in ind["usd"]["reason"]
+    assert ind["usd"]["available"] is False and ind["usd"]["reason"] == "no data came back from the source"      # plain words; the series code stays in `errors`
     assert "payrolls" in ind
     assert list(ind)[0] == "fed"                     # fixed display order
 
@@ -86,3 +86,18 @@ def test_route_works_in_demo_mode_without_fred_and_labels_it(tmp_path):
         assert r.status_code == 200
         d = r.json()["data"]
         assert d["demo"] is True and d["indicators"] == [] and d["upcoming"] and d["gaps"]
+
+
+def test_when_no_indicator_loads_say_so_once_instead_of_listing_each():
+    dead = {"facts": [{"id": "cpi", "label": "CPI", "error": "unavailable (CPIAUCSL)"}, {"id": "us10y", "label": "10Y", "error": "unavailable (DGS10)"}], "interpretations": []}
+    out = B.build(dead, {"releases": [], "errors": ["CPIAUCSL: down"], "calendar": {}, "upcoming": [], "release_schedule": []}, [], NOW)
+    assert out["indicators"] == [] and "could not be loaded" in out["indicators_note"] and "CPIAUCSL" not in out["indicators_note"]
+    assert out["errors"] == ["CPIAUCSL: down"]                                           # the technical detail is kept
+    demo = B.build({**dead, "demo": True}, {"releases": [], "errors": [], "calendar": {}, "upcoming": [], "release_schedule": []}, [], NOW)
+    assert "Demo mode" in demo["indicators_note"]
+
+
+def test_a_single_failed_indicator_among_working_ones_stays_listed_with_a_plain_reason():
+    out = B.build(facts(), fed(), [], NOW)
+    usd = next(i for i in out["indicators"] if i["id"] == "usd")
+    assert out["indicators_note"] is None and usd["available"] is False and usd["reason"] == "no data came back from the source"

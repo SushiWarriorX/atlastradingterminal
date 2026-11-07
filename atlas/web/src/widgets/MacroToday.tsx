@@ -33,7 +33,7 @@ export function MacroToday() {
           <td className="small">{i.change ? `${i.change.value >= 0 ? "+" : "−"}${Math.abs(i.change.value).toFixed(2)} ${i.change.unit}` : ""} <span className="dim">{i.change?.label.replace("vs ", "")}</span></td>
           <td className="mono small">{i.obs_date}</td><td className={`small ${i.freshness === "OVERDUE" ? "warnc" : "dim"}`}>{i.freshness === "OVERDUE" ? "Overdue" : "Current"}</td></tr>
       ) : <tr key={i.id}><td><b>{i.label}</b></td><td colSpan={4} className="down small">Unavailable: {i.reason}</td></tr>)}</tbody></table>
-      {d.indicators.length === 0 && <div className="note">No official indicators loaded (no FRED key or demo mode).</div>}
+      {d.indicators.length === 0 && <div className="note warn" data-testid="macro-indicators-note">{d.indicators_note ?? "No official indicators to show."}</div>}
       <div className="ws-bar" style={{ paddingLeft: 0 }}><span>UPCOMING · scheduled dates</span></div>
       {d.upcoming.length === 0 ? <div className="note">No upcoming events could be loaded.</div> : d.upcoming.map((e, i) => (
         <div key={i} className="small" style={{ margin: "4px 0" }}><b className="mono">{e.at_utc ? when(e.at_utc) : e.date}</b> {e.title} <span className="dim">· {e.source}</span></div>))}

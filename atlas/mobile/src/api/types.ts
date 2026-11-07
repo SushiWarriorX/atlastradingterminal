@@ -133,7 +133,7 @@ export interface MacroBriefItem { kind: "fact" | "interpretation"; title: string
 export interface MacroIndicator { id: string; label: string; available: boolean; reason?: string; value?: number | string | null; unit?: string | null; obs_date?: string | null; change?: { label: string; value: number; unit: string } | null; freshness?: string | null }
 export interface MacroEvent { date: string; at_utc: string | null; title: string; source: string; link?: string | null }
 export interface MacroHeadline { feed: string; title: string; link: string | null; published: string | null; topic: string; topic_label: string; implication: string; implication_kind: string }
-export interface MacroBriefData { as_of: string; demo: boolean; today: MacroBriefItem[]; indicators: MacroIndicator[]; upcoming: MacroEvent[]; headlines: MacroHeadline[]; topics: Record<string, string>; calendar_warning: string | null; errors: string[]; gaps: string[]; notice: string | null }
+export interface MacroBriefData { as_of: string; demo: boolean; today: MacroBriefItem[]; indicators: MacroIndicator[]; indicators_note: string | null; upcoming: MacroEvent[]; headlines: MacroHeadline[]; topics: Record<string, string>; calendar_warning: string | null; errors: string[]; gaps: string[]; notice: string | null }
 
 export interface StockYear { end: string; revenue: number | null; revenue_growth_pct: number | null; operating_margin_pct: number | null; net_margin_pct: number | null; net_income: number | null; free_cash_flow: number | null; net_cash: number | null; debt_to_equity: number | null }
 export interface StockCase { id: string; text: string; based_on: string[]; kind: string }

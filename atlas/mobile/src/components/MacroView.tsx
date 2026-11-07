@@ -38,7 +38,7 @@ export function MacroView() {
                 <View key={i} style={{ gap: 4 }}><Tag label={t.kind === "fact" ? "Fact" : "Interpretation"} tint={t.kind === "fact" ? undefined : color.warn} /><Txt variant="body">{t.title}</Txt><Txt variant="tiny">{t.detail} · {t.source}</Txt></View>))}
             </Section>
             <Section title="Key indicators" note="Official data with its observation date. Not live prices.">
-              {d.indicators.length === 0 ? <Txt variant="small">No official indicators loaded (no FRED key, or demo mode).</Txt> : d.indicators.map((i, n) => (
+              {d.indicators.length === 0 ? <Txt variant="small" c={color.warn} testID="macro-indicators-note">{d.indicators_note ?? "No official indicators to show."}</Txt> : d.indicators.map((i, n) => (
                 <View key={i.id}>{n > 0 && <Divider />}
                   {i.available ? (
                     <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, gap: space.md }}>
