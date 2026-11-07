@@ -3,14 +3,14 @@ import type { Stance } from "./api/types";
 
 // Silver and graphite: near-black base, brushed-steel cards, bright silver accent. Green/red for direction, amber for "pay attention", sky blue for demo data.
 export const color = {
-  bg: "#08090B", surface: "#17191D", surface2: "#252930", border: "#3A3F48", text: "#FFFFFF", dim: "#A7ADB8", faint: "#727985",
+  bg: "#08090B", surface: "#17191D", surface2: "#252930", border: "#3A3F48", text: "#FFFFFF", dim: "#A7ADB8", faint: "#9AA0AB",
   accent: "#D5D9E0", accent2: "#9AA1AD", accent3: "#EEF1F5", up: "#00C28C", down: "#FF5A66", warn: "#F5A524", demo: "#6DB3FF", live: "#00C28C",
   button: "#C4C9D1", onSilver: "#0B0C0E",
 };
 export const grad = {
   accent: ["#F6F8FB", "#C5CAD3", "#8C929D"] as const,       // buttons, active chips: polished silver, light to dark
   card: ["#2F333A", "#1E2126", "#14161A"] as const,         // cards: brushed steel fading to graphite
-  hot: ["#6A707B", "#3A3E46", "#1E2126"] as const,          // highlight card: brighter steel sheen, still dark enough for white text
+  hot: ["#303644", "#262A33", "#1D2025"] as const,          // highlight card: a cooler steel-blue sheen; dark enough that small grey captions stay readable (tested)
   good: ["#0F4A3E", "#1C2227", "#14161A"] as const, warn: ["#5A3F12", "#25221F", "#14161A"] as const, bad: ["#5A1B2B", "#251C20", "#14161A"] as const,
 };
 // Figtree: a free geometric typeface that is the closest match to Revolut's licensed Aeonik. Custom fonts need one family per weight.

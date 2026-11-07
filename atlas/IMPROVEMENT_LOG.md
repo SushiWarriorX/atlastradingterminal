@@ -2,6 +2,13 @@
 
 Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) and by hand.
 
+## 2026-11-07, cycle 4: small source and date captions are readable on every card
+- **Found:** the grey captions that carry each figure's source and date (for example "SEC EDGAR 10-K · as of 2026-12-31") were close to invisible on the brighter top Discover card (contrast about 1.1 to 1), and below the accessibility minimum on ordinary cards too (about 2.9 to 1 at the top of a card). Those captions are how the app keeps its "every number has a source and a date" promise.
+- **Changed:** the "faint" text colour is lighter (`#9AA0AB`) and the highlight card is a cooler, darker steel-blue instead of a bright grey. The silver and graphite look is unchanged elsewhere. New `lib/contrast.ts` and a unit test that fails if small captions or secondary text drop below 4.5:1 on any card gradient stop or on the screen background.
+- **Verified:** phone unit tests (37, two new), phone type check, backend 830 tests, web checks, browser suite 44 of 44; viewed the new Discover screenshot, captions now clear.
+- **Not verified:** the terminal's small captions use a different CSS palette and were not measured this cycle.
+- **Next candidates:** run the same contrast check on the terminal's CSS colours; Stocks empty-state suggestions; loading states for Discover and Strategy Lab on the phone.
+
 ## 2026-11-07, cycle 3: the silver glow no longer ends in a hard edge
 - **Found:** on every phone tab the glow behind the header stopped in a visible straight edge about 300 points down (the right-hand corner of the second gradient was still slightly lit where the box ended).
 - **Changed:** `TopGlow` now ends with a final fade into the screen colour, so no corner can end abruptly. One small change in `Gradient.tsx`; no colours or layout changed.

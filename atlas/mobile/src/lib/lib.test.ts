@@ -7,6 +7,8 @@ import { keys } from "./keys";
 import { safeUrl } from "./links";
 import { MAX_RECENTS, parseRecents, pushRecent } from "./recents";
 import { applyAdd, applyRemove, applyReorder, idsOf, moveId, settledRows } from "./watchlist";
+import { contrast } from "./contrast";
+import { color, grad } from "../theme";
 import { blankForm, fromEntry, missingText, resultText, sideLabel, signed, toBody } from "./journal";
 
 const NOW = Date.parse("2026-12-01T12:00:00Z");
@@ -245,5 +247,19 @@ describe("journal form helpers", () => {
     expect(sideLabel(entry({ status: "note", direction: "long" }))).toBe("Note");
     expect(sideLabel(entry({ status: "open", direction: "long" }))).toBe("Long");
     expect(sideLabel(entry({ status: "closed", direction: "short" }))).toBe("Short");
+  });
+});
+
+describe("readable text on every card", () => {
+  it("measures contrast correctly", () => {
+    expect(contrast("#000000", "#FFFFFF")).toBeCloseTo(21, 0);
+    expect(contrast("#777777", "#777777")).toBeCloseTo(1, 5);
+  });
+  it("small captions (faint) and body-small text (dim) reach 4.5:1 on every stop of every card gradient and on the screen background", () => {
+    const stops = [color.bg, color.surface, ...grad.card, ...grad.hot];
+    for (const bg of stops) {
+      expect(contrast(color.faint, bg), `faint on ${bg}`).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(color.dim, bg), `dim on ${bg}`).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });
