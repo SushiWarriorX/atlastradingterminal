@@ -7,7 +7,7 @@ import { keys } from "./keys";
 import { safeUrl } from "./links";
 import { MAX_RECENTS, parseRecents, pushRecent } from "./recents";
 import { applyAdd, applyRemove, applyReorder, idsOf, moveId, settledRows } from "./watchlist";
-import { blankForm, fromEntry, missingText, resultText, signed, toBody } from "./journal";
+import { blankForm, fromEntry, missingText, resultText, sideLabel, signed, toBody } from "./journal";
 
 const NOW = Date.parse("2026-12-01T12:00:00Z");
 const asset = (id: string, symbol: string, type: Asset["type"] = "stock", venue = "Nasdaq"): Asset => ({ id, symbol, name: symbol + " Inc", type, venue, support: "supported", note: null });
@@ -240,5 +240,10 @@ describe("journal form helpers", () => {
     expect(resultText(entry({ status: "note" }))).toBe("");
     expect(missingText(entry({ status: "open", pnl_missing: ["exit price"] }))).toBe("P&L needs the exit price.");
     expect(missingText(entry({ status: "note", pnl_missing: ["size"] }))).toBeNull();
+  });
+  it("a plain note never shows a side, but a trade does", () => {
+    expect(sideLabel(entry({ status: "note", direction: "long" }))).toBe("Note");
+    expect(sideLabel(entry({ status: "open", direction: "long" }))).toBe("Long");
+    expect(sideLabel(entry({ status: "closed", direction: "short" }))).toBe("Short");
   });
 });

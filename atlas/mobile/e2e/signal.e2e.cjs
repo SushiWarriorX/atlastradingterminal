@@ -494,6 +494,9 @@ async function healthy(browser) {
       await page.click(T("entry-save"));
       await page.waitForSelector(V("journal-list"));
       assert(await page.locator('[data-testid^="entry-e:"]').count() === 1, "one entry after saving a bare note");
+      const noteRow = await page.locator('[data-testid^="entry-e:"]').first().innerText();
+      match(noteRow, /Note/, "a plain note is tagged Note");
+      noMatch(noteRow, /Long|Short/, "a plain note must not look like a long or short position");
       await page.click(T("journal-add"));
       await page.fill(T("f-symbol"), "aapl");
       await page.fill(T("f-size"), "10");

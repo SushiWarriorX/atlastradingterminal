@@ -4,7 +4,7 @@ import { FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView,
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError } from "../api/client";
 import type { JournalEntry, JournalFilters } from "../api/types";
-import { blankForm, fromEntry, missingText, resultText, signed, toBody, type JournalForm } from "../lib/journal";
+import { blankForm, fromEntry, missingText, resultText, sideLabel, signed, toBody, type JournalForm } from "../lib/journal";
 import { useJournal, useJournalDelete, useJournalSave } from "../state/queries";
 import { useIsWide } from "../state/layout";
 import { color, font, radius, space, fonts } from "../theme";
@@ -62,10 +62,10 @@ function EntryRow({ e, onPress }: { e: JournalEntry; onPress: () => void }) {
   const result = resultText(e);
   const pnl = e.status === "closed" ? (e.net_pnl_num ?? 0) : 0;
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${e.symbol} ${e.direction}. ${result || "Note"}`} testID={`entry-${e.id}`} style={({ pressed }) => [s.row, pressed && { opacity: 0.7 }]}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${e.symbol} ${e.status === "note" ? "note" : e.direction}. ${result || "Note"}`} testID={`entry-${e.id}`} style={({ pressed }) => [s.row, pressed && { opacity: 0.7 }]}>
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Txt variant="h2">{e.symbol}</Txt><Tag label={e.direction === "long" ? "Long" : "Short"} />{e.origin === "imported" && <Tag label="Imported" />}
+          <Txt variant="h2">{e.symbol}</Txt><Tag label={sideLabel(e)} />{e.origin === "imported" && <Tag label="Imported" />}
         </View>
         <Txt variant="tiny" style={{ marginTop: 2 }}>{day(e.entry_at)}{e.size ? ` · ${e.size}` : ""}{e.entry_price ? ` @ ${e.entry_price}` : ""}{e.exit_price ? ` → ${e.exit_price}` : ""}</Txt>
         {e.note || e.thesis ? <Txt variant="small" numberOfLines={1} style={{ marginTop: 2 }}>{e.note ?? e.thesis}</Txt> : null}

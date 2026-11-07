@@ -39,3 +39,8 @@ export function missingText(e: JournalEntry): string | null {
   if (e.status === "closed" || e.status === "note" || !e.pnl_missing.length) return null;
   return `P&L needs the ${e.pnl_missing.join(" and ")}.`;
 }
+
+/** The side tag for a list row. A plain note has no side: showing "Long" would read as if a position had been taken. */
+export function sideLabel(e: JournalEntry): string {
+  return e.status === "note" ? "Note" : e.direction === "long" ? "Long" : "Short";
+}

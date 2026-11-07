@@ -106,7 +106,7 @@ export function JournalQuickWidget() {
           <thead><tr><th>Date</th><th>Symbol</th><th>Side</th><th className="r">Size</th><th className="r">Entry</th><th className="r">Exit</th><th className="r">P&L</th><th className="r">Return</th><th>Note</th></tr></thead>
           <tbody>{log.data.items.map((e) => (
             <tr key={e.id} className={editing === e.id ? "sel" : ""} onClick={() => open(e)} title={e.status === "note" ? "A note: add size, entry and exit to see P&L" : e.pnl_missing.length ? `P&L needs: ${e.pnl_missing.join(", ")}` : undefined}>
-              <td className="dim">{day(e.entry_at)}</td><td><b>{e.symbol}</b>{e.origin === "imported" && <span className="pill"> imported</span>}</td><td>{e.direction}</td>
+              <td className="dim">{day(e.entry_at)}</td><td><b>{e.symbol}</b>{e.origin === "imported" && <span className="pill"> imported</span>}</td><td className={e.status === "note" ? "dim" : ""}>{e.status === "note" ? "note" : e.direction}</td>
               <td className="r mono">{e.size ?? "—"}</td><td className="r mono">{e.entry_price ?? "—"}</td><td className="r mono">{e.exit_price ?? "—"}</td>
               <td className={`r mono ${dir(e.net_pnl_num ?? 0)}`}>{e.status === "closed" ? signed(e.net_pnl_num) : e.status === "open" ? "open" : "—"}</td>
               <td className={`r mono ${dir(e.return_pct ?? 0)}`}>{e.return_pct === null ? "—" : `${signed(e.return_pct)}%`}</td>
