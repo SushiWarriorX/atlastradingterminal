@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import type { AgentName, Asset, ChartRange, ResearchResponse, WatchlistResponse } from "../api/types";
+import type { AgentName, Asset, ChartRange, JournalFilters, LabRunBody, ResearchResponse, WatchlistResponse } from "../api/types";
 import { keys } from "../lib/keys";
 import { pushRecent } from "../lib/recents";
 import { applyAdd, applyRemove, applyReorder } from "../lib/watchlist";
@@ -104,4 +104,49 @@ export function useRecents() {
   const add = (a: Asset) => setList((cur) => { const n = pushRecent(cur, a); storage.setRecents(n, baseUrl); return n; });
   const clear = () => { setList([]); storage.setRecents([], baseUrl); };
   return { list, add, clear };
+}
+
+export function useJournal(filters: JournalFilters) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).journal(filters), queryFn: () => need(api).journalLog(filters), enabled: !!api, refetchInterval: 30_000, retry: 1 });
+}
+
+export function useJournalSave() {
+  const { api, baseUrl } = useConnection();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string | null; body: Record<string, string | null> }) => (id ? need(api).journalUpdate(id, body) : need(api).journalCreate(body)),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["journal", baseUrl] }),
+  });
+}
+
+export function useJournalDelete() {
+  const { api, baseUrl } = useConnection();
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (id: string) => need(api).journalDelete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["journal", baseUrl] }) });
+}
+
+export function useMacroBrief() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).macro, queryFn: () => need(api).macroBrief(), enabled: !!api, staleTime: 5 * 60_000, refetchInterval: 10 * 60_000, retry: 1 });
+}
+
+export function useStockResearch(symbol: string, enabled: boolean) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).stock(symbol), queryFn: () => need(api).stockResearch(symbol), enabled: !!api && enabled, staleTime: 10 * 60_000, retry: 0 });
+}
+
+export function useEarnings(days: number, enabled: boolean) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).earnings(days), queryFn: () => need(api).earnings(days), enabled: !!api && enabled, staleTime: 10 * 60_000, retry: 0 });
+}
+
+export function useLabRun() {
+  const { api } = useConnection();
+  return useMutation({ mutationFn: (body: LabRunBody) => need(api).labRun(body) });
+}
+
+export function useDiscover() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).discover, queryFn: () => need(api).discover(false), enabled: !!api, staleTime: 30 * 60_000, retry: 0 });
 }

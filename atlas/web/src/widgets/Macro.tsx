@@ -4,6 +4,7 @@ import { api } from "../api";
 import { fmtChange, fmtValue, MacroFact } from "../macro";
 import { ErrorBox, Panel } from "../ui";
 import { FedWatchTab } from "./FedWatch";
+import { MacroToday } from "./MacroToday";
 
 function FactRow({ f }: { f: MacroFact }) {
   if (f.error) return <tr><td><b>{f.label}</b></td><td colSpan={5} className="down small">Unavailable: {f.error}</td></tr>;
@@ -24,11 +25,13 @@ function FactRow({ f }: { f: MacroFact }) {
 export function MacroDashboard() {
   const q = useQuery({ queryKey: ["macro"], queryFn: api.macroOverview, staleTime: 10 * 60_000, refetchInterval: 30 * 60_000 });
   const d = q.data;
-  const [tab, setTab] = useState<"indicators" | "fed">("indicators");
+  const [tab, setTab] = useState<"today" | "indicators" | "fed">("today");
   return (
     <Panel title="MACRO DASHBOARD" right={<span>
+      <button className={`mini ${tab === "today" ? "on" : ""}`} onClick={() => setTab("today")}>Today</button>
       <button className={`mini ${tab === "indicators" ? "on" : ""}`} onClick={() => setTab("indicators")}>Indicators</button>
       <button className={`mini ${tab === "fed" ? "on" : ""}`} onClick={() => setTab("fed")}>Fed Watch</button></span>}>
+      {tab === "today" && <MacroToday />}
       {tab === "fed" && <FedWatchTab />}
       {tab === "indicators" && <>
       {q.isError && <ErrorBox error={q.error} />}

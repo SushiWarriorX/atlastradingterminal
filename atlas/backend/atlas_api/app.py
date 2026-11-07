@@ -22,9 +22,16 @@ from .fedwatch import FedWatchService
 from .signal import routes as signal_routes
 from .signal.service import SignalService
 from .macro import MacroService
+from .macro_brief import MacroBriefService
+from .discover.service import DiscoverService
+from .btclab.data import BtcData
+from .btclab.evaluate import LabError
+from .btclab.service import LabService, RunIn as LabRunIn
+from .stocks.edgar import EdgarClient
+from .stocks.research import StockResearch
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
 from .providers.ibkr_data import IBKRData
-from .journal import hyperliquid as hl, importers as jimp, stats as jstats
+from .journal import entries as jent, hyperliquid as hl, importers as jimp, stats as jstats
 from .journal.matching import Exec
 from .journal.store import JournalError, JournalStore
 from .news.service import NewsError, NewsService
@@ -84,6 +91,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     if llm is None and os.getenv("ANTHROPIC_API_KEY"):
         llm = AnthropicLLM(os.environ["ANTHROPIC_API_KEY"], os.getenv("ATLAS_MODEL", "claude-sonnet-5-5"))
     journal = JournalStore(db)
+    journal_entries = jent.EntryStore(db)
     news = NewsService(db, news_client, allow_local=os.getenv("ATLAS_NEWS_ALLOW_LOCAL") == "1", user_agent=os.getenv("ATLAS_NEWS_USER_AGENT", "ATLAS-Terminal/0.1 (personal research)"),
                        symbol_url=os.getenv("ATLAS_NEWS_SYMBOL_URL") or None)
     derivs = DerivativesService(db, deriv_client, demo)
@@ -314,12 +322,19 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     fedwatch = FedWatchService(provs.get("fred"), news, demo)
     signal = SignalService(db=db, svc=svc, news=news, fundamentals=fundamentals, macro=macro, fedwatch=fedwatch, demo=demo, llm=llm, registry=signal_registry, **(signal_parts or {}))       # Signal Mobile research API (read-only); the last two are test hooks
     signal_routes.register(app, signal, ok)
+    jent.register(app, ok, journal, journal_entries)           # simple journal entries: write a trade down like a note
 
     @app.get("/api/macro/fed")
     async def macro_fed():
         if not demo and provs.get("fred") is None:
             raise ApiError("NOT_CONFIGURED", "The FRED provider is not set up.", 503)
         return ok(await fedwatch.overview())
+
+    macro_brief = MacroBriefService(macro, fedwatch, news, demo)
+
+    @app.get("/api/macro/brief")
+    async def macro_brief_route():
+        return ok(await macro_brief.overview())      # works without a FRED key: it then says the indicators are unavailable instead of failing
 
     @app.get("/api/market/status")
     async def market_status():
@@ -982,6 +997,66 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         if inst is None:
             raise ApiError("UNKNOWN_INSTRUMENT", f"unknown instrument '{token[:40]}'", 404)
         return ok(await fundamentals.get(inst, force=refresh))
+
+    stock_research = StockResearch(EdgarClient(db), fundamentals, news, demo)
+
+    discover = DiscoverService(db, bars, stock_research.edgar, demo)
+
+    @app.get("/api/discover/shortlist")
+    async def discover_shortlist(refresh: bool = False):
+        return ok(await discover.shortlist(refresh))
+
+    @app.get("/api/discover/ranked")
+    async def discover_ranked(sector: str | None = None, min_score: float = 0, max_pe: float | None = None, min_growth: float | None = None, limit: int = 25):
+        return ok(discover.ranked(sector, min_score, max_pe, min_growth, limit))
+
+    @app.get("/api/discover/method")
+    async def discover_method():
+        return ok(discover.method())
+
+    lab = LabService(BtcData(db), demo)
+
+    @app.get("/api/btclab/strategies")
+    async def btclab_strategies():
+        return ok({"strategies": lab.listing(), **lab.status()})
+
+    @app.post("/api/btclab/data/refresh")
+    async def btclab_refresh():
+        try:
+            return ok(await lab.refresh(["1d", "1h"]))
+        except LabError as e:
+            raise ApiError("DATA_UNAVAILABLE", str(e), 503)
+
+    @app.post("/api/btclab/run")
+    async def btclab_run(b: LabRunIn):
+        try:
+            res = await lab.run(b)
+        except LabError as e:
+            raise ApiError("LAB_UNAVAILABLE", str(e), 503)
+        db.audit("user", "btclab_run", {"strategies": b.strategies, "timeframe": b.timeframe, "market": b.market, "leverage": b.leverage})
+        return ok(res)
+
+    @app.get("/api/stocks/earnings")
+    async def stocks_earnings(symbols: str = "", days: int = 30):
+        """Next earnings dates for the symbols asked about (default: the equities on the watchlist)."""
+        names = [x.strip().upper() for x in symbols.split(",") if x.strip()][:40]
+        insts = []
+        for n in names:
+            inst = I.resolve(n)
+            if inst is not None and inst.asset_class == "equity":
+                insts.append(inst)
+        if not names:
+            insts = [i for i in (I.resolve(r["symbol"]) for r in db.q("SELECT symbol FROM signal_watchlist WHERE asset_type='stock' ORDER BY position")) if i is not None and i.asset_class == "equity"][:40]
+        return ok(await stock_research.earnings_calendar(insts, max(1, min(days, 120))))
+
+    @app.get("/api/stocks/{token}/research")
+    async def stocks_research(token: str):
+        inst = I.resolve(token)
+        if inst is None:
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown instrument '{token[:40]}'", 404)
+        if inst.asset_class != "equity":
+            raise ApiError("NOT_APPLICABLE", f"stock research applies to US stocks, not {inst.asset_class} instruments", 422)
+        return ok(await stock_research.research(inst))
 
     # --- news -----------------------------------------------------------------
     @app.exception_handler(NewsError)

@@ -37,7 +37,7 @@ export const useStore = create<State>((set, get) => ({
       const eq = isEquityId(p.selected_instrument) ? p.selected_instrument : loadEquity();
       saveEquity(eq);
       // a workspace that no longer exists (Markets, Fundamentals) falls back to Overview instead of showing a dead page
-      set({ theme: p.theme, updateSeconds: p.update_seconds, selected: p.selected_instrument, selectedEquity: eq, workspace: NAV.some((n) => n.view === p.workspace) ? p.workspace : "overview", hydrated: true });
+      set({ theme: p.theme, updateSeconds: p.update_seconds, selected: p.selected_instrument, selectedEquity: eq, workspace: NAV.some((n) => n.view === (p.workspace === "backtest" ? "scanner" : p.workspace)) ? (p.workspace === "backtest" ? "scanner" : p.workspace) : "overview", hydrated: true });
     } catch {
       set({ hydrated: true });
     }
@@ -46,7 +46,7 @@ export const useStore = create<State>((set, get) => ({
     if (isEquityId(id)) { saveEquity(id); set({ selected: id, selectedEquity: id }); } else set({ selected: id });
     persist({ selected_instrument: id });
   },
-  setWorkspace: (w) => { set({ workspace: w }); persist({ workspace: w }); },
+  setWorkspace: (w0) => { const w = w0 === "backtest" ? "scanner" : w0; set({ workspace: w }); persist({ workspace: w }); },      // the Backtester now lives on the Discover desk
   setTheme: (t) => { document.documentElement.dataset.theme = t; set({ theme: t }); persist({ theme: t }); },
   setUpdateSeconds: (s) => { set({ updateSeconds: s }); persist({ update_seconds: s }); },
   setPendingAsk: (a) => set({ pendingAsk: a }),

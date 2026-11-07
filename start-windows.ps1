@@ -47,6 +47,8 @@ if (Test-Path $localSettings) {
     . $localSettings
     Write-Host "Loaded your private settings from local-settings.ps1"
 }
+# Let the browser version of Signal (http://localhost:8081) talk to this backend. Harmless if you do not use it.
+if (-not $env:ATLAS_CORS_ORIGINS) { $env:ATLAS_CORS_ORIGINS = "http://localhost:8081,http://127.0.0.1:8081" }
 if ($IbkrPort -gt 0) {
     $env:IBKR_ENABLED = "1"
     $env:IBKR_MODE = "readonly"

@@ -179,3 +179,51 @@ body { font: 12.5px/1.4 "Inter", system-ui, -apple-system, "Segoe UI", sans-seri
 .toolbar-main { padding: 2px 0 8px; gap: 2px; } .toolbar-main .ohlc { margin-left: auto; }
 .toolbar-tools { padding: 0 0 8px; gap: 3px; }
 .range-bar { display: flex; gap: 2px; padding: 8px 0 2px; } .mini.ico { padding: 3px 8px; display: inline-flex; align-items: center; }
+.jq-stats { padding-bottom: 8px; align-items: flex-end; } .jq-stats b { font-size: 16px; }
+.jq-form { display: flex; flex-direction: column; gap: 6px; padding: 2px 0 10px; } .jq-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.jq-note { flex: 1; min-width: 220px; } .jq-more { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px 12px; padding: 6px 0; }
+.jq-more label { display: flex; flex-direction: column; gap: 2px; font-size: 10.5px; color: var(--dim); } .jq-more .jq-wide { grid-column: 1 / -1; }
+.jq-more textarea { width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; font: inherit; resize: vertical; }
+
+/* ---- Silver and graphite (dark theme): brushed-steel panels, silver gradient buttons, Figtree type. Light theme is untouched. ---- */
+:root:not([data-theme="light"]) {
+  --bg: #08090b; --panel: #17191d; --panel2: #252930; --border: #3a3f48; --grid: #22252b; --text: #ffffff; --dim: #a7adb8;
+  --accent: #d5d9e0; --accent-fade: rgba(213,217,224,.16); --up: #00c28c; --down: #ff5a66; --info: #6db3ff; --ai: #c3c9d4; --warn: #f5a524;
+  --vol: #252930; --vol-up: rgba(0,194,140,.34); --vol-down: rgba(255,90,102,.34); --btn: #c4c9d1;
+  --grad: linear-gradient(135deg, #f6f8fb 0%, #c5cad3 55%, #8c929d 100%);
+  --grad-soft: linear-gradient(135deg, rgba(230,234,241,.20), rgba(150,158,172,.10) 55%, rgba(120,128,142,.10));
+}
+:root:not([data-theme="light"]) body, :root:not([data-theme="light"]) button, :root:not([data-theme="light"]) input, :root:not([data-theme="light"]) select, :root:not([data-theme="light"]) textarea { font-family: "Figtree", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+:root:not([data-theme="light"]) body {
+  background:
+    radial-gradient(1100px 560px at 6% -14%, rgba(230,234,241,.30), transparent 60%),
+    radial-gradient(900px 520px at 100% -8%, rgba(160,170,190,.20), transparent 55%),
+    radial-gradient(800px 500px at 70% 115%, rgba(120,130,150,.14), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+:root:not([data-theme="light"]) .side { background: linear-gradient(180deg, rgba(230,234,241,.12), rgba(8,9,11,0) 55%); }
+:root:not([data-theme="light"]) .nav { border-radius: 999px; font-weight: 600; }
+:root:not([data-theme="light"]) .nav.on { background: var(--grad); color: #0b0c0e; box-shadow: 0 6px 20px rgba(200,205,215,.25); }
+:root:not([data-theme="light"]) .nav.on span { color: #0b0c0e; }
+:root:not([data-theme="light"]) .nav:hover:not(.on) { background: var(--grad-soft); color: var(--text); }
+:root:not([data-theme="light"]) .panel { background: linear-gradient(160deg, rgba(230,234,241,.14), rgba(23,25,29,0) 45%), var(--panel); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+:root:not([data-theme="light"]) .panel-h { background: linear-gradient(90deg, rgba(230,234,241,.26), rgba(150,158,172,.10) 60%, rgba(120,128,142,.06)); border-bottom: 1px solid var(--border); padding: 8px 14px; }
+:root:not([data-theme="light"]) .panel-t { background: linear-gradient(90deg, #ffffff, #c5cad3 70%, #9aa1ad); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; font-size: 11.5px; letter-spacing: .08em; }
+:root:not([data-theme="light"]) .mini { background: var(--panel2); border: 1px solid var(--border); border-radius: 999px; padding: 4px 14px; font-weight: 600; color: var(--text); font-size: 11.5px; }
+:root:not([data-theme="light"]) .mini:hover:not(:disabled) { background: #30343c; border-color: var(--accent); }
+:root:not([data-theme="light"]) .mini.on { background: var(--grad); border-color: transparent; color: #0b0c0e; box-shadow: 0 4px 14px rgba(200,205,215,.22); }
+:root:not([data-theme="light"]) .pill { border-radius: 999px; padding: 1px 10px; border: 1px solid rgba(213,217,224,.45); color: var(--accent); background: rgba(213,217,224,.10); font-weight: 600; }
+:root:not([data-theme="light"]) .pill.warn { border-color: rgba(245,165,36,.6); color: var(--warn); background: rgba(245,165,36,.14); }
+:root:not([data-theme="light"]) .badge.LIVE { background: rgba(0,194,140,.18); color: var(--up); }
+:root:not([data-theme="light"]) .badge.DELAYED { background: rgba(245,165,36,.16); color: var(--warn); }
+:root:not([data-theme="light"]) .badge.HISTORICAL { background: rgba(109,179,255,.18); color: var(--info); }
+:root:not([data-theme="light"]) .badge.DEMO { background: var(--grad); color: #0b0c0e; }
+:root:not([data-theme="light"]) .badge.UNAVAILABLE { background: rgba(255,90,102,.18); color: var(--down); }
+:root:not([data-theme="light"]) .stats-strip { background: var(--grad-soft); border: 1px solid var(--border); border-radius: 16px; }
+:root:not([data-theme="light"]) .note[data-testid^="pick-"], :root:not([data-theme="light"]) .note[data-testid^="lab-detail"] { background: var(--grad-soft); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin: 8px 0; }
+:root:not([data-theme="light"]) .tbl tr.sel td, :root:not([data-theme="light"]) .tbl tbody tr:hover td { background: rgba(230,234,241,.07); }
+:root:not([data-theme="light"]) .ws-bar span:first-child { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; }
+:root:not([data-theme="light"]) .up { color: var(--up); } :root:not([data-theme="light"]) .down { color: var(--down); }
+:root:not([data-theme="light"]) input, :root:not([data-theme="light"]) select, :root:not([data-theme="light"]) textarea { background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 12px; padding: 4px 10px; }
+:root:not([data-theme="light"]) input:focus, :root:not([data-theme="light"]) select:focus, :root:not([data-theme="light"]) textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(213,217,224,.2); }

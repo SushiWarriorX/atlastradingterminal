@@ -124,7 +124,7 @@ const V = (id) => `${T(id)}:visible`;
 const inner = (page, testId) => page.locator(V(testId)).first().innerText();
 const present = async (page, testId) => (await page.locator(V(testId)).count()) > 0;
 const rowIds = (page) => page.$$eval('[data-testid^="row-"]', (els) => els.map((e) => e.getAttribute("data-testid").slice(4)));
-const ready = (page) => page.waitForSelector(T("tab-watchlist"), { timeout: 25000 });
+const ready = (page) => page.waitForSelector(T("tab-stocks"), { timeout: 25000 });
 
 async function connectTo(page, url, password) {
   await page.goto(WEB_ORIGIN);
@@ -140,7 +140,7 @@ async function waitRows(page, ids, ms = 25000) {
   eq(got, ids, "watchlist rows");
 }
 async function openFromWatchlist(page, id) {
-  await page.click(T("tab-watchlist"));
+  await toStocks(page);
   await page.waitForSelector(T(`row-${id}`));
   await page.locator(T(`row-${id}`)).locator('[role="button"]').first().click();
   await page.waitForSelector(T("asset-name"));
@@ -151,8 +151,18 @@ async function expand(page, agent) {
   await page.waitForSelector(T(`refresh-${agent}`));
   return inner(page, `agent-${agent}`);
 }
+async function toStocks(page) {            // search is a screen over the tabs on a phone: step back out of it first
+  if (await present(page, "search-back")) await page.click(V("search-back"));
+  await page.click(V("tab-stocks"));
+}
+async function gotoSearch(page) {
+  if (await present(page, "search-input")) return;
+  await toStocks(page);
+  await page.click(V("open-search"));
+  await page.waitForSelector(T("search-input"));
+}
 async function search(page, q) {
-  await page.click(T("tab-search"));
+  await gotoSearch(page);
   const answered = page.waitForResponse((r) => r.url().includes(`/api/signal/search?q=${encodeURIComponent(q)}`), { timeout: 20000 });
   await page.fill(T("search-input"), q);
   await answered;
@@ -180,15 +190,17 @@ async function healthy(browser) {
       await page.click(T("connect-submit"));
       await page.waitForSelector(V("connect-error"));
       match(await inner(page, "connect-error"), /reach|connect|server|address/i);
-      assert(!(await present(page, "tab-watchlist")), "must stay on the connect screen");
+      assert(!(await present(page, "tab-stocks")), "must stay on the connect screen");
     });
 
-    await check("connects and shows an honest empty watchlist with exactly two tabs and a profile icon", async () => {
+    await check("connects and shows an honest empty watchlist under five tabs and a profile icon", async () => {
       await page.fill(T("server-url"), be.url);
       await page.click(T("connect-submit"));
+      await page.waitForSelector(T("tab-stocks"));
+      await toStocks(page);
       await page.waitForSelector(T("watchlist-empty"));
       const tabs = await page.$$eval('[data-testid^="tab-"]', (els) => els.map((e) => e.innerText.replace(/[^A-Za-z]+/g, "")));
-      eq(tabs, ["Watchlist", "Search"], "the only tabs");
+      eq(tabs, ["BTC", "Stocks", "Macro", "Discover", "Journal"], "the only tabs");
       assert(await present(page, "profile-button"), "settings must sit behind the profile icon");
       assert(!(await present(page, "demo-banner")), "no demo label on a live server");
       await shot(page, "01-empty-watchlist");
@@ -231,7 +243,7 @@ async function healthy(browser) {
     });
 
     await check("the watchlist shows each saved asset with name, type, price, change, sparkline and a takeaway", async () => {
-      await page.click(T("tab-watchlist"));
+      await toStocks(page);
       await waitRows(page, [ID.btc, ID.btcEtf, ID.solCoin, ID.aapl]);
       for (const id of [ID.btc, ID.btcEtf, ID.aapl]) {
         await page.waitForSelector(T(`price-${id}`));
@@ -398,7 +410,7 @@ async function healthy(browser) {
       bad.push(...(await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)));          // asset screen, every agent that was opened
       await page.click(T("back"));
       bad.push(...(await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)));          // watchlist
-      await page.click(T("tab-search"));
+      await gotoSearch(page);
       bad.push(...(await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)));          // search
       eq(bad, [], "trading controls");
       const probe = await api(be, "/api/signal/orders", { method: "POST", body: {} });
@@ -414,7 +426,7 @@ async function healthy(browser) {
     });
 
     await check("settings sit behind the profile icon and say what mode the server is in", async () => {
-      await page.click(T("tab-watchlist"));
+      await toStocks(page);
       await page.click(T("profile-button"));
       await page.waitForSelector(T("settings-title"));
       eq(await inner(page, "settings-server"), be.url);
@@ -422,7 +434,7 @@ async function healthy(browser) {
       noMatch(await text(page), /Demo mode/);
       await shot(page, "08-settings");
       await page.click(T("settings-close"));
-      await page.waitForSelector(T("tab-watchlist"));
+      await page.waitForSelector(T("tab-stocks"));
     });
 
     await check("offline: the saved list is shown with a clear notice; the server's return clears it; nothing is lost", async () => {
@@ -450,6 +462,8 @@ async function healthy(browser) {
       try {
         await connectTo(w, be.url);
         await w.waitForSelector(T("ticker"));
+        for (const d of ["btc", "stocks", "macro", "discover", "journal"]) assert(await present(w, `nav-${d}`), `top navigation must offer ${d}`);
+        await w.click(T("nav-stocks"));
         await w.waitForSelector(T("pane-watchlist"));
         await w.waitForSelector(T("news-panel"));
         await waitRows(w, [ID.btc, ID.btcEtf, ID.aapl]);
@@ -469,6 +483,77 @@ async function healthy(browser) {
         await w.waitForSelector(T("settings-drawer"));
         await shot(w, "11-wide-settings");
       } finally { await d.close(); livePage = page; }
+    });
+
+    await check("Journal tab: a note, then a trade with exact P&L, filter, edit and delete", async () => {
+      await page.click(T("tab-journal"));
+      await page.waitForSelector(T("journal-empty"));
+      await page.click(T("journal-empty-add"));
+      await page.fill(T("f-symbol"), "btc");
+      await page.fill(T("f-note"), "Watching the 200 day average");
+      await page.click(T("entry-save"));
+      await page.waitForSelector(V("journal-list"));
+      assert(await page.locator('[data-testid^="entry-e:"]').count() === 1, "one entry after saving a bare note");
+      const noteRow = await page.locator('[data-testid^="entry-e:"]').first().innerText();
+      match(noteRow, /Note/, "a plain note is tagged Note");
+      noMatch(noteRow, /Long|Short/, "a plain note must not look like a long or short position");
+      await page.click(T("journal-add"));
+      await page.fill(T("f-symbol"), "aapl");
+      await page.fill(T("f-size"), "10");
+      await page.fill(T("f-entry"), "100");
+      await page.fill(T("f-exit"), "110");
+      await page.click(T("entry-save"));
+      await page.waitForSelector(V("journal-stats"));
+      const st = await inner(page, "journal-stats");
+      match(st, /\+100\.00/, "net P&L is 10 x (110 - 100)");
+      match(await text(page), /\+10\.00%/, "return on cost");
+      await page.click(T("journal-filter-note"));
+      await sleep(400);
+      eq(await page.locator('[data-testid^="entry-e:"]').count(), 1, "notes filter");
+      await page.click(T("journal-filter-all"));
+      await sleep(300);
+      await page.locator('[data-testid^="entry-e:"]').first().click();
+      await page.waitForSelector(T("entry-delete"));
+      await page.click(T("entry-delete"));
+      await sleep(500);
+      eq(await page.locator('[data-testid^="entry-e:"]').count(), 1, "one entry left after a delete");
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the journal");
+      await shot(page, "12-journal");
+    });
+
+    await check("Macro: what matters today, indicators and headlines are labelled, gaps are listed, and a missing FRED key is said plainly", async () => {
+      await page.click(T("tab-macro"));
+      await page.waitForSelector(V("macro-brief"));
+      const t = await text(page);
+      match(t, /What matters today/); match(t, /Key indicators/); match(t, /Upcoming/); match(t, /Headlines/);
+      match(t, /Official indicators could not be loaded right now/, "missing indicators are said once, in plain words, not invented");
+      assert(!/Unavailable: unavailable/i.test(t), "no 'Unavailable: unavailable (CODE)' wording");
+      eq((t.match(/Unavailable:/g) || []).length, 0, "no wall of 'Unavailable:' rows; the one plain message replaces them");
+      match(t, /Consensus forecasts .* not shown/, "the gaps are listed");
+      noMatch(t, FORECASTS, "no forecasts");
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls on Macro");
+      await shot(page, "13-macro");
+    });
+
+    await check("Stock deep-dive: collapsed by default, then filings status, valuation, earnings, rule-based points and the gaps are labelled", async () => {
+      await toStocks(page);
+      await page.waitForSelector(V("earnings-card"));
+      await page.click(V("earnings-toggle"));
+      await page.waitForSelector(V("earnings-empty"), { timeout: 30000 }).catch(() => page.waitForSelector(V("earn-row-AAPL"), { timeout: 5000 }));
+      await openFromWatchlist(page, ID.aapl);
+      await page.waitForSelector(V("stock-card"));
+      assert(!(await present(page, "stock-body")), "the deep-dive must stay collapsed until asked for");
+      await page.click(V("stock-toggle"));
+      await page.waitForSelector(V("stock-body"), { timeout: 45000 });
+      const t = await text(page);
+      match(t, /Company deep-dive/); match(t, /Financials \(annual filings\)/); match(t, /Bull points/); match(t, /Bear points/);
+      match(t, /Interpretation \(rule-based\)/); match(t, /Guidance and analyst consensus .* not available/i, "the gaps are listed");
+      match(t, /SEC filings are off|No filing data loaded|Demo/i, "missing SEC contact is said plainly, not papered over");
+      const points = (await page.$$eval("div", (els) => els.map((e) => e.innerText || "").filter((x) => x.startsWith("•")))).join(" ");
+      noMatch(points, FORECASTS, "bull and bear points make no forecasts");       // (headlines are quoted third-party text and are checked separately)
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the deep-dive");
+      await shot(page, "14-stock-deep-dive");
+      await page.click(V("back"));
     });
 
     await check("no uncaught errors in the browser during the whole run", async () => { eq(S.pageErrors, [], "uncaught page errors"); });
@@ -601,7 +686,7 @@ async function login(browser) {
       await connectTo(page, be.url, "wrong password");
       await page.waitForSelector(V("connect-error"));
       match(await inner(page, "connect-error"), /password|incorrect|wrong|invalid/i);
-      assert(!(await present(page, "tab-watchlist")), "must stay on the connect screen");
+      assert(!(await present(page, "tab-stocks")), "must stay on the connect screen");
     });
     await check("the right password logs in, and the login survives a reload", async () => {
       await page.fill(T("server-password"), "correct horse battery");
@@ -628,7 +713,7 @@ async function login(browser) {
       be = await startBackend(["--db", db, "--password", "a different password"], { port: be.port });
       await page.reload();
       await page.waitForSelector(T("connect-title"), { timeout: 30000 });
-      assert(!(await present(page, "tab-watchlist")), "must not show the app with a rejected login");
+      assert(!(await present(page, "tab-stocks")), "must not show the app with a rejected login");
     });
   } finally { await S.ctx.close().catch(() => undefined); await be.stop(); }
 }
@@ -644,7 +729,7 @@ async function demo(browser) {
       await connectTo(page, demoBe.url); await ready(page);
       await search(page, "bitcoin"); await addFromSearch(page, ID.btc);
       await search(page, "aapl"); await addFromSearch(page, ID.aapl);
-      await page.click(T("tab-watchlist"));
+      await toStocks(page);
       await waitRows(page, [ID.btc, ID.aapl]);
       await page.waitForSelector(V("demo-banner"));
       await shot(page, "01-demo-watchlist");
@@ -659,6 +744,52 @@ async function demo(browser) {
       await page.click(T("profile-button")); await page.waitForSelector(T("settings-title"));
       match(await text(page), /Demo mode/);
     });
+    await check("BTC Strategy Lab on a demo server: collapsed, runs five strategies, labels the data as synthetic, says what it is not, never offers a trade", async () => {
+      await page.goto(WEB_ORIGIN); await ready(page);
+      await page.click(V("tab-btc"));
+      await page.waitForSelector(V("lab-card"));
+      assert(!(await present(page, "lab-run")), "the lab stays collapsed until asked for");
+      await page.click(V("lab-toggle"));
+      await page.click(V("lab-run"));
+      await page.waitForSelector(V("lab-results"), { timeout: 60000 });
+      const t = await inner(page, "lab-results");
+      match(t, /synthetic/i, "demo prices are labelled synthetic");
+      eq(await page.locator('[data-testid^="lab-row-"]:visible').count(), 5, "five strategies by default");
+      match(t, /not a forecast|Past results do not predict/i);
+      match(t, /(No reliable|Weak|Moderate) evidence/);
+      await page.locator('[data-testid^="lab-row-"]:visible').first().click();
+      match(await text(page), /Right now \(/, "current rule state is shown");
+      noMatch(await text(page), FORECASTS, "no forecasts");
+      await page.click(V("lab-perp")); await page.click(V("lab-lev-3")); await page.click(V("lab-run"));
+      await page.waitForFunction(() => /perp/i.test(document.body.innerText) || /funding/i.test(document.body.innerText), null, { timeout: 60000 });
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the lab");
+      await shot(page, "15-strategy-lab");
+      await toStocks(page); await page.click(V("profile-button")); await page.waitForSelector(T("settings-title"));      // leave the app where the next check expects it
+    });
+    await check("Discover on a demo server: five picks with reasons, risks, evidence and dates, a visible method, save to watchlist, no trade buttons", async () => {
+      await page.goto(WEB_ORIGIN); await ready(page);
+      await page.click(V("tab-discover"));
+      await page.waitForSelector(V("discover-body"), { timeout: 90000 });
+      await page.waitForSelector(V("discover-demo"));
+      const picks = await page.$$eval('[data-testid^="pick-"]:not([data-testid^="pick-more"]):not([data-testid^="pick-save"])', (els) => els.map((e) => e.getAttribute("data-testid")));
+      assert(picks.length >= 1 && picks.length <= 5, `between one and five picks (got ${picks.length})`);
+      const t = await text(page);
+      match(t, /Why it ranks well/); match(t, /Risks to weigh/); match(t, /Not a recommendation, rating or forecast/);
+      match(t, /Not included:/); match(t, /Earnings surprises, IPO calendars/);
+      noMatch(t, FORECASTS, "no forecasts");
+      const sym = picks[0].slice(5);
+      await page.click(V(`pick-more-${sym}`));
+      match(await text(page), /Score breakdown/); match(await text(page), /as of \d{4}-\d{2}-\d{2}/, "evidence carries dates");
+      await page.click(V("discover-how"));
+      await page.waitForSelector(V("discover-method"));
+      match(await inner(page, "discover-method"), /Growth .* 25%/s, "weights are shown");
+      await page.click(V(`pick-save-${sym}`));
+      await page.waitForFunction((s2) => /On your watchlist/.test(document.querySelector(`[data-testid="pick-save-${s2}"]`)?.innerText ?? ""), sym, { timeout: 15000 });
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in Discover");
+      await shot(page, "16-discover");
+      await toStocks(page); await page.click(V("profile-button")); await page.waitForSelector(T("settings-title"));
+    });
+
     await check("switching to a live server drops the demo list and every demo label; nothing carries over", async () => {
       await page.fill(T("server-url"), liveBe.url);
       await page.click(T("connect-submit"));

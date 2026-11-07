@@ -2,17 +2,19 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { Asset } from "../../api/types";
-import { ScreenHeader } from "../../components/ScreenHeader";
-import { SearchRowItem } from "../../components/SearchRowItem";
-import { noOutline } from "../../components/ConnectForm";
-import { Banner, Divider, EmptyState, ErrorState, Skeleton, TextButton, Txt } from "../../components/ui";
-import { idsOf } from "../../lib/watchlist";
-import { useAddToWatchlist, useDebounced, useRecents, useRemoveFromWatchlist, useSearch, useWatchlist } from "../../state/queries";
-import { useOpenAsset } from "../../state/selection";
-import { color, font, radius, space } from "../../theme";
+import type { Asset } from "../api/types";
+import { ScreenHeader } from "../components/ScreenHeader";
+import { SearchRowItem } from "../components/SearchRowItem";
+import { noOutline } from "../components/ConnectForm";
+import { Banner, Divider, EmptyState, ErrorState, Skeleton, TextButton, Txt } from "../components/ui";
+import { idsOf } from "../lib/watchlist";
+import { useAddToWatchlist, useDebounced, useRecents, useRemoveFromWatchlist, useSearch, useWatchlist } from "../state/queries";
+import { useIsWide } from "../state/layout";
+import { useOpenAsset } from "../state/selection";
+import { color, font, radius, space, fonts } from "../theme";
 
 export default function SearchScreen() {
+  const wide = useIsWide();
   const insets = useSafeAreaInsets();
   const [q, setQ] = useState("");
   const debounced = useDebounced(q, 300);
@@ -64,7 +66,7 @@ export default function SearchScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: color.bg, paddingTop: insets.top }}>
-      <ScreenHeader title="Search" />
+      <ScreenHeader title="Search" back={!wide} />
       <View style={s.inputWrap}>
         <Ionicons name="search" size={18} color={color.faint} />
         <TextInput value={q} onChangeText={setQ} placeholder="Bitcoin, AAPL, SPY…" placeholderTextColor={color.faint} autoCapitalize="none" autoCorrect={false} returnKeyType="search" style={[s.input, noOutline]} testID="search-input" accessibilityLabel="Search assets" />
@@ -78,6 +80,6 @@ export default function SearchScreen() {
 
 const s = StyleSheet.create({
   inputWrap: { flexDirection: "row", alignItems: "center", gap: space.sm, marginHorizontal: space.lg, marginBottom: space.md, paddingHorizontal: space.md, backgroundColor: color.surface, borderRadius: 16 },
-  input: { flex: 1, color: color.text, fontSize: font.md, paddingVertical: 12 },
+  input: { flex: 1, color: color.text, fontFamily: fonts.regular, fontSize: font.md, paddingVertical: 12 },
   sectionHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: space.lg, paddingVertical: space.sm },
 });

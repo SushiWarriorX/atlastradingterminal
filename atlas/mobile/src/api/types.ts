@@ -116,3 +116,62 @@ export interface Meta {
 }
 export interface AuthStatus { required: boolean; authenticated: boolean }
 export interface LoginResult extends AuthStatus { token?: string; expires_in?: number }
+
+// --- journal (the simple entries; shared with the terminal) ---------------------------------------------------------------------------
+export interface JournalEntry {
+  id: string; origin: "manual" | "imported"; editable: boolean; symbol: string; asset_class: string; direction: "long" | "short";
+  size: string | null; entry_price: string | null; exit_price: string | null; entry_at: string; exit_at: string | null; fees: string | null; planned_stop: string | null;
+  note: string | null; thesis: string | null; risk_plan: string | null; outcome: string | null; has_screenshot: boolean; screenshot?: string | null;
+  status: "note" | "open" | "closed"; gross_pnl: string | null; net_pnl: string | null; net_pnl_num: number | null; return_pct: number | null; r_multiple: number | null;
+  holding_seconds: number | null; pnl_missing: string[];
+}
+export interface JournalStats { n: number; reliable: boolean; note?: string | null; wins?: number; losses?: number; win_rate?: number; net_pnl?: number; profit_factor?: number | null }
+export interface JournalLog { items: JournalEntry[]; total: number; stats: JournalStats }
+export type JournalFilters = { q?: string; status?: "" | "open" | "closed" | "note" };
+
+export interface MacroBriefItem { kind: "fact" | "interpretation"; title: string; detail: string; source: string; link?: string | null }
+export interface MacroIndicator { id: string; label: string; available: boolean; reason?: string; value?: number | string | null; unit?: string | null; obs_date?: string | null; change?: { label: string; value: number; unit: string } | null; freshness?: string | null }
+export interface MacroEvent { date: string; at_utc: string | null; title: string; source: string; link?: string | null }
+export interface MacroHeadline { feed: string; title: string; link: string | null; published: string | null; topic: string; topic_label: string; implication: string; implication_kind: string }
+export interface MacroBriefData { as_of: string; demo: boolean; today: MacroBriefItem[]; indicators: MacroIndicator[]; indicators_note: string | null; upcoming: MacroEvent[]; headlines: MacroHeadline[]; topics: Record<string, string>; calendar_warning: string | null; errors: string[]; gaps: string[]; notice: string | null }
+
+export interface StockYear { end: string; revenue: number | null; revenue_growth_pct: number | null; operating_margin_pct: number | null; net_margin_pct: number | null; net_income: number | null; free_cash_flow: number | null; net_cash: number | null; debt_to_equity: number | null }
+export interface StockCase { id: string; text: string; based_on: string[]; kind: string }
+export interface StockResearchData {
+  symbol: string; as_of: string; demo: boolean;
+  company: { name: string | null; sector: string | null; industry: string | null; sic_description: string | null; source: string };
+  financials: { available: boolean; years: StockYear[]; revenue_cagr: { value_pct: number; from: string; to: string } | null; source: string; note: string };
+  valuation: { rows: { key: string; label: string; value: number | null; unit: string; note: string | null }[]; source: string | null; status: string | null } | null;
+  earnings: { next_date: string | null; source: string; guidance: { reason: string }; consensus: { reason: string } };
+  bull: StockCase[]; bear: StockCase[]; case_note: string;
+  catalysts: { date: string; title: string; source: string; link: string | null }[];
+  filings: { form: string; filed: string; link: string | null; items: { item: string; meaning: string }[] }[];
+  news: { title: string; link: string | null; feed: string; published: string | null }[]; errors: string[]; gaps: string[];
+}
+export interface EarningsData { as_of: string; window_days: number; items: { symbol: string; name: string | null; instrument_id: string; date: string; days_away: number; sector: string | null }[]; checked: number; errors: string[]; note: string }
+
+export interface LabMetrics { net_return_pct: number | null; sharpe: number | null; max_drawdown_pct: number | null; win_rate_pct: number | null; profit_factor: number | null; trades: number; no_losing_trades?: boolean }
+export interface LabResult {
+  id: string; name: string; family: string;
+  out_of_sample: LabMetrics; walk_forward: LabMetrics; buy_and_hold: { out_of_sample: LabMetrics };
+  robustness: { share_positive: number; doubled_costs_oos_return_pct: number };
+  evidence: { level: "none" | "weak" | "moderate"; reasons: string[] };
+  now: { rule_position: string; conditions: { rule: string; met: boolean | null; value: string }[]; as_of: string; note: string };
+  curve: { strategy: number[]; buy_and_hold: number[] };
+}
+export interface LabRunData { settings: { timeframe: string; market: string; leverage: number }; period: { from: string; to: string; bars: number }; results: LabResult[]; skipped: { id: string; reason: string }[]; notes: string[]; caveats: string[]; data: { demo: boolean; source: string; status: string; notes: string[] } }
+export interface LabRunBody { strategies?: string[]; timeframe: string; market: string; leverage: number; long_short: boolean }
+
+export interface DiscoverPick {
+  symbol: string; name: string | null; sector: string | null; asset_id: string; score: number; coverage: number; of: number; rank?: number;
+  factors: Record<string, { score: number } | null>;
+  reasons: string[]; risks: string[]; evidence: { label: string; value: number | null; unit: string; source: string; as_of: string }[];
+  pe: number | null; revenue_growth_pct: number | null;
+}
+export interface DiscoverData {
+  asof: string; created_at: string; demo: boolean; shortlist: DiscoverPick[]; ranked: DiscoverPick[]; stale_notice?: string; notes: string[];
+  universe: { name: string; size: number; priced: number; liquid: number; scored: number };
+  data: { prices: string; prices_status: string; prices_as_of: string | null; fundamentals: string };
+  method: { weights: Record<string, number>; scales: Record<string, string>; steps: string[]; note: string };
+  gaps: string[]; disclaimer: string;
+}
