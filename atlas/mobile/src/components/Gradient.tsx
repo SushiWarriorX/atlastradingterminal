@@ -26,6 +26,8 @@ export function TopGlow({ height = 300 }: { height?: number }) {
     <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height }}>
       <Gradient colors={["rgba(230,234,241,0.34)", "rgba(150,158,172,0.14)", "rgba(8,9,11,0)"]} from={[0, 0]} to={[0.3, 1]} style={StyleSheet.absoluteFill} />
       <Gradient colors={["rgba(190,200,220,0.22)", "rgba(190,200,220,0)"]} from={[1, 0]} to={[0.4, 0.8]} style={StyleSheet.absoluteFill} />
+      {/* a last fade into the screen colour, so no corner of the glow can end in a visible straight edge */}
+      <Gradient colors={["rgba(8,9,11,0)", "rgba(8,9,11,1)"]} from={[0, 0.5]} to={[0, 1]} style={StyleSheet.absoluteFill} />
     </View>
   );
 }

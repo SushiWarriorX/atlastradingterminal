@@ -2,6 +2,13 @@
 
 Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) and by hand.
 
+## 2026-11-07, cycle 3: the silver glow no longer ends in a hard edge
+- **Found:** on every phone tab the glow behind the header stopped in a visible straight edge about 300 points down (the right-hand corner of the second gradient was still slightly lit where the box ended).
+- **Changed:** `TopGlow` now ends with a final fade into the screen colour, so no corner can end abruptly. One small change in `Gradient.tsx`; no colours or layout changed.
+- **Verified:** phone type check and unit tests, backend 830 tests, web checks, browser suite 44 of 44; compared before and after screenshots of the Stocks, Journal and Macro tabs: the edge is gone.
+- **Not verified:** a real phone's GPU rendering (checked in the browser only).
+- **Next candidates:** Stocks empty-state suggestions; loading states for Discover and Strategy Lab on the phone; keyboard shortcuts for the five terminal desks.
+
 ## 2026-11-07, cycle 2: a plain Journal note is no longer tagged "Long"
 - **Found:** a note with only a symbol and some text (no size or prices) showed a "Long" tag in the phone list and "long" in the terminal table, because the form's side defaults to long. That reads as if a position had been taken.
 - **Changed:** notes now show "Note" instead of a side (phone tag, accessibility label, terminal table); trades still show Long or Short. New helper `sideLabel` with a unit test; the browser test now fails if a bare note ever looks like a long or short.
