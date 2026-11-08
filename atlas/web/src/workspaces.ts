@@ -1,4 +1,4 @@
-export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "secfilings" | "narrative" | "treasury" | "positioning" | "stablecoins" | "network" | "fx" | "tracker" | "world" | "cryptomarket" | "ops" | "fedops" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "secfilings" | "narrative" | "treasury" | "positioning" | "stablecoins" | "network" | "fx" | "tracker" | "world" | "cryptomarket" | "ops" | "fedops" | "tga" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
@@ -73,9 +73,10 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "treasury", type: "treasury", x: 0, y: 62, w: 12, h: 14 },
     { i: "fx", type: "fx", x: 0, y: 76, w: 12, h: 11 },
     { i: "fedops", type: "fedops", x: 0, y: 87, w: 12, h: 12 },
-    { i: "world", type: "world", x: 0, y: 99, w: 12, h: 16 },
-    { i: "yields", type: "yields", x: 0, y: 115, w: 5, h: 7 },
-    { i: "ai", type: "ai", x: 5, y: 115, w: 7, h: 10 },
+    { i: "tga", type: "tga", x: 0, y: 99, w: 12, h: 11 },
+    { i: "world", type: "world", x: 0, y: 110, w: 12, h: 16 },
+    { i: "yields", type: "yields", x: 0, y: 126, w: 5, h: 7 },
+    { i: "ai", type: "ai", x: 5, y: 126, w: 7, h: 10 },
   ] },
   settings: { id: "settings", name: "Settings", widgets: [
     { i: "settings", type: "settings", x: 0, y: 0, w: 6, h: 12 },

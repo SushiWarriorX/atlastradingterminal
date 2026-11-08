@@ -231,3 +231,8 @@ export function useFedOps() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).fedOps, queryFn: () => need(api).fedOps(), enabled: !!api, staleTime: 15 * 60_000, refetchInterval: 30 * 60_000, retry: 0 });
 }
+
+export function useTga() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).tga, queryFn: () => need(api).tga(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 60 * 60_000, retry: 0 });
+}

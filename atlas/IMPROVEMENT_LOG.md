@@ -21,6 +21,11 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+## 2026-11-08 · Data cycle 11 and strategy cycle 4 (parallel loops)
+- **Data:** US Treasury General Account (the government's cash balance at the Fed), from the Daily Treasury Statement (FiscalData, free, no key, fetched live this cycle). Backend `tga.py` (7 tests, fixture from a real 260-day response; the closing-balance value sits in the source's `open_today_bal` field, confirmed because 11-04's closing equals 11-05's opening), route `/api/macro/tga`, terminal Macro desk panel, Signal Macro card, macro refresh job. Closing balance in billions, with date, OVERDUE after 6 days, described as where cash sits, not a signal. Skipped this cycle: Lightning stats (newest record 70 days old) and two hosts that did not answer.
+- **Strategy:** Ichimoku cloud (9, 26, 52, cloud drawn 26 bars ahead so it never peeks), fixed settings, not tuned. Frozen backtest: evidence **weak**. Whole history +21,039.6% vs holding +26,966.3%; last 30% (out of sample) +139.2% vs +187.9%, 15 trades there (41 in all); worst drop out of sample -39.2% vs -53.1%; out-of-sample Sharpe 0.93 vs 0.91; 100% of nearby settings positive out of sample; doubled costs +132.2%. It did not beat holding on return, and the luck check (24 rules in the library) could not rule out luck. Reported as it is.
+- **Checks:** backend 1021 passed, phone 43 unit + 48 of 48 browser checks, terminal 10 tests + build + desk browser check (new Treasury cash check). Test bug found in my own test (off-by-one on the first cloud bar), not in the strategy.
+
 ## 2026-11-08 · Improvement loop (6-hour): no change
 - **Checked:** clean tree after the data and strategy cycles; backend 1012 passed, phone 43 unit + 48 of 48 browser checks, terminal 10 tests + build + desk browser check, all run minutes earlier. Viewed the phone Macro screenshot: top of screen reads correctly (calendar, plain "indicators could not be loaded" message, SOFR with date).
 - **Not verified:** the new Fed liquidity card sits below the fold of that screenshot and was not looked at as an image (its text and states are covered by the browser checks).

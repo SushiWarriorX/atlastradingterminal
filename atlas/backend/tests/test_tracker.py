@@ -162,3 +162,27 @@ def test_psar_strategy_is_fixed_has_no_lookahead_and_exits_when_price_breaks_the
     pos = st.build(d, st.params).to_numpy()
     assert pos[50] == 1.0 and pos[-1] == 0.0
     assert (st.build(d.iloc[:100], st.params).to_numpy() == pos[:100]).all()          # bar i uses only bars up to i
+
+
+def test_ichimoku_cloud_is_the_hand_checkable_formula_and_is_shifted_forward():
+    n = 80
+    c = 100 + np.arange(n, dtype=float)
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c})
+    top, bot = ST.ichimoku_cloud(d, 9, 26, 52)
+    assert top.iloc[:77].isna().all() and not np.isnan(top.iloc[77])                         # needs 52 bars of range, then 26 more bars of shift
+    i = 77 - 26                                                                           # the bar the value at 77 was computed from
+    mid = lambda k: (d["h"].iloc[i - k + 1:i + 1].max() + d["l"].iloc[i - k + 1:i + 1].min()) / 2
+    a, b = (mid(9) + mid(26)) / 2, mid(52)
+    assert top.iloc[77] == max(a, b) and bot.iloc[77] == min(a, b)
+
+
+def test_ichimoku_strategy_is_fixed_has_no_lookahead_and_exits_below_the_cloud():
+    st = ST.S["ichimoku_cloud"]
+    assert st.params == {"tenkan": 9, "kijun": 26, "senkou": 52} and not st.requires_funding
+    up = 100 + np.arange(120, dtype=float)
+    down = up[-1] - np.arange(1, 121, dtype=float) * 2
+    c = np.concatenate([up, down])
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:77].sum() == 0 and pos[77] == 1.0 and pos[100] == 1.0 and pos[-1] == 0.0
+    assert (st.build(d.iloc[:150], st.params).to_numpy() == pos[:150]).all()               # bar i uses only bars up to i

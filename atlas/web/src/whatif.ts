@@ -89,3 +89,8 @@ export interface FedOpsData { available: boolean; reason?: string; demo: boolean
   reverse_repo?: { billions: number; previous_day_billions: number; change_billions: number; average_billions: number; highest_billions: number; highest_date: string; dates_in_window: number };
   repo?: { billions: number; window_total_billions: number; days_used: number; highest_billions: number; dates_in_window: number };
   history?: { date: string; reverse_repo_billions: number; repo_billions: number }[] }
+
+export interface TgaData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  balance_billions?: number; change_1d_billions?: number; change_month_billions?: number | null; month_average_billions?: number; dates_in_window?: number;
+  year_low_billions?: number; year_low_date?: string; year_high_billions?: number; year_high_date?: string; days_in_year_range?: number;
+  history?: { date: string; balance_billions: number }[] }

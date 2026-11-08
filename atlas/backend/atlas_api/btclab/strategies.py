@@ -411,6 +411,33 @@ reg(Strategy("psar_trend", "Parabolic SAR (Wilder)", "Trend", "Holds BTC while t
              {"step": [0.01, 0.015, 0.02, 0.03, 0.04]}, _psar_build, _psar_conds))
 
 
+def ichimoku_cloud(d: pd.DataFrame, tenkan: int, kijun: int, senkou: int) -> tuple[pd.Series, pd.Series]:
+    """Ichimoku cloud edges (Hosoda): span A = mean of the conversion and base lines, span B = midpoint of the `senkou`-bar range, both drawn `kijun` bars into the future.
+    Shifting forward means the cloud shown at bar i was computed from bars up to i - kijun, so it never uses later data. Returns (upper edge, lower edge)."""
+    mid = lambda n: (d["h"].rolling(n, min_periods=n).max() + d["l"].rolling(n, min_periods=n).min()) / 2
+    a = ((mid(tenkan) + mid(kijun)) / 2).shift(kijun)
+    b = mid(senkou).shift(kijun)
+    return pd.concat([a, b], axis=1).max(axis=1, skipna=False), pd.concat([a, b], axis=1).min(axis=1, skipna=False)
+
+
+def _ichi_build(d, p):
+    top, bot = ichimoku_cloud(d, p["tenkan"], p["kijun"], p["senkou"])
+    return hold(d["c"] > top, d["c"] < bot)
+
+
+def _ichi_conds(d, p):
+    top, bot = ichimoku_cloud(d, p["tenkan"], p["kijun"], p["senkou"])
+    t, b_, c = top.iloc[-1], bot.iloc[-1], d["c"].iloc[-1]
+    bad = bool(np.isnan(t) or np.isnan(b_))
+    return [_cond("Close above the top of the Ichimoku cloud (entry)", None if bad else bool(c > t), f"close {_val(c)} vs cloud top {_val(t)}"),
+            _cond("Close below the bottom of the cloud (exit)", None if bad else bool(c < b_), f"close {_val(c)} vs cloud bottom {_val(b_)}")]
+
+
+reg(Strategy("ichimoku_cloud", "Ichimoku cloud (9, 26, 52)", "Trend", "Holds BTC while the price is above Hosoda's Ichimoku cloud, and steps aside once it falls below the cloud. Inside the cloud it keeps whatever position it had.",
+             "Close is above both cloud edges (cloud built from 9, 26 and 52-bar ranges and drawn 26 bars ahead).", "Close falls below both cloud edges.", "The cloud edge is the stop; there is no other stop.",
+             {"tenkan": 9, "kijun": 26, "senkou": 52}, {"kijun": [20, 23, 26, 30, 34]}, _ichi_build, _ichi_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 

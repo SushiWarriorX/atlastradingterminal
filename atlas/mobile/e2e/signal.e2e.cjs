@@ -561,6 +561,11 @@ async function healthy(browser) {
       const fo = await text(page);
       match(fo, /Fed liquidity operations/); match(fo, /New York Fed/); noMatch(fo, FORECASTS, "the Fed operations card makes no forecasts");
       if (await present(page, "fedops-body")) match(fo, /not market signals or forecasts/, "the plumbing caveat is shown");
+      await page.waitForSelector(V("tga-card"));
+      await page.waitForSelector(V("tga-body") + ", " + V("tga-unavailable") + ", " + V("tga-error"), { timeout: 45000 });
+      const tg = await text(page);
+      match(tg, /Treasury cash balance/); match(tg, /US Treasury/); noMatch(tg, FORECASTS, "the Treasury balance card makes no forecasts");
+      if (await present(page, "tga-body")) match(tg, /not a market signal or a forecast/, "the plumbing caveat is shown");
       match(wt, /World economies/); noMatch(wt, FORECASTS, "the World Bank card makes no forecasts");
       if (await present(page, "world-body")) match(wt, /revised later/, "the annual-data caveat is shown");
       match(fxText, /US dollar vs major currencies/); match(fxText, /ECB/); noMatch(fxText, FORECASTS, "the exchange-rate card makes no forecasts");
