@@ -230,3 +230,27 @@ def test_keltner_strategy_is_fixed_enters_on_a_breakout_exits_below_the_ema_and_
     pos = st.build(d, st.params).to_numpy()
     assert pos[:60].sum() == 0 and pos[62] == 1.0 and pos[-1] == 0.0 and set(pos) <= {0.0, 1.0}
     assert (st.build(d.iloc[:100], st.params).to_numpy() == pos[:100]).all()                 # bar i uses only bars up to i
+
+
+def test_vortex_matches_a_hand_worked_example():
+    h = [10, 11, 12, 11, 13]
+    l = [8, 9, 10, 9, 11]
+    c = [9, 10, 11, 10, 12]
+    d = pd.DataFrame({"h": np.array(h, float), "l": np.array(l, float), "c": np.array(c, float)})
+    vp, vm = ST.vortex(d, 3)
+    assert vp.iloc[:3].isna().all() and not np.isnan(vp.iloc[3])                              # needs 3 full bars after the first (which has no previous bar)
+    # bars 1..3: VM+ = |h - prev l| = 11-8, 12-9, 11-10 = 3, 3, 1 -> 7;  VM- = |l - prev h| = 9-10, 10-11, 9-12 = 1, 1, 3 -> 5
+    # true ranges: bar1 max(2, |11-9|, |9-9|) = 2, bar2 max(2, |12-10|, |10-10|) = 2, bar3 max(2, |11-11|, |9-11|) = 2 -> 6
+    assert abs(vp.iloc[3] - 7 / 6) < 1e-12 and abs(vm.iloc[3] - 5 / 6) < 1e-12
+
+
+def test_vortex_strategy_is_fixed_enters_in_an_uptrend_leaves_in_a_downtrend_and_has_no_lookahead():
+    st = ST.S["vortex_cross"]
+    assert st.params == {"n": 14} and not st.requires_funding
+    up = 100 + np.arange(60, dtype=float) * 2
+    down = up[-1] - np.arange(1, 61, dtype=float) * 2
+    c = np.concatenate([up, down])
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:14].sum() == 0 and pos[30] == 1.0 and pos[-1] == 0.0 and set(pos) <= {0.0, 1.0}
+    assert (st.build(d.iloc[:90], st.params).to_numpy() == pos[:90]).all()                    # bar i uses only bars up to i

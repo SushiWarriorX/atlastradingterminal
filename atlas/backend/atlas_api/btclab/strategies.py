@@ -483,6 +483,33 @@ reg(Strategy("keltner_breakout", "Keltner channel breakout", "Volatility", "Buys
              "Close is above EMA(20) plus 2 x ATR(10).", "Close falls below EMA(20).", "No fixed stop; the exit rule is the stop.", {"n": 20, "atr_n": 10, "k": 2.0}, {"k": [1.0, 1.5, 2.0, 2.5, 3.0]}, _keltner_build, _keltner_conds))
 
 
+def vortex(d: pd.DataFrame, n: int) -> tuple[pd.Series, pd.Series]:
+    """Vortex indicator (Botes and Siepman, 2010): VI+ = sum of |high - previous low| over n bars divided by the sum of true ranges, VI- = the same with |low - previous high|.
+    Each value uses only bars up to and including that bar."""
+    h, l, pc = d["h"], d["l"], d["c"].shift(1)
+    vmp, vmm = (h - l.shift(1)).abs(), (l - h.shift(1)).abs()
+    tr = pd.concat([h - l, (h - pc).abs(), (l - pc).abs()], axis=1).max(axis=1, skipna=False)
+    s_tr = tr.rolling(n, min_periods=n).sum()
+    return vmp.rolling(n, min_periods=n).sum() / s_tr, vmm.rolling(n, min_periods=n).sum() / s_tr
+
+
+def _vortex_build(d, p):
+    vp, vm = vortex(d, p["n"])
+    return hold(vp > vm, vp <= vm)
+
+
+def _vortex_conds(d, p):
+    vp, vm = vortex(d, p["n"])
+    a, b_ = vp.iloc[-1], vm.iloc[-1]
+    bad = bool(np.isnan(a) or np.isnan(b_))
+    return [_cond("VI+ above VI- (entry)", None if bad else bool(a > b_), f"VI+ {_val(a)} vs VI- {_val(b_)}"),
+            _cond("VI+ at or below VI- (exit)", None if bad else bool(a <= b_), f"VI+ {_val(a)} vs VI- {_val(b_)}")]
+
+
+reg(Strategy("vortex_cross", "Vortex indicator (14)", "Trend", "Holds BTC while the upward vortex line is above the downward one: it compares how far each bar reaches above the last bar's low against how far it reaches below the last bar's high.",
+             "VI+ is above VI- (14 bars).", "VI+ drops to VI- or below.", "No fixed stop; the exit rule is the stop.", {"n": 14}, {"n": [10, 14, 20, 28, 40]}, _vortex_build, _vortex_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 

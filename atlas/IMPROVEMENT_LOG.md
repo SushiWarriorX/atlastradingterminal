@@ -21,6 +21,12 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+## 2026-11-08 · Strategy cycle 7: Vortex indicator cross
+- **Rule (fixed from the queue, not tuned):** long while VI+ is above VI- (14 bars); flat otherwise. 27 rules in the library now (the loop's note: past 30 rules the luck check gets stricter still; at 60 it stops and asks).
+- **Frozen backtest, evidence: weak.** This is the first rule in this run of cycles whose headline numbers beat holding: whole history +68,354.9% vs holding +26,979.0% (200 trades), worst drop -62.5% vs -83.8%; last 30% (out of sample): +262.8% vs +188.0%, 67 trades, worst drop -26.8% vs -53.1%, Sharpe 1.3 vs 0.9. Walk-forward +1,125.4%; 100% of nearby settings positive out of sample; doubled costs +217.4%. The label is still weak for one stated reason: with 27 rules in the library to pick from, the safe lower estimate of its Sharpe ratio is -0.10 (it needs to be above 0), so luck cannot be ruled out. That is close to the line but on the wrong side of it.
+- **How to read it:** a good-looking backtest from the best of 27 tries is exactly what the luck check exists to discount. Nothing here says it works; only the forward record can add evidence. 200 trades also means many short whipsaw trades, so costs matter more than for slower rules (the doubled-cost result held up).
+- **Checks:** hand-worked indicator test (VI+ 7/6, VI- 5/6), uptrend/downtrend and no-look-ahead tests; backend 1053 passed. No UI change this cycle.
+
 ## 2026-11-08 · Data cycle 14: average interest rates on US Treasury debt
 - **Source:** US Treasury FiscalData, "Average Interest Rates on U.S. Treasury Securities" (free, no key, fetched live this cycle). Backend `avgrates.py` (9 tests, fixture from a real 260-row response), route `/api/macro/debtrates`, terminal Macro desk table with a small trend bar chart, Signal Macro card, macro refresh job.
 - **Shows:** the average rate on all debt now outstanding, by type (bills, notes, bonds, TIPS, floating-rate, all marketable, all interest-bearing), the change from last month and from a year earlier, and 15 months of history. October 2026: all interest-bearing debt 3.580%, up from 3.531% in September. Described as a lagging average of what the Treasury already pays (old low-rate debt stays in it until it matures), not a market yield and not a signal. A missing comparison month shows "none", never a guess.
