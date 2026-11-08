@@ -231,3 +231,9 @@ export interface StablecoinTop { name: string; symbol: string; billions: number;
 export interface Stablecoins { available: boolean; reason?: string; demo: boolean; as_of: string; source?: string; url?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   total_billions?: number; changes?: { label: string; ref_date: string; change_billions: number; change_pct: number }[]; peak?: { date: string; total_billions: number; below_peak_pct: number };
   history?: { date: string; total_billions: number }[]; top?: StablecoinTop[] }
+
+export interface OnChainFees { available: boolean; reason?: string; sat_per_vbyte?: { fastest: number; half_hour: number; hour: number; economy: number; minimum: number }; typical_tx_vbytes?: number; typical_tx_sats_fastest?: number; typical_tx_sats_economy?: number;
+  mempool?: { transactions: number; megavbytes: number; blocks_worth: number; total_fees_btc: number } }
+export interface OnChainDifficulty { available: boolean; reason?: string; progress_pct?: number; estimated_change_pct?: number; previous_change_pct?: number; remaining_blocks?: number; estimated_date?: string | null; next_adjustment_height?: number; block_height?: number | null; note?: string }
+export interface OnChainHashrate { available: boolean; reason?: string; date?: string; seven_day_average_eh?: number; latest_day_eh?: number; current_eh?: number | null; changes?: { label: string; change_pct: number }[]; history?: { date: string; eh: number }[]; highest_day?: { date: string; eh: number }; note?: string }
+export interface OnChain { as_of: string; demo: boolean; source: string; url: string; fees: OnChainFees; difficulty: OnChainDifficulty; hashrate: OnChainHashrate }

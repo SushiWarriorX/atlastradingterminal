@@ -31,6 +31,7 @@ from .nyfed import NyFedSofr
 from .treasury import Treasury
 from .cftc import CftcBitcoin
 from .stablecoins import Stablecoins
+from .onchain import OnChain
 from .discover.narratives import NarrativeService
 from .btclab.evaluate import LabError
 from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
@@ -1055,6 +1056,12 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     fear_greed = FearGreed(demo=demo)
     cftc_btc = CftcBitcoin(demo=demo)
     stablecoins = Stablecoins(demo=demo)
+    onchain = OnChain(demo=demo)
+
+    @app.get("/api/btc/network")
+    async def btc_network():
+        """Bitcoin network health (mempool.space): fees, mempool size, difficulty cycle and hashrate. Each section fails on its own; not a price signal."""
+        return ok(await onchain.overview())
 
     @app.get("/api/btc/stablecoins")
     async def btc_stablecoins():

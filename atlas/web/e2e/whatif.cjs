@@ -62,6 +62,10 @@ fs.mkdirSync(S, { recursive: true });
   const sc = await pg.locator('[data-testid="stablecoins"]').innerText();
   if (!/DefiLlama|Demo mode/.test(sc)) fail('stablecoin panel lacks its source or demo notice');
   console.log('BTC desk stablecoins: ok');
+  if (!(await titles()).some(x => /BITCOIN NETWORK/.test(x))) fail('BTC desk has no network panel');
+  const nw = await pg.locator('[data-testid="network"]').innerText();
+  if (!/mempool\.space|Demo mode/.test(nw)) fail('network panel lacks its source or demo notice');
+  console.log('BTC desk network: ok');
 
   if (errors.length) fail('browser errors: ' + errors.join(' ; '));
   console.log('PASS');

@@ -14,6 +14,13 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Data-source loop, cycle 6: mempool.space Bitcoin network health
+- **Verified live first:** fees (fastest 2 sat/vB), mempool (61,466 transactions waiting), difficulty cycle (67% through, estimated next change -5.2%), block height 975,081, 3 months of hashrate (about 905-985 EH/s). Real responses are the test fixtures.
+- **Shipped:** `onchain.py`, `GET /api/btc/network`. Three independent sections (fees and mempool, difficulty cycle, hashrate); one failing leaves the others, and a missing mempool or block height only drops that extra. Headline hashrate is a 7-day average because single days are noisy. Terminal: panel on the BTC desk. Signal: card on the BTC page.
+- **Honesty built in:** "estimated next difficulty change" is labelled an estimate; "not a price signal" on both screens; a typical-transaction cost is plain arithmetic (fee rate x 140 vB) and labelled; demo mode invents nothing.
+- **Tests:** 9 new backend (929 pass), phone browser 47/47 (extended), terminal browser check extended, web build.
+
 ## 2026-11-08 · Data-source loop, cycle 5: DefiLlama stablecoin supply
 - **Verified live first:** stablecoins.llama.fi total USD-pegged supply $293.7B on 2026-11-08 (about $307B a month earlier, so shrinking), Tether $176.8B and USD Coin $70.6B the largest. Trimmed real responses are the test fixtures.
 - **Shipped:** `stablecoins.py`, `GET /api/btc/stablecoins`. Total supply, changes over 7 days / 30 days / 90 days / 1 year (a comparison is left out when the history does not reach back, never invented), distance below the peak, 90-day bars, top 6 USD issuers with share and 7d/30d change. Non-USD stablecoins are excluded. Terminal: panel on the BTC desk. Signal: card on the BTC page.

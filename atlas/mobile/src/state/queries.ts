@@ -190,3 +190,8 @@ export function useStablecoins() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).stablecoins, queryFn: () => need(api).btcStablecoins(), enabled: !!api, staleTime: 60 * 60_000, refetchInterval: 2 * 60 * 60_000, retry: 0 });
 }
+
+export function useNetwork() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).network, queryFn: () => need(api).btcNetwork(), enabled: !!api, staleTime: 5 * 60_000, refetchInterval: 10 * 60_000, retry: 0 });
+}
