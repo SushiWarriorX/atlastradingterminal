@@ -111,12 +111,15 @@ async function phone(browser) {
   await ctx.addInitScript(() => { window.__opened = []; window.open = (u) => { window.__opened.push(String(u)); return null; }; });     // record links instead of leaving the app
   const origins = new Set();
   const pageErrors = [];
+  const consoleErrors = [];
   ctx.on("request", (r) => { try { origins.add(new URL(r.url()).origin); } catch { /* ignore */ } });
   const page = await ctx.newPage();
   page.setDefaultTimeout(20000);
   page.on("pageerror", (e) => pageErrors.push(String(e).slice(0, 300)));
+  // React warnings (for example "React does not recognize the ... prop on a DOM element") arrive as console errors, not page errors.
+  page.on("console", (m) => { if (m.type() === "error" && /React does not recognize|Warning:|Invalid DOM property|unique "key"|validateDOMNesting/.test(m.text())) consoleErrors.push(m.text().slice(0, 300)); });
   livePage = page;
-  return { ctx, page, origins, pageErrors };
+  return { ctx, page, origins, pageErrors, consoleErrors };
 }
 const text = (page) => page.evaluate(() => document.body.innerText);
 // Screens stay mounted under the one on top, so an id like "stale-banner" can exist twice: always talk about the one the user can see.
@@ -571,7 +574,7 @@ async function healthy(browser) {
       await page.click(V("back"));
     });
 
-    await check("no uncaught errors in the browser during the whole run", async () => { eq(S.pageErrors, [], "uncaught page errors"); });
+    await check("no uncaught errors in the browser during the whole run", async () => { eq(S.pageErrors, [], "uncaught page errors"); eq(S.consoleErrors, [], "React warnings in the browser console"); });
   } finally {
     await S.ctx.close().catch(() => undefined);
     await be.stop();

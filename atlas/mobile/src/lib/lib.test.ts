@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Asset, Briefing, Finding, Prov, WatchlistResponse, WatchRow } from "../api/types";
 import { AGENT_ORDER, briefingSections, coverageNote, lineText, rowKind } from "./briefing";
@@ -300,5 +302,13 @@ describe("calendar helpers", () => {
     expect(detailLine(ev({ details: { eps_estimate: null, analysts: null, last_year_eps: null } }))).toBe("Estimate n/a · a year ago n/a");
     expect(detailLine(ev({ kind: "dividend", details: { amount: 0.97, pay_date: "2026-12-10" } }))).toBe("$0.97 per share · pays 2026-12-10");
     expect(detailLine(ev({ kind: "economy", details: { release: "Consumer Price Index" } }))).toBe("Consumer Price Index");
+  });
+});
+
+describe("code hygiene for the browser version", () => {
+  const files = (dir: string): string[] => readdirSync(dir).flatMap((f) => { const p = join(dir, f); return statSync(p).isDirectory() ? files(p) : p.endsWith(".tsx") ? [p] : []; });
+  it("never passes React Native accessibility props to an SVG element (the browser warns: 'React does not recognize the accessibilityElementsHidden prop')", () => {
+    const bad = files(join(__dirname, "..")).filter((f) => /<Svg[^>]*accessibility(ElementsHidden|Label|Role)/.test(readFileSync(f, "utf8")));
+    expect(bad).toEqual([]);
   });
 });

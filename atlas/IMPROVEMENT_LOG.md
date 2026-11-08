@@ -2,6 +2,12 @@
 
 Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) and by hand.
 
+
+## 2026-11-08 · Browser console warning fixed (user report)
+- **Problem:** the browser console warned "React does not recognize the `accessibilityElementsHidden` prop on a DOM element" (from the small price lines, `Sparkline`).
+- **Fix:** web now gets `aria-hidden`; phones keep the native prop. Harmless, but noisy.
+- **Guard:** the browser test now fails on React console warnings, and a unit test blocks accessibility props on `<Svg>`. 44/44 browser checks, 43 unit tests pass.
+
 ## 2026-11-08, cycle 8: the phone calendar's two filter rows no longer both say "All"
 - **Found (reviewing the new phone calendar):** the company filter and the type filter each had a chip called "All", so it was unclear which one a tap would change.
 - **Changed:** company filter chips are now "Big companies", "My watchlist" and "Everything"; the type filter starts with "All types". Labels only; no logic changed.
