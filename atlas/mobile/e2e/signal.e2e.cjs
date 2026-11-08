@@ -507,6 +507,7 @@ async function healthy(browser) {
       const st = await inner(page, "journal-stats");
       match(st, /\+100\.00/, "net P&L is 10 x (110 - 100)");
       match(await text(page), /\+10\.00%/, "return on cost");
+      await shot(page, "12b-journal-with-trade");
       await page.click(T("journal-filter-note"));
       await sleep(400);
       eq(await page.locator('[data-testid^="entry-e:"]').count(), 1, "notes filter");

@@ -1,5 +1,7 @@
 # Signal Mobile
 
+**Windows, easiest way:** double-click `start-signal-windows.bat` in the project folder (or run `.\start-signal-windows.bat` in PowerShell). It starts the backend and Signal for you; when Signal asks for a server, type `http://localhost:8000`.
+
 A simple, fast phone app for researching **Bitcoin, crypto tokens, US stocks and ETFs**, built on your ATLAS server. Four research agents (News, Technical, Macro, Fundamentals) are folded into one screen per asset.
 
 **Research and paper trading only.** The app cannot place trades, connect to a brokerage or hold money, and the backend has no route that could. Nothing in it is financial advice.

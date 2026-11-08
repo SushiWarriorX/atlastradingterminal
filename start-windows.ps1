@@ -6,7 +6,8 @@
 # Optional: copy local-settings.example.ps1 to local-settings.ps1 and put your keys there (that file is never uploaded to GitHub).
 # First run installs everything (a few minutes). Later runs start in seconds.
 # To stop ATLAS, close the two black windows it opens.
-param([switch]$Real, [int]$IbkrPort = 0)
+#   start-signal-windows.bat   only the Signal phone app (in your browser) plus the backend it needs. Same as: .\start-windows.ps1 -SignalOnly
+param([switch]$Real, [int]$IbkrPort = 0, [switch]$SignalOnly)
 
 $ErrorActionPreference = "Continue"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -95,7 +96,16 @@ if (-not (Test-Path $marker)) {
 }
 
 # 4. Frontend packages (first run only)
-if (-not (Test-Path (Join-Path $web "node_modules"))) {
+$mobile = Join-Path $root "atlas\mobile"
+if ($SignalOnly) {
+    Write-Host "Checking the Signal app packages (fast when nothing changed)..."
+    Push-Location $mobile
+    & npm install --no-audit --no-fund
+    $npmCode = $LASTEXITCODE
+    Pop-Location
+    if ($npmCode -ne 0) { Stop-WithProblem "Installing the Signal app packages failed. Copy the red text above and send it to Claude." }
+}
+elseif (-not (Test-Path (Join-Path $web "node_modules"))) {
     Write-Host "Installing frontend packages. First run only; this takes a few minutes..."
     Push-Location $web
     & npm install
@@ -124,7 +134,9 @@ $b = $backend.Replace("'", "''")
 $p = $venvPython.Replace("'", "''")
 $demoLine = if ($Real) { "Remove-Item Env:ATLAS_DEMO -ErrorAction SilentlyContinue" } else { "`$env:ATLAS_DEMO = '1'" }
 Start-Window ("`$Host.UI.RawUI.WindowTitle = 'ATLAS backend (close this window to stop it)'; Set-Location '$b'; $demoLine; & '$p' -m atlas_api")
-if (Test-Url "http://127.0.0.1:5173") {
+if ($SignalOnly) {
+    # no ATLAS terminal screen needed
+} elseif (Test-Url "http://127.0.0.1:5173") {
     Write-Host "A screen is already running on port 5173: using it." -ForegroundColor Yellow
 } else {
     $w = $web.Replace("'", "''")
@@ -135,11 +147,21 @@ if (Test-Url "http://127.0.0.1:5173") {
 Write-Host "Waiting for ATLAS to start (up to 2 minutes)..."
 $ready = $false
 for ($i = 0; $i -lt 60; $i++) {
-    if ((Test-Url "http://127.0.0.1:8000/api/health") -and (Test-Url "http://127.0.0.1:5173")) { $ready = $true; break }
+    if ((Test-Url "http://127.0.0.1:8000/api/health") -and ($SignalOnly -or (Test-Url "http://127.0.0.1:5173"))) { $ready = $true; break }
     Start-Sleep -Seconds 2
 }
 if (-not $ready) {
     Stop-WithProblem "ATLAS did not start within 2 minutes. Look at the two black windows it opened: the last red lines there say what went wrong. Send them to Claude."
+}
+if ($SignalOnly) {
+    Write-Host ""
+    Write-Host "The backend is running. Starting Signal now. When it asks for a server address, type: http://localhost:8000" -ForegroundColor Green
+    Write-Host "Signal opens in your browser (usually http://localhost:8081). To stop: press Ctrl+C here, then close the black ATLAS backend window." -ForegroundColor Green
+    Set-Location $mobile
+    $env:EXPO_NO_TELEMETRY = "1"
+    & npx --no-install expo start --web --clear
+    if ($LASTEXITCODE -ne 0) { Stop-WithProblem "Signal did not start. Copy the red text above and send it to Claude." }
+    exit 0
 }
 Start-Process "http://127.0.0.1:5173"
 Write-Host ""
