@@ -83,6 +83,20 @@ def register_default_jobs(s: Scheduler, d: dict) -> None:
             raise RuntimeError("every crypto source failed: " + "; ".join(failed))
         return {"refreshed": done, "failed": failed}
 
+    async def listings_refresh(ctx: RunContext) -> dict:
+        out = await d["listings"].refresh(call=ctx.call)
+        if out.get("available") is False:
+            raise RuntimeError(out.get("reason") or "listings are not available")
+        if out["rows"] == 0:
+            raise RuntimeError("the IPO calendar returned no rows: " + "; ".join(out["errors"][:3]))
+        return {"deals": out["rows"], "confirmed_trading": out["confirmed"], "verified_by_sec": out["verified"], "notes": out["errors"][:4]}
+
+    async def discovery_refresh(ctx: RunContext) -> dict:
+        run = await d["new_to_me"].refresh(call=ctx.call, check=ctx.check)
+        if not run.get("available"):
+            raise RuntimeError(run.get("reason") or "the daily study could not run")
+        return {"universe": run["universe"], "studied": run["studied"], "passed": run["passed"], "left_out": sum(run["left_out_reasons"].values()), "could_not_study": sum(run["could_not_study"].values())}
+
     async def health_check(ctx: RunContext) -> dict:
         checks = []
 
@@ -126,6 +140,12 @@ def register_default_jobs(s: Scheduler, d: dict) -> None:
                        description="Keeps the Macro screen current: key indicators, Treasury, exchange rates, World Bank."))
     s.register(JobSpec("crypto_refresh", "Refresh crypto data", "refresh", crypto_refresh, interval_market_s=900, interval_off_s=900, priority=3, buckets={"public_api": 8}, max_runtime_s=180,
                        description="BTC daily prices, Fear and Greed, stablecoins, network, market, CFTC positioning."))
+    if d.get("listings") is not None:
+        s.register(JobSpec("listings_refresh", "Refresh newly listed companies", "discovery", listings_refresh, interval_market_s=3600 * 3, interval_off_s=3600 * 8, priority=4, buckets={"public_api": 4, "sec": 50},
+                           max_runtime_s=300, enabled=not d.get("demo"), description="Reads the Nasdaq IPO calendar (upcoming and recent), looks for a confirmed first trading day and the SEC final prospectus. Fundamental research ranks above optional experiments."))
+    if d.get("new_to_me") is not None:
+        s.register(JobSpec("discovery_refresh", "Daily new-to-me research candidates", "discovery", discovery_refresh, interval_market_s=86400, interval_off_s=86400, priority=4, buckets={"public_api": 2, "sec": 130},
+                           max_runtime_s=1800, enabled=sec_on, freshness_s=3 * 86400, description="Studies a varied sample of listed companies from SEC filings and saves the ones that pass the evidence gate. Needs ATLAS_SEC_CONTACT. Fewer candidates are better than weak ones."))
     s.register(JobSpec("health_check", "Health and data-quality checks", "health", health_check, interval_market_s=600, interval_off_s=600, priority=5, max_runtime_s=60,
                        description="Database integrity, disk space, stale jobs, exhausted budgets and dead letters. Reports problems; never changes code."))
 

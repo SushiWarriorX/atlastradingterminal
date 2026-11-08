@@ -114,6 +114,8 @@ FORMS = {
     "4": ("Insider trade report (officer, director or 10% owner)", "medium"), "3": ("Insider initial ownership report", "low"), "5": ("Insider year-end ownership report", "low"),
     "144": ("Notice of a planned insider share sale", "medium"), "SC 13D": ("A 5%+ holder with intent to influence the company", "high"), "SC 13D/A": ("5%+ holder, amended", "medium"),
     "SC 13G": ("A 5%+ passive holder", "medium"), "SC 13G/A": ("5%+ passive holder, amended", "low"), "DEF 14A": ("Proxy statement for the shareholder meeting", "medium"), "DEFA14A": ("Additional proxy material", "low"),
+    "424B4": ("Final prospectus for a priced offering (an IPO appears here)", "high"), "424B1": ("Prospectus (offering priced)", "medium"), "424B3": ("Prospectus (resale or merger)", "low"),
+    "8-A12B": ("Registration of shares on a stock exchange (listing)", "high"), "F-1": ("Registration of shares for sale by a foreign company (IPO)", "high"),
     "S-1": ("Registration of shares for sale (IPO or follow-on)", "high"), "S-3": ("Shelf registration of securities", "medium"), "424B5": ("Prospectus supplement (shares or debt being sold)", "medium"), "424B2": ("Prospectus supplement", "low"),
     "6-K": ("Foreign company current report", "medium"), "20-F": ("Foreign company annual report", "high"), "13F-HR": ("Institutional manager holdings report", "medium"),
     "SD": ("Specialized disclosure (conflict minerals)", "low"), "FWP": ("Free-writing prospectus", "low"), "PX14A6G": ("Shareholder proposal notice of exempt solicitation", "low"),
@@ -212,6 +214,11 @@ class EdgarClient:
 
     async def financials(self, cik: int):
         return await self._cached_get(f"facts:{cik}", TTL["facts"], FACTS_URL.format(cik=cik), condense_facts)
+
+    async def research_facts(self, cik: int):
+        """Quarterly and annual facts for the fundamental-research engine (condensed; see research/facts.py)."""
+        from ..research import facts as rfacts
+        return await self._cached_get(f"rfacts:{cik}", TTL["facts"], FACTS_URL.format(cik=cik), lambda raw: rfacts.condense(raw))
 
     async def all_filings(self, cik: int):
         return await self._cached_get(f"subsall:{cik}", TTL["subs"], SUBS_URL.format(cik=cik), condense_filings)

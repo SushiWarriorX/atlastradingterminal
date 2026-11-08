@@ -51,6 +51,11 @@ from .btclab.evaluate import LabError
 from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
 from .stocks.edgar import EdgarClient
 from .stocks.research import StockResearch
+from .research.live import FundamentalResearch
+from .discover.store import DiscoveryStore, STATES as DISC_STATES
+from .discover.listings import NasdaqIpoFeed
+from .discover.listings_service import ListingsService
+from .discover.newtome import NewToMe
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
 from .providers.ibkr_data import IBKRData
 from .journal import entries as jent, hyperliquid as hl, importers as jimp, stats as jstats
@@ -1096,6 +1101,13 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     stock_research = StockResearch(EdgarClient(db), fundamentals, news, demo)
 
     discover = DiscoverService(db, bars, stock_research.edgar, demo)
+    fundamental_research = FundamentalResearch(stock_research.edgar, fundamentals, demo)
+    discovery_store = DiscoveryStore(db)
+    listings_service = ListingsService(db, NasdaqIpoFeed(db), bars, stock_research.edgar, demo)
+
+    async def _study(symbol, price, price_time, price_source, now):
+        return await fundamental_research.filing_research(symbol, price, price_time, price_source, now)
+    new_to_me = NewToMe(db, discovery_store, _study, None, demo, watchlist=lambda: [r["symbol"] for r in db.q("SELECT symbol FROM signal_watchlist WHERE asset_type='stock'")])
     narratives = NarrativeService(db, bars, news, demo)
 
     @app.get("/api/discover/narrative")
@@ -1229,6 +1241,95 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             insts = [i for i in (I.resolve(r["symbol"]) for r in db.q("SELECT symbol FROM signal_watchlist WHERE asset_type='stock' ORDER BY position")) if i is not None and i.asset_class == "equity"][:25]
         want = [f.strip().upper() if f.strip().upper() != "SC13D" else "SC 13D" for f in forms.split(",") if f.strip()] or None
         return ok(await stock_research.filings_feed(insts, want, max(1, min(limit, 200)), max(1, min(days, 1500))))
+
+    # --- fundamental discovery: newly listed companies, new-to-me candidates, my own states and notes ---
+    @app.get("/api/discover/listings")
+    async def discover_listings(days: int = 30):
+        """Newly listed companies on NYSE and Nasdaq: upcoming deals and recent pricings, with confirmation and SEC verification where they could be checked."""
+        return ok(listings_service.read(days))
+
+    def _csv(v: str | None):
+        items = [x.strip() for x in (v or "").split(",") if x.strip()]
+        return items[:20] or None
+
+    @app.get("/api/discover/candidates")
+    async def discover_candidates(target: int = 5, sectors: str | None = None, countries: str | None = None, exchanges: str | None = None, min_market_cap: float | None = None,
+                                  max_market_cap: float | None = None, min_dollar_volume: float | None = None, max_listing_age_years: int | None = None, min_listing_age_years: int | None = None):
+        """New-to-me research candidates from the latest daily study, narrowed by my filters and by what I have already seen, saved or dismissed. Fewer are shown when evidence is weak."""
+        f = {"sectors": _csv(sectors), "countries": _csv(countries), "exchanges": _csv(exchanges), "min_market_cap": 0 if min_market_cap is None else max(0.0, min_market_cap),
+             "max_market_cap": float("inf") if max_market_cap is None else max_market_cap, "min_dollar_volume": 0 if min_dollar_volume is None else max(0.0, min_dollar_volume),
+             "max_listing_age_years": max_listing_age_years, "min_listing_age_years": min_listing_age_years}
+        return ok(new_to_me.read(f, max(1, min(target, 20))))
+
+    class StateIn(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        symbol: str = Field(min_length=1, max_length=10, pattern=r"^[A-Za-z]{1,5}([-/][A-Za-z])?$")
+        state: str
+        on: bool = True
+
+    @app.post("/api/discover/state")
+    async def discover_state(body: StateIn):
+        if body.state not in DISC_STATES:
+            raise ApiError("BAD_STATE", f"state must be one of {', '.join(DISC_STATES)}", 422)
+        return ok(discovery_store.set_state(body.symbol, body.state, body.on))
+
+    @app.get("/api/discover/state/{symbol}")
+    async def discover_state_get(symbol: str):
+        return ok({"state": discovery_store.get(symbol), "notes": discovery_store.notes(symbol), "last_review": discovery_store.last_review(symbol)})
+
+    class NoteIn(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        body: str = Field(min_length=1, max_length=4000)
+
+    @app.post("/api/research/{token}/notes")
+    async def research_note_add(token: str, body: NoteIn):
+        inst = I.resolve(token)
+        if inst is None or inst.asset_class != "equity":
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown stock '{token[:40]}'", 404)
+        try:
+            return ok(discovery_store.add_note(inst.symbol, body.body))
+        except ValueError as e:
+            raise ApiError("BAD_NOTE", str(e), 422)
+
+    @app.delete("/api/research/notes/{note_id}")
+    async def research_note_delete(note_id: int):
+        if not discovery_store.delete_note(note_id):
+            raise ApiError("NOT_FOUND", "no such note", 404)
+        return ok({"deleted": note_id})
+
+    @app.post("/api/research/{token}/review")
+    async def research_review(token: str):
+        """Mark a company as reviewed now: saves the figures I looked at so the next visit can show what changed. Needs the filing analysis to be available."""
+        inst = I.resolve(token)
+        if inst is None or inst.asset_class != "equity":
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown stock '{token[:40]}'", 404)
+        r = await fundamental_research.research(inst)
+        if not r.get("available"):
+            raise ApiError("NOT_AVAILABLE", r.get("reason") or "the research is not available right now, so there is nothing to record", 409)
+        return ok({"snapshot": discovery_store.record_review(inst.symbol, r)})
+
+    @app.get("/api/research/{token}/changes")
+    async def research_changes(token: str):
+        inst = I.resolve(token)
+        if inst is None or inst.asset_class != "equity":
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown stock '{token[:40]}'", 404)
+        r = await fundamental_research.research(inst)
+        if not r.get("available"):
+            return ok({"has_review": discovery_store.last_review(inst.symbol) is not None, "available": False, "reason": r.get("reason")})
+        return ok({**discovery_store.changes_since_review(inst.symbol, r), "available": True})
+
+    @app.get("/api/research/{token}")
+    async def fundamental_research_route(token: str, discount_rate_pct: float | None = None, terminal_growth_pct: float | None = None, band_pct: float | None = None):
+        """Revenue-first fundamental research from SEC filings: revenue, quality, Rule of 40, valuation under stated assumptions. Policy values outside their limits are ignored."""
+        inst = I.resolve(token)
+        if inst is None:
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown instrument '{token[:40]}'", 404)
+        if inst.asset_class != "equity":
+            raise ApiError("NOT_APPLICABLE", f"fundamental research applies to US stocks, not {inst.asset_class} instruments", 422)
+        discovery_store.set_state(inst.symbol, "opened")
+        out = await fundamental_research.research(inst, {"discount_rate_pct": discount_rate_pct, "terminal_growth_pct": terminal_growth_pct, "band_pct": band_pct})
+        out["my_state"] = {"state": discovery_store.get(inst.symbol), "notes": discovery_store.notes(inst.symbol), "last_review": discovery_store.last_review(inst.symbol)}
+        return ok(out)
 
     @app.get("/api/stocks/{token}/research")
     async def stocks_research(token: str):
@@ -1609,6 +1710,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
 
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
+                                      "listings": listings_service, "new_to_me": new_to_me,
                                       "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler

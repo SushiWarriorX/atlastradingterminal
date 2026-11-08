@@ -35,8 +35,9 @@ LABELS = {"under": "Potentially undervalued under these assumptions", "within": 
           "none": "Insufficient evidence"}
 
 
-def _p(policy, k):
-    return policy[k]
+EMPTY = {"multiples": [], "scenarios": [], "reverse_dcf": None, "sensitivity": None, "influence": [], "invalidators": [],
+         "methods": {"multiples": "not computed: a price and a diluted share count are needed", "dcf": {"available": False, "reason": "not computed"},
+                     "peers": {"available": False, "reason": "Peer comparison is not built yet."}, "own_history": {"available": False, "reason": "Historical multiples are not built yet."}}}
 
 
 def dcf(rev0: float, m0_pct: float, g_start_pct: float, g_term_pct: float, m_target_pct: float, r_pct: float, years: int, debt: float, cash: float, shares: float, dilution_pct: float) -> dict | None:
@@ -132,10 +133,11 @@ def assess(inp: dict, policy: dict | None = None, now: datetime | None = None) -
     base = {"policy": policy, "price": inp.get("price"), "price_time": inp.get("price_time"), "price_source": inp.get("price_source"),
             "caveat": "A model-dependent estimate under stated assumptions: not a forecast, price target or advice. Different reasonable assumptions give different answers."}
     if kind in SPECIAL:
-        return {**base, "label": LABELS["none"], "label_key": "none", "reason": f"This company is a {SPECIAL[kind]}. Sector-specific valuation methods are not built yet, so no verdict is given.", "sector": kind,
+        return {**base, **EMPTY, "label": LABELS["none"], "label_key": "none", "reason": f"This company is a {SPECIAL[kind]}. Sector-specific valuation methods are not built yet, so no verdict is given.", "sector": kind,
                 "evidence": {"level": "insufficient", "checks": [], "limits": []}}
     if not inp.get("price") or inp["price"] <= 0 or not inp.get("shares") or inp["shares"] <= 0:
-        return {**base, "label": LABELS["none"], "label_key": "none", "reason": "A current price and a diluted share count are both needed.", "evidence": {"level": "insufficient", "checks": [], "limits": []}}
+        return {**base, **EMPTY, "label": LABELS["none"], "label_key": "none", "reason": "A current price and a diluted share count are both needed.", "sector": kind,
+                "evidence": {"level": "insufficient", "checks": [], "limits": []}}
     ev = evidence(inp, policy, now)
     mult = multiples(inp)
     out = {**base, "sector": kind, "multiples": mult, "evidence": ev, "scenarios": [], "reverse_dcf": None, "sensitivity": None, "influence": [], "invalidators": [],

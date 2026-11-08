@@ -81,7 +81,7 @@ def loss_making_software() -> dict:
     rev = [50.0] * 4 + [80.0] * 4
     q = {"revenue": rev, "gross_profit": [r * 0.6 for r in rev], "operating_income": [-r * 0.4 for r in rev], "net_income": [-r * 0.45 for r in rev],
          "operating_cash_flow": [-r * 0.25 for r in rev], "capex": [r * 0.05 for r in rev]}
-    return build("Burning Cash Software (synthetic)", 4004, 2024, q, {"cash": [200.0] * 8, "debt": [0.0] * 8, "equity": [150.0] * 8})
+    return build("Burning Cash Software (synthetic)", 4004, 2024, q, {"cash": [200.0] * 8, "debt": [0.0] * 8, "equity": [150.0] * 8}, {2024: 40.0, 2025: 42.0})
 
 
 def bank() -> dict:
