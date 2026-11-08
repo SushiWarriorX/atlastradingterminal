@@ -36,7 +36,8 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 | alternative.me Fear & Greed (cycle 1) | Daily 0-100 crypto mood gauge, 31-day history | Terminal BTC desk, Signal BTC page |
 
 ## QUEUED (candidates, in order; each must be fetched live before it ships)
-(queue is empty: the next cycle searches for new candidates, e.g. Treasury bill auction results, Treasury interest expense (check live first), DefiLlama DeFi value once api.llama.fi answers)
+1. **Treasury interest expense** (verified live 2026-11-08: HTTP 200, no key; `fiscaldata.treasury.gov` `v2/accounting/od/interest_expense`, newest record 2026-10-31, 7,397 rows). Fields: `expense_catg_desc` (public issues vs intragovernmental), `expense_group_desc` (accrued interest, amortisation of premium or discount, TIPS inflation compensation), `expense_type_desc` (bills, notes, bonds, TIPS, FRN, savings, ...), `month_expense_amt`, `fytd_expense_amt` (dollars as text). Needs care before it ships: about 60 rows per month with several levels that must not be double counted, so build totals from one level and check them against the source's own year-to-date figures; fetch about 14 months to compare with a year ago.
+(otherwise the queue is empty: the next cycle searches for new candidates, e.g. Treasury bill auction results, Treasury interest expense (check live first), DefiLlama DeFi value once api.llama.fi answers)
 
 ## BLOCKED
 - Nasdaq public website feeds (cycle: fundamentals upgrade): `api.nasdaq.com/api/ipo/calendar` and `/api/screener/stocks` answer from this machine and feed the new Discover panels (listings and the "new to me" universe). They are unofficial, undocumented and their terms were not reviewed; if you do not want them, say so and those two panels will be switched off.

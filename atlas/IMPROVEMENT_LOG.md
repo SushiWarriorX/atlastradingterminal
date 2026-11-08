@@ -21,6 +21,10 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+## 2026-11-08 · Data cycle 18: nothing shipped (candidate verified and queued)
+- **Why nothing shipped:** this turn already delivered the fundamentals-first research and discovery build and the Ask ChatGPT handoff. The next candidate, Treasury interest expense, answers live (HTTP 200, no key, newest month 2026-10-31) but it is a multi-level table of about 60 rows a month where a careless sum would double count (public issues, TIPS inflation compensation, premium and discount amortisation, intragovernmental lines). A wrong total on the Macro screen is worse than none, so it is queued with the verified field list and the plan (one level for totals, checked against the source's own year-to-date figures) in `DATA_SOURCES.md`.
+- **Still open for you:** `api.bls.gov` and the exchange hosts (Deribit, Kraken, OKX, Bybit, Binance, ticdata.treasury.gov) are not on the allowed list, so CPI, PCE and PPI, BTC implied volatility and foreign Treasury holdings stay unavailable.
+
 ## 2026-11-08 · Strategy cycle 11: On-balance volume trend
 - **Rule (fixed from the queue, not tuned):** long while on-balance volume is above its 50-bar average AND the close is above its 50-bar average; flat when either fails. **The library is now 31 rules**, past the 30-rule mark in the loop's brief: every rule's luck check is now stricter (it is judged against the best of 31). At 60 rules the loop stops and asks you.
 - **Frozen backtest, evidence: weak.** Whole history +38,321.3% vs holding +26,499.2% (128 trades); worst drop -48.7% vs -83.8%; Sharpe 1.4 vs 1.1. Last 30% (out of sample): +186.1% vs holding +182.9%, 49 trades, worst drop -30.0% vs -53.1%, Sharpe 1.2 vs 0.9. Walk-forward +860.1%; 100% of nearby settings positive out of sample; doubled costs +159.5%. The tool's one reason for the label: with 31 rules to pick from, the safe lower estimate of its Sharpe ratio is -0.53 (it needs to be above 0), so luck cannot be ruled out. It was invested about 48% of the time and captured about 48% of up moves and 42% of down moves.
