@@ -21,6 +21,13 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+## 2026-11-08 · Data cycle 13: US federal budget (Monthly Treasury Statement)
+- **Source:** US Treasury FiscalData, Monthly Treasury Statement Table 1 (free, no key, fetched live this cycle). Backend `mts.py` (9 tests, fixture from a real 60-row response), route `/api/macro/budget`, terminal Macro desk panel, Signal Macro card, macro refresh job.
+- **Shows:** latest month's receipts, outlays and deficit (outlays minus receipts; negative would be a surplus); fiscal-year-to-date totals against the same months of the previous year (only when the earlier year has all those months, otherwise no comparison rather than a wrong one); 24-month history. The statement is for September 2026, the end of fiscal 2026. Described as accounting totals about the past, not signals.
+- **Checked against the source:** my deficit arithmetic equals the source's own deficit field for every month, and my fiscal-year-to-date sums equal the source's own "Year-to-Date" row (receipts $5,403.3B, outlays $7,395.8B, deficit $1,992.5B).
+- **Blocker for the user:** `api.bls.gov` (official CPI and unemployment, free, keyless) does not answer from this machine because the host is not allowed. FRED is also blocked, so the Macro key indicators stay empty. Adding `api.bls.gov` to the environment's allowed hosts would fix that.
+- **Checks:** backend 1040 passed, phone 43 unit + 48 of 48 browser checks, terminal 10 tests + build + desk browser check (new budget check).
+
 ## 2026-11-08 · Strategy cycle 5: Time-series momentum (12 minus 1)
 - **Rule (fixed from the queue, not tuned):** long while the return from 365 bars ago to 30 bars ago is positive, flat otherwise. The latest month is left out on purpose. 25 rules in the library now.
 - **Frozen backtest, evidence: none.** The tool's own reason: only 3 trades out of sample (needs 15), so it cannot tell skill from luck and the luck check was not run. Whole history +12,626.6% vs holding +26,979.4%; worst drop -80.7% vs -83.8%. Last 30% (out of sample): +237.1% vs holding +188.0%, worst drop -32.1% vs -53.1%, but from just 3 trades. 100% of nearby settings positive out of sample; doubled costs +234.9%. It was invested in about 77% of up bars and 73% of down bars, so it mostly behaved like holding with a few exits.

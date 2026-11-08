@@ -1,7 +1,7 @@
 import type { CheckState_ } from "./health";
 import type { FedWatch, MacroBrief, MacroOverview } from "./macro";
 import type { EarningsCal, StockResearch } from "./stocks";
-import type { AuctionsData, TgaData, FedOpsData, OpsOverview, CryptoMarket, WorldData, TrackerData, FxData, NarrativeData, OnChain, Positioning, Sentiment, Stablecoins, TreasuryData, WhatIf } from "./whatif";
+import type { BudgetData, AuctionsData, TgaData, FedOpsData, OpsOverview, CryptoMarket, WorldData, TrackerData, FxData, NarrativeData, OnChain, Positioning, Sentiment, Stablecoins, TreasuryData, WhatIf } from "./whatif";
 import type { SecFilings } from "./secfilings";
 import type { CalData } from "./calendar";
 import type { DiscoverRanked, DiscoverRun } from "./discover";
@@ -92,6 +92,7 @@ export const api = {
   opsPost: (path: string, b: unknown = {}) => call<OpsOverview>(`/api/ops/${path}`, body("POST", b)),
   fedOps: () => call<FedOpsData>("/api/macro/fedops"),
   auctions: () => call<AuctionsData>("/api/macro/auctions"),
+  budget: () => call<BudgetData>("/api/macro/budget"),
   tga: () => call<TgaData>("/api/macro/tga"),
   btcSentiment: () => call<Sentiment>("/api/btc/sentiment"),
   whatIf: (id: string, amount: number) => call<WhatIf>(`/api/signal/whatif/${encodeURIComponent(id)}?amount=${amount}`),

@@ -241,3 +241,8 @@ export function useAuctions() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).auctions, queryFn: () => need(api).auctions(), enabled: !!api, staleTime: 60 * 60_000, refetchInterval: 2 * 60 * 60_000, retry: 0 });
 }
+
+export function useBudget() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).budget, queryFn: () => need(api).budget(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}

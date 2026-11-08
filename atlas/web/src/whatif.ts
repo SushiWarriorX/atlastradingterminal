@@ -99,3 +99,9 @@ export interface AuctionRow { tenor: string; term: string; auction_date: string;
   bid_to_cover: number; average_bid_to_cover: number | null; compared_with: number; offering_billions: number | null }
 export interface AuctionsData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   tenors?: AuctionRow[]; pending_results?: { tenor: string; auction_date: string }[] }
+
+export interface BudgetData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  fiscal_year?: number; month?: string; month_receipts_billions?: number; month_outlays_billions?: number; month_deficit_billions?: number;
+  ytd_months?: number; ytd_receipts_billions?: number; ytd_outlays_billions?: number; ytd_deficit_billions?: number;
+  prior_ytd_receipts_billions?: number | null; prior_ytd_outlays_billions?: number | null; prior_ytd_deficit_billions?: number | null;
+  history?: { fiscal_year: number; month: string; receipts_billions: number; outlays_billions: number; deficit_billions: number }[] }
