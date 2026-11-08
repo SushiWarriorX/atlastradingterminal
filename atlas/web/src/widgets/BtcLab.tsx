@@ -37,6 +37,10 @@ function Detail({ r, run }: { r: LabResult; run: LabRun }) {
         <table className="tbl"><thead><tr><th /><th className="r">Return</th><th className="r">Sharpe</th><th className="r">Max DD</th><th className="r">Trades</th></tr></thead><tbody>
           {m("In sample (first 70%)", r.in_sample)}{m("Out of sample (last 30%)", r.out_of_sample)}{m("Walk-forward (re-tuned as you go)", r.walk_forward)}{m("Buy and hold, out of sample", r.buy_and_hold.out_of_sample)}</tbody></table>
       </div>
+      <div className="small" style={{ marginTop: 6 }} data-testid={`lab-judgement-${r.id}`}><b>Judgement.</b> {r.judgement.plain ?? "Not enough up and down bars out of sample to compare with holding."}
+        {r.judgement.sharpe_lower_bound && <> Luck check: with {r.judgement.sharpe_lower_bound.n_compared} strategies in the library to pick from, the safe lower estimate of its Sharpe ratio is <b>{n2(r.judgement.sharpe_lower_bound.lower)}</b> at {r.judgement.sharpe_lower_bound.confidence_pct.toFixed(1)}% confidence (it needs to be above 0).</>}
+        {" "}{(["uptrend", "downtrend"] as const).map((k) => { const g = r.judgement.regimes[k]; return g ? `${k === "uptrend" ? "While BTC was above its 200-bar average" : "While below it"}: ${pc(g.strategy_yearly_pct, 0)} a year vs ${pc(g.buy_hold_yearly_pct, 0)} holding (${g.bars} bars). ` : ""; }).join("")}
+        <span className="dim">{r.judgement.note}</span></div>
       <div className="small" style={{ marginTop: 6 }}><b>Robustness.</b> Out of sample, {Math.round(r.robustness.share_positive * 100)}% of five nearby values of "{r.robustness.param}" made money ({r.robustness.neighbours.map((x) => `${x[r.robustness.param]}: ${pc(x.oos_return_pct, 0)}`).join(", ")}). With fees and slippage doubled: {pc(r.robustness.doubled_costs_oos_return_pct)}.</div>
       <div className="small"><b>Costs paid over the history:</b> fees {r.costs.fees_paid_pct.toFixed(1)}% of equity-notional{run.settings.market === "perp" ? `, funding ${r.costs.funding_paid_pct >= 0 ? "paid" : "received"} ${Math.abs(r.costs.funding_paid_pct).toFixed(1)}%` : ""}{r.costs.liquidated ? ". LIQUIDATED." : "."}</div>
       <div className="small" style={{ marginTop: 6 }}><b>Right now ({r.now.as_of}):</b> the rule is <b>{r.now.rule_position}</b>. {r.now.conditions.map((c, i) => <span key={i}>{c.met === null ? "?" : c.met ? "✓" : "✗"} {c.rule} <span className="dim">({c.value})</span>{i < r.now.conditions.length - 1 ? "; " : ""}</span>)} <div className="dim">{r.now.note}</div></div>
@@ -67,6 +71,8 @@ export function BtcLabWidget() {
   return (
     <Panel title="BTC STRATEGY LAB" right={d && <span className={`pill ${d.data.demo ? "warn" : ""}`}>{d.data.status}</span>}>
       {lib.isError && <ErrorBox error={lib.error} />}
+      {lib.data && <details className="note" data-testid="lab-findings"><summary className="small"><b>What the research has found so far</b> (dated {lib.data.findings.as_of}; past data, not a forecast)</summary>
+        {lib.data.findings.points.map((x, i) => <div key={i} className="small">• {x}</div>)}<div className="small dim">{lib.data.findings.data}</div></details>}
       <div className="note">Research only. Each rule is fixed in advance and tested after fees, slippage and funding on history it was not tuned to. A rule being "on" now is a description, not a forecast.</div>
       <div className="toolbar" data-testid="lab-controls">
         <span className="savedchip">{["spot", "perp"].map((m) => <button key={m} className={`mini ${market === m ? "on" : ""}`} onClick={() => setMarket(m)}>{m === "spot" ? "spot" : "perpetual"}</button>)}</span>

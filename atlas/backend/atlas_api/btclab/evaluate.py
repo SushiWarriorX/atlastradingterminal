@@ -12,6 +12,7 @@ Net figures are after fees, slippage and (for perpetuals) funding. Sharpe uses p
 from __future__ import annotations
 
 import math
+import zlib
 from bisect import bisect_left
 from datetime import datetime, timezone
 
@@ -125,6 +126,59 @@ def _slice(res: dict, k0: int, k1: int, f: Frame, a: int) -> tuple[list[float], 
     return cv, [x for x in res["trades"] if t0 <= x["exit_t"] <= t1]
 
 
+def bar_returns(curve) -> np.ndarray:
+    cv = np.asarray(curve, float)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        r = np.diff(cv) / np.where(cv[:-1] > 0, cv[:-1], np.nan)
+    return np.nan_to_num(r, nan=0.0, posinf=0.0, neginf=0.0)
+
+
+ALPHA = 0.10          # one-sided: how often luck is allowed to pass a single strategy
+
+
+def sharpe_lower_bound(r: np.ndarray, bpy: int, n_compared: int, seed: int, resamples: int = 1000) -> dict | None:
+    """Approximate lower bound on the Sharpe ratio from a block bootstrap of the out-of-sample bar returns.
+    The more strategies are compared at once, the stricter the bound (alpha is divided by the number compared), because the best of many looks good by luck alone."""
+    m = len(r)
+    if m < 60 or float(r.std()) == 0:
+        return None
+    block = max(5, int(bpy / 36))
+    rng = np.random.default_rng(seed)
+    nb = int(np.ceil(m / block))
+    starts = rng.integers(0, max(m - block, 1), size=(resamples, nb))
+    idx = (starts[:, :, None] + np.arange(block)[None, None, :]).reshape(resamples, -1)[:, :m]
+    samp = r[idx]
+    sd = samp.std(axis=1)
+    sh = np.where(sd > 0, samp.mean(axis=1) / np.where(sd > 0, sd, 1) * math.sqrt(bpy), np.nan)
+    q = max(ALPHA / max(n_compared, 1), 0.001)
+    return {"lower": float(np.nanquantile(sh, q)), "confidence_pct": (1 - q) * 100, "n_compared": n_compared, "block_bars": block}
+
+
+def capture(rs: np.ndarray, rb: np.ndarray) -> dict | None:
+    """How much of buy and hold's up bars and down bars the strategy took part in (100% = all of them, 0% = none)."""
+    up, dn = rb > 0, rb < 0
+    if up.sum() < 20 or dn.sum() < 20:
+        return None
+    return {"up_pct": float(rs[up].mean() / rb[up].mean() * 100), "down_pct": float(rs[dn].mean() / rb[dn].mean() * 100)}
+
+
+def regimes(f: "Frame", full: dict, bh: dict, a: int, b: int) -> dict:
+    """Average yearly return (strategy vs buy and hold) in bars where BTC was above vs below its own 200-bar average (judged from the previous bar, so no look-ahead)."""
+    c = f.df["c"]
+    ma = c.rolling(200, min_periods=200).mean().to_numpy()
+    cc = c.to_numpy()
+    rs, rb = bar_returns(full["curve"]), bar_returns(bh["curve"])
+    j = np.arange(a, b)
+    ok = (j - 1 >= 0) & ~np.isnan(ma[j - 1])
+    up = np.zeros(len(j), bool)
+    up[ok] = cc[j[ok] - 1] > ma[j[ok] - 1]
+    out = {}
+    for name, mask in (("uptrend", ok & up), ("downtrend", ok & ~up)):
+        n = int(mask.sum())
+        out[name] = None if n < 60 else {"bars": n, "strategy_yearly_pct": float(rs[mask].mean() * f.bpy * 100), "buy_hold_yearly_pct": float(rb[mask].mean() * f.bpy * 100)}
+    return out
+
+
 def down(curve: list[float], m: int = 240) -> list[float]:
     if len(curve) <= m:
         return [round(x, 5) for x in curve]
@@ -143,7 +197,7 @@ def buy_and_hold(f: Frame, req: dict, a: int, b: int) -> dict:
     return res
 
 
-def evaluate(strat: Strategy, f: Frame, req: dict, bh: dict) -> dict:
+def evaluate(strat: Strategy, f: Frame, req: dict, bh: dict, n_compared: int = 1) -> dict:
     a, b = f.first, f.last
     ls = bool(req.get("long_short"))
     costs = costs_for(f, strat, req)
@@ -192,6 +246,12 @@ def evaluate(strat: Strategy, f: Frame, req: dict, bh: dict) -> dict:
     stress = run(f, tgt, costs_for(f, strat, req, 2.0), a + k, b)
     stress_ret = (stress["curve"][-1] - 1) * 100
 
+    # judgement: luck check, capture versus buy and hold, regimes
+    rs_oos, rb_oos = bar_returns(oos_c), bar_returns(bh_oos[0])
+    lb = sharpe_lower_bound(rs_oos, f.bpy, n_compared, zlib.crc32(strat.id.encode()))
+    cap = capture(rs_oos, rb_oos) if len(rs_oos) == len(rb_oos) else None
+    reg_ = regimes(f, full, bh, a, b)
+
     # evidence
     reasons: list[str] = []
     oos_ret, wf_ret = m_oos["net_return_pct"] or 0.0, m_wf["net_return_pct"] or 0.0
@@ -213,18 +273,30 @@ def evaluate(strat: Strategy, f: Frame, req: dict, bh: dict) -> dict:
         beats = (m_oos["sharpe"] or -9) >= (m_bh_oos["sharpe"] or 9)
         if not beats:
             reasons.append("Risk-adjusted (Sharpe) it did not beat simply holding BTC over the same out-of-sample period.")
-        if share >= ROBUST_SHARE and stress_ret > 0 and beats:
+        luck_ok = lb is not None and lb["lower"] > 0
+        if lb is not None and not luck_ok:
+            reasons.append(f"Could not rule out luck: with {n_compared} strateg{'y' if n_compared == 1 else 'ies'} in the library to pick from, the safe lower estimate of its Sharpe ratio is {lb['lower']:.2f} (it needs to be above 0).")
+        adds_value = cap is None or cap["down_pct"] < cap["up_pct"]
+        if cap is not None and not adds_value:
+            reasons.append(f"It took part in {cap['down_pct']:.0f}% of buy and hold's down bars but only {cap['up_pct']:.0f}% of its up bars, so timing did not help.")
+        if share >= ROBUST_SHARE and stress_ret > 0 and beats and luck_ok and adds_value:
             level = "moderate"
             reasons.append("Held up out of sample, in walk-forward, across nearby parameters and with doubled costs. That is still limited evidence: BTC has had only a few market cycles.")
     elif not reasons:
         reasons.append("No reliable evidence.")
 
+    plain = None
+    if cap is not None:
+        plain = (f"Out of sample it was in the market {m_oos['exposure_pct'] if m_oos['exposure_pct'] is not None else (full['exposure'] * 100):.0f}% of the time. It took part in {cap['up_pct']:.0f}% of buy and hold's up bars and {cap['down_pct']:.0f}% of its down bars; "
+                 f"worst drop {m_oos['max_drawdown_pct']:.0f}% versus {m_bh_oos['max_drawdown_pct']:.0f}% for holding.")
     conds = strat.conds(f.df, params)
     now_t = tgt[b - 1]
     return {
         "id": strat.id, "name": strat.name, "family": strat.family, "params": params, "stop_pct": strat.stop_pct,
         "full": m_full, "in_sample": m_is, "out_of_sample": m_oos, "walk_forward": {**m_wf, "folds": folds, "efficiency": wf_eff},
         "buy_and_hold": {"full": m_bh_full, "out_of_sample": m_bh_oos},
+        "judgement": {"sharpe_lower_bound": lb, "capture": cap, "regimes": reg_, "plain": plain,
+                      "note": "The lower bound is an approximate block-bootstrap estimate. It counts every strategy in the library, because picking the best of many looks good by luck."},
         "robustness": {"param": pname, "neighbours": nb, "share_positive": share, "doubled_costs_oos_return_pct": stress_ret},
         "evidence": {"level": level, "reasons": reasons, "min_trades": MIN_TRADES},
         "costs": {"fees_paid_pct": full["fees_paid_pct"], "funding_paid_pct": full["funding_paid_pct"], "liquidated": full["liquidated"]},
@@ -251,13 +323,15 @@ def run_lab(rows, funding, req: dict) -> dict:
     f = Frame(rows, req["timeframe"], funding, perp)
     a, b = f.first, f.last
     bh = buy_and_hold(f, req, a, b)
+    # The luck check counts the WHOLE library, not only the strategies ticked: choosing the best of the library is the same as having tried them all.
+    n_compared = max(sum(1 for i in ids if not (S[i].requires_funding and not perp)), sum(1 for x in S.values() if not (x.requires_funding and not perp)))
     results, skipped = [], []
     for sid in ids:
         st = S[sid]
         if st.requires_funding and not perp:
             skipped.append({"id": sid, "reason": "This strategy uses perpetual funding, so it only runs on the perpetual market."})
             continue
-        results.append(evaluate(st, f, req, bh))
+        results.append(evaluate(st, f, req, bh, n_compared))
     results.sort(key=rank_key, reverse=True)
     notes = list(f.notes)
     if req["timeframe"] != "1d":

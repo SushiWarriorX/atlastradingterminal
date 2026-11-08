@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from . import evaluate as E
 from .data import BARS_PER_YEAR, TF_SECONDS, BtcData, DataError, gaps
-from .strategies import DEFAULT_FIVE, S
+from .strategies import DEFAULT_FIVE, FINDINGS, S
 
 MAX_STRATEGIES = 8
 
@@ -67,7 +67,7 @@ class LabService:
         return [s.meta() for s in S.values()]
 
     def status(self) -> dict:
-        return {"demo": self.demo, "defaults": DEFAULT_FIVE, "max_leverage": 3.0, "data": None if self.demo else self.data.status(),
+        return {"demo": self.demo, "defaults": DEFAULT_FIVE, "findings": FINDINGS, "max_leverage": 3.0, "data": None if self.demo else self.data.status(),
                 "sources": {"prices": "Coinbase Exchange public candles, BTC-USD spot (4h is built from 1h)", "funding": "Hyperliquid hourly funding history (from 2023)"}}
 
     async def refresh(self, tfs: list[str]) -> dict:
@@ -105,6 +105,7 @@ class LabService:
                        "funding_source": None if not perp else ("DEMO: synthetic funding" if self.demo else "Hyperliquid funding history"),
                        "bars": len(rows), "last_bar": datetime.fromtimestamp(rows[-1][0], timezone.utc).isoformat(), "gap_count": len(gaps(rows, TF_SECONDS[r["timeframe"]])),
                        "status": "DEMO" if self.demo else "HISTORICAL", "notes": notes}
+        out["findings"] = FINDINGS
         out["run_id"] = key
         if len(self._cache) > 24:
             self._cache.pop(next(iter(self._cache)))

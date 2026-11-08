@@ -246,4 +246,81 @@ reg(Strategy("funding_fade", "Fade negative funding", "Derivatives", "Perpetual 
                            _cond(f"Close above {p['trend']}-bar average", None if np.isnan(sma(d['c'], p['trend']).iloc[-1]) else d["c"].iloc[-1] > sma(d["c"], p["trend"]).iloc[-1], f"close {_val(d['c'].iloc[-1])} vs {_val(sma(d['c'], p['trend']).iloc[-1])}")],
              stop_pct=10.0, requires_funding=True, notes=["Needs Hyperliquid funding history, which starts in 2023, so it is tested on a short window."]))
 
+
+
+# --- candidates added after the first round of research (see IMPROVEMENT_LOG.md) -------------------------------------------------------------
+def _supertrend(d: pd.DataFrame, n: int, mult: float) -> pd.Series:
+    """Classic Supertrend: ATR bands that only move in the trend's favour; +1 while the close is above the lower band, -1 below the upper band."""
+    a, hl2 = atr(d, n).to_numpy(), ((d["h"] + d["l"]) / 2).to_numpy()
+    c = d["c"].to_numpy()
+    up, dn = hl2 + mult * a, hl2 - mult * a
+    fu, fl, tr = np.full(len(c), np.nan), np.full(len(c), np.nan), np.zeros(len(c))
+    for i in range(len(c)):
+        if np.isnan(up[i]):
+            continue
+        if i == 0 or np.isnan(fu[i - 1]):
+            fu[i], fl[i], tr[i] = up[i], dn[i], 1.0
+            continue
+        fu[i] = up[i] if (up[i] < fu[i - 1] or c[i - 1] > fu[i - 1]) else fu[i - 1]
+        fl[i] = dn[i] if (dn[i] > fl[i - 1] or c[i - 1] < fl[i - 1]) else fl[i - 1]
+        tr[i] = 1.0 if c[i] > fu[i - 1] else (-1.0 if c[i] < fl[i - 1] else tr[i - 1])
+    return pd.Series(np.where(np.isnan(fu), 0.0, tr), index=d.index)
+
+
+reg(Strategy("supertrend", "Supertrend", "Trend", "Follows a trailing band built from the average range; flips when the price closes through the band.", "Close breaks above the trailing upper ATR band.",
+             "Close breaks below the trailing lower ATR band.", "No fixed stop; the trailing band is the stop.", {"n": 10, "mult": 3.0}, {"mult": [2.0, 2.5, 3.0, 3.5, 4.0]},
+             lambda d, p: _supertrend(d, p["n"], p["mult"]),
+             lambda d, p: [_cond("Supertrend is up (price above the trailing band)", bool(_supertrend(d, p["n"], p["mult"]).iloc[-1] > 0), f"state {'up' if _supertrend(d, p['n'], p['mult']).iloc[-1] > 0 else 'down'}")], symmetric=True))
+
+
+def _chandelier(d, p):
+    hi = d["h"].shift(1).rolling(p["entry"]).max()
+    stop = d["h"].rolling(22).max() - p["mult"] * atr(d, 22)
+    return hold(d["c"] > hi, d["c"] < stop)
+
+
+reg(Strategy("chandelier_breakout", "Breakout with a trailing stop", "Breakout", "Buy a new high, then trail a stop three average-ranges below the recent high so winners run and losers are cut.",
+             "Close is above the highest high of the previous N bars.", "Close falls below the 22-bar high minus K times the 22-bar average true range.", "The trailing exit is the stop.", {"entry": 55, "mult": 3.0}, {"mult": [2.0, 2.5, 3.0, 4.0, 5.0]}, _chandelier,
+             lambda d, p: [_cond(f"Close above the {p['entry']}-bar high (entry)", None if np.isnan(d["h"].shift(1).rolling(p["entry"]).max().iloc[-1]) else d["c"].iloc[-1] > d["h"].shift(1).rolling(p["entry"]).max().iloc[-1], f"close {_val(d['c'].iloc[-1])}"),
+                           _cond("Close below the trailing stop (exit)", None if np.isnan(atr(d, 22).iloc[-1]) else d["c"].iloc[-1] < d["h"].rolling(22).max().iloc[-1] - p["mult"] * atr(d, 22).iloc[-1], f"stop {_val(d['h'].rolling(22).max().iloc[-1] - p['mult'] * atr(d, 22).iloc[-1])}")]))
+
+
+def _band(d, p):
+    m = sma(d["c"], p["n"])
+    return hold(d["c"] > m * (1 + p["b"]), d["c"] < m * (1 - p["b"]))
+
+
+reg(Strategy("sma_band", "Long average with a buffer", "Trend", "Like 'price above the long average' but needs a clear move through a buffer zone, which cuts false signals when the price hugs the average.",
+             "Close is more than B% above the N-bar average.", "Close is more than B% below the N-bar average.", "No fixed stop; the exit rule is the stop.", {"n": 200, "b": 0.03}, {"b": [0.0, 0.01, 0.02, 0.03, 0.05]}, _band,
+             lambda d, p: [_cond(f"Close more than {p['b'] * 100:.0f}% above the {p['n']}-bar average", None if np.isnan(sma(d['c'], p['n']).iloc[-1]) else d["c"].iloc[-1] > sma(d["c"], p["n"]).iloc[-1] * (1 + p["b"]), f"close {_val(d['c'].iloc[-1])} vs average {_val(sma(d['c'], p['n']).iloc[-1])}")]))
+reg(Strategy("rsi_trend", "RSI strength trend", "Momentum", "Hold while momentum is strong: enter when RSI(14) is high, leave when it fades.", "RSI(14) rises above the entry level.", "RSI(14) falls below the exit level.", "No fixed stop; the exit rule is the stop.",
+             {"enter": 60, "exit": 45}, {"enter": [50, 55, 60, 65, 70]}, lambda d, p: hold(rsi(d["c"], 14) > p["enter"], rsi(d["c"], 14) < p["exit"]),
+             lambda d, p: [_cond(f"RSI(14) above {p['enter']}", None if np.isnan(rsi(d['c'], 14).iloc[-1]) else rsi(d["c"], 14).iloc[-1] > p["enter"], f"RSI {_val(rsi(d['c'], 14).iloc[-1])}")]))
+
+
+def _volf(d, p):
+    r = d["c"].pct_change()
+    v = r.rolling(30).std()
+    med = v.rolling(365, min_periods=200).median()
+    return ((d["c"] > sma(d["c"], p["n"])) & (v < med * p["k"])).astype(float)
+
+
+reg(Strategy("vol_filtered_trend", "Trend only in calm markets", "Volatility", "Holds the long-average trend only while recent volatility is not unusually high, to sidestep violent swings.", "Close above the N-bar average and 30-bar volatility below K times its one-year median.",
+             "Either condition stops being true.", "No fixed stop; the exit rule is the stop.", {"n": 100, "k": 1.2}, {"k": [0.8, 1.0, 1.2, 1.5, 2.0]}, _volf,
+             lambda d, p: [_cond(f"Close above {p['n']}-bar average", None if np.isnan(sma(d['c'], p['n']).iloc[-1]) else d["c"].iloc[-1] > sma(d["c"], p["n"]).iloc[-1], f"close {_val(d['c'].iloc[-1])}"),
+                           _cond(f"30-bar volatility below {p['k']}x its one-year median", None if np.isnan(d["c"].pct_change().rolling(30).std().rolling(365, min_periods=200).median().iloc[-1]) else bool(d["c"].pct_change().rolling(30).std().iloc[-1] < d["c"].pct_change().rolling(30).std().rolling(365, min_periods=200).median().iloc[-1] * p["k"]), "volatility vs its median")]))
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
+
+
+# What the research found, dated. These are results on past data, not forecasts; they are re-checked when the library changes.
+FINDINGS = {
+    "as_of": "2026-11-08",
+    "data": "Coinbase BTC-USD daily bars from 2015, hourly and 4-hour bars from late 2023, and Hyperliquid funding from 2023. Fees 5 bps and slippage 5 bps per side.",
+    "points": [
+        "Daily spot, 2015 to 2026: simply holding returned about +27,000% with an 84% worst drop. Counting the whole library of rules, none cleared the bar for moderate evidence: with 20 or so rules to pick from, the best ones can look good by luck.",
+        "What the better daily trend rules did offer was a smaller worst drop (about 35% to 45% for the best ones, against 84% for holding) in exchange for giving up some return. They did not beat holding on return out of sample.",
+        "Perpetuals (2023 to 2026) and 4-hour or 1-hour spot: most rules lost money after fees, slippage and funding. Faster timeframes trade more often, so costs eat the edge.",
+        "Five more candidates were added and tested (Supertrend, a breakout with a trailing stop, a long average with a buffer, an RSI strength trend, a trend filtered by calm volatility). None became a standout, and they are kept as research candidates, not recommendations.",
+    ],
+}

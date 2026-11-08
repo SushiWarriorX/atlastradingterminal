@@ -176,13 +176,67 @@ def test_api_validates_and_runs_in_demo_mode(tmp_path):
     with TestClient(create_app(db_path=str(tmp_path / "a.db"), demo=True, alert_loop=False, news_loop=False)) as c:
         s = c.get("/api/btclab/strategies").json()["data"]
         assert len(s["strategies"]) >= 12 and s["max_leverage"] == 3.0 and s["defaults"] == ST.DEFAULT_FIVE
+        assert s["findings"]["as_of"] and len(s["findings"]["points"]) >= 3 and "not recommendations" in " ".join(s["findings"]["points"])
         assert c.post("/api/btclab/run", json={"leverage": 5}).status_code == 422                 # never above 3x
         assert c.post("/api/btclab/run", json={"strategies": ["nope"]}).status_code == 422
         assert c.post("/api/btclab/run", json={"strategies": ["sma_cross", "sma_cross"]}).status_code == 422
         r = c.post("/api/btclab/run", json={})
         assert r.status_code == 200
         d = r.json()["data"]
-        assert len(d["results"]) == 5 and d["data"]["status"] == "DEMO" and "DEMO" in d["data"]["source"] and d["caveats"]
+        assert d["findings"]["as_of"] and len(d["results"]) == 5 and d["data"]["status"] == "DEMO" and "DEMO" in d["data"]["source"] and d["caveats"]
         assert c.post("/api/btclab/run", json={"market": "perp", "leverage": 3, "long_short": True, "strategies": ["sma_cross"]}).status_code == 200
         spot = c.post("/api/btclab/run", json={"market": "spot", "leverage": 3, "strategies": ["sma_cross"]}).json()["data"]
         assert spot["settings"]["leverage"] == 1.0                                              # spot is never leveraged
+
+
+# --- judgement: luck check, capture, regimes -----------------------------------------------------------------------------------------------------
+def test_sharpe_lower_bound_is_deterministic_and_gets_stricter_with_more_strategies():
+    rng = np.random.default_rng(5)
+    r = rng.normal(0.0015, 0.02, 700)
+    one = E.sharpe_lower_bound(r, 365, 1, seed=1)
+    ten = E.sharpe_lower_bound(r, 365, 20, seed=1)
+    assert one == E.sharpe_lower_bound(r, 365, 1, seed=1)                      # same inputs, same answer
+    assert ten["lower"] < one["lower"] and ten["confidence_pct"] > one["confidence_pct"]
+    assert E.sharpe_lower_bound(r[:30], 365, 1, seed=1) is None                 # too little data to say anything
+    assert E.sharpe_lower_bound(np.zeros(200), 365, 1, seed=1) is None          # no variation, no ratio
+
+
+def test_pure_noise_does_not_clear_the_luck_check_but_a_real_edge_does():
+    rng = np.random.default_rng(9)
+    noise = rng.normal(0.0, 0.02, 600)
+    edge = rng.normal(0.004, 0.01, 600)
+    assert E.sharpe_lower_bound(noise, 365, 20, seed=2)["lower"] < 0
+    assert E.sharpe_lower_bound(edge, 365, 20, seed=2)["lower"] > 0
+
+
+def test_capture_ratios_describe_timing_value():
+    rb = np.array([0.02, -0.02] * 30)
+    assert E.capture(rb, rb) == {"up_pct": pytest.approx(100.0), "down_pct": pytest.approx(100.0)}      # holding captures everything
+    flat = np.zeros(60)
+    assert E.capture(flat, rb) == {"up_pct": pytest.approx(0.0), "down_pct": pytest.approx(0.0)}
+    good_timing = np.where(rb > 0, rb, rb * 0.2)                                                         # keeps the ups, dodges most downs
+    c = E.capture(good_timing, rb)
+    assert c["up_pct"] == pytest.approx(100.0) and c["down_pct"] == pytest.approx(20.0)
+    assert E.capture(rb[:10], rb[:10]) is None
+
+
+def test_regimes_split_by_the_previous_bars_trend_and_hide_thin_samples():
+    rows = demo_rows("1d")
+    f = E.Frame(rows, "1d", None, False)
+    bh = E.buy_and_hold(f, dict(fee_bps=0, slippage_bps=0), f.first, f.last)
+    r = E.regimes(f, bh, bh, f.first, f.last)
+    assert set(r) == {"uptrend", "downtrend"}
+    for v in r.values():
+        if v is not None:
+            assert v["bars"] >= 60 and v["strategy_yearly_pct"] == pytest.approx(v["buy_hold_yearly_pct"])      # compared with itself: identical
+
+
+def test_results_carry_judgement_and_never_claim_moderate_when_the_library_is_this_big():
+    rows = demo_rows("1d")
+    out = E.run_lab(rows, None, dict(strategies=["momentum_filtered"], timeframe="1d", market="spot", leverage=1.0, long_short=False, fee_bps=5, slippage_bps=5))
+    r = out["results"][0]
+    j = r["judgement"]
+    assert j["sharpe_lower_bound"]["n_compared"] >= 20 and "library" in j["note"]
+    assert j["regimes"].keys() == {"uptrend", "downtrend"}
+    if j["sharpe_lower_bound"]["lower"] <= 0:
+        assert r["evidence"]["level"] != "moderate" and any("rule out luck" in x for x in r["evidence"]["reasons"])

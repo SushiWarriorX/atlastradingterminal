@@ -2,6 +2,19 @@
 
 Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) and by hand.
 
+## 2026-11-08, cycle 6 (on request): strategy research on real BTC data, and a harder-to-fool lab
+- **Asked for:** look for different trading strategies, backtest them, and improve judgement.
+- **Method:** downloaded real data (Coinbase BTC-USD daily from 2015, hourly and 4-hour from late 2023; Hyperliquid funding from 2023). Ran every strategy through the existing evaluator (fees 5 bps, slippage 5 bps per side), spot and perpetuals, daily, 4h and 1h.
+- **Added five candidates:** Supertrend, breakout with a trailing stop, long average with a buffer, RSI strength trend, trend filtered by calm volatility. The library now has 21 rules, each fixed in advance and not tuned.
+- **What the data said (past results, not forecasts):**
+  - Daily spot 2015 to 2026: buy and hold about +27,000%, worst drop 84%. Last 30% of history (out of sample): holding +187%; the best rule, momentum with a trend filter, +210% with a worst drop of about 27 to 44% instead of 53 to 84%. Most others earned less than holding. Their real benefit was smaller drops.
+  - Perpetuals 2023 to 2026 and 4h or 1h spot: most rules lost money after fees, slippage and funding; none reached moderate evidence. Faster timeframes lose to costs.
+  - Nothing among the new candidates was a standout.
+- **Judgement upgrades (the main change):** (1) a luck check: a block-bootstrap lower bound on the out-of-sample Sharpe ratio that counts the whole library (the best of 20 rules looks good by chance), so "moderate" now needs the lower bound above 0; with the whole library in play nothing on the real data reaches it. (2) capture ratios: how much of buy and hold's up bars and down bars each rule took part in, and a plain-English line saying so. (3) regime split: yearly return while BTC was above or below its own 200-bar average, versus holding. (4) a dated "what the research found so far" note in the API, the terminal panel and the phone card.
+- **Verified:** backend 835 tests (5 new for the luck check, capture, regimes and library-wide counting), web and phone type checks and unit tests, browser suite 44 of 44 including a check that the luck check names how many strategies were in play; ran the whole thing against real downloaded data.
+- **Not verified:** how a user's own settings (other fees, other periods) change the verdicts; the bootstrap is an approximation (it does not model every dependence in the data).
+- **Next candidates:** let the user choose the out-of-sample split; show the equity curve with the regime shading; research position sizing (volatility targeting) as a separate engine feature.
+
 ## 2026-11-08, cycle 5 (run on request): the Strategy Lab says what it is doing while it works
 - **Found:** on real data the first Strategy Lab run downloads BTC history (up to about a minute for perpetuals, because funding history is fetched too). The only feedback was a spinner, which looks frozen, and the spinner was white on the silver button so it was hard to see.
 - **Changed:** while a comparison runs, phone and terminal show a plain-words message ("Running the comparison. The first run on real data downloads BTC price history; later runs are quick." plus a funding-history line for perpetuals and an hourly-prices line for 4h and 1h). The button spinner is now dark on silver. The wording lives in one small tested function (`busyText`); the browser test slows the request on purpose to check the message appears and disappears.
