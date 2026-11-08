@@ -170,3 +170,8 @@ export function useSecFilings(symbol: string, forms: string[], enabled = true) {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).filings(symbol, forms.join(",")), queryFn: () => need(api).secFilings(symbol, forms, 365), enabled: !!api && enabled && !!symbol, staleTime: 10 * 60_000, retry: 0, placeholderData: (prev) => prev });
 }
+
+export function useNarrative() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).narrative, queryFn: () => need(api).narrative(false), enabled: !!api, staleTime: 30 * 60_000, retry: 0 });
+}

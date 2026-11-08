@@ -9,6 +9,15 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Narrative of the day in Discover (user request)
+- **What:** every UTC day the app features one market theme (Quantum, Nuclear and uranium, Robotics, AI infrastructure, Power, Space, Cybersecurity, Defense and drones, Obesity drugs, Chip equipment, Gold, Crypto-linked stocks, Solar, Fintech, Oil and gas). `GET /api/discover/narrative` (saved per day in `narrative_runs`, migration 016), `/api/discover/narrative/history`.
+- **How it picks:** fixed baskets of liquid US stocks. Four measures: median one-month return versus SPY (40%), share above the 50-day average (25%), volume versus normal (15%), headlines in the last 48 hours from the user's RSS feeds (20%). Highest score among themes not featured in the previous 5 calendar days wins. Missing news is left out and the rest rescaled, never counted as zero.
+- **Shows:** why it is in focus (facts), the basket with moves, hand-written context (labelled as such), risks, volatility note, headlines, other themes, method. Terminal: top of the Discover/Scanner desk. Signal: top of the Discover tab.
+- **Bugs caught by tests while building:** "last 5 days" originally meant the last 5 saved rows; themes with more keywords collected more headlines (now max 3 keywords each).
+- **Not verified live:** the sandbox cannot reach Yahoo, so price fetching for the baskets runs on test data here; it uses the same bar source as Discover. Some tickers may have changed symbol; a theme needs 4 names with data or it is skipped.
+- **Tests:** 10 backend, phone browser 47/47.
+
 ## 2026-11-08 · SEC filings feed (user request)
 - **What:** `GET /api/stocks/filings?symbols=&forms=&limit=&days=` (default: the watchlist's stocks). Covers 10-K/10-Q, 8-K (with item meanings), insider Form 4/144, 5% holders (13D/13G), proxies, offerings, late-filing notices. Newest first, importance dot, link to the document on sec.gov, plain-English meaning that is explicitly generic.
 - **Where:** terminal Equities desk panel "SEC FILINGS" (this stock or whole watchlist, filter chips); Signal card on every stock page (open by default, filters).

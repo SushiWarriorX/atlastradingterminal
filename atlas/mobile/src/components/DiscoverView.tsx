@@ -5,6 +5,7 @@ import { idsOf } from "../lib/watchlist";
 import { useAddToWatchlist, useDiscover, useRemoveFromWatchlist, useWatchlist } from "../state/queries";
 import { useOpenAsset } from "../state/selection";
 import { color, grad, radius, space } from "../theme";
+import { NarrativeCard } from "./NarrativeCard";
 import { ScreenHeader } from "./ScreenHeader";
 import { Banner, Divider, ErrorState, GCard, PrimaryButton, Skeleton, Tag, TextButton, Txt } from "./ui";
 
@@ -58,10 +59,11 @@ export function DiscoverView() {
   return (
     <View style={{ flex: 1, backgroundColor: color.bg }}>
       <ScreenHeader title="Discover" subtitle={d ? `Scan of ${d.asof}` : undefined} />
-      {q.isLoading ? <View style={{ padding: space.lg, gap: space.lg }} testID="discover-loading"><Txt variant="small">Scanning the universe and reading filings. The first scan of the day takes about 20 seconds.</Txt>{[0, 1, 2].map((i) => <Skeleton key={i} h={90} r={16} />)}</View>
-        : q.isError || !d ? <ErrorState testID="discover-error" title="Can't load the shortlist" body={q.error instanceof Error ? q.error.message : "Something went wrong."} onRetry={() => q.refetch()} />
+      {q.isLoading ? <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.lg }}><NarrativeCard /><View style={{ gap: space.lg }} testID="discover-loading"><Txt variant="small">Scanning the universe and reading filings. The first scan of the day takes about 20 seconds.</Txt>{[0, 1, 2].map((i) => <Skeleton key={i} h={90} r={16} />)}</View></ScrollView>
+        : q.isError || !d ? <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.lg }}><NarrativeCard /><ErrorState testID="discover-error" title="Can't load the shortlist" body={q.error instanceof Error ? q.error.message : "Something went wrong."} onRetry={() => q.refetch()} /></ScrollView>
         : (
           <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.lg, paddingBottom: space.xxl * 2 }} testID="discover-body">
+            <NarrativeCard />
             <Txt variant="small">Five stocks to research today, picked by fixed rules. Not a recommendation, rating or forecast.</Txt>
             {d.demo ? <Banner tone="demo" title="Demo data" testID="discover-demo">Prices and company figures are synthetic.</Banner> : null}
             {d.stale_notice ? <Banner tone="warn" title="Showing the last saved shortlist">{d.stale_notice}</Banner> : null}

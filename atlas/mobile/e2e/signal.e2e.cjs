@@ -838,6 +838,11 @@ async function demo(browser) {
       await page.click(V("tab-discover"));
       await page.waitForSelector(V("discover-body"), { timeout: 90000 });
       await page.waitForSelector(V("discover-demo"));
+      await page.waitForSelector(V("narrative-card"));
+      await page.waitForSelector(V("narrative-body") + ", " + V("narrative-none") + ", " + V("narrative-error"), { timeout: 90000 });
+      const nt = await text(page);
+      match(nt, /Narrative of the day/);
+      if (await present(page, "narrative-body")) { match(nt, /Why it is in focus/); match(nt, /Risks to weigh/); match(nt, /Demo data/, "demo narrative is labelled"); match(nt, /Not a recommendation, rating or prediction/i); noMatch(nt, FORECASTS, "narrative makes no forecasts"); }
       const picks = await page.$$eval('[data-testid^="pick-"]:not([data-testid^="pick-more"]):not([data-testid^="pick-save"])', (els) => els.map((e) => e.getAttribute("data-testid")));
       assert(picks.length >= 1 && picks.length <= 5, `between one and five picks (got ${picks.length})`);
       const t = await text(page);

@@ -27,6 +27,7 @@ from .discover.service import DiscoverService
 from .eventcal.service import EventCalendar
 from .btclab.data import BtcData
 from .sentiment import FearGreed
+from .discover.narratives import NarrativeService
 from .btclab.evaluate import LabError
 from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
 from .stocks.edgar import EdgarClient
@@ -1003,6 +1004,17 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     stock_research = StockResearch(EdgarClient(db), fundamentals, news, demo)
 
     discover = DiscoverService(db, bars, stock_research.edgar, demo)
+    narratives = NarrativeService(db, bars, news, demo)
+
+    @app.get("/api/discover/narrative")
+    async def discover_narrative(refresh: bool = False):
+        """Today's market narrative (Quantum, Nuclear, Robotics ...), found by fixed rules from price strength, breadth, volume and headlines. Saved per UTC day."""
+        return ok(await narratives.today(refresh))
+
+    @app.get("/api/discover/narrative/history")
+    async def discover_narrative_history(limit: int = 30):
+        return ok({"items": narratives.history(max(1, min(limit, 100))), "method": narratives.method()})
+
 
     @app.get("/api/discover/shortlist")
     async def discover_shortlist(refresh: bool = False):
