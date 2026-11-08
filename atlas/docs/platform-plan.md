@@ -68,6 +68,14 @@ The dashboard shows the effective interval, whether it differs from yours, and e
 - Controls: pause all, resume, emergency stop (confirmation required), run a job now, change each job's intervals and on/off, retry or dismiss dead letters, set reserve and Claude budgets.
 - The cloud deployment itself has NOT been done or tested (see "Remaining").
 
+
+## Added requirement: recurring development-skills review (additive; nothing above was replaced)
+
+A weekly review of development skills, kept in development tooling (`atlas/devtools/`, see its README) and separate from production trading and research execution. It reads the project's own record to find demonstrated development needs, compares candidate skills with what is installed, inspects candidates statically (never executes them), records each worthwhile candidate, and alerts only when there is a useful recommendation, a serious security issue or an action required. It installs nothing without your approval, evaluates approved skills in an isolated copy, adopts only after passing checks and a recorded improvement, and always keeps a rollback path.
+
+- **Shared quota:** it reads the production scheduler's database read-only and applies the same interval rules at the lowest priority, so it slows down when the Claude allowance is low and defers when higher-priority work needs it. It uses 0 Claude tokens by default and is not an AI loop.
+- **Recurring execution is NOT active yet.** A supported weekly GitHub Actions workflow (`skills-review.yml`) is prepared; GitHub runs scheduled workflows only from the default branch, so it starts after this branch is merged. A manual trigger works today.
+
 ## Remaining (honest list)
 
 - Phases 3-6 above. Phase 6 includes backup and restore testing, staging, the rollback procedure, PWA install and the audit of the existing app for financial-arithmetic, leakage, timezone and security bugs.

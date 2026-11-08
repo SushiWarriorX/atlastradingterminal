@@ -20,6 +20,14 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Development-skills review routine (user request, additive)
+- **Environment inspected:** skills are folders with a `SKILL.md` (name and description header, optional version/scripts/references) in the project (`.claude/skills`, none yet), the user folder, and the account-synced folder (10 skills, managed by the account, never modified). Catalog search works only inside a Claude Code session; GitHub is not reachable from the build machine.
+- **Built:** `atlas/devtools/skills_review.py` + config + README + `tests/` (45 tests): inventory, needs from the project record, static inspection (critical patterns reject, risky patterns flag, nothing executed), overlap/redundancy/version/customization checks, ledger of reviews and decisions, read-only shared-budget deferral and interval stretching (same rules as the scheduler, lowest priority), approve/apply/evaluate/record-eval/adopt/rollback with backups, `add-candidate` for catalog finds, `note` for outside decisions.
+- **First real run (manual):** 10 installed skills seen; needs counted from the log; 4 catalog candidates recorded as metadata-only (react-native-best-practices, a11y-enforcer, data-validation, expo); all four are marked NOT INSPECTED and cannot be installed until their files are downloaded and inspected. Nothing installed. Exit code 10 (something worth reading).
+- **Bugs the tests caught in my own code:** "test" matched inside "backtest" (now whole-word starts); a candidate was compared with its own installed copy and called redundant (same-name now means update); CLI default file paths were bound at import so a test wrote the real ledger (now resolved at call time, real files cleaned up); metadata-only candidates read "0 flagged items", implying they were inspected (now "NOT INSPECTED").
+- **Not active:** recurring execution. A weekly workflow is prepared (`.github/workflows/skills-review.yml`, read-only, opens/updates one issue only on exit code 10) but scheduled workflows run from the default branch only. The GitHub fetch path is mock-tested only.
+
 ## 2026-11-08 · Platform upgrade, phases 1-2: baseline and shared scheduler (user request)
 - **Plan and status:** `atlas/docs/platform-plan.md` (what existed, what was built, what is verified, remaining work, cost assumptions, the three questions only the user can answer).
 - **Built:** durable scheduler (`atlas_api/sched/`: settings, atomic budget reservation, interval adaptation, engine with leases, retries, dead letters, recovery, emergency stop), five default jobs (news, SEC filings, macro, crypto data, health check), `/api/ops/*`, worker process (`python -m atlas_api.worker`) plus a worker container and heartbeat health check in `docker-compose.yml`, Operations screens in the terminal Settings desk and Signal Settings.

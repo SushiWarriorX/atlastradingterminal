@@ -1,0 +1,288 @@
+{
+ "version": 1,
+ "reviews": [
+  {
+   "id": 1,
+   "date": "2026-11-08T18:14:52.631756+00:00",
+   "trigger": "manual",
+   "status": "done",
+   "installed_skills": 10,
+   "candidates_considered": 4,
+   "needs": {
+    "testing": 67,
+    "debugging": 48,
+    "security": 5,
+    "financial-data": 63,
+    "backtesting": 34,
+    "performance": 9,
+    "cloud-deployment": 6,
+    "mobile": 61,
+    "documentation": 14
+   },
+   "recommendations": [
+    "react-native-best-practices",
+    "data-validation",
+    "expo",
+    "a11y-enforcer"
+   ],
+   "serious": [],
+   "alerted": true,
+   "outcome": "recommendations",
+   "interval": [
+    "preferred every 7 days"
+   ]
+  }
+ ],
+ "candidates": {
+  "react-native-best-practices": {
+   "name": "react-native-best-practices",
+   "source": "claude-plugin-catalog",
+   "source_link": "Community plugin (catalog id plugin_012QDvnV1p2rnFLBYbJJjkjn)",
+   "version": "1.0.0",
+   "description": "React Native performance, Metro bundler optimization, FlatList and ScrollView guidance, Expo and navigation patterns for mobile app performance",
+   "problem_addressed": [
+    {
+     "need": "performance",
+     "times_seen": 9,
+     "example": [
+      "[improvement log] - **Evidence:** 38 new scheduler/ops tests (including two-connection race on one budget, lease across two schedulers, crash recovery, backoff bounds, Retry-Afte"
+     ]
+    },
+    {
+     "need": "mobile",
+     "times_seen": 61,
+     "example": [
+      "[improvement log] - **Evidence:** 38 new scheduler/ops tests (including two-connection race on one budget, lease across two schedulers, crash recovery, backoff bounds, Retry-Afte"
+     ]
+    }
+   ],
+   "expected_benefit": "Addresses performance, mobile.",
+   "overlap_with_installed": [],
+   "compatibility": "metadata only: no files were available, so nothing could be inspected",
+   "dependencies": "none declared",
+   "permissions": [
+    "none declared in the header"
+   ],
+   "potential_cost": "no direct cost known; installing changes what Claude reads, so token use may rise slightly",
+   "security": {
+    "verdict": "review",
+    "findings": [],
+    "files": 0,
+    "bytes": 0,
+    "content_hash": null,
+    "boundary": "this is a static check of text; it cannot prove a skill is safe"
+   },
+   "evaluation_plan": [
+    "install in an isolated copy of the repo (never your working tree)",
+    "run the project's regression checks",
+    "give Claude one representative task with and without the skill and record the outcome",
+    "adopt only if the outcome is 'improved' and checks still pass"
+   ],
+   "relevance_score": 0.622,
+   "status": "proposed",
+   "reasons": [
+    "needs a human look at the flagged items before any install"
+   ],
+   "path": null,
+   "decisions": [
+    {
+     "at": "2026-11-08T18:14:52.869712+00:00",
+     "what": "note",
+     "text": "Earlier skills-loop cycle 3: install card shown to the user; no decision recorded yet."
+    }
+   ],
+   "first_seen": "2026-11-08T18:14:52.631756+00:00",
+   "last_seen": "2026-11-08T18:14:52.631756+00:00"
+  },
+  "a11y-enforcer": {
+   "name": "a11y-enforcer",
+   "source": "claude-plugin-catalog",
+   "source_link": "Community plugin (catalog id plugin_019ZPoryasLhWPPD2ajsJYPb)",
+   "version": "1.0.0",
+   "description": "Find WCAG accessibility problems in React and web code: missing labels, keyboard and focus issues, color contrast, for mobile and web usability",
+   "problem_addressed": [
+    {
+     "need": "mobile",
+     "times_seen": 61,
+     "example": [
+      "[improvement log] - **Evidence:** 38 new scheduler/ops tests (including two-connection race on one budget, lease across two schedulers, crash recovery, backoff bounds, Retry-Afte"
+     ]
+    }
+   ],
+   "expected_benefit": "Addresses mobile.",
+   "overlap_with_installed": [],
+   "compatibility": "metadata only: no files were available, so nothing could be inspected",
+   "dependencies": "none declared",
+   "permissions": [
+    "none declared in the header"
+   ],
+   "potential_cost": "no direct cost known; installing changes what Claude reads, so token use may rise slightly",
+   "security": {
+    "verdict": "review",
+    "findings": [],
+    "files": 0,
+    "bytes": 0,
+    "content_hash": null,
+    "boundary": "this is a static check of text; it cannot prove a skill is safe"
+   },
+   "evaluation_plan": [
+    "install in an isolated copy of the repo (never your working tree)",
+    "run the project's regression checks",
+    "give Claude one representative task with and without the skill and record the outcome",
+    "adopt only if the outcome is 'improved' and checks still pass"
+   ],
+   "relevance_score": 0.222,
+   "status": "proposed",
+   "reasons": [
+    "needs a human look at the flagged items before any install"
+   ],
+   "path": null,
+   "decisions": [
+    {
+     "at": "2026-11-08T18:14:52.817239+00:00",
+     "what": "note",
+     "text": "Earlier skills-loop cycle 2: install card shown to the user; no decision recorded yet."
+    }
+   ],
+   "first_seen": "2026-11-08T18:14:52.631756+00:00",
+   "last_seen": "2026-11-08T18:14:52.631756+00:00"
+  },
+  "data-validation": {
+   "name": "data-validation",
+   "source": "claude-plugin-catalog",
+   "source_link": "Anthropic Data plugin (catalog id plugin_0153QbrfDvjVzxFdadfBi5S8)",
+   "version": "1.1.0",
+   "description": "validate-data and statistical-analysis skills for checking data sources, datasets and backtest statistics, financial data quality",
+   "problem_addressed": [
+    {
+     "need": "backtesting",
+     "times_seen": 34,
+     "example": [
+      "[improvement log] ## 2026-11-08 \u00b7 Strategy loop, cycle 2: ADX trend (Wilder)"
+     ]
+    }
+   ],
+   "expected_benefit": "Addresses backtesting.",
+   "overlap_with_installed": [],
+   "compatibility": "metadata only: no files were available, so nothing could be inspected",
+   "dependencies": "none declared",
+   "permissions": [
+    "none declared in the header"
+   ],
+   "potential_cost": "no direct cost known; installing changes what Claude reads, so token use may rise slightly",
+   "security": {
+    "verdict": "review",
+    "findings": [],
+    "files": 0,
+    "bytes": 0,
+    "content_hash": null,
+    "boundary": "this is a static check of text; it cannot prove a skill is safe"
+   },
+   "evaluation_plan": [
+    "install in an isolated copy of the repo (never your working tree)",
+    "run the project's regression checks",
+    "give Claude one representative task with and without the skill and record the outcome",
+    "adopt only if the outcome is 'improved' and checks still pass"
+   ],
+   "relevance_score": 0.556,
+   "status": "proposed",
+   "reasons": [
+    "needs a human look at the flagged items before any install"
+   ],
+   "path": null,
+   "decisions": [
+    {
+     "at": "2026-11-08T18:14:52.922632+00:00",
+     "what": "note",
+     "text": "Earlier skills-loop cycle 1: install card shown to the user for Anthropic's Data plugin (validate-data, statistical-analysis); no decision recorded yet."
+    }
+   ],
+   "first_seen": "2026-11-08T18:14:52.631756+00:00",
+   "last_seen": "2026-11-08T18:14:52.631756+00:00"
+  },
+  "expo": {
+   "name": "expo",
+   "source": "claude-plugin-catalog",
+   "source_link": "Expo Team plugin (catalog id plugin_01CdKmKU3jHhmjgegG7ryVzp)",
+   "version": "1.12.5",
+   "description": "Official Expo skills for building, deploying, upgrading and debugging Expo mobile apps; adds a remote server and hooks",
+   "problem_addressed": [
+    {
+     "need": "cloud-deployment",
+     "times_seen": 6,
+     "example": [
+      "[improvement log] - **Built:** durable scheduler (`atlas_api/sched/`: settings, atomic budget reservation, interval adaptation, engine with leases, retries, dead letters, recover"
+     ]
+    },
+    {
+     "need": "mobile",
+     "times_seen": 61,
+     "example": [
+      "[improvement log] - **Evidence:** 38 new scheduler/ops tests (including two-connection race on one budget, lease across two schedulers, crash recovery, backoff bounds, Retry-Afte"
+     ]
+    }
+   ],
+   "expected_benefit": "Addresses cloud-deployment, mobile.",
+   "overlap_with_installed": [],
+   "compatibility": "metadata only: no files were available, so nothing could be inspected",
+   "dependencies": "none declared",
+   "permissions": [
+    "none declared in the header"
+   ],
+   "potential_cost": "no direct cost known; installing changes what Claude reads, so token use may rise slightly",
+   "security": {
+    "verdict": "review",
+    "findings": [
+     {
+      "severity": "warn",
+      "what": "its description says it connects to an outside server",
+      "file": "(catalog description)",
+      "line": 0,
+      "excerpt": "Official Expo skills for building, deploying, upgrading and debugging Expo mobile apps; adds a remote server and hooks"
+     },
+     {
+      "severity": "warn",
+      "what": "its description mentions hooks that run automatically",
+      "file": "(catalog description)",
+      "line": 0,
+      "excerpt": "Official Expo skills for building, deploying, upgrading and debugging Expo mobile apps; adds a remote server and hooks"
+     }
+    ],
+    "files": 0,
+    "bytes": 0,
+    "content_hash": null,
+    "boundary": "this is a static check of text; it cannot prove a skill is safe"
+   },
+   "evaluation_plan": [
+    "install in an isolated copy of the repo (never your working tree)",
+    "run the project's regression checks",
+    "give Claude one representative task with and without the skill and record the outcome",
+    "adopt only if the outcome is 'improved' and checks still pass"
+   ],
+   "relevance_score": 0.422,
+   "status": "proposed",
+   "reasons": [
+    "needs a human look at the flagged items before any install"
+   ],
+   "path": null,
+   "decisions": [
+    {
+     "at": "2026-11-08T18:14:52.974515+00:00",
+     "what": "note",
+     "text": "Earlier skills-loop cycle 3: deferred because it adds a remote server and hooks on every tool call; the repo's AGENTS.md already points to the matching Expo docs. Revisit before an Expo upgrade."
+    }
+   ],
+   "first_seen": "2026-11-08T18:14:52.631756+00:00",
+   "last_seen": "2026-11-08T18:14:52.631756+00:00"
+  }
+ },
+ "installed": {},
+ "next_run": "2026-11-15T18:14:52.631756+00:00",
+ "last_run": "2026-11-08T18:14:52.631756+00:00",
+ "pending_actions": [
+  "approve or reject 'react-native-best-practices'",
+  "approve or reject 'data-validation'",
+  "approve or reject 'expo'",
+  "approve or reject 'a11y-enforcer'"
+ ]
+}

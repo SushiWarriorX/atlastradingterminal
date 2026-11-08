@@ -14,6 +14,7 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install -e '.[dev]'
       - run: pytest -q
+      - run: pytest -q ../devtools/tests          # the development-skills review tool
   web:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: atlas/web } }
