@@ -1,7 +1,7 @@
 import type { CheckState_ } from "./health";
 import type { FedWatch, MacroBrief, MacroOverview } from "./macro";
 import type { EarningsCal, StockResearch } from "./stocks";
-import type { OpsOverview, CryptoMarket, WorldData, TrackerData, FxData, NarrativeData, OnChain, Positioning, Sentiment, Stablecoins, TreasuryData, WhatIf } from "./whatif";
+import type { FedOpsData, OpsOverview, CryptoMarket, WorldData, TrackerData, FxData, NarrativeData, OnChain, Positioning, Sentiment, Stablecoins, TreasuryData, WhatIf } from "./whatif";
 import type { SecFilings } from "./secfilings";
 import type { CalData } from "./calendar";
 import type { DiscoverRanked, DiscoverRun } from "./discover";
@@ -90,6 +90,7 @@ export const api = {
   btcMarket: () => call<CryptoMarket>("/api/btc/market"),
   opsOverview: () => call<OpsOverview>("/api/ops/overview"),
   opsPost: (path: string, b: unknown = {}) => call<OpsOverview>(`/api/ops/${path}`, body("POST", b)),
+  fedOps: () => call<FedOpsData>("/api/macro/fedops"),
   btcSentiment: () => call<Sentiment>("/api/btc/sentiment"),
   whatIf: (id: string, amount: number) => call<WhatIf>(`/api/signal/whatif/${encodeURIComponent(id)}?amount=${amount}`),
   stockResearch: (id: string) => call<StockResearch>(`/api/stocks/${encodeURIComponent(id)}/research`),

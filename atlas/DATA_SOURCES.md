@@ -18,6 +18,7 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 | RSS feeds | Headlines | News, Macro |
 | CoinGecko, mempool.space | Crypto fundamentals | Signal |
 | CoinGecko whole-crypto-market snapshot (cycle 9) | Total crypto market value, 24h change and volume, Bitcoin / Ether / stablecoin share ('dominance') | Terminal BTC desk panel, Signal BTC page card |
+| NY Fed repo and reverse repo operations (cycle 10) | Cash parked at the Fed overnight (reverse repo) with day change, month average and peak; cash the Fed lent (standing repo) with days used and peak; 40-day history | Terminal Macro desk panel, Signal Macro card |
 | World Bank annual indicators (cycle 8) | Yearly economic growth, inflation and unemployment for the US, euro area, China, Japan, UK and India, each with its own latest year and change from the year before | Terminal Macro desk panel, Signal Macro card |
 | ECB euro reference exchange rates (cycle 7) | The US dollar against EUR, JPY, GBP, CHF, CNY, CAD and AUD: rate, 1-day and 30-day change in dollar strength, and how many of the seven the dollar is stronger against | Terminal Macro desk panel, Signal Macro card |
 | mempool.space Bitcoin network (cycle 6) | Fees (sat/vB and a typical transaction), mempool queue, mining difficulty cycle with estimated next change, hashrate (7-day average, 30/90-day change, 90-day history) | Terminal BTC desk panel, Signal BTC page card |
@@ -28,7 +29,7 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 | alternative.me Fear & Greed (cycle 1) | Daily 0-100 crypto mood gauge, 31-day history | Terminal BTC desk, Signal BTC page |
 
 ## QUEUED (candidates, in order; each must be fetched live before it ships)
-(queue is empty: the next cycle searches for new candidates, e.g. NY Fed reverse-repo usage, Treasury auction results, DefiLlama DeFi value)
+(queue is empty: the next cycle searches for new candidates, e.g. Treasury auction results, DefiLlama DeFi value)
 
 ## BLOCKED
 - fred.stlouisfed.org: added to the allowed hosts but still no reply after the change (checked cycle 1). Retry next cycle; if still silent, the PPI series ids stay unverified.

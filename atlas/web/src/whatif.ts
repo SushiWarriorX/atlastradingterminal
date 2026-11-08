@@ -84,3 +84,8 @@ export interface OpsOverview {
   claude: { access: string; model: string; telemetry: string; usage_known: boolean; usage_note: string; dollar_cost_known: boolean };
   budgets: OpsBudget[]; jobs: OpsJob[]; runs: OpsRun[]; dead_letters: { id: number; job_id: string; failed_at: string; attempts: number; error: string | null }[]; events: { ts: string; kind: string; severity: string; message: string }[];
 }
+
+export interface FedOpsData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  reverse_repo?: { billions: number; previous_day_billions: number; change_billions: number; average_billions: number; highest_billions: number; highest_date: string; dates_in_window: number };
+  repo?: { billions: number; window_total_billions: number; days_used: number; highest_billions: number; dates_in_window: number };
+  history?: { date: string; reverse_repo_billions: number; repo_billions: number }[] }

@@ -34,6 +34,7 @@ from .stablecoins import Stablecoins
 from .onchain import OnChain
 from .ecb import EcbFx
 from .worldbank import WorldBank
+from .fedops import FedOps
 from .cgglobal import CoinGeckoGlobal
 from .sched.engine import Scheduler
 from .sched.jobs import register_default_jobs
@@ -353,6 +354,12 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     treasury = Treasury(demo=demo)
     ecb_fx = EcbFx(demo=demo)
     world_bank = WorldBank(demo=demo)
+    fed_ops = FedOps(demo=demo)
+
+    @app.get("/api/macro/fedops")
+    async def macro_fedops():
+        """Fed repo and reverse repo operations (New York Fed): cash parked at the Fed and cash the Fed lent. Describes money-market plumbing; not a signal."""
+        return ok(await fed_ops.overview())
 
     @app.get("/api/macro/world")
     async def macro_world():
@@ -1553,7 +1560,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
 
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
-                                      "extras": {"macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

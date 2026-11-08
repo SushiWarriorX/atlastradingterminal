@@ -226,3 +226,8 @@ export function useOpsAction() {
   const qc = useQueryClient();
   return useMutation({ mutationFn: ({ path, body }: { path: string; body?: unknown }) => need(api).opsPost(path, body ?? {}), onSuccess: (d) => qc.setQueryData(keys(baseUrl).ops, d) });
 }
+
+export function useFedOps() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).fedOps, queryFn: () => need(api).fedOps(), enabled: !!api, staleTime: 15 * 60_000, refetchInterval: 30 * 60_000, retry: 0 });
+}

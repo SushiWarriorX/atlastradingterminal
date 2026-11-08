@@ -75,6 +75,13 @@ fs.mkdirSync(S, { recursive: true });
   if (!/Aroon trend/.test(tr) || !/FORWARD RECORD/i.test(tr)) fail('tracker panel lacks the Aroon entry or its forward record section');
   console.log('BTC desk strategy tracker: ok');
 
+  await pg.keyboard.press('Control+4');                  // Macro desk
+  await pg.waitForTimeout(800);
+  await pg.locator('[data-testid="fedops"]').waitFor({ timeout: 45000 });
+  const fo = await pg.locator('[data-testid="fedops"]').innerText();
+  if (!/New York Fed|Federal Reserve Bank of New York|Demo mode/.test(fo)) fail('Fed operations panel lacks its source or demo notice');
+  console.log('Macro desk Fed operations: ok');
+
   await cmd('SETTINGS');
   await pg.waitForSelector('[data-testid="ops"]', { timeout: 30000 });
   const ops = await pg.locator('[data-testid="ops"]').innerText();

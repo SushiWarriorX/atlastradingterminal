@@ -131,3 +131,34 @@ def test_adx_strategy_is_fixed_has_no_lookahead_and_goes_long_in_a_strong_uptren
     pos = st.build(d, st.params).to_numpy()
     assert pos[100] == 1.0 and pos[-1] == 0.0                                           # in during the strong rise, out after it reverses
     assert (st.build(d.iloc[:200], st.params).to_numpy() == pos[:200]).all()            # bar i uses only bars up to i
+
+
+# --- Parabolic SAR (strategy loop, cycle 3) -----------------------------------------------------------------------------------------------
+def test_psar_follows_wilders_definition_on_a_hand_worked_example():
+    d = pd.DataFrame({"h": [10.0, 11.0, 12.0, 9.0, 8.5], "l": [8.0, 9.0, 10.0, 7.0, 6.5], "c": [9.0, 10.5, 11.5, 7.5, 7.0]})
+    sar = ST.psar(d, 0.02, 0.2).to_numpy()
+    # up-trend: SAR stays at the first low (8) because it may never rise above the last two lows; bar 3 (low 7) breaks it, so the SAR jumps to the old extreme high (12)
+    assert list(sar[:3]) == [8.0, 8.0, 8.0]
+    assert sar[3] == 12.0                                                  # reversal: SAR becomes the extreme point of the finished up-trend
+    assert sar[4] == 12.0                                                  # 12 + 0.02 x (7 - 12) = 11.9, but it may never be below the last two highs (9 and 12)
+
+
+def test_psar_acceleration_is_capped_and_resets_on_reversal():
+    c = 100 + np.arange(60, dtype=float)
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c})
+    sar = ST.psar(d, 0.02, 0.2).to_numpy()
+    assert (np.diff(sar[3:]) > 0).all()                                    # in a steady rise the SAR only moves up
+    gaps = (c - sar)[3:]
+    assert gaps.min() > 0 and (np.diff(gaps[40:]) < 0).all()                               # it closes on price but stays below it in a steady rise; the acceleration cap (0.2) stops it catching up
+
+
+def test_psar_strategy_is_fixed_has_no_lookahead_and_exits_when_price_breaks_the_sar():
+    st = ST.S["psar_trend"]
+    assert st.params == {"step": 0.02, "max_af": 0.2} and not st.requires_funding
+    up = 100 + np.arange(80, dtype=float)
+    down = up[-1] - np.arange(1, 61, dtype=float) * 2
+    c = np.concatenate([up, down])
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[50] == 1.0 and pos[-1] == 0.0
+    assert (st.build(d.iloc[:100], st.params).to_numpy() == pos[:100]).all()          # bar i uses only bars up to i

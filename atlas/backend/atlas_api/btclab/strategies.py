@@ -365,6 +365,52 @@ reg(Strategy("adx_trend", "ADX trend (Wilder)", "Trend", "Holds BTC only when th
              "ADX is above 25 and +DI is above -DI.", "+DI falls below -DI (sellers are in charge).", "No fixed stop; the exit rule is the stop.", {"n": 14, "level": 25}, {"n": [10, 14, 20, 28, 40]}, _adx_build, _adx_conds))
 
 
+def psar(d: pd.DataFrame, step: float, max_af: float) -> pd.Series:
+    """Welles Wilder's Parabolic SAR (1978): a stop-and-reverse level that trails the trend and accelerates toward price. Each value uses only bars up to and including that bar."""
+    h, l, c = d["h"].to_numpy(float), d["l"].to_numpy(float), d["c"].to_numpy(float)
+    n = len(c)
+    sar = np.full(n, np.nan)
+    if n < 3:
+        return pd.Series(sar, index=d.index)
+    up = c[1] >= c[0]
+    sar[0] = l[0] if up else h[0]
+    ep = h[0] if up else l[0]
+    af = step
+    for i in range(1, n):
+        s_ = sar[i - 1] + af * (ep - sar[i - 1])
+        if up:
+            s_ = min(s_, l[i - 1], l[i - 2] if i >= 2 else l[i - 1])         # never above the last two lows
+            if l[i] < s_:
+                up, s_, ep, af = False, ep, l[i], step                       # price broke the SAR: reverse, SAR jumps to the old extreme
+            elif h[i] > ep:
+                ep, af = h[i], min(af + step, max_af)
+        else:
+            s_ = max(s_, h[i - 1], h[i - 2] if i >= 2 else h[i - 1])         # never below the last two highs
+            if h[i] > s_:
+                up, s_, ep, af = True, ep, h[i], step
+            elif l[i] < ep:
+                ep, af = l[i], min(af + step, max_af)
+        sar[i] = s_
+    return pd.Series(sar, index=d.index)
+
+
+def _psar_build(d, p):
+    sar = psar(d, p["step"], p["max_af"])
+    return hold(d["c"] > sar, d["c"] < sar)
+
+
+def _psar_conds(d, p):
+    sar = psar(d, p["step"], p["max_af"]).iloc[-1]
+    c = d["c"].iloc[-1]
+    return [_cond("Close above the Parabolic SAR (entry)", None if np.isnan(sar) else bool(c > sar), f"close {_val(c)} vs SAR {_val(sar)}"),
+            _cond("Close below the Parabolic SAR (exit)", None if np.isnan(sar) else bool(c < sar), f"close {_val(c)} vs SAR {_val(sar)}")]
+
+
+reg(Strategy("psar_trend", "Parabolic SAR (Wilder)", "Trend", "Holds BTC while the price is above Wilder's trailing stop-and-reverse level, which accelerates toward price as the trend ages.",
+             "Close is above the Parabolic SAR (step 0.02, maximum 0.2).", "Close falls below the Parabolic SAR.", "The SAR is itself a trailing stop; there is no other stop.", {"step": 0.02, "max_af": 0.2},
+             {"step": [0.01, 0.015, 0.02, 0.03, 0.04]}, _psar_build, _psar_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 

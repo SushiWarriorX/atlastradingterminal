@@ -47,7 +47,7 @@ def register_default_jobs(s: Scheduler, d: dict) -> None:
 
     async def macro_refresh(ctx: RunContext) -> dict:
         done, failed = [], []
-        for name in ("macro_brief", "treasury", "ecb_fx", "world_bank"):
+        for name in ("macro_brief", "treasury", "ecb_fx", "world_bank", "fed_ops"):
             svc = d["extras"].get(name)
             if svc is None:
                 continue

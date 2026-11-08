@@ -21,6 +21,12 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+## 2026-11-08 · Data cycle 10 and strategy cycle 3 (parallel loops)
+- **Data:** NY Fed repo and reverse repo operations (free, official, no key). Backend `fedops.py` (7 tests, fixture from a real 120-operation response), route `/api/macro/fedops`, terminal Macro desk panel, Signal Macro card, added to the macro refresh job. Shown with its date, OVERDUE after 6 days, described as plumbing not a signal. Demo mode shows nothing.
+- **Strategy:** Parabolic SAR (Wilder), fixed settings (step 0.02, max 0.2), no tuning. Frozen backtest: evidence **weak**. Whole history +2,255.5% vs holding +26,962.8%; last 30% (out of sample) +68.8% vs +187.8%, 51 trades; worst drop out of sample -35.4% vs -53.1%; 100% of nearby settings positive out of sample; doubled costs +52.4%. It did not beat holding after adjusting for risk, and the luck check (23 rules in the library) could not rule out luck. Reported as it is.
+- **Checks:** backend 1012 passed, phone 43 unit + 48 browser checks, terminal 10 tests + build + browser check (new Macro desk check).
+- **Skills cycle:** looked at Superpowers, megapowers, no-cape, Tackle (all hook into every session with broad access): none installed, see SKILLS_LOG.md.
+
 ## 2026-11-08 · Development-skills review routine (user request, additive)
 - **Environment inspected:** skills are folders with a `SKILL.md` (name and description header, optional version/scripts/references) in the project (`.claude/skills`, none yet), the user folder, and the account-synced folder (10 skills, managed by the account, never modified). Catalog search works only inside a Claude Code session; GitHub is not reachable from the build machine.
 - **Built:** `atlas/devtools/skills_review.py` + config + README + `tests/` (44 tests): inventory, needs from the project record, static inspection (critical patterns reject, risky patterns flag, nothing executed), overlap/redundancy/version/customization checks, ledger of reviews and decisions, read-only shared-budget deferral and interval stretching (same rules as the scheduler, lowest priority), approve/apply/evaluate/record-eval/adopt/rollback with backups, `add-candidate` for catalog finds, `note` for outside decisions.
