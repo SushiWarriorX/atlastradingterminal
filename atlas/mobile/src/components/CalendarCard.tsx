@@ -8,7 +8,7 @@ import { color, space } from "../theme";
 import { Banner, Chip, GCard, Skeleton, Tag, Txt } from "./ui";
 
 const KINDS = ["", "earnings", "economy", "rates", "dividend", "auction"];
-const SCOPES: [string, string][] = [["major", "Major"], ["watchlist", "Mine"], ["all", "All"]];
+const SCOPES: [string, string][] = [["major", "Big companies"], ["watchlist", "My watchlist"], ["all", "Everything"]];
 
 function Row({ e, onOpen }: { e: CalendarEvent; onOpen: (id: string) => void }) {
   const press = e.instrument_id ? () => onOpen(e.instrument_id!) : undefined;
@@ -41,7 +41,7 @@ export function CalendarCard() {
     <GCard style={{ padding: space.lg, gap: space.md }} testID="calendar-card">
       <View><Txt variant="h2">Calendar</Txt><Txt variant="tiny">Earnings, economic data, Fed decisions, dividends, Treasury auctions</Txt></View>
       <View style={{ flexDirection: "row", gap: 4, flexWrap: "wrap" }}>{[7, 14, 21].map((n) => <Chip key={n} label={`${n}d`} active={days === n} onPress={() => setDays(n)} testID={`cal-days-${n}`} />)}{SCOPES.map(([v, l]) => <Chip key={v} label={l} active={scope === v} onPress={() => setScope(v)} testID={`cal-scope-${v}`} />)}</View>
-      <View style={{ flexDirection: "row", gap: 4, flexWrap: "wrap" }}>{KINDS.map((k) => <Chip key={k || "all"} label={k ? KIND_LABEL[k] : "All"} active={kind === k} onPress={() => setKind(k)} testID={`cal-kind-${k || "all"}`} />)}</View>
+      <View style={{ flexDirection: "row", gap: 4, flexWrap: "wrap" }}>{KINDS.map((k) => <Chip key={k || "all"} label={k ? KIND_LABEL[k] : "All types"} active={kind === k} onPress={() => setKind(k)} testID={`cal-kind-${k || "all"}`} />)}</View>
       {cal.isLoading ? <View style={{ gap: space.md }} testID="calendar-loading"><Txt variant="small">Loading the calendar. The first load fetches several sources and can take a few seconds.</Txt>{[0, 1, 2].map((i) => <Skeleton key={i} h={40} />)}</View>
         : cal.isError || !d ? <Banner tone="warn" title="Couldn't load the calendar" testID="calendar-error">{cal.error instanceof Error ? cal.error.message : "Something went wrong."}</Banner>
         : (

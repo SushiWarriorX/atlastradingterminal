@@ -2,6 +2,13 @@
 
 Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) and by hand.
 
+## 2026-11-08, cycle 8: the phone calendar's two filter rows no longer both say "All"
+- **Found (reviewing the new phone calendar):** the company filter and the type filter each had a chip called "All", so it was unclear which one a tap would change.
+- **Changed:** company filter chips are now "Big companies", "My watchlist" and "Everything"; the type filter starts with "All types". Labels only; no logic changed.
+- **Verified:** backend 849 tests, web and phone type checks and unit tests (phone 42), browser suite 44 of 44; viewed the new Macro screenshot.
+- **Still open:** the calendar shows times in the device's own time zone (fine on a phone, but the sandbox screenshots read UTC, so "1:30 PM" for an 8:30 AM ET release); the owner's request for a Voices section (follow a trader and see their narrative) is waiting on the choice between a free paste-in box and a paid X API key.
+- **Next candidates:** Voices (once the owner answers); calendar reminders for watchlist events; keyboard shortcuts for the terminal desks.
+
 ## 2026-11-08, on request: one calendar for earnings, economic data, rates, dividends and Treasury auctions
 - **Asked for:** an earnings calendar like eToro's: company earnings, CPI data, interest-rate decisions, dividend payments, and so on.
 - **Built:** `/api/calendar` (backend `eventcal` package), a CALENDAR panel at the top of the terminal's Macro desk, and a Calendar card at the top of the phone's Macro tab. Five kinds: company earnings and dividends (Nasdaq's public calendars, unofficial, with the analyst EPS estimate it shows and the last-year figure), economic releases (BLS: CPI, jobs, PPI, JOLTS, employment cost; BEA: GDP and PCE), Fed decisions, minutes and press conferences (the hand-entered FOMC table), and Treasury auctions (US Treasury API). Filters: 7, 14 or 21 days; type; Major companies, My watchlist or Everything; add-to-watchlist in the terminal; tap a company on the phone to open it.
