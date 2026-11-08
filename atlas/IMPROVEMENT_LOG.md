@@ -10,6 +10,13 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Data-source loop, cycle 2: NY Fed SOFR
+- **Verified live first:** markets.newyorkfed.org answered with SOFR 3.92% for 2026-11-05 (percentiles, volume). A real response is the test fixture.
+- **Shipped:** `nyfed.py`; SOFR is a key indicator right after the Fed target range in Macro (terminal and Signal), with its date, daily change and freshness. Failure shows "unavailable" with a reason; demo mode shows nothing.
+- **Bug caught by the browser test:** SOFR loading alone hid the "FRED could not be loaded" message. The one-message rule now ignores SOFR and keeps loaded rows.
+- **Tests:** 6 new backend; 47/47 phone browser; 896+ backend pass.
+
 ## 2026-11-08 · Narrative of the day in Discover (user request)
 - **What:** every UTC day the app features one market theme (Quantum, Nuclear and uranium, Robotics, AI infrastructure, Power, Space, Cybersecurity, Defense and drones, Obesity drugs, Chip equipment, Gold, Crypto-linked stocks, Solar, Fintech, Oil and gas). `GET /api/discover/narrative` (saved per day in `narrative_runs`, migration 016), `/api/discover/narrative/history`.
 - **How it picks:** fixed baskets of liquid US stocks. Four measures: median one-month return versus SPY (40%), share above the 50-day average (25%), volume versus normal (15%), headlines in the last 48 hours from the user's RSS feeds (20%). Highest score among themes not featured in the previous 5 calendar days wins. Missing news is left out and the rest rescaled, never counted as zero.

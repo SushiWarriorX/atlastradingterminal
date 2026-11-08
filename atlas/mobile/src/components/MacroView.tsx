@@ -11,7 +11,7 @@ import { Banner, Chip, Divider, ErrorState, Skeleton, Tag, TextButton, Txt } fro
 import type { MacroIndicator } from "../api/types";
 
 /** The few numbers that drive the rate and inflation story: the Fed's rate, CPI, PCE and PPI (headline and core). Other series stay available from the server. */
-const CORE = ["fed", "cpi", "core_cpi", "pce", "core_pce", "ppi", "core_ppi"];
+const CORE = ["fed", "sofr", "cpi", "core_cpi", "pce", "core_pce", "ppi", "core_ppi"];
 const open = (u: string | null | undefined) => { const s = safeUrl(u ?? null); if (s) Linking.openURL(s).catch(() => undefined); };
 const value = (i: MacroIndicator) => (typeof i.value === "number" ? `${i.value.toFixed(2)}${i.unit?.startsWith("%") ? "%" : ""}` : String(i.value ?? "n/a"));
 const when = (iso: string | null) => (iso ? localDateTime(iso) : "");
@@ -39,7 +39,8 @@ export function MacroView() {
             {d.calendar_warning ? <Banner tone="warn" title="Calendar needs updating">{d.calendar_warning}</Banner> : null}
             <CalendarCard />
             <Section title="Key indicators" note="Fed rate, CPI, PCE and PPI: official data with its observation date, not live prices. Year-over-year for the price indexes.">
-              {core.length === 0 ? <Txt variant="small" c={color.warn} testID="macro-indicators-note">{d.indicators_note ?? "No official indicators to show."}</Txt> : core.map((i, n) => (
+              {d.indicators_note ? <Txt variant="small" c={color.warn} testID="macro-indicators-note">{d.indicators_note}</Txt> : null}
+              {core.length === 0 ? (d.indicators_note ? null : <Txt variant="small" c={color.warn}>No official indicators to show.</Txt>) : core.map((i, n) => (
                 <View key={i.id}>{n > 0 && <Divider />}
                   {i.available ? (
                     <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, gap: space.md }}>

@@ -8,7 +8,7 @@ const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString([], { m
 const fmt = (i: BriefIndicator) => (typeof i.value === "number" ? `${i.value.toFixed(2)}${i.unit === "%" || i.unit?.startsWith("%") ? "%" : ""}` : i.value ?? "n/a");
 
 /** The few numbers that drive the rate and inflation story: the Fed's rate, CPI, PCE and PPI (headline and core). Other series stay available from the server. */
-const CORE = ["fed", "cpi", "core_cpi", "pce", "core_pce", "ppi", "core_ppi"];
+const CORE = ["fed", "sofr", "cpi", "core_cpi", "pce", "core_pce", "ppi", "core_ppi"];
 
 /** One page: key indicators, what is coming, and headlines. Facts, rule-based interpretation and headlines are labelled differently. */
 export function MacroToday() {
@@ -30,7 +30,8 @@ export function MacroToday() {
           <td className="small">{i.change ? `${i.change.value >= 0 ? "+" : "−"}${Math.abs(i.change.value).toFixed(2)} ${i.change.unit}` : ""} <span className="dim">{i.change?.label.replace("vs ", "")}</span></td>
           <td className="mono small">{i.obs_date}</td><td className={`small ${i.freshness === "OVERDUE" ? "warnc" : "dim"}`}>{i.freshness === "OVERDUE" ? "Overdue" : "Current"}</td></tr>
       ) : <tr key={i.id}><td><b>{i.label}</b></td><td colSpan={4} className="down small">Unavailable: {i.reason}</td></tr>)}</tbody></table>
-      {core.length === 0 && <div className="note warn" data-testid="macro-indicators-note">{d.indicators_note ?? "No official indicators to show."}</div>}
+      {d.indicators_note && <div className="note warn" data-testid="macro-indicators-note">{d.indicators_note}</div>}
+      {core.length === 0 && !d.indicators_note && <div className="note warn">No official indicators to show.</div>}
       <div className="ws-bar" style={{ paddingLeft: 0 }}><span>UPCOMING · scheduled dates</span></div>
       {d.upcoming.length === 0 ? <div className="note">No upcoming events could be loaded.</div> : d.upcoming.map((e, i) => (
         <div key={i} className="small" style={{ margin: "4px 0" }}><b className="mono">{e.at_utc ? when(e.at_utc) : e.date}</b> {e.title} <span className="dim">· {e.source}</span></div>))}

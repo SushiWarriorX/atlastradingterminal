@@ -27,6 +27,7 @@ from .discover.service import DiscoverService
 from .eventcal.service import EventCalendar
 from .btclab.data import BtcData
 from .sentiment import FearGreed
+from .nyfed import NyFedSofr
 from .discover.narratives import NarrativeService
 from .btclab.evaluate import LabError
 from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
@@ -333,7 +334,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             raise ApiError("NOT_CONFIGURED", "The FRED provider is not set up.", 503)
         return ok(await fedwatch.overview())
 
-    macro_brief = MacroBriefService(macro, fedwatch, news, demo)
+    macro_brief = MacroBriefService(macro, fedwatch, news, demo, sofr=NyFedSofr(demo=demo))
 
     @app.get("/api/macro/brief")
     async def macro_brief_route():

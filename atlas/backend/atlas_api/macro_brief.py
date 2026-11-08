@@ -38,7 +38,7 @@ TOPICS = {
                     "Geopolitical shocks usually show up as moves in oil, the dollar, gold and safe-haven bonds first. The effect on stocks and BTC varies and is often short-lived."),
 }
 _TOPIC_RX = {k: re.compile(v[1], re.I) for k, v in TOPICS.items()}
-INDICATOR_ORDER = ["fed", "us10y", "us2y", "curve", "cpi", "core_cpi", "core_pce", "pce", "ppi", "core_ppi", "payrolls", "unemployment", "gdp", "usd", "balance_sheet"]
+INDICATOR_ORDER = ["fed", "sofr", "us10y", "us2y", "curve", "cpi", "core_cpi", "core_pce", "pce", "ppi", "core_ppi", "payrolls", "unemployment", "gdp", "usd", "balance_sheet"]
 
 
 def topic_of(title: str) -> str | None:
@@ -67,7 +67,7 @@ def clean_reason(err: str) -> str:
 
 def indicators_note(ind: list[dict], demo: bool) -> str | None:
     """When NO indicator could be loaded, say so once in plain words instead of listing every one as unavailable."""
-    if any(i["available"] for i in ind):
+    if any(i["available"] for i in ind if i["id"] != "sofr"):       # SOFR comes from the NY Fed, not FRED, so it loading does not mean FRED loaded
         return None
     if demo:
         return "Demo mode: official indicators are not shown because they would not be real."
@@ -136,7 +136,7 @@ def build(macro: dict, fed: dict, stories: list[dict], now: datetime) -> dict:
     demo = bool(macro.get("demo") or fed.get("demo"))
     note = indicators_note(ind, demo)
     if note:
-        ind = []                                                  # one clear message beats a wall of "unavailable" rows
+        ind = [i for i in ind if i["available"]]                 # one clear message beats a wall of "unavailable" rows; anything that did load (SOFR) stays
     ev = upcoming(fed, today)
     heads = []
     seen = set()
@@ -155,8 +155,8 @@ def build(macro: dict, fed: dict, stories: list[dict], now: datetime) -> dict:
 
 
 class MacroBriefService:
-    def __init__(self, macro, fedwatch, news, demo: bool = False):
-        self.macro, self.fed, self.news, self.demo = macro, fedwatch, news, demo
+    def __init__(self, macro, fedwatch, news, demo: bool = False, sofr=None):
+        self.macro, self.fed, self.news, self.demo, self.sofr = macro, fedwatch, news, demo, sofr
 
     async def _central_bank_stories(self) -> tuple[list[dict], list[str]]:
         errs: list[str] = []
@@ -178,6 +178,8 @@ class MacroBriefService:
         now = now or datetime.now(timezone.utc)
         macro = await self.macro.overview() if self.macro else {"facts": [], "interpretations": [], "notice": "The FRED provider is not set up, so official indicators are unavailable."}
         fed = await self.fed.overview(now)
+        if self.sofr is not None:
+            fed = {**fed, "releases": [*(fed.get("releases") or []), await self.sofr.fact(now.astimezone(timezone.utc).date())]}
         stories = [{"feed": s["feed"], "title": s["title"], "link": s.get("link"), "published": s.get("published")} for s in (self.news.items(hours=72, limit=200)["items"] if self.news else [])]
         stories += [{"feed": c["feed"], "title": c["title"], "link": c.get("link"), "published": c.get("published_utc")} for c in fed.get("communications") or []]
         extra_err: list[str] = []
