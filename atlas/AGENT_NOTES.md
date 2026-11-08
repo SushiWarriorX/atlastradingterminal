@@ -31,6 +31,13 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 - Parse untrusted XML defensively (refuse a DOCTYPE or entities); never build a link from a field without checking its characters; show only https links.
 - Keep a trimmed real response as the test fixture, and test the failure, stale and demo paths, not only the happy one.
 
+## Treasury FiscalData (the source behind many Macro cards)
+- Missing values arrive as the text "null", not as nulls; amounts are strings, usually in millions of dollars (a few are in dollars). Convert once, state the unit on screen.
+- Read the field the source really fills: in the cash-balance table the closing balance sits in `open_today_bal`. Prove it with two live rows that must agree (one day's closing equals the next day's opening) before trusting it.
+- Mixed-type tables hide look-alikes (inflation-protected and floating-rate notes inside "Note"): filter with the source's own flag fields, never by guessing from a name or a yield.
+- A page-size limit can cut the oldest month in half; count what is really there before promising "N months", and show "no comparison" when a month is missing.
+- Check your own arithmetic against a total the source publishes (a deficit, a year-to-date row) in a test.
+
 ## Phone lists
 - Signal's screens render lists with a scroll view and `map`. That is fine while the server caps the rows (calendar 40 a day over at most 21 days, filings 40, watchlist 100). Any new list that could pass about 100 rows should use `FlatList`, or the server should cap it.
 
