@@ -281,3 +281,29 @@ def test_stoch_strategy_is_fixed_buys_the_dip_in_an_uptrend_only_and_has_no_look
     dd = pd.DataFrame({"h": down + 1, "l": down - 1, "c": down})
     assert st.build(dd, st.params).to_numpy().sum() == 0                                        # in a downtrend the close is below its average, so it never enters
     assert (st.build(d.iloc[:300], st.params).to_numpy() == pos[:300]).all()                    # bar i uses only bars up to i
+
+
+def test_mfi_matches_a_hand_worked_example():
+    c = np.array([10, 11, 10, 12, 13], float)
+    d = pd.DataFrame({"h": c, "l": c, "c": c, "v": np.array([1, 2, 3, 4, 5], float)})                # high = low = close, so the typical price is the close
+    m = ST.mfi(d, 3)
+    assert m.iloc[:3].isna().all() and not np.isnan(m.iloc[3])                                      # 3 price changes are needed
+    # flows after bar 0: bar1 11x2 = 22 (up), bar2 10x3 = 30 (down), bar3 12x4 = 48 (up), bar4 13x5 = 65 (up)
+    assert abs(m.iloc[3] - 100 * (22 + 48) / (22 + 48 + 30)) < 1e-9                                  # 70
+    assert abs(m.iloc[4] - 100 * (48 + 65) / (48 + 65 + 30)) < 1e-9
+    flat = pd.DataFrame({"h": [5.0] * 6, "l": [5.0] * 6, "c": [5.0] * 6, "v": [1.0] * 6})
+    assert ST.mfi(flat, 3).isna().all()                                                             # no price change at all: undefined, not 0 or 100
+
+
+def test_mfi_strategy_is_fixed_buys_exhausted_selling_sells_recovery_and_has_no_lookahead():
+    st = ST.S["mfi_reversion"]
+    assert st.params == {"n": 14, "low": 20, "high": 70} and not st.requires_funding
+    fall = 200 - np.arange(40, dtype=float) * 2
+    rise = fall[-1] + np.arange(1, 41, dtype=float) * 3
+    c = np.concatenate([np.full(15, 200.0) + np.arange(15) * 0.1, fall, rise])
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c, "v": np.full(len(c), 100.0)})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:14].sum() == 0 and set(pos) <= {0.0, 1.0}
+    assert pos[40] == 1.0                                                                           # deep into the fall the index is near 0, so it is holding
+    assert pos[-1] == 0.0                                                                           # after a long rise the index is above 70, so it has sold
+    assert (st.build(d.iloc[:60], st.params).to_numpy() == pos[:60]).all()                          # bar i uses only bars up to i

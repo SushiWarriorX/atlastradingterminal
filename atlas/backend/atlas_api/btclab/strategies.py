@@ -538,6 +538,34 @@ reg(Strategy("stoch_uptrend", "Stochastic pullback in an uptrend", "Mean reversi
              {"low": [10, 15, 20, 25, 30]}, _stoch_build, _stoch_conds))
 
 
+def mfi(d: pd.DataFrame, n: int) -> pd.Series:
+    """Money Flow Index (Quong and Soudack): a volume-weighted RSI. Typical price = (high + low + close) / 3; money flow = typical price x volume, counted as positive when the typical price
+    rose from the previous bar and negative when it fell; MFI = 100 x positive / (positive + negative) over `n` bars. Each value uses only bars up to and including that bar."""
+    tp = (d["h"] + d["l"] + d["c"]) / 3
+    flow = tp * d["v"]
+    up, dn = flow.where(tp > tp.shift(1), 0.0), flow.where(tp < tp.shift(1), 0.0)
+    valid = tp.shift(1).notna()                                                        # the first bar has no previous bar to compare with
+    up, dn = up.where(valid), dn.where(valid)
+    pos, neg = up.rolling(n, min_periods=n).sum(), dn.rolling(n, min_periods=n).sum()
+    return 100 * pos / (pos + neg).replace(0, np.nan)
+
+
+def _mfi_build(d, p):
+    m = mfi(d, p["n"])
+    return hold(m < p["low"], m > p["high"])
+
+
+def _mfi_conds(d, p):
+    m = mfi(d, p["n"]).iloc[-1]
+    bad = bool(np.isnan(m))
+    return [_cond(f"Money Flow Index below {p['low']} (entry)", None if bad else bool(m < p["low"]), f"MFI {_val(m)}"),
+            _cond(f"Money Flow Index above {p['high']} (exit)", None if bad else bool(m > p["high"]), f"MFI {_val(m)}")]
+
+
+reg(Strategy("mfi_reversion", "Money Flow Index reversion", "Mean reversion", "Buys when volume-weighted selling looks exhausted (Money Flow Index below 20) and sells once buying has recovered (above 70).",
+             "The 14-bar Money Flow Index falls below 20.", "The Money Flow Index rises above 70.", "No fixed stop; the exit rule is the stop.", {"n": 14, "low": 20, "high": 70}, {"low": [10, 15, 20, 25, 30]}, _mfi_build, _mfi_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 

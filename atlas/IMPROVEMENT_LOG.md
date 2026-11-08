@@ -21,6 +21,12 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+## 2026-11-08 · Strategy cycle 9: Money Flow Index reversion
+- **Rule (fixed from the queue, not tuned):** enter when the 14-bar Money Flow Index (a volume-weighted RSI) falls below 20; exit when it rises above 70. 29 rules in the library now (the loop's note: past 30 rules the luck check gets stricter still; at 60 it stops and asks).
+- **Frozen backtest, evidence: none, and the first rule in this run that lost money.** Whole history -22.3% (20 trades) vs holding +26,956.7%; worst drop -73.6% vs -83.8%; Sharpe 0.1 vs 1.1. Last 30% (out of sample): +28.4% vs holding +187.8%, only 6 trades, worst drop -19.1% vs -53.1%. Walk-forward -36.1% (the tool's second reason: re-tuning as you go did not make money). Doubled costs +26.9% out of sample; 80% of nearby settings positive out of sample (not 100%). The tool's other reason: only 6 out-of-sample trades (needs 15), so the luck check was not run. It was invested about 23% of the time and captured about 23% of both up and down moves, so its timing added nothing.
+- **Reported as it is:** buying volume-weighted "exhaustion" in BTC did not work over this history, and the small out-of-sample gain rests on 6 trades. Kept in the library and tracker like every other rule; the forward record is the only thing that can change that.
+- **Checks:** hand-worked indicator test (MFI 70 and 79.02 from flows of 22, 30, 48, 65; flat prices give undefined, not 0 or 100), fall-then-rise entry/exit test, no-look-ahead test; backend tests passed. No UI change this cycle.
+
 ## 2026-11-08 · Data cycle 16: what the Fed holds (SOMA, New York Fed)
 - **Source:** Federal Reserve Bank of New York, System Open Market Account holdings (free, no key, fetched live this cycle; weekly since 2003). Backend `soma.py` (9 tests, fixture is 330 real weeks to 2026-11-04), route `/api/macro/fedholdings`, terminal Macro desk panel with a two-year weekly bar chart, Signal Macro card, macro refresh job.
 - **Shows (as of 2026-11-04):** total holdings $6.36T ($4.47T Treasuries, $1.88T mortgage-backed securities); changes over 1, 4, 13 and 52 weeks (1 week +$1.8B, 4 weeks -$2.9B, 13 weeks +$1.6B, 52 weeks +$205.1B); the peak was $8.42T on 2022-04-13, so holdings are $2.07T (24.5%) below it. The mix: notes and bonds 56.6%, mortgage-backed 29.6%, bills 9.0%, inflation-protected 4.4%, floating-rate 0.4%. Described as the Fed's own portfolio, not a signal. The data says holdings are $205B higher than a year ago; the card reports that as it is.
