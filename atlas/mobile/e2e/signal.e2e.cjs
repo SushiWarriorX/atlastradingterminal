@@ -592,6 +592,19 @@ async function healthy(browser) {
       await page.click(V("back"));
     });
 
+    await check("SEC filings card on a stock page: filters, rows link to sec.gov or the missing SEC contact is said plainly, no trading controls", async () => {
+      await openFromWatchlist(page, ID.aapl);
+      await page.waitForSelector(V("filings-card"));
+      await page.waitForSelector(V("filings-body") + ", " + V("filings-error"), { timeout: 45000 });
+      const t = await text(page);
+      match(t, /SEC filings/); match(t, /Reports/); match(t, /Insiders/); match(t, /Big holders/);
+      match(t, /Filings are switched off|ATLAS_SEC_CONTACT|Demo mode|Tap a row to open it on sec\.gov/i, "either filings or the plain reason they are missing");
+      await page.click(V("filings-group-insiders"));
+      await page.waitForSelector(V("filings-body"), { timeout: 30000 });
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the filings card");
+      await page.click(V("back"));
+    });
+
     await check("Fear & Greed card on the BTC page: shows its source and says it is not a signal, whether the index loads or not", async () => {
       await openFromWatchlist(page, ID.btc);
       await page.waitForSelector(V("sentiment-card"));

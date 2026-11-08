@@ -7,7 +7,7 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 | --- | --- | --- |
 | Coinbase Exchange public candles | BTC-USD daily/hourly prices | Strategy Lab, charts |
 | Hyperliquid funding history | BTC perpetual funding (from 2023) | Strategy Lab |
-| SEC EDGAR (needs `ATLAS_SEC_CONTACT`) | Filings, annual financials | Stock deep-dive, Discover |
+| SEC EDGAR (needs `ATLAS_SEC_CONTACT`) | Annual financials; filings feed: 10-K, 10-Q, 8-K, insider Form 4/144, 5% holders, proxies, offerings, late notices | Stock deep-dive, Discover, SEC Filings panel (terminal Equities desk) and card (Signal stock page) |
 | FRED public CSV | Yields, CPI, PCE, PPI, jobs, GDP, Fed rate, dollar index, Fed balance sheet | Macro |
 | BLS release calendar (ICS) | CPI, jobs, PPI release dates | Macro, Calendar |
 | BEA schedule page | GDP and PCE release dates | Calendar |

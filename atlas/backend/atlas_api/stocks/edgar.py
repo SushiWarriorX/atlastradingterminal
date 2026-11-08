@@ -107,6 +107,44 @@ def condense_subs(subs: dict, limit: int = 12) -> dict:
             "exchanges": subs.get("exchanges"), "filings": rows}
 
 
+# Plain-English meaning of the forms people actually look at, and how much they usually matter. Meanings are generic; they do not say what a particular filing contains.
+FORMS = {
+    "10-K": ("Annual report", "high"), "10-K/A": ("Annual report (amended)", "medium"), "10-Q": ("Quarterly report", "high"), "10-Q/A": ("Quarterly report (amended)", "medium"),
+    "8-K": ("Current report: a material event", "high"), "8-K/A": ("Current report (amended)", "medium"), "NT 10-K": ("Late-filing notice for the annual report", "high"), "NT 10-Q": ("Late-filing notice for the quarterly report", "high"),
+    "4": ("Insider trade report (officer, director or 10% owner)", "medium"), "3": ("Insider initial ownership report", "low"), "5": ("Insider year-end ownership report", "low"),
+    "144": ("Notice of a planned insider share sale", "medium"), "SC 13D": ("A 5%+ holder with intent to influence the company", "high"), "SC 13D/A": ("5%+ holder, amended", "medium"),
+    "SC 13G": ("A 5%+ passive holder", "medium"), "SC 13G/A": ("5%+ passive holder, amended", "low"), "DEF 14A": ("Proxy statement for the shareholder meeting", "medium"), "DEFA14A": ("Additional proxy material", "low"),
+    "S-1": ("Registration of shares for sale (IPO or follow-on)", "high"), "S-3": ("Shelf registration of securities", "medium"), "424B5": ("Prospectus supplement (shares or debt being sold)", "medium"), "424B2": ("Prospectus supplement", "low"),
+    "6-K": ("Foreign company current report", "medium"), "20-F": ("Foreign company annual report", "high"), "13F-HR": ("Institutional manager holdings report", "medium"),
+    "SD": ("Specialized disclosure (conflict minerals)", "low"), "FWP": ("Free-writing prospectus", "low"), "PX14A6G": ("Shareholder proposal notice of exempt solicitation", "low"),
+}
+FILING_FORMS_DEFAULT = ["10-K", "10-Q", "8-K", "4", "SC 13D", "SC 13G", "144", "DEF 14A", "S-1", "S-3", "NT 10-K", "NT 10-Q", "6-K", "20-F", "10-K/A", "SC 13D/A", "8-K/A"]
+
+
+def condense_filings(subs: dict, limit: int = 120) -> dict:
+    """Recent filings for any form in FORMS, newest first. Links point to the document on sec.gov; nothing here is summarised from the filing's text."""
+    rec = (subs.get("filings") or {}).get("recent") or {}
+    cik = int(subs.get("cik") or 0)
+    n = len(rec.get("form") or [])
+
+    def col(name, i):
+        v = rec.get(name) or []
+        return v[i] if i < len(v) else ""
+    rows = []
+    for i in range(n):
+        form = col("form", i)
+        if form not in FORMS:
+            continue
+        acc, doc = col("accessionNumber", i), col("primaryDocument", i)
+        items = [x for x in str(col("items", i) or "").split(",") if x]
+        link = f"https://www.sec.gov/Archives/edgar/data/{cik}/{acc.replace('-', '')}/{doc}" if acc and doc and re.fullmatch(r"[\w.\-/]+", doc) and ".." not in doc else None
+        rows.append({"form": form, "meaning": FORMS[form][0], "importance": FORMS[form][1], "filed": col("filingDate", i), "report_date": col("reportDate", i) or None,
+                     "accepted_at": col("acceptanceDateTime", i) or None, "items": [{"item": x, "meaning": EIGHT_K.get(x, "Other")} for x in items][:6], "link": link})
+        if len(rows) >= limit:
+            break
+    return {"name": subs.get("name"), "cik": cik, "filings": rows}
+
+
 class EdgarClient:
     def __init__(self, db: DB, contact: str | None = None, client: httpx.AsyncClient | None = None):
         c = (contact if contact is not None else os.environ.get("ATLAS_SEC_CONTACT", "")).strip()
@@ -174,6 +212,9 @@ class EdgarClient:
 
     async def financials(self, cik: int):
         return await self._cached_get(f"facts:{cik}", TTL["facts"], FACTS_URL.format(cik=cik), condense_facts)
+
+    async def all_filings(self, cik: int):
+        return await self._cached_get(f"subsall:{cik}", TTL["subs"], SUBS_URL.format(cik=cik), condense_filings)
 
     async def filings(self, cik: int):
         return await self._cached_get(f"subs:{cik}", TTL["subs"], SUBS_URL.format(cik=cik), condense_subs)

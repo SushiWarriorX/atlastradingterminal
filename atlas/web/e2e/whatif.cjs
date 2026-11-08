@@ -32,6 +32,16 @@ fs.mkdirSync(S, { recursive: true });
   if (/\b(buy|sell|order|trade)\b/i.test(buttons)) fail('trading control in the what-if panel: ' + buttons);
   await pg.screenshot({ path: S + '/whatif-equities.png' });
   console.log('Equities desk what-if: ok');
+  t = await titles();
+  if (!t.some(x => /SEC FILINGS AAPL/.test(x))) fail('Equities desk has no SEC filings panel: ' + t.join(' | '));
+  const sec = pg.locator('[data-testid="sec-filings"]');
+  await sec.waitFor({ timeout: 45000 });
+  const secText = await sec.innerText();
+  if (!/Demo mode|ATLAS_SEC_CONTACT|open on sec\.gov/.test(secText)) fail('SEC filings panel shows neither filings nor the reason: ' + secText.slice(0, 200));
+  await pg.click('[data-testid="filings-group-insiders"]');
+  await pg.click('[data-testid="filings-scope-watchlist"]');
+  await pg.waitForTimeout(500);
+  console.log('Equities desk SEC filings: ok');
 
   await pg.keyboard.press('Control+2');                  // BTC desk
   await pg.waitForTimeout(800);

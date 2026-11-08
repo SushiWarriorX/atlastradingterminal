@@ -1084,6 +1084,16 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             insts = [i for i in (I.resolve(r["symbol"]) for r in db.q("SELECT symbol FROM signal_watchlist WHERE asset_type='stock' ORDER BY position")) if i is not None and i.asset_class == "equity"][:40]
         return ok(await stock_research.earnings_calendar(insts, max(1, min(days, 120))))
 
+    @app.get("/api/stocks/filings")
+    async def stocks_filings(symbols: str = "", forms: str = "", limit: int = 40, days: int = 365):
+        """Latest SEC filings (10-K, 10-Q, 8-K, insider Form 4, 5% holders, offerings...) for the symbols asked about, default the watchlist's stocks."""
+        names = [x.strip().upper() for x in symbols.split(",") if x.strip()][:25]
+        insts = [i for i in (I.resolve(n) for n in names) if i is not None and i.asset_class == "equity"]
+        if not names:
+            insts = [i for i in (I.resolve(r["symbol"]) for r in db.q("SELECT symbol FROM signal_watchlist WHERE asset_type='stock' ORDER BY position")) if i is not None and i.asset_class == "equity"][:25]
+        want = [f.strip().upper() if f.strip().upper() != "SC13D" else "SC 13D" for f in forms.split(",") if f.strip()] or None
+        return ok(await stock_research.filings_feed(insts, want, max(1, min(limit, 200)), max(1, min(days, 1500))))
+
     @app.get("/api/stocks/{token}/research")
     async def stocks_research(token: str):
         inst = I.resolve(token)

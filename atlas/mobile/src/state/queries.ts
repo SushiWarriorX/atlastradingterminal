@@ -165,3 +165,8 @@ export function useSentiment() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).sentiment, queryFn: () => need(api).btcSentiment(), enabled: !!api, staleTime: 15 * 60_000, refetchInterval: 30 * 60_000, retry: 0 });
 }
+
+export function useSecFilings(symbol: string, forms: string[], enabled = true) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).filings(symbol, forms.join(",")), queryFn: () => need(api).secFilings(symbol, forms, 365), enabled: !!api && enabled && !!symbol, staleTime: 10 * 60_000, retry: 0, placeholderData: (prev) => prev });
+}

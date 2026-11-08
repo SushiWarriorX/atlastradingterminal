@@ -1,4 +1,4 @@
-export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "secfilings" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
@@ -30,10 +30,11 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "quote", type: "quote", x: 0, y: 13, w: 4, h: 11 },
     { i: "tech", type: "tech", x: 4, y: 13, w: 8, h: 11 },
     { i: "research", type: "stockresearch", x: 0, y: 24, w: 12, h: 26 },
-    { i: "whatif", type: "whatif", x: 0, y: 50, w: 12, h: 22 },
-    { i: "earn", type: "earnings", x: 0, y: 72, w: 12, h: 12 },
-    { i: "mtf", type: "mtf", x: 0, y: 84, w: 12, h: 16 },
-    { i: "news", type: "news", x: 0, y: 100, w: 12, h: 10 },
+    { i: "filings", type: "secfilings", x: 0, y: 50, w: 12, h: 18 },
+    { i: "whatif", type: "whatif", x: 0, y: 68, w: 12, h: 22 },
+    { i: "earn", type: "earnings", x: 0, y: 90, w: 12, h: 12 },
+    { i: "mtf", type: "mtf", x: 0, y: 102, w: 12, h: 16 },
+    { i: "news", type: "news", x: 0, y: 118, w: 12, h: 10 },
   ] },
   scanner: { id: "scanner", name: "Discover, Scanner and Backtester", widgets: [
     { i: "disc", type: "discover", x: 0, y: 0, w: 12, h: 34 },

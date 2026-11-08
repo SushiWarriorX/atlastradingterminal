@@ -198,3 +198,9 @@ export interface Sentiment {
   value?: number; label?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   yesterday?: number | null; a_week_ago?: number | null; a_month_ago?: number | null; history?: { date: string; value: number }[];
 }
+
+export interface SecFiling {
+  symbol: string; name: string | null; instrument_id: string; form: string; meaning: string; importance: "high" | "medium" | "low"; filed: string; report_date: string | null;
+  accepted_at: string | null; items: { item: string; meaning: string }[]; link: string | null; origin: string; fetched_at: string;
+}
+export interface SecFilingsData { as_of: string; forms: string[]; checked: number; demo: boolean; source: string; note: string; items: SecFiling[]; errors: string[]; needs_contact?: boolean }

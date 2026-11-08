@@ -8,7 +8,7 @@ Missing inputs give a missing figure and a reason, never an estimate. Guidance a
 """
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from ..models import ProviderUnavailable
 
@@ -184,6 +184,38 @@ class StockResearch:
                 "catalysts": catalysts(earnings_date, filings, now.date()), "filings": filings, "filings_meta": subs_meta, "news": stories,
                 "errors": errors, "gaps": GAPS, "labels": {"fact": "A number from a filing or provider, with its period or time.", "calculated": "Computed here from the facts; the formula is stated.",
                                                                 "interpretation": "Rule-based text, not a prediction or advice."}}
+
+    async def filings_feed(self, instruments: list, forms: list[str] | None = None, limit: int = 40, days: int = 365, now: datetime | None = None) -> dict:
+        """Latest SEC filings for the symbols asked about, newest first, in plain words. Needs ATLAS_SEC_CONTACT; says so when it is missing."""
+        from .edgar import FILING_FORMS_DEFAULT, FORMS
+        now = now or datetime.now(timezone.utc)
+        want = set(forms) if forms else set(FILING_FORMS_DEFAULT)
+        base = {"as_of": now.isoformat(), "forms": sorted(want), "checked": len(instruments), "demo": self.demo, "source": "SEC EDGAR submissions (official). Links open the filing on sec.gov.",
+                "note": "Titles and form types are from the SEC; the plain-English meaning is generic and does not say what a given filing contains. Read the filing before relying on it.", "items": [], "errors": []}
+        if self.demo:
+            return {**base, "errors": ["Demo mode: SEC filings are not loaded, because an invented filing would look real."]}
+        if not self.edgar.enabled:
+            return {**base, "errors": ["SEC filings are off: ATLAS_SEC_CONTACT is not set. Windows: add the line $env:ATLAS_SEC_CONTACT = \"you@example.com\" to local-settings.ps1 and restart ATLAS. The email is sent only to sec.gov."], "needs_contact": True}
+        cutoff = (now.date() - timedelta(days=days)).isoformat()
+        for inst in instruments:
+            try:
+                hit = await self.edgar.cik(inst.symbol)
+                if hit is None:
+                    base["errors"].append(f"{inst.symbol}: no SEC company with that ticker (ETFs and some foreign shares have none).")
+                    continue
+                data, origin, at = await self.edgar.all_filings(hit[0])
+            except ProviderUnavailable as e:
+                base["errors"].append(f"{inst.symbol}: {e.message[:100]}")
+                continue
+            except Exception as e:  # noqa: BLE001
+                base["errors"].append(f"{inst.symbol}: {type(e).__name__}")
+                continue
+            for f in data["filings"]:
+                if f["form"] in want and f["filed"] >= cutoff:
+                    base["items"].append({**f, "symbol": inst.symbol, "name": data.get("name"), "instrument_id": inst.id, "origin": origin, "fetched_at": at.isoformat()})
+        base["items"].sort(key=lambda r: (r["filed"], r.get("accepted_at") or ""), reverse=True)
+        base["items"] = base["items"][:max(1, min(limit, 200))]
+        return base
 
     async def earnings_calendar(self, instruments: list, days: int = 30, now: datetime | None = None) -> dict:
         now = now or datetime.now(timezone.utc)

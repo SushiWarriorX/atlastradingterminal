@@ -8,6 +8,14 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · SEC filings feed (user request)
+- **What:** `GET /api/stocks/filings?symbols=&forms=&limit=&days=` (default: the watchlist's stocks). Covers 10-K/10-Q, 8-K (with item meanings), insider Form 4/144, 5% holders (13D/13G), proxies, offerings, late-filing notices. Newest first, importance dot, link to the document on sec.gov, plain-English meaning that is explicitly generic.
+- **Where:** terminal Equities desk panel "SEC FILINGS" (this stock or whole watchlist, filter chips); Signal card on every stock page (open by default, filters).
+- **Verified live:** Apple, Nvidia and Tesla filings fetched from EDGAR in this session; a trimmed real Apple response is the test fixture.
+- **Honest limits:** needs `ATLAS_SEC_CONTACT` (said plainly with the fix when missing); ETFs have no SEC company; Form 4 rows say an insider trade was filed, not whether it was a buy or sell (that needs the filing's own text).
+- **Tests:** 9 backend, phone browser 47/47, terminal browser check; 880 backend tests pass.
+
 ## 2026-11-08 · Data-source loop, cycle 1: Crypto Fear & Greed (user request)
 - **Loop:** `atlas/DATA_LOOP.md` (playbook) and `atlas/DATA_SOURCES.md` (live / queued / blocked / rejected). Runs every 10 minutes inside this session (scheduled tasks cannot go below 1 hour); the session job expires after 7 days.
 - **Network:** the build machine only reached Coinbase and SEC, so ten exact public hosts were added to the allowed list (with approval).

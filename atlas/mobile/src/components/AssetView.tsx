@@ -8,6 +8,7 @@ import type { AgentName, ChartRange } from "../api/types";
 import { StockResearchCard } from "./StockResearchCard";
 import { WhatIfCard } from "./WhatIfCard";
 import { SentimentCard } from "./SentimentCard";
+import { SecFilingsCard } from "./SecFilingsCard";
 import { StrategyLabCard } from "./StrategyLabCard";
 import { BTC_ID } from "../state/selection";
 import { AgentRow } from "./AgentRow";
@@ -126,6 +127,7 @@ export function AssetView({ id, embedded, hideBack }: { id: string; embedded?: b
                 onRefresh={() => refreshAgent(ag)} refreshing={refreshing === ag} refreshMessage={msgs[ag] ?? null} />
             ))}
           </View>
+          {a?.type === "stock" ? <SecFilingsCard symbol={a.symbol} /> : null}
           {a?.type === "stock" ? <StockResearchCard symbol={a.symbol} /> : null}
           {a ? <WhatIfCard assetId={a.id} symbol={a.symbol} /> : null}
           {a?.id === BTC_ID ? <SentimentCard /> : null}
