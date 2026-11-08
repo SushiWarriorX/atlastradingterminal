@@ -334,3 +334,25 @@ def test_cci_strategy_is_fixed_enters_on_a_strong_push_exits_below_zero_and_has_
     assert pos[:19].sum() == 0 and set(pos) <= {0.0, 1.0}
     assert pos[55] == 1.0 and pos[-1] == 0.0                                                         # in the surge it is holding; after a long fall it has left
     assert (st.build(d.iloc[:70], st.params).to_numpy() == pos[:70]).all()                           # bar i uses only bars up to i
+
+
+def test_obv_matches_a_hand_worked_example():
+    c = np.array([10, 11, 10, 10, 12], float)
+    v = np.array([5, 7, 3, 4, 6], float)
+    d = pd.DataFrame({"h": c, "l": c, "c": c, "v": v})
+    o = ST.obv(d).to_numpy()
+    assert o.tolist() == [0.0, 7.0, 4.0, 4.0, 10.0]                                                   # +0 (first bar), +7 (up), -3 (down), +0 (unchanged), +6 (up)
+
+
+def test_obv_strategy_is_fixed_needs_both_conditions_and_has_no_lookahead():
+    st = ST.S["obv_trend"]
+    assert st.params == {"n_obv": 50, "n_price": 50} and not st.requires_funding
+    up = 100 + np.arange(120, dtype=float)
+    down = up[-1] - np.arange(1, 121, dtype=float) * 2
+    c = np.concatenate([up, down])
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c, "v": np.full(len(c), 100.0)})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:49].sum() == 0 and pos[49] == 1.0 and pos[80] == 1.0 and pos[-1] == 0.0 and set(pos) <= {0.0, 1.0}                  # the 50-bar averages first exist on bar 49
+    assert (st.build(d.iloc[:150], st.params).to_numpy() == pos[:150]).all()                          # bar i uses only bars up to i
+    flat_volume_up = pd.DataFrame({"h": up + 1, "l": up - 1, "c": up, "v": np.zeros(len(up))})        # price rising but no volume at all: OBV never rises above its average, so no position
+    assert st.build(flat_volume_up, st.params).to_numpy().sum() == 0

@@ -591,6 +591,35 @@ reg(Strategy("cci_trend", "Commodity Channel Index trend", "Momentum", "Holds BT
              "The 20-bar CCI rises above +100.", "The CCI falls below 0.", "No fixed stop; the exit rule is the stop.", {"n": 20, "high": 100, "low": 0}, {"high": [60, 80, 100, 120, 150]}, _cci_build, _cci_conds))
 
 
+def obv(d: pd.DataFrame) -> pd.Series:
+    """On-balance volume (Granville): a running total that adds a bar's volume when the close rose and subtracts it when the close fell. The first bar has no previous close and adds nothing.
+    Each value uses only bars up to and including that bar."""
+    return (np.sign(d["c"].diff()).fillna(0.0) * d["v"]).cumsum()
+
+
+def _obv_ok(d, p):
+    o = obv(d)
+    return (o > sma(o, p["n_obv"])) & (d["c"] > sma(d["c"], p["n_price"]))
+
+
+def _obv_build(d, p):
+    ok = _obv_ok(d, p)
+    return hold(ok, ~ok)
+
+
+def _obv_conds(d, p):
+    o, c = obv(d), d["c"]
+    so, sp = sma(o, p["n_obv"]).iloc[-1], sma(c, p["n_price"]).iloc[-1]
+    bad = bool(np.isnan(so) or np.isnan(sp))
+    return [_cond(f"On-balance volume above its {p['n_obv']}-bar average (entry, with the next line)", None if bad else bool(o.iloc[-1] > so), f"OBV {_val(o.iloc[-1])} vs average {_val(so)}"),
+            _cond(f"Close above its {p['n_price']}-bar average (entry; if either line fails, exit)", None if bad else bool(c.iloc[-1] > sp), f"close {_val(c.iloc[-1])} vs average {_val(sp)}")]
+
+
+reg(Strategy("obv_trend", "On-balance volume trend", "Trend", "Holds BTC while volume is flowing in with the price: on-balance volume is above its own 50-bar average and the close is above its 50-bar average. Steps aside as soon as either fails.",
+             "On-balance volume is above its 50-bar average AND the close is above its 50-bar average.", "Either of those two stops being true.", "No fixed stop; the exit rule is the stop.", {"n_obv": 50, "n_price": 50},
+             {"n_obv": [30, 40, 50, 70, 100]}, _obv_build, _obv_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 
