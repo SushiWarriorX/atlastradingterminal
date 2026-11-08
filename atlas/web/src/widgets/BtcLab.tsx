@@ -2,6 +2,7 @@ import { Fragment, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api, errText } from "../api";
 import type { LabResult, LabRun, LabStrategy, Metrics } from "../btclab";
+import { busyText } from "../labText";
 import { ErrorBox, Panel } from "../ui";
 
 const pc = (x: number | null | undefined, d = 1) => (x === null || x === undefined ? "n/a" : `${x >= 0 ? "+" : "−"}${Math.abs(x).toFixed(d)}%`);
@@ -81,6 +82,7 @@ export function BtcLabWidget() {
         <div className="jq-wide small dim">Pick up to 8 strategies (five are chosen by default, one per style). Perpetual tests start in May 2023, when funding history begins. Leverage is capped at 3x.</div>
         {Object.entries(byFamily).map(([fam, list]) => <div key={fam} className="jq-wide small"><b>{fam}:</b> {list.map((s) => <label key={s.id} style={{ marginRight: 10 }} title={`${s.summary}\nEntry: ${s.entry}\nExit: ${s.exit}\nStop: ${s.stop}\nSizing: ${s.sizing}${s.notes.length ? "\n" + s.notes.join(" ") : ""}`}><input type="checkbox" checked={ids.includes(s.id)} onChange={() => toggle(s.id)} /> {s.name}</label>)}</div>)}
       </div>}
+      {run.isPending && <div className="note" data-testid="lab-busy">{busyText(market, tf)}</div>}
       {run.isError && <div className="warnc small" data-testid="lab-error">{errText(run.error)}</div>}
       {d && <div data-testid="lab-results">
         <div className="small dim">{d.period.from} to {d.period.to} · {d.period.bars.toLocaleString()} {d.settings.timeframe} bars · {d.data.source}{d.data.funding_source ? ` · ${d.data.funding_source}` : ""} · fees {d.settings.fee_bps} bps, slippage {d.settings.slippage_bps} bps per side{d.data.gap_count ? ` · ${d.data.gap_count} gaps in the saved bars` : ""}</div>

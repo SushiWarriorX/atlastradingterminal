@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Pressable, View } from "react-native";
 import type { LabResult } from "../api/types";
 import { signed } from "../lib/journal";
+import { busyText } from "../lib/lab";
 import { useLabRun } from "../state/queries";
 import { color, radius, space } from "../theme";
 import { Banner, Chip, Divider, PrimaryButton, Tag, Txt, GCard, Pill } from "./ui";
@@ -62,6 +63,7 @@ export function StrategyLabCard() {
             {market === "perp" && [1, 2, 3].map((x) => <Chip key={x} label={`${x}x`} active={lev === x} onPress={() => setLev(x)} testID={`lab-lev-${x}`} />)}
           </View>
           <PrimaryButton label="Compare five strategies" onPress={go} busy={run.isPending} testID="lab-run" />
+          {run.isPending ? <Txt variant="small" testID="lab-busy">{busyText(market, tf)}</Txt> : null}
           {run.isError ? <Banner tone="warn" title="Couldn't run the comparison" testID="lab-error">{run.error instanceof Error ? run.error.message : "Something went wrong."}</Banner> : null}
           {d && (
             <View testID="lab-results">

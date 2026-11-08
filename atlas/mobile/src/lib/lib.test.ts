@@ -7,6 +7,7 @@ import { keys } from "./keys";
 import { safeUrl } from "./links";
 import { MAX_RECENTS, parseRecents, pushRecent } from "./recents";
 import { applyAdd, applyRemove, applyReorder, idsOf, moveId, settledRows } from "./watchlist";
+import { busyText } from "./lab";
 import { contrast } from "./contrast";
 import { color, grad } from "../theme";
 import { blankForm, fromEntry, missingText, resultText, sideLabel, signed, toBody } from "./journal";
@@ -261,5 +262,22 @@ describe("readable text on every card", () => {
       expect(contrast(color.faint, bg), `faint on ${bg}`).toBeGreaterThanOrEqual(4.5);
       expect(contrast(color.dim, bg), `dim on ${bg}`).toBeGreaterThanOrEqual(4.5);
     }
+  });
+});
+
+describe("Strategy Lab waiting message", () => {
+  it("always says it is working and that the first real-data run downloads history", () => {
+    for (const [m, tf] of [["spot", "1d"], ["perp", "1d"], ["spot", "1h"], ["perp", "4h"]]) {
+      const t = busyText(m, tf);
+      expect(t).toMatch(/Running the comparison/);
+      expect(t).toMatch(/first run on real data downloads/);
+      expect(t).toMatch(/later runs are quick/);
+    }
+  });
+  it("mentions funding history only for perpetuals, and hourly prices only for intraday", () => {
+    expect(busyText("spot", "1d")).not.toMatch(/funding/);
+    expect(busyText("perp", "1d")).toMatch(/funding history/);
+    expect(busyText("spot", "1d")).not.toMatch(/hourly/);
+    expect(busyText("spot", "4h")).toMatch(/hourly prices/);
   });
 });

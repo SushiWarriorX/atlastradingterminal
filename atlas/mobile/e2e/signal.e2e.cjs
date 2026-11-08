@@ -750,8 +750,14 @@ async function demo(browser) {
       await page.waitForSelector(V("lab-card"));
       assert(!(await present(page, "lab-run")), "the lab stays collapsed until asked for");
       await page.click(V("lab-toggle"));
+      await page.route("**/api/btclab/run", async (route) => { await sleep(1500); await route.continue(); });      // slow it down so the waiting message can be seen
       await page.click(V("lab-run"));
+      await page.waitForSelector(V("lab-busy"), { timeout: 5000 });
+      match(await inner(page, "lab-busy"), /Running the comparison.*first run on real data downloads/s, "a waiting message explains the first-run download");
+      await shot(page, "15a-lab-busy");
       await page.waitForSelector(V("lab-results"), { timeout: 60000 });
+      await page.unroute("**/api/btclab/run");
+      assert(!(await present(page, "lab-busy")), "the waiting message goes away when results arrive");
       const t = await inner(page, "lab-results");
       match(t, /synthetic/i, "demo prices are labelled synthetic");
       eq(await page.locator('[data-testid^="lab-row-"]:visible').count(), 5, "five strategies by default");

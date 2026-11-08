@@ -75,7 +75,7 @@ export function PrimaryButton({ label, onPress, busy, testID, disabled }: { labe
   return (
     <Pressable onPress={onPress} disabled={busy || disabled} accessibilityRole="button" testID={testID} style={({ pressed }) => [(pressed || busy || disabled) && { opacity: 0.7 }]}>
       <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={s.primary}>
-        {busy ? <ActivityIndicator color={color.text} /> : <Text style={s.primaryText}>{label}</Text>}
+        {busy ? <ActivityIndicator color={color.onSilver} /> : <Text style={s.primaryText}>{label}</Text>}
       </Gradient>
     </Pressable>
   );

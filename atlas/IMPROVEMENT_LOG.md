@@ -2,6 +2,14 @@
 
 Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) and by hand.
 
+## 2026-11-08, cycle 5 (run on request): the Strategy Lab says what it is doing while it works
+- **Found:** on real data the first Strategy Lab run downloads BTC history (up to about a minute for perpetuals, because funding history is fetched too). The only feedback was a spinner, which looks frozen, and the spinner was white on the silver button so it was hard to see.
+- **Changed:** while a comparison runs, phone and terminal show a plain-words message ("Running the comparison. The first run on real data downloads BTC price history; later runs are quick." plus a funding-history line for perpetuals and an hourly-prices line for 4h and 1h). The button spinner is now dark on silver. The wording lives in one small tested function (`busyText`); the browser test slows the request on purpose to check the message appears and disappears.
+- **Also reviewed (no change needed):** the terminal's colours. Its small text uses `--dim` (about 5.5:1 on its lightest panel tint), so the contrast candidate from cycle 4 is closed.
+- **Verified:** phone unit tests (39, two new groups), web and phone type checks, backend 830 tests, browser suite 44 of 44; viewed the busy-state screenshot before and after the spinner fix.
+- **Not verified:** the real download time on a real connection (the sandbox runs this against fast fixtures); the copy says "up to about a minute", which matches the 50 seconds measured for funding history earlier.
+- **Next candidates:** Stocks empty-state suggestions; keyboard shortcuts for the five terminal desks; Discover first-scan loading message ("about 20 seconds" is shown, check it reads well on a phone).
+
 ## 2026-11-07, cycle 4: small source and date captions are readable on every card
 - **Found:** the grey captions that carry each figure's source and date (for example "SEC EDGAR 10-K · as of 2026-12-31") were close to invisible on the brighter top Discover card (contrast about 1.1 to 1), and below the accessibility minimum on ordinary cards too (about 2.9 to 1 at the top of a card). Those captions are how the app keeps its "every number has a source and a date" promise.
 - **Changed:** the "faint" text colour is lighter (`#9AA0AB`) and the highlight card is a cooler, darker steel-blue instead of a bright grey. The silver and graphite look is unchanged elsewhere. New `lib/contrast.ts` and a unit test that fails if small captions or secondary text drop below 4.5:1 on any card gradient stop or on the screen background.
