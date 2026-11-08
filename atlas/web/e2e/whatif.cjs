@@ -97,6 +97,10 @@ fs.mkdirSync(S, { recursive: true });
   const dr = await pg.locator('[data-testid="debtrates"]').innerText();
   if (!/US Treasury|Treasury FiscalData|Demo mode/.test(dr)) fail('Debt interest rates panel lacks its source or demo notice');
   console.log('Macro desk debt interest rates: ok');
+  await pg.locator('[data-testid="debtmix"]').waitFor({ timeout: 45000 });
+  const dm = await pg.locator('[data-testid="debtmix"]').innerText();
+  if (!/US Treasury|Treasury FiscalData|Demo mode/.test(dm)) fail('Debt breakdown panel lacks its source or demo notice');
+  console.log('Macro desk debt breakdown: ok');
 
   await cmd('SETTINGS');
   await pg.waitForSelector('[data-testid="ops"]', { timeout: 30000 });

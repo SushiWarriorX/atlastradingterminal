@@ -109,3 +109,8 @@ export interface BudgetData { available: boolean; reason?: string; demo: boolean
 export interface DebtRateRow { name: string; rate: number; change_month: number | null; change_year: number | null }
 export interface DebtRatesData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   rows?: DebtRateRow[]; history?: { date: string; rate: number }[] }
+
+export interface DebtMixRow { name: string; billions: number; share_of_total_pct: number; change_month_billions: number | null }
+export interface DebtMixData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  rows?: DebtMixRow[]; total_billions?: number; held_by_public_billions?: number; held_by_government_accounts_billions?: number; bills_share_of_marketable_pct?: number | null;
+  change_since_billions?: number; since?: string; months_covered?: number; history?: { date: string; total_billions: number }[] }
