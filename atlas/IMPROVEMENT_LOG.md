@@ -6,6 +6,11 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Macro trimmed to the core numbers (user request)
+- Removed the "What matters today" rule-based notes from the terminal and phone Macro views. Key indicators now show only: Fed rate, CPI, core CPI, PCE, core PCE, PPI, core PPI. Upcoming dates and headlines stay. The server still returns every indicator (yields, jobs, GDP, dollar, balance sheet), so they can be shown again by editing one list (`CORE`) in `MacroToday.tsx` and `MacroView.tsx`.
+- Phone browser test now checks the notes section is gone. 45/45.
+
 ## 2026-11-08 · Terminal what-if panel + PPI on the macro side (user requests)
 - **Terminal:** the "What if I had bought X?" panel (same server route as Signal) is on the Equities and BTC desks. New browser check `web/e2e/whatif.cjs`. Caught a title bug (BTC showed "SPOT" because its id ends in :SPOT).
 - **Macro:** CPI and PCE (headline and core) were already shown; added PPI and core PPI (FRED `WPSFD49207`, `WPSFD4131`) next to them, with plain "why it matters" notes. A failing PPI series cannot hide CPI or PCE (tested).

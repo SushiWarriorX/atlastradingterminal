@@ -10,6 +10,8 @@ import { ScreenHeader } from "./ScreenHeader";
 import { Banner, Chip, Divider, ErrorState, Skeleton, Tag, TextButton, Txt } from "./ui";
 import type { MacroIndicator } from "../api/types";
 
+/** The few numbers that drive the rate and inflation story: the Fed's rate, CPI, PCE and PPI (headline and core). Other series stay available from the server. */
+const CORE = ["fed", "cpi", "core_cpi", "pce", "core_pce", "ppi", "core_ppi"];
 const open = (u: string | null | undefined) => { const s = safeUrl(u ?? null); if (s) Linking.openURL(s).catch(() => undefined); };
 const value = (i: MacroIndicator) => (typeof i.value === "number" ? `${i.value.toFixed(2)}${i.unit?.startsWith("%") ? "%" : ""}` : String(i.value ?? "n/a"));
 const when = (iso: string | null) => (iso ? localDateTime(iso) : "");
@@ -25,6 +27,7 @@ export function MacroView() {
   const [openId, setOpenId] = useState<number | null>(null);
   const d = q.data;
   const heads = (d?.headlines ?? []).filter((h) => !topic || h.topic === topic);
+  const core = (d?.indicators ?? []).filter((i) => CORE.includes(i.id));
   return (
     <View style={{ flex: 1, backgroundColor: color.bg }}>
       <ScreenHeader title="Macro" subtitle={d ? `Updated ${when(d.as_of)}` : undefined} />
@@ -35,12 +38,8 @@ export function MacroView() {
             {d.demo && <Banner tone="demo" title="Demo data" testID="macro-demo">{d.notice ?? "Official indicators and live headlines are not shown in demo mode."}</Banner>}
             {d.calendar_warning ? <Banner tone="warn" title="Calendar needs updating">{d.calendar_warning}</Banner> : null}
             <CalendarCard />
-            <Section title="What matters today" note="Scheduled dates are facts. Notes marked Interpretation are fixed, rule-based text, not predictions.">
-              {d.today.length === 0 ? <Txt variant="small">Nothing scheduled in the next two days, and no indicator crosses a rule threshold.</Txt> : d.today.map((t, i) => (
-                <View key={i} style={{ gap: 4 }}><Tag label={t.kind === "fact" ? "Fact" : "Interpretation"} tint={t.kind === "fact" ? undefined : color.warn} /><Txt variant="body">{t.title}</Txt><Txt variant="tiny">{t.detail} · {t.source}</Txt></View>))}
-            </Section>
-            <Section title="Key indicators" note="Official data with its observation date. Not live prices.">
-              {d.indicators.length === 0 ? <Txt variant="small" c={color.warn} testID="macro-indicators-note">{d.indicators_note ?? "No official indicators to show."}</Txt> : d.indicators.map((i, n) => (
+            <Section title="Key indicators" note="Fed rate, CPI, PCE and PPI: official data with its observation date, not live prices. Year-over-year for the price indexes.">
+              {core.length === 0 ? <Txt variant="small" c={color.warn} testID="macro-indicators-note">{d.indicators_note ?? "No official indicators to show."}</Txt> : core.map((i, n) => (
                 <View key={i.id}>{n > 0 && <Divider />}
                   {i.available ? (
                     <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, gap: space.md }}>

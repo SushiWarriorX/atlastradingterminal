@@ -529,7 +529,7 @@ async function healthy(browser) {
       await page.click(T("tab-macro"));
       await page.waitForSelector(V("macro-brief"));
       const t = await text(page);
-      match(t, /What matters today/); match(t, /Key indicators/); match(t, /Upcoming/); match(t, /Headlines/);
+      match(t, /Key indicators/); noMatch(t, /What matters today/, "the rule-based notes section was removed on request"); match(t, /Upcoming/); match(t, /Headlines/);
       match(t, /Official indicators could not be loaded right now/, "missing indicators are said once, in plain words, not invented");
       assert(!/Unavailable: unavailable/i.test(t), "no 'Unavailable: unavailable (CODE)' wording");
       eq((t.match(/Unavailable:/g) || []).length, 0, "no wall of 'Unavailable:' rows; the one plain message replaces them");
