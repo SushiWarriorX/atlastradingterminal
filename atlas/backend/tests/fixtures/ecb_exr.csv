@@ -1,0 +1,316 @@
+KEY,CURRENCY,CURRENCY_DENOM,TIME_PERIOD,OBS_VALUE,TITLE
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-07,1.6109,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-08,1.6098,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-09,1.6128,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-10,1.6167,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-11,1.6161,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-14,1.6202,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-15,1.6194,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-16,1.6176,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-17,1.6139,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-18,1.6095,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-21,1.6098,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-22,1.6122,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-23,1.6146,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-24,1.6177,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-25,1.622,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-28,1.6199,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-29,1.6211,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-09-30,1.6297,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-01,1.6255,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-02,1.6176,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-05,1.6097,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-06,1.614,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-07,1.6079,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-08,1.611,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-09,1.6052,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-12,1.6032,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-13,1.6033,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-14,1.5971,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-15,1.6218,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-16,1.6171,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-19,1.6068,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-20,1.6056,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-21,1.5971,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-22,1.598,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-23,1.5939,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-26,1.5927,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-27,1.5856,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-28,1.583,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-29,1.5842,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-10-30,1.5904,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-11-02,1.6004,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-11-03,1.6007,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-11-04,1.6061,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-11-05,1.6033,Australian dollar/Euro ECB reference exchange rate
+EXR.D.AUD.EUR.SP00.A,AUD,EUR,2026-11-06,1.625,Australian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-07,1.6062,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-08,1.6033,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-09,1.6043,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-10,1.6049,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-11,1.6064,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-14,1.6041,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-15,1.6062,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-16,1.6082,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-17,1.6068,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-18,1.6056,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-21,1.6091,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-22,1.6099,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-23,1.6077,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-24,1.6047,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-25,1.6127,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-28,1.6118,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-29,1.6101,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-09-30,1.6105,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-01,1.6095,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-02,1.5984,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-05,1.5969,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-06,1.6058,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-07,1.5931,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-08,1.5953,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-09,1.5942,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-12,1.5946,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-13,1.5933,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-14,1.5918,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-15,1.5923,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-16,1.5935,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-19,1.5798,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-20,1.5758,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-21,1.5779,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-22,1.5725,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-23,1.5665,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-26,1.5695,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-27,1.5636,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-28,1.5638,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-29,1.5577,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-10-30,1.5606,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-11-02,1.5673,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-11-03,1.5623,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-11-04,1.5701,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-11-05,1.5675,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CAD.EUR.SP00.A,CAD,EUR,2026-11-06,1.5705,Canadian dollar/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-07,0.9405,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-08,0.9425,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-09,0.9404,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-10,0.9432,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-11,0.9451,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-14,0.9431,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-15,0.9441,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-16,0.9449,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-17,0.9466,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-18,0.9462,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-21,0.9438,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-22,0.9393,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-23,0.939,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-24,0.9409,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-25,0.9445,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-28,0.9464,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-29,0.9461,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-09-30,0.9478,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-01,0.9437,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-02,0.9279,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-05,0.9311,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-06,0.9359,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-07,0.9309,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-08,0.9326,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-09,0.9313,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-12,0.9312,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-13,0.9312,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-14,0.933,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-15,0.9305,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-16,0.9272,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-19,0.9261,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-20,0.9237,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-21,0.9256,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-22,0.9211,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-23,0.9227,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-26,0.9243,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-27,0.9239,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-28,0.9247,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-29,0.9222,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-10-30,0.9194,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-11-02,0.9193,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-11-03,0.9166,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-11-04,0.9188,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-11-05,0.918,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CHF.EUR.SP00.A,CHF,EUR,2026-11-06,0.9143,Swiss franc/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-07,7.7995,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-08,7.7936,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-09,7.8159,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-10,7.79,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-11,7.7762,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-14,7.7489,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-15,7.7444,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-16,7.738,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-17,7.7009,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-18,7.6755,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-21,7.693,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-22,7.6803,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-23,7.6538,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-24,7.6302,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-25,7.6551,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-28,7.6352,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-29,7.6117,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-09-30,7.613,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-01,7.5748,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-02,7.5259,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-05,7.5118,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-06,7.5554,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-07,7.4937,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-08,7.4972,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-09,7.4992,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-12,7.4832,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-13,7.489,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-14,7.4925,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-15,7.4993,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-16,7.524,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-19,7.4991,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-20,7.4894,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-21,7.4999,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-22,7.4786,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-23,7.466,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-26,7.4603,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-27,7.4343,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-28,7.4217,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-29,7.4144,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-10-30,7.4326,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-11-02,7.4567,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-11-03,7.459,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-11-04,7.5177,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-11-05,7.4846,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.CNY.EUR.SP00.A,CNY,EUR,2026-11-06,7.4485,Chinese yuan renminbi/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-07,0.85894,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-08,0.8574,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-09,0.85898,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-10,0.85915,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-11,0.85815,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-14,0.85598,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-15,0.8558,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-16,0.8574,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-17,0.8583,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-18,0.8588,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-21,0.8578,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-22,0.8578,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-23,0.8595,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-24,0.85986,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-25,0.86045,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-28,0.85785,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-29,0.85718,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-09-30,0.85463,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-01,0.85373,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-02,0.85033,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-05,0.8472,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-06,0.8488,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-07,0.84645,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-08,0.84698,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-09,0.84763,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-12,0.84478,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-13,0.8446,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-14,0.84385,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-15,0.8461,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-16,0.84385,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-19,0.84205,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-20,0.84028,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-21,0.83825,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-22,0.8377,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-23,0.83728,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-26,0.8382,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-27,0.83658,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-28,0.83785,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-29,0.83578,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-10-30,0.8338,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-11-02,0.8358,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-11-03,0.83358,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-11-04,0.8346,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-11-05,0.83393,Pound sterling/Euro ECB reference exchange rate
+EXR.D.GBP.EUR.SP00.A,GBP,EUR,2026-11-06,0.83415,Pound sterling/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-07,179.85,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-08,179.2,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-09,178.59,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-10,179.09,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-11,178.56,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-14,178.52,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-15,178.86,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-16,178.88,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-17,178.75,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-18,180.94,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-21,180.7,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-22,180.17,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-23,180.2,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-24,180.57,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-25,179.7,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-28,178.5,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-29,178.41,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-09-30,178.27,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-01,178.49,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-02,176.99,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-05,177.28,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-06,178.15,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-07,176.85,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-08,177.05,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-09,177.34,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-12,177.33,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-13,176.91,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-14,177.39,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-15,177.06,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-16,177.82,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-19,177.63,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-20,177.34,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-21,177.36,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-22,175.97,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-23,175.51,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-26,176.15,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-27,175.97,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-28,175.86,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-29,175.92,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-10-30,175.68,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-11-02,177.1,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-11-03,176.95,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-11-04,178.3,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-11-05,177.85,Japanese yen/Euro ECB reference exchange rate
+EXR.D.JPY.EUR.SP00.A,JPY,EUR,2026-11-06,176.77,Japanese yen/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-07,1.1622,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-08,1.1614,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-09,1.1652,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-10,1.1616,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-11,1.1592,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-14,1.1551,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-15,1.1539,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-16,1.1537,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-17,1.1481,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-18,1.146,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-21,1.149,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-22,1.1463,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-23,1.1411,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-24,1.1367,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-25,1.1403,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-28,1.1378,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-29,1.1355,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-09-30,1.1355,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-01,1.1298,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-02,1.1225,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-05,1.1204,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-06,1.1269,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-07,1.1177,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-08,1.1186,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-09,1.1206,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-12,1.1181,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-13,1.1188,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-14,1.1195,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-15,1.1208,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-16,1.1253,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-19,1.1225,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-20,1.1215,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-21,1.1234,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-22,1.1205,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-23,1.1193,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-26,1.1188,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-27,1.115,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-28,1.1133,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-29,1.113,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-10-30,1.1172,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-11-02,1.1216,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-11-03,1.1179,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-11-04,1.1267,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-11-05,1.1224,US dollar/Euro ECB reference exchange rate
+EXR.D.USD.EUR.SP00.A,USD,EUR,2026-11-06,1.1165,US dollar/Euro ECB reference exchange rate

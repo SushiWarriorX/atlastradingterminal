@@ -49,3 +49,6 @@ export interface OnChainFees { available: boolean; reason?: string; sat_per_vbyt
 export interface OnChainDifficulty { available: boolean; reason?: string; progress_pct?: number; estimated_change_pct?: number; previous_change_pct?: number; remaining_blocks?: number; estimated_date?: string | null; next_adjustment_height?: number; block_height?: number | null; note?: string }
 export interface OnChainHashrate { available: boolean; reason?: string; date?: string; seven_day_average_eh?: number; latest_day_eh?: number; current_eh?: number | null; changes?: { label: string; change_pct: number }[]; history?: { date: string; eh: number }[]; highest_day?: { date: string; eh: number }; note?: string }
 export interface OnChain { as_of: string; demo: boolean; source: string; url: string; fees: OnChainFees; difficulty: OnChainDifficulty; hashrate: OnChainHashrate }
+
+export interface FxPair { pair: string; currency: string; rate: number; date: string; dollar_vs_1d_pct: number; dollar_vs_30d_pct: number | null; compared_with_30d: string | null }
+export interface FxData { available: boolean; reason?: string; demo: boolean; as_of: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; pairs?: FxPair[]; breadth?: { stronger_30d: number; of: number }; source?: string; url?: string; note?: string }

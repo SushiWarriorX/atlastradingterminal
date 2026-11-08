@@ -15,6 +15,13 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Data-source loop, cycle 7: ECB euro reference exchange rates
+- **Verified live first:** data-api.ecb.europa.eu CSV, 7 currencies, latest 2026-11-06 (EUR/USD 1.1165, USD per euro; JPY 176.77, GBP 0.83415 per euro). The real file (trimmed columns) is the test fixture.
+- **Shipped:** `ecb.py`, `GET /api/macro/fx`. The ECB publishes euro-based rates, so dollar pairs are calculated (dollars-per-yen = dollars-per-euro divided by yen-per-euro) and quoted the usual way (EUR/USD, USD/JPY, GBP/USD, USD/CHF, USD/CNY, USD/CAD, AUD/USD). "Dollar vs it" is the change in units of the other currency per dollar, so positive always means the dollar got stronger; a test pins both directions. Terminal: panel on the Macro desk. Signal: card on the Macro screen.
+- **Honesty built in:** labelled reference rates for information, not tradable quotes; once a day; overdue after 5 days; a missing currency is left out, never guessed; failure or demo shows nothing.
+- **Tests:** 8 new backend (937 pass), phone browser 47/47 (extended), web build.
+
 ## 2026-11-08 · Data-source loop, cycle 6: mempool.space Bitcoin network health
 - **Verified live first:** fees (fastest 2 sat/vB), mempool (61,466 transactions waiting), difficulty cycle (67% through, estimated next change -5.2%), block height 975,081, 3 months of hashrate (about 905-985 EH/s). Real responses are the test fixtures.
 - **Shipped:** `onchain.py`, `GET /api/btc/network`. Three independent sections (fees and mempool, difficulty cycle, hashrate); one failing leaves the others, and a missing mempool or block height only drops that extra. Headline hashrate is a 7-day average because single days are noisy. Terminal: panel on the BTC desk. Signal: card on the BTC page.

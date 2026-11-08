@@ -17,6 +17,7 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 | Yahoo Finance (unofficial) | Stock prices, valuation | Signal, Stocks |
 | RSS feeds | Headlines | News, Macro |
 | CoinGecko, mempool.space | Crypto fundamentals | Signal |
+| ECB euro reference exchange rates (cycle 7) | The US dollar against EUR, JPY, GBP, CHF, CNY, CAD and AUD: rate, 1-day and 30-day change in dollar strength, and how many of the seven the dollar is stronger against | Terminal Macro desk panel, Signal Macro card |
 | mempool.space Bitcoin network (cycle 6) | Fees (sat/vB and a typical transaction), mempool queue, mining difficulty cycle with estimated next change, hashrate (7-day average, 30/90-day change, 90-day history) | Terminal BTC desk panel, Signal BTC page card |
 | DefiLlama stablecoin supply (cycle 5) | Total US-dollar stablecoin supply, changes over 7d/30d/90d/1y, distance from peak, 90-day history, top 6 issuers with share and changes | Terminal BTC desk panel, Signal BTC page card |
 | CFTC Commitments of Traders, CME Bitcoin futures (cycle 4) | Weekly long/short/net by trader group (leveraged funds, asset managers, dealers, others), open interest, 1-year rank | Terminal BTC desk panel, Signal BTC page card |
@@ -25,9 +26,8 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 | alternative.me Fear & Greed (cycle 1) | Daily 0-100 crypto mood gauge, 31-day history | Terminal BTC desk, Signal BTC page |
 
 ## QUEUED (candidates, in order; each must be fetched live before it ships)
-1. ECB reference exchange rates (EUR/USD and others)
-2. World Bank / IMF annual macro series (slow-moving context)
-3. Hyperliquid open interest and basis (extend the existing client)
+1. World Bank / IMF annual macro series (slow-moving context)
+2. Hyperliquid open interest and basis (extend the existing client)
 
 ## BLOCKED
 - fred.stlouisfed.org: added to the allowed hosts but still no reply after the change (checked cycle 1). Retry next cycle; if still silent, the PPI series ids stay unverified.

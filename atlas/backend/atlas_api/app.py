@@ -32,6 +32,7 @@ from .treasury import Treasury
 from .cftc import CftcBitcoin
 from .stablecoins import Stablecoins
 from .onchain import OnChain
+from .ecb import EcbFx
 from .discover.narratives import NarrativeService
 from .btclab.evaluate import LabError
 from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
@@ -339,6 +340,12 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         return ok(await fedwatch.overview())
 
     treasury = Treasury(demo=demo)
+    ecb_fx = EcbFx(demo=demo)
+
+    @app.get("/api/macro/fx")
+    async def macro_fx():
+        """How the US dollar is doing against the major currencies (ECB euro reference rates, daily, official). For information, not tradable quotes."""
+        return ok(await ecb_fx.overview())
 
     @app.get("/api/macro/treasury")
     async def macro_treasury():

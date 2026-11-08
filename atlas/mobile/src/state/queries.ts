@@ -195,3 +195,8 @@ export function useNetwork() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).network, queryFn: () => need(api).btcNetwork(), enabled: !!api, staleTime: 5 * 60_000, refetchInterval: 10 * 60_000, retry: 0 });
 }
+
+export function useFx() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).fx, queryFn: () => need(api).fx(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 60 * 60_000, retry: 0 });
+}

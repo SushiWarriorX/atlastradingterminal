@@ -531,6 +531,10 @@ async function healthy(browser) {
       await page.waitForSelector(V("treasury-card"));
       await page.waitForSelector(V("treasury-body") + ", " + V("treasury-error"), { timeout: 45000 });
       const t = await text(page);
+      await page.waitForSelector(V("fx-card"));
+      await page.waitForSelector(V("fx-body") + ", " + V("fx-unavailable") + ", " + V("fx-error"), { timeout: 45000 });
+      const fxText = await text(page);
+      match(fxText, /US dollar vs major currencies/); match(fxText, /ECB/); noMatch(fxText, FORECASTS, "the exchange-rate card makes no forecasts");
       match(t, /US Treasury/, "the Treasury card is on the Macro screen"); match(t, /Yield curve|Yield curve unavailable|Demo mode/i);
       match(t, /Key indicators/); noMatch(t, /What matters today/, "the rule-based notes section was removed on request"); match(t, /Upcoming/); match(t, /Headlines/);
       match(t, /Official indicators could not be loaded right now/, "missing indicators are said once, in plain words, not invented");
