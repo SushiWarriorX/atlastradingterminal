@@ -41,6 +41,7 @@ from .mts import Mts
 from .avgrates import AvgRates
 from .mspd import Mspd
 from .soma import Soma
+from .fedrates import FedRates
 from .cgglobal import CoinGeckoGlobal
 from .sched.engine import Scheduler
 from .sched.jobs import register_default_jobs
@@ -367,6 +368,12 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     debt_rates = AvgRates(demo=demo)
     debt_mix = Mspd(demo=demo)
     fed_holdings = Soma(demo=demo)
+    fed_rates = FedRates(demo=demo)
+
+    @app.get("/api/macro/fedrates")
+    async def macro_fedrates():
+        """The Fed's policy rate (EFFR), its target range and the overnight reference rates (New York Fed). Describes where overnight money costs; not a signal."""
+        return ok(await fed_rates.overview())
 
     @app.get("/api/macro/fedholdings")
     async def macro_fedholdings():
@@ -1602,7 +1609,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
 
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
-                                      "extras": {"fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

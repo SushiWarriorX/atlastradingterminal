@@ -307,3 +307,10 @@ export interface FedHoldingsData { available: boolean; reason?: string; demo: bo
   total_billions?: number; treasuries_billions?: number; mbs_billions?: number; mix?: { name: string; billions: number; share_pct: number }[];
   changes?: { period: string; since: string | null; change_billions: number | null; change_pct: number | null }[];
   peak_billions?: number; peak_date?: string; from_peak_billions?: number; from_peak_pct?: number; history?: { date: string; total_billions: number }[] }
+
+export interface FedRatesData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  effr?: number; effr_change_pp?: number | null; target_low?: number; target_high?: number; effr_position?: "inside" | "below" | "above"; effr_above_bottom_pp?: number; sofr_minus_effr_pp?: number | null;
+  rates?: { code: string; name: string; rate: number; date: string; p1: number | null; p99: number | null; volume_billions: number | null }[];
+  history_available?: boolean; history_reason?: string;
+  last_change?: { date: string; days_ago: number; from_range: number[]; to_range: number[]; change_pp: number; window_days: number } | null;
+  history?: { date: string; rate: number }[] }

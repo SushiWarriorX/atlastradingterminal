@@ -1,7 +1,7 @@
 import type { CheckState_ } from "./health";
 import type { FedWatch, MacroBrief, MacroOverview } from "./macro";
 import type { EarningsCal, StockResearch } from "./stocks";
-import type { FedHoldingsData, DebtMixData, DebtRatesData, BudgetData, AuctionsData, TgaData, FedOpsData, OpsOverview, CryptoMarket, WorldData, TrackerData, FxData, NarrativeData, OnChain, Positioning, Sentiment, Stablecoins, TreasuryData, WhatIf } from "./whatif";
+import type { FedRatesData, FedHoldingsData, DebtMixData, DebtRatesData, BudgetData, AuctionsData, TgaData, FedOpsData, OpsOverview, CryptoMarket, WorldData, TrackerData, FxData, NarrativeData, OnChain, Positioning, Sentiment, Stablecoins, TreasuryData, WhatIf } from "./whatif";
 import type { SecFilings } from "./secfilings";
 import type { CalData } from "./calendar";
 import type { DiscoverRanked, DiscoverRun } from "./discover";
@@ -96,6 +96,7 @@ export const api = {
   debtRates: () => call<DebtRatesData>("/api/macro/debtrates"),
   debtMix: () => call<DebtMixData>("/api/macro/debtmix"),
   fedHoldings: () => call<FedHoldingsData>("/api/macro/fedholdings"),
+  fedRates: () => call<FedRatesData>("/api/macro/fedrates"),
   tga: () => call<TgaData>("/api/macro/tga"),
   btcSentiment: () => call<Sentiment>("/api/btc/sentiment"),
   whatIf: (id: string, amount: number) => call<WhatIf>(`/api/signal/whatif/${encodeURIComponent(id)}?amount=${amount}`),

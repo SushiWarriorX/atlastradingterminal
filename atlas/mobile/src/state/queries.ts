@@ -261,3 +261,8 @@ export function useFedHoldings() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).fedHoldings, queryFn: () => need(api).fedHoldings(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
 }
+
+export function useFedRates() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).fedRates, queryFn: () => need(api).fedRates(), enabled: !!api, staleTime: 15 * 60_000, refetchInterval: 30 * 60_000, retry: 0 });
+}

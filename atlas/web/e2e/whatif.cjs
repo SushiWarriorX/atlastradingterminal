@@ -105,6 +105,10 @@ fs.mkdirSync(S, { recursive: true });
   const fh = await pg.locator('[data-testid="fedholdings"]').innerText();
   if (!/New York Fed|Federal Reserve Bank of New York|Demo mode/.test(fh)) fail('Fed holdings panel lacks its source or demo notice');
   console.log('Macro desk Fed holdings: ok');
+  await pg.locator('[data-testid="fedrates"]').waitFor({ timeout: 45000 });
+  const fr = await pg.locator('[data-testid="fedrates"]').innerText();
+  if (!/New York Fed|Federal Reserve Bank of New York|Demo mode/.test(fr)) fail('Fed rates panel lacks its source or demo notice');
+  console.log('Macro desk Fed rates: ok');
 
   await cmd('SETTINGS');
   await pg.waitForSelector('[data-testid="ops"]', { timeout: 30000 });

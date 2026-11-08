@@ -16,6 +16,7 @@ import { BudgetCard } from "./BudgetCard";
 import { DebtRatesCard } from "./DebtRatesCard";
 import { DebtMixCard } from "./DebtMixCard";
 import { FedHoldingsCard } from "./FedHoldingsCard";
+import { FedRatesCard } from "./FedRatesCard";
 import { ScreenHeader } from "./ScreenHeader";
 import { Banner, Chip, Divider, ErrorState, Skeleton, Tag, TextButton, Txt } from "./ui";
 import type { MacroIndicator } from "../api/types";
@@ -59,6 +60,7 @@ export function MacroView() {
                     </View>) : <View style={{ paddingVertical: 8 }}><Txt variant="body">{i.label}</Txt><Txt variant="tiny" c={color.down}>Unavailable: {i.reason}</Txt></View>}
                 </View>))}
             </Section>
+            <FedRatesCard />
             <TreasuryCard />
             <FxCard />
             <FedOpsCard />

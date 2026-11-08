@@ -1,4 +1,4 @@
-export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "secfilings" | "narrative" | "treasury" | "positioning" | "stablecoins" | "network" | "fx" | "tracker" | "world" | "cryptomarket" | "ops" | "fedops" | "tga" | "auctions" | "budget" | "debtrates" | "debtmix" | "fedholdings" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "secfilings" | "narrative" | "treasury" | "positioning" | "stablecoins" | "network" | "fx" | "tracker" | "world" | "cryptomarket" | "ops" | "fedops" | "tga" | "auctions" | "budget" | "debtrates" | "debtmix" | "fedholdings" | "fedrates" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
@@ -70,18 +70,19 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "c10", type: "chart", x: 0, y: 26, w: 6, h: 12, props: { id: "MACRO:FRED:DGS10", title: "US 10Y YIELD (FRED, daily)" } },
     { i: "c2", type: "chart", x: 6, y: 26, w: 6, h: 12, props: { id: "MACRO:FRED:DGS2", title: "US 2Y YIELD (FRED, daily)" } },
     un("fed", "macro_fed", 0, 38, 12, 24),                     // the Macro Dashboard panel (the placeholder id is kept so saved layouts pick it up)
-    { i: "treasury", type: "treasury", x: 0, y: 62, w: 12, h: 14 },
-    { i: "fx", type: "fx", x: 0, y: 76, w: 12, h: 11 },
-    { i: "fedops", type: "fedops", x: 0, y: 87, w: 12, h: 12 },
-    { i: "tga", type: "tga", x: 0, y: 99, w: 12, h: 11 },
-    { i: "auctions", type: "auctions", x: 0, y: 110, w: 12, h: 15 },
-    { i: "budget", type: "budget", x: 0, y: 125, w: 12, h: 12 },
-    { i: "debtrates", type: "debtrates", x: 0, y: 137, w: 12, h: 13 },
-    { i: "debtmix", type: "debtmix", x: 0, y: 150, w: 12, h: 15 },
-    { i: "fedholdings", type: "fedholdings", x: 0, y: 165, w: 12, h: 14 },
-    { i: "world", type: "world", x: 0, y: 179, w: 12, h: 16 },
-    { i: "yields", type: "yields", x: 0, y: 195, w: 5, h: 7 },
-    { i: "ai", type: "ai", x: 5, y: 195, w: 7, h: 10 },
+    { i: "fedrates", type: "fedrates", x: 0, y: 62, w: 12, h: 12 },
+    { i: "treasury", type: "treasury", x: 0, y: 74, w: 12, h: 14 },
+    { i: "fx", type: "fx", x: 0, y: 88, w: 12, h: 11 },
+    { i: "fedops", type: "fedops", x: 0, y: 99, w: 12, h: 12 },
+    { i: "tga", type: "tga", x: 0, y: 111, w: 12, h: 11 },
+    { i: "auctions", type: "auctions", x: 0, y: 122, w: 12, h: 15 },
+    { i: "budget", type: "budget", x: 0, y: 137, w: 12, h: 12 },
+    { i: "debtrates", type: "debtrates", x: 0, y: 149, w: 12, h: 13 },
+    { i: "debtmix", type: "debtmix", x: 0, y: 162, w: 12, h: 15 },
+    { i: "fedholdings", type: "fedholdings", x: 0, y: 177, w: 12, h: 14 },
+    { i: "world", type: "world", x: 0, y: 191, w: 12, h: 16 },
+    { i: "yields", type: "yields", x: 0, y: 207, w: 5, h: 7 },
+    { i: "ai", type: "ai", x: 5, y: 207, w: 7, h: 10 },
   ] },
   settings: { id: "settings", name: "Settings", widgets: [
     { i: "settings", type: "settings", x: 0, y: 0, w: 6, h: 12 },
