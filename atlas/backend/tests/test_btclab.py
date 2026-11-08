@@ -236,7 +236,21 @@ def test_results_carry_judgement_and_never_claim_moderate_when_the_library_is_th
     out = E.run_lab(rows, None, dict(strategies=["momentum_filtered"], timeframe="1d", market="spot", leverage=1.0, long_short=False, fee_bps=5, slippage_bps=5))
     r = out["results"][0]
     j = r["judgement"]
-    assert j["sharpe_lower_bound"]["n_compared"] >= 20 and "library" in j["note"]
+    assert "library" in j["note"]
+    if j["sharpe_lower_bound"] is not None:
+        assert j["sharpe_lower_bound"]["n_compared"] >= 20
+    else:
+        assert "Too few out-of-sample trades" in j["luck_check_note"]
     assert j["regimes"].keys() == {"uptrend", "downtrend"}
-    if j["sharpe_lower_bound"]["lower"] <= 0:
+    if j["sharpe_lower_bound"] is not None and j["sharpe_lower_bound"]["lower"] <= 0:
         assert r["evidence"]["level"] != "moderate" and any("rule out luck" in x for x in r["evidence"]["reasons"])
+    if j["sharpe_lower_bound"] is None:
+        assert r["evidence"]["level"] == "none"                       # too few trades can never be better than "no reliable evidence"
+
+
+def test_no_luck_check_is_shown_for_a_rule_with_too_few_trades():
+    out = E.run_lab(demo_rows("1d"), None, dict(strategies=["momentum_roc"], timeframe="1d", market="spot", leverage=1.0, long_short=False, fee_bps=5, slippage_bps=5))
+    r = out["results"][0]
+    assert r["out_of_sample"]["trades"] < E.MIN_TRADES
+    j = r["judgement"]
+    assert j["sharpe_lower_bound"] is None and "Too few out-of-sample trades" in j["luck_check_note"] and str(E.MIN_TRADES) in j["luck_check_note"]

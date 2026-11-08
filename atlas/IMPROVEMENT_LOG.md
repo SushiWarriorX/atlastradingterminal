@@ -2,6 +2,14 @@
 
 Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) and by hand.
 
+## 2026-11-08, cycle 7: no luck check for a rule with too few trades
+- **Found (by looking at the real results screen for the first time):** a rule that made a single out-of-sample trade showed "safe lower Sharpe estimate 6.59". The luck check resamples daily returns, so a few long holdings look like many independent days and the number was meaningless. The label said "No reliable evidence" but the figure beside it looked reassuring.
+- **Tried first and rejected:** making the resampling blocks as long as the holding period. A test showed that does not reliably make a Sharpe estimate more cautious (Sharpe of a series with long flat stretches is not monotone in block length), so that change was reverted rather than shipped.
+- **Changed:** the luck check only runs with at least 15 out-of-sample trades; otherwise the result says "Too few out-of-sample trades (n; at least 15 are needed) to run a luck check." (`luck_check_note`). Such a rule can never be better than "No reliable evidence". The evidence tag on the phone is a pill, not full-width.
+- **Verified:** backend 836 tests (the old assertions updated, one new), web and phone type checks and unit tests, browser suite 44 of 44 (its Strategy Lab check now expects the "too few trades" message); viewed the new results screenshot.
+- **Honest limit:** with 15 or more trades the luck check is still an approximation (a block bootstrap of daily returns); treat it as guidance.
+- **Next candidates:** let the user choose the out-of-sample split; Stocks empty-state suggestions; keyboard shortcuts for the terminal desks; check the new Windows launcher on a real Windows machine (reported by the owner as not starting before it existed; untested here).
+
 ## 2026-11-08, cycle 6 (on request): strategy research on real BTC data, and a harder-to-fool lab
 - **Asked for:** look for different trading strategies, backtest them, and improve judgement.
 - **Method:** downloaded real data (Coinbase BTC-USD daily from 2015, hourly and 4-hour from late 2023; Hyperliquid funding from 2023). Ran every strategy through the existing evaluator (fees 5 bps, slippage 5 bps per side), spot and perpetuals, daily, 4h and 1h.

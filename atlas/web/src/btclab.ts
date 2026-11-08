@@ -5,7 +5,7 @@ export interface LabResult {
   id: string; name: string; family: string; params: Record<string, number>; stop_pct: number | null;
   full: Metrics; in_sample: Metrics; out_of_sample: Metrics; walk_forward: Metrics & { folds: { from: string; to: string; chosen: Record<string, number>; train_sharpe: number | null; test_return_pct: number }[]; efficiency: number | null };
   buy_and_hold: { full: Metrics; out_of_sample: Metrics };
-  judgement: { sharpe_lower_bound: { lower: number; confidence_pct: number; n_compared: number } | null; capture: { up_pct: number; down_pct: number } | null; regimes: Record<string, { bars: number; strategy_yearly_pct: number; buy_hold_yearly_pct: number } | null>; plain: string | null; note: string };
+  judgement: { luck_check_note: string | null; sharpe_lower_bound: { lower: number; confidence_pct: number; n_compared: number } | null; capture: { up_pct: number; down_pct: number } | null; regimes: Record<string, { bars: number; strategy_yearly_pct: number; buy_hold_yearly_pct: number } | null>; plain: string | null; note: string };
   robustness: { param: string; neighbours: Record<string, number>[]; share_positive: number; doubled_costs_oos_return_pct: number };
   evidence: { level: "none" | "weak" | "moderate"; reasons: string[]; min_trades: number };
   costs: { fees_paid_pct: number; funding_paid_pct: number; liquidated: boolean };

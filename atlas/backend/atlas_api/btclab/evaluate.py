@@ -248,7 +248,9 @@ def evaluate(strat: Strategy, f: Frame, req: dict, bh: dict, n_compared: int = 1
 
     # judgement: luck check, capture versus buy and hold, regimes
     rs_oos, rb_oos = bar_returns(oos_c), bar_returns(bh_oos[0])
-    lb = sharpe_lower_bound(rs_oos, f.bpy, n_compared, zlib.crc32(strat.id.encode()))
+    # A luck check on the daily returns of a rule that made only a handful of trades would be meaningless (a few long holdings look like many independent days), so it is only run with enough trades.
+    lb = sharpe_lower_bound(rs_oos, f.bpy, n_compared, zlib.crc32(strat.id.encode())) if m_oos["trades"] >= MIN_TRADES else None
+    luck_note = None if lb else f"Too few out-of-sample trades ({m_oos['trades']}; at least {MIN_TRADES} are needed) to run a luck check."
     cap = capture(rs_oos, rb_oos) if len(rs_oos) == len(rb_oos) else None
     reg_ = regimes(f, full, bh, a, b)
 
@@ -295,7 +297,7 @@ def evaluate(strat: Strategy, f: Frame, req: dict, bh: dict, n_compared: int = 1
         "id": strat.id, "name": strat.name, "family": strat.family, "params": params, "stop_pct": strat.stop_pct,
         "full": m_full, "in_sample": m_is, "out_of_sample": m_oos, "walk_forward": {**m_wf, "folds": folds, "efficiency": wf_eff},
         "buy_and_hold": {"full": m_bh_full, "out_of_sample": m_bh_oos},
-        "judgement": {"sharpe_lower_bound": lb, "capture": cap, "regimes": reg_, "plain": plain,
+        "judgement": {"sharpe_lower_bound": lb, "luck_check_note": luck_note, "capture": cap, "regimes": reg_, "plain": plain,
                       "note": "The lower bound is an approximate block-bootstrap estimate. It counts every strategy in the library, because picking the best of many looks good by luck."},
         "robustness": {"param": pname, "neighbours": nb, "share_positive": share, "doubled_costs_oos_return_pct": stress_ret},
         "evidence": {"level": level, "reasons": reasons, "min_trades": MIN_TRADES},

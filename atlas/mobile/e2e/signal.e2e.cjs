@@ -766,7 +766,8 @@ async function demo(browser) {
       match(t, /(No reliable|Weak|Moderate) evidence/);
       await page.locator('[data-testid^="lab-row-"]:visible').first().click();
       match(await text(page), /Right now \(/, "current rule state is shown");
-      match(await text(page), /Luck check: with \d+ strategies in the library/, "the luck check says how many strategies were in play");
+      match(await text(page), /Too few out-of-sample trades \(\d+; at least 15 are needed\) to run a luck check/, "a rule with too few trades is not given a misleading luck check");
+      await shot(page, "15b-lab-results-expanded");
       noMatch(await text(page), FORECASTS, "no forecasts");
       await page.click(V("lab-perp")); await page.click(V("lab-lev-3")); await page.click(V("lab-run"));
       await page.waitForFunction(() => /perp/i.test(document.body.innerText) || /funding/i.test(document.body.innerText), null, { timeout: 60000 });

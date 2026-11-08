@@ -155,7 +155,7 @@ export interface LabResult {
   id: string; name: string; family: string;
   out_of_sample: LabMetrics; walk_forward: LabMetrics; buy_and_hold: { out_of_sample: LabMetrics };
   robustness: { share_positive: number; doubled_costs_oos_return_pct: number };
-  judgement: { sharpe_lower_bound: { lower: number; confidence_pct: number; n_compared: number } | null; plain: string | null };
+  judgement: { luck_check_note: string | null; sharpe_lower_bound: { lower: number; confidence_pct: number; n_compared: number } | null; plain: string | null };
   evidence: { level: "none" | "weak" | "moderate"; reasons: string[] };
   now: { rule_position: string; conditions: { rule: string; met: boolean | null; value: string }[]; as_of: string; note: string };
   curve: { strategy: number[]; buy_and_hold: number[] };

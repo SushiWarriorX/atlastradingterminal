@@ -38,6 +38,7 @@ function Detail({ r, run }: { r: LabResult; run: LabRun }) {
           {m("In sample (first 70%)", r.in_sample)}{m("Out of sample (last 30%)", r.out_of_sample)}{m("Walk-forward (re-tuned as you go)", r.walk_forward)}{m("Buy and hold, out of sample", r.buy_and_hold.out_of_sample)}</tbody></table>
       </div>
       <div className="small" style={{ marginTop: 6 }} data-testid={`lab-judgement-${r.id}`}><b>Judgement.</b> {r.judgement.plain ?? "Not enough up and down bars out of sample to compare with holding."}
+        {!r.judgement.sharpe_lower_bound && r.judgement.luck_check_note && <> {r.judgement.luck_check_note}</>}
         {r.judgement.sharpe_lower_bound && <> Luck check: with {r.judgement.sharpe_lower_bound.n_compared} strategies in the library to pick from, the safe lower estimate of its Sharpe ratio is <b>{n2(r.judgement.sharpe_lower_bound.lower)}</b> at {r.judgement.sharpe_lower_bound.confidence_pct.toFixed(1)}% confidence (it needs to be above 0).</>}
         {" "}{(["uptrend", "downtrend"] as const).map((k) => { const g = r.judgement.regimes[k]; return g ? `${k === "uptrend" ? "While BTC was above its 200-bar average" : "While below it"}: ${pc(g.strategy_yearly_pct, 0)} a year vs ${pc(g.buy_hold_yearly_pct, 0)} holding (${g.bars} bars). ` : ""; }).join("")}
         <span className="dim">{r.judgement.note}</span></div>
