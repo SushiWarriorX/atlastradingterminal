@@ -21,6 +21,9 @@ SOURCE = "Nasdaq IPO calendar (public website feed; unofficial; data attributed 
 PAGE = "https://www.nasdaq.com/market-activity/ipos"
 TTL = timedelta(hours=6)
 VERIFY_FORMS = ("424B4", "424B1")
+SPAC_NAME = re.compile(r"\bacquisition (corp|corporation|holdings|co|company)\b|\bblank check\b|\bmerger corp\b", re.I)
+SPAC_NOTE = ("A blank-check company (SPAC): it raises cash to merge with an operating business later and has no business of its own yet, so there is no revenue to research. "
+             "A completed merger is a different event and is not covered by this feed.")
 COVERAGE_NOTE = ("This feed covers IPOs only. Direct listings, completed SPAC mergers, exchange transfers and ticker changes are not in it, so they are not shown here; "
                  "nothing is guessed. A priced deal is marked 'confirmed trading' only when an independent price history shows its first trading day.")
 
@@ -95,6 +98,8 @@ def classify(row: dict, today: date, confirmed_first_trade: str | None = None) -
     """Status of one deal. A first trading day is accepted only when passed in from an independent price history."""
     st = row["stage"]
     out = {**row, "listing_type": "IPO", "listing_type_note": "From the IPO calendar; direct listings, SPAC mergers and transfers are not covered."}
+    if SPAC_NAME.search(row.get("name") or ""):
+        out.update(listing_type="SPAC IPO", listing_type_note=SPAC_NOTE)
     if st == "withdrawn":
         out.update(status="withdrawn", status_text="Withdrawn: the offering was pulled; no listing.")
     elif st == "filed":

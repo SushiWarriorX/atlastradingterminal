@@ -35,7 +35,7 @@ LABELS = {"under": "Potentially undervalued under these assumptions", "within": 
           "none": "Insufficient evidence"}
 
 
-EMPTY = {"multiples": [], "scenarios": [], "reverse_dcf": None, "sensitivity": None, "influence": [], "invalidators": [],
+EMPTY = {"warnings": [], "multiples": [], "scenarios": [], "reverse_dcf": None, "sensitivity": None, "influence": [], "invalidators": [],
          "methods": {"multiples": "not computed: a price and a diluted share count are needed", "dcf": {"available": False, "reason": "not computed"},
                      "peers": {"available": False, "reason": "Peer comparison is not built yet."}, "own_history": {"available": False, "reason": "Historical multiples are not built yet."}}}
 
@@ -136,11 +136,12 @@ def assess(inp: dict, policy: dict | None = None, now: datetime | None = None) -
         return {**base, **EMPTY, "label": LABELS["none"], "label_key": "none", "reason": f"This company is a {SPECIAL[kind]}. Sector-specific valuation methods are not built yet, so no verdict is given.", "sector": kind,
                 "evidence": {"level": "insufficient", "checks": [], "limits": []}}
     if not inp.get("price") or inp["price"] <= 0 or not inp.get("shares") or inp["shares"] <= 0:
-        return {**base, **EMPTY, "label": LABELS["none"], "label_key": "none", "reason": "A current price and a diluted share count are both needed.", "sector": kind,
-                "evidence": {"level": "insufficient", "checks": [], "limits": []}}
+        return {**base, **{**EMPTY, "warnings": [inp["shares_note"]] if inp.get("shares_note") else []}, "label": LABELS["none"], "label_key": "none",
+                "reason": "A current price and a diluted share count are both needed.", "sector": kind, "evidence": {"level": "insufficient", "checks": [], "limits": []}}
     ev = evidence(inp, policy, now)
     mult = multiples(inp)
-    out = {**base, "sector": kind, "multiples": mult, "evidence": ev, "scenarios": [], "reverse_dcf": None, "sensitivity": None, "influence": [], "invalidators": [],
+    warnings = [inp["shares_note"]] if inp.get("shares_reliable") is False and inp.get("shares_note") else []
+    out = {**base, "sector": kind, "warnings": warnings, "multiples": mult, "evidence": ev, "scenarios": [], "reverse_dcf": None, "sensitivity": None, "influence": [], "invalidators": [],
            "methods": {"multiples": "shown above where meaningful", "dcf": None, "peers": {"available": False, "reason": "Peer comparison is not built yet; a lower multiple alone would not prove cheapness."},
                        "own_history": {"available": False, "reason": "The company's own historical multiples need historical prices and share counts; not built yet."}}}
     m0, g0 = inp.get("fcf_margin_pct"), inp.get("ttm_growth_pct")

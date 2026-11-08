@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError } from "../api/client";
 import type { AgentName, ChartRange } from "../api/types";
 import { StockResearchCard } from "./StockResearchCard";
+import { FundamentalResearchCard } from "./FundamentalResearchCard";
 import { WhatIfCard } from "./WhatIfCard";
 import { SentimentCard } from "./SentimentCard";
 import { PositioningCard } from "./PositioningCard";
@@ -133,6 +134,7 @@ export function AssetView({ id, embedded, hideBack }: { id: string; embedded?: b
             ))}
           </View>
           {a?.type === "stock" ? <SecFilingsCard symbol={a.symbol} /> : null}
+          {a?.type === "stock" ? <FundamentalResearchCard symbol={a.symbol} /> : null}
           {a?.type === "stock" ? <StockResearchCard symbol={a.symbol} /> : null}
           {a ? <WhatIfCard assetId={a.id} symbol={a.symbol} /> : null}
           {a?.id === BTC_ID ? <SentimentCard /> : null}

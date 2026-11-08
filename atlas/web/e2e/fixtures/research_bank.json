@@ -1,0 +1,124 @@
+{
+ "symbol": "BANK",
+ "as_of": "2026-02-01T12:00:00+00:00",
+ "demo": false,
+ "errors": [],
+ "available": true,
+ "company": {
+  "name": "Sample Bank (synthetic)",
+  "cik": 5005,
+  "sic": 6022,
+  "sector_kind": "bank",
+  "special_sector_note": "bank (use net interest margin, efficiency ratio, credit quality and book value; revenue and free cash flow are not comparable)"
+ },
+ "revenue": {
+  "available": false,
+  "reason": "No US-GAAP revenue figure was found in the company's filings (banks, insurers and foreign filers often report differently).",
+  "currency": "USD"
+ },
+ "coverage": {
+  "covered": [
+   "Annual revenue (five years) and quarterly revenue (eight quarters) from 10-K and 10-Q filings",
+   "Trailing-twelve-month revenue, year-over-year growth, multi-year growth rate and acceleration",
+   "Revenue per diluted share and the change in diluted share count",
+   "Margins, cash conversion, free cash flow, stock-based compensation, cash, debt, a pre-tax return on capital",
+   "Rule of 40 (software only), with an EBITDA-basis variant labelled separately",
+   "Enterprise value, multiples, a scenario DCF, a reverse DCF and an evidence-quality grade"
+  ],
+  "not_covered": [
+   "Revenue by segment or geography, organic versus acquired growth, currency effects, one-off items (in the filing text, not in structured data)",
+   "Customer concentration, recurring revenue, retention and backlog (filing text)",
+   "Management guidance (never mixed with reported results; not available from free structured sources)",
+   "Peer comparison and the company's own historical multiples (not built yet)",
+   "Banks, insurers and REITs: sector-specific metrics (not built yet; company-style measures are marked not applicable)",
+   "Foreign filers that report under IFRS (only US-GAAP filings are read)",
+   "Analyst estimates (not available from free sources)"
+  ]
+ },
+ "definitions": {
+  "reported": "filed by the company for exactly that period",
+  "derived": "a difference of two filed cumulative figures",
+  "calculated": "arithmetic done here, formula stated",
+  "estimate": "model output under stated assumptions"
+ },
+ "quality": {
+  "available": false,
+  "reason": "No US-GAAP revenue figure was found in the company's filings (banks, insurers and foreign filers often report differently)."
+ },
+ "rule_of_40": {
+  "definition": "Rule of 40 (FCF basis) = TTM revenue growth % + TTM free-cash-flow margin %",
+  "threshold": 40.0,
+  "caveat": "Reaching 40 does not mean a stock is undervalued, and missing it does not disqualify a company. Working-capital timing (for example annual upfront billing), stock-based compensation (not subtracted from free cash flow), acquisitions and unusual cash flows can move the score; check them in the filings.",
+  "applicable": false,
+  "label": "Not applicable",
+  "reason": "This company is a bank (use net interest margin, efficiency ratio, credit quality and book value; revenue and free cash flow are not comparable).",
+  "sector": "bank"
+ },
+ "valuation": {
+  "warnings": [],
+  "multiples": [],
+  "scenarios": [],
+  "reverse_dcf": null,
+  "sensitivity": null,
+  "influence": [],
+  "invalidators": [],
+  "methods": {
+   "multiples": "not computed: a price and a diluted share count are needed",
+   "dcf": {
+    "available": false,
+    "reason": "not computed"
+   },
+   "peers": {
+    "available": false,
+    "reason": "Peer comparison is not built yet."
+   },
+   "own_history": {
+    "available": false,
+    "reason": "Historical multiples are not built yet."
+   }
+  },
+  "label": "Insufficient evidence",
+  "label_key": "none",
+  "reason": "No US-GAAP revenue figure was found in the company's filings (banks, insurers and foreign filers often report differently).",
+  "evidence": {
+   "level": "insufficient",
+   "checks": [],
+   "limits": []
+  }
+ },
+ "thesis": {
+  "what_must_be_true": [
+   "Not enough computed evidence to say what the price requires."
+  ],
+  "what_would_disprove_it": [
+   "Not enough computed evidence to name a specific test."
+  ],
+  "research_next": [
+   "Open the latest annual report and read the segment, geography and customer-concentration notes (not in structured data).",
+   "Find recurring-revenue, retention and backlog disclosures, and separate organic growth from acquisitions and currency effects.",
+   "Check stock-based compensation and any acquisitions or one-off cash flows inside the trailing twelve months.",
+   "Compare with two or three similar companies side by side (peer comparison is not built into this page yet)."
+  ]
+ },
+ "sources": {
+  "filings": {
+   "origin": "fixture",
+   "fetched_at": "2026-02-01T12:00:00+00:00",
+   "source": "SYNTHETIC SEC-schema fixture (not real company data)"
+  },
+  "submissions": null
+ },
+ "my_state": {
+  "state": {
+   "symbol": "BANK",
+   "first_seen_at": null,
+   "opened_at": "2026-02-01T12:00:00+00:00",
+   "saved_at": null,
+   "dismissed_at": null,
+   "researched_at": null,
+   "shown_count": 0
+  },
+  "notes": [],
+  "last_review": null
+ }
+}

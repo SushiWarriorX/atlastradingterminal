@@ -106,7 +106,7 @@ def assemble(rf: dict, sic, price, price_time: str | None, price_source: str | N
                                                               "calculated": "arithmetic done here, formula stated", "estimate": "model output under stated assumptions"}}
     if not rev.get("available"):
         out.update({"quality": {"available": False, "reason": rev["reason"]}, "rule_of_40": rule_of_40(rf, sic),
-                    "valuation": {"label": V.LABELS["none"], "label_key": "none", "reason": rev["reason"], "evidence": {"level": "insufficient", "checks": [], "limits": []}},
+                    "valuation": {**V.EMPTY, "label": V.LABELS["none"], "label_key": "none", "reason": rev["reason"], "evidence": {"level": "insufficient", "checks": [], "limits": []}},
                     "thesis": thesis(rev, {}, {})})
         return out
     q = quality(rf)

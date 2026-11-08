@@ -1,4 +1,4 @@
-import type { CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, OpsOverview, FedOpsData, TgaData, AuctionsData, BudgetData, DebtRatesData, DebtMixData, FedHoldingsData, FedRatesData, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
+import type { CandidatesFeed, Changes, FundamentalResearch, ListingsFeed, MyState, CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, OpsOverview, FedOpsData, TgaData, AuctionsData, BudgetData, DebtRatesData, DebtMixData, FedHoldingsData, FedRatesData, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
 
 /** A failure with a code the UI can act on. `network` means we never got an answer. */
 export class ApiError extends Error {
@@ -98,6 +98,14 @@ export function createApi(opts: ClientOptions) {
     tga: () => call<TgaData>("/api/macro/tga", { timeoutMs: 45_000 }),
     btcSentiment: () => call<Sentiment>("/api/btc/sentiment", { timeoutMs: 30_000 }),
     whatIf: (id: string, amount: number) => call<WhatIfData>(`/api/signal/whatif/${enc(id)}?amount=${amount}`, { timeoutMs: 60_000 }),
+    fundamentalResearch: (symbol: string) => call<FundamentalResearch>(`/api/research/${encodeURIComponent(symbol)}`, { timeoutMs: 90_000 }),
+    researchChanges: (symbol: string) => call<Changes>(`/api/research/${encodeURIComponent(symbol)}/changes`, { timeoutMs: 90_000 }),
+    researchReview: (symbol: string) => call<{ snapshot: Record<string, unknown> }>(`/api/research/${encodeURIComponent(symbol)}/review`, { method: "POST", body: {}, timeoutMs: 90_000 }),
+    researchNoteAdd: (symbol: string, text: string) => call<{ id: number }>(`/api/research/${encodeURIComponent(symbol)}/notes`, { method: "POST", body: { body: text } }),
+    researchNoteDelete: (id: number) => call<{ deleted: number }>(`/api/research/notes/${id}`, { method: "DELETE" }),
+    discoverListings: (days = 30) => call<ListingsFeed>(`/api/discover/listings?days=${days}`),
+    discoverCandidates: (qs: string) => call<CandidatesFeed>(`/api/discover/candidates${qs ? `?${qs}` : ""}`),
+    discoverState: (symbol: string, state: string, on = true) => call<MyState["state"]>("/api/discover/state", { method: "POST", body: { symbol, state, on } }),
     stockResearch: (symbol: string) => call<StockResearchData>(`/api/stocks/${encodeURIComponent(symbol)}/research`, { timeoutMs: 60_000 }),
     earnings: (days: number) => call<EarningsData>(`/api/stocks/earnings?days=${days}`, { timeoutMs: 60_000 }),
     macroBrief: () => call<MacroBriefData>("/api/macro/brief", { timeoutMs: 40_000 }),

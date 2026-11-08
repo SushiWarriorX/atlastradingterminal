@@ -266,3 +266,23 @@ export function useFedRates() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).fedRates, queryFn: () => need(api).fedRates(), enabled: !!api, staleTime: 15 * 60_000, refetchInterval: 30 * 60_000, retry: 0 });
 }
+
+export function useFundamentalResearch(symbol: string, enabled: boolean) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).fundResearch(symbol), queryFn: () => need(api).fundamentalResearch(symbol), enabled: !!api && enabled, staleTime: 10 * 60_000, retry: 0 });
+}
+
+export function useResearchChanges(symbol: string, enabled: boolean) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).fundChanges(symbol), queryFn: () => need(api).researchChanges(symbol), enabled: !!api && enabled, staleTime: 60_000, retry: 0 });
+}
+
+export function useListings() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).listings, queryFn: () => need(api).discoverListings(30), enabled: !!api, staleTime: 10 * 60_000, refetchInterval: 30 * 60_000, retry: 0 });
+}
+
+export function useCandidates(qs: string) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).candidates(qs), queryFn: () => need(api).discoverCandidates(qs), enabled: !!api, staleTime: 5 * 60_000, retry: 0 });
+}

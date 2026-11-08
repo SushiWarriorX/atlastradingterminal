@@ -1,4 +1,4 @@
-export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "secfilings" | "narrative" | "treasury" | "positioning" | "stablecoins" | "network" | "fx" | "tracker" | "world" | "cryptomarket" | "ops" | "fedops" | "tga" | "auctions" | "budget" | "debtrates" | "debtmix" | "fedholdings" | "fedrates" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "secfilings" | "narrative" | "treasury" | "positioning" | "stablecoins" | "network" | "fx" | "tracker" | "world" | "cryptomarket" | "ops" | "fedops" | "tga" | "auctions" | "budget" | "debtrates" | "debtmix" | "fedholdings" | "fedrates" | "fundresearch" | "listings" | "newtome" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
@@ -34,20 +34,23 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "watch", type: "watchlist", x: 8, y: 0, w: 4, h: 13 },
     { i: "quote", type: "quote", x: 0, y: 13, w: 4, h: 11 },
     { i: "tech", type: "tech", x: 4, y: 13, w: 8, h: 11 },
-    { i: "research", type: "stockresearch", x: 0, y: 24, w: 12, h: 26 },
-    { i: "filings", type: "secfilings", x: 0, y: 50, w: 12, h: 18 },
-    { i: "whatif", type: "whatif", x: 0, y: 68, w: 12, h: 22 },
-    { i: "earn", type: "earnings", x: 0, y: 90, w: 12, h: 12 },
-    { i: "mtf", type: "mtf", x: 0, y: 102, w: 12, h: 16 },
-    { i: "news", type: "news", x: 0, y: 118, w: 12, h: 10 },
+    { i: "fundres", type: "fundresearch", x: 0, y: 24, w: 12, h: 60 },
+    { i: "research", type: "stockresearch", x: 0, y: 84, w: 12, h: 26 },
+    { i: "filings", type: "secfilings", x: 0, y: 110, w: 12, h: 18 },
+    { i: "whatif", type: "whatif", x: 0, y: 128, w: 12, h: 22 },
+    { i: "earn", type: "earnings", x: 0, y: 150, w: 12, h: 12 },
+    { i: "mtf", type: "mtf", x: 0, y: 162, w: 12, h: 16 },
+    { i: "news", type: "news", x: 0, y: 178, w: 12, h: 10 },
   ] },
   scanner: { id: "scanner", name: "Discover, Scanner and Backtester", widgets: [
-    { i: "narr", type: "narrative", x: 0, y: 0, w: 12, h: 24 },
-    { i: "disc", type: "discover", x: 0, y: 24, w: 12, h: 34 },
-    { i: "scan", type: "scanner", x: 0, y: 58, w: 12, h: 20 },
-    { i: "bt", type: "backtest", x: 0, y: 78, w: 12, h: 34 },
-    { i: "chart", type: "chart", x: 0, y: 112, w: 7, h: 13 },
-    { i: "tech", type: "tech", x: 7, y: 112, w: 5, h: 13 },
+    { i: "listings", type: "listings", x: 0, y: 0, w: 12, h: 22 },
+    { i: "newtome", type: "newtome", x: 0, y: 22, w: 12, h: 34 },
+    { i: "narr", type: "narrative", x: 0, y: 56, w: 12, h: 24 },
+    { i: "disc", type: "discover", x: 0, y: 80, w: 12, h: 34 },
+    { i: "scan", type: "scanner", x: 0, y: 114, w: 12, h: 20 },
+    { i: "bt", type: "backtest", x: 0, y: 134, w: 12, h: 34 },
+    { i: "chart", type: "chart", x: 0, y: 168, w: 7, h: 13 },
+    { i: "tech", type: "tech", x: 7, y: 168, w: 5, h: 13 },
   ] },
   journal: { id: "journal", name: "Journal", widgets: [
     { i: "quick", type: "journalquick", x: 0, y: 0, w: 12, h: 30 },

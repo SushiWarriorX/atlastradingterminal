@@ -162,7 +162,7 @@ class NewToMe:
                 self.store.mark_shown(p["symbol"], p["material"], p["score"], now)
         age = (now.date() - date.fromisoformat(run["asof"])).days
         return {"available": True, "asof": run["asof"], "age_days": age, "stale": age > 2, "target": target, "shown": len(items), "items": items,
-                "pool_size": len(pool), "filters_applied": filters or {}, "excluded_by_my_filters": excl, "hidden_because_seen": hidden, "kept_varied": skipped,
+                "pool_size": len(pool), "filters_applied": {k: (None if isinstance(v, float) and v in (float("inf"), float("-inf")) else v) for k, v in (filters or {}).items()}, "excluded_by_my_filters": excl, "hidden_because_seen": hidden, "kept_varied": skipped,
                 "evidence_note": (f"Showing {len(items)} of a target of {target}: fewer are shown when evidence is weak or when I have already seen, saved or dismissed the rest." if len(items) < target
                                   else f"Showing {len(items)} candidates."),
                 "study": {"universe": run["universe"], "after_filters": run["after_filters"], "studied": run["studied"], "passed": run["passed"], "left_out_reasons": run["left_out_reasons"],

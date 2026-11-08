@@ -6,6 +6,7 @@ import type { SecFilings } from "./secfilings";
 import type { CalData } from "./calendar";
 import type { DiscoverRanked, DiscoverRun } from "./discover";
 import type { LabReq, LabRun, LabStrategies } from "./btclab";
+import type { CandidatesFeed, Changes, FundamentalResearch, ListingsFeed, MyState } from "./research";
 export type Status = "LIVE" | "DELAYED" | "HISTORICAL" | "STALE" | "DEMO" | "UNAVAILABLE";
 
 export interface Prov {
@@ -100,6 +101,17 @@ export const api = {
   tga: () => call<TgaData>("/api/macro/tga"),
   btcSentiment: () => call<Sentiment>("/api/btc/sentiment"),
   whatIf: (id: string, amount: number) => call<WhatIf>(`/api/signal/whatif/${encodeURIComponent(id)}?amount=${amount}`),
+  fundamentalResearch: (sym: string, policy?: { discount_rate_pct?: number; terminal_growth_pct?: number; band_pct?: number }) => {
+    const q = new URLSearchParams(); Object.entries(policy ?? {}).forEach(([k, v]) => { if (v != null && Number.isFinite(v)) q.set(k, String(v)); });
+    return call<FundamentalResearch>(`/api/research/${encodeURIComponent(sym)}${q.toString() ? `?${q}` : ""}`);
+  },
+  researchChanges: (sym: string) => call<Changes>(`/api/research/${encodeURIComponent(sym)}/changes`),
+  researchReview: (sym: string) => call<{ snapshot: Record<string, unknown> }>(`/api/research/${encodeURIComponent(sym)}/review`, { method: "POST" }),
+  researchNoteAdd: (sym: string, text: string) => call<{ id: number }>(`/api/research/${encodeURIComponent(sym)}/notes`, { ...body("POST", { body: text }), headers: { "Content-Type": "application/json" } }),
+  researchNoteDelete: (id: number) => call<{ deleted: number }>(`/api/research/notes/${id}`, { method: "DELETE" }),
+  discoverListings: (days = 30) => call<ListingsFeed>(`/api/discover/listings?days=${days}`),
+  discoverCandidates: (qs: string) => call<CandidatesFeed>(`/api/discover/candidates${qs ? `?${qs}` : ""}`),
+  discoverState: (symbol: string, state: string, on = true) => call<MyState["state"]>("/api/discover/state", { ...body("POST", { symbol, state, on }), headers: { "Content-Type": "application/json" } }),
   stockResearch: (id: string) => call<StockResearch>(`/api/stocks/${encodeURIComponent(id)}/research`),
   earningsCal: (symbols: string[], days: number) => call<EarningsCal>(`/api/stocks/earnings?symbols=${encodeURIComponent(symbols.join(","))}&days=${days}`),
   macroBrief: () => call<MacroBrief>("/api/macro/brief"),

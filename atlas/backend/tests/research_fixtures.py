@@ -10,7 +10,8 @@ QEND = [("01-01", "03-31"), ("04-01", "06-30"), ("07-01", "09-30"), ("10-01", "1
 FILED = ["{y}-05-02", "{y}-08-02", "{y}-11-01"]                                          # Q1, Q2, Q3 reports; the annual report follows in February of the next year
 
 
-def build(name: str, cik: int, first_year: int, q: dict[str, list[float]], instants: dict[str, list[float]] | None = None, shares: dict[int, float] | None = None, restate: dict | None = None) -> dict:
+def build(name: str, cik: int, first_year: int, q: dict[str, list[float]], instants: dict[str, list[float]] | None = None, shares: dict[int, float] | None = None, restate: dict | None = None,
+          q_shares: list[float] | None = None) -> dict:
     """q[metric] = flat list of quarterly values from Q1 of first_year. instants[metric] = value at each quarter end. shares[year] = weighted diluted shares for that fiscal year."""
     gaap: dict = {}
     n = 0
@@ -48,6 +49,10 @@ def build(name: str, cik: int, first_year: int, q: dict[str, list[float]], insta
     for y, v in (shares or {}).items():
         add("WeightedAverageNumberOfDilutedSharesOutstanding", "shares", {"start": f"{y}-01-01", "end": f"{y}-12-31", "val": v, "accn": f"0000999999-{(y + 1) % 100:02d}-{900000 + cik % 1000:06d}",
                                                                        "fy": y, "fp": "FY", "form": "10-K", "filed": f"{y + 1}-02-20"})
+    for i, v in enumerate(q_shares or []):                                              # weighted-average diluted shares for each quarter, as filed in the 10-Q
+        y, k = first_year + i // 4, i % 4
+        add("WeightedAverageNumberOfDilutedSharesOutstanding", "shares", {"start": f"{y}-{QEND[k][0]}", "end": f"{y}-{QEND[k][1]}", "val": v, "accn": f"0000999999-{y % 100:02d}-{k * 1000 + cik % 1000:06d}",
+                                                                       "fy": y, "fp": f"Q{k + 1}", "form": "10-Q", "filed": FILED[min(k, 2)].format(y=y)})
     return {"cik": cik, "entityName": name, "facts": {"us-gaap": gaap}}
 
 
@@ -73,7 +78,7 @@ def software() -> dict:
 def recent_ipo() -> dict:
     """Public for three quarters only: no annual report yet, no year-earlier comparison."""
     q = {"revenue": [40.0, 48.0, 57.0], "operating_cash_flow": [-5.0, -4.0, -2.0], "capex": [1.0, 1.0, 1.5], "net_income": [-12.0, -10.0, -9.0]}
-    return build("New Listing Corp (synthetic)", 3003, 2026, q, {"cash": [300.0] * 3, "debt": [0.0] * 3, "equity": [250.0] * 3})
+    return build("New Listing Corp (synthetic)", 3003, 2026, q, {"cash": [300.0] * 3, "debt": [0.0] * 3, "equity": [250.0] * 3}, q_shares=[60.0, 75.0, 90.0])    # share count still rising after the listing
 
 
 def loss_making_software() -> dict:

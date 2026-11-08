@@ -1,0 +1,356 @@
+{
+ "available": true,
+ "asof": "2026-02-01",
+ "age_days": 0,
+ "stale": false,
+ "target": 5,
+ "shown": 3,
+ "items": [
+  {
+   "symbol": "CLDX",
+   "name": "Cloud Software Inc (synthetic)",
+   "exchange": "Nasdaq",
+   "sector": "Technology",
+   "industry": "Prepackaged software",
+   "country": "United States",
+   "market_cap": 2500000000.0,
+   "size_bucket": "mid",
+   "ipo_year": 2016,
+   "dollar_volume": 27000000.0,
+   "price": 30.0,
+   "price_time": "2026-02-01T12:00:00+00:00",
+   "price_source": "Nasdaq screener (delayed, unofficial)",
+   "score": 87.7,
+   "factors": {
+    "growth": 75.0,
+    "quality": 80.7,
+    "resilience": 100.0,
+    "valuation": 100.0
+   },
+   "why_selected": [
+    "Revenue grew 25.0% over the last twelve months (2025-12-31), and its growth is steady.",
+    "Free-cash-flow margin is 18.0%.",
+    "Gross margin is 75%, a sign of pricing power or a product-like business model.",
+    "Rule of 40 (FCF basis) is 43.0 (reaches 40).",
+    "Valuation under stated assumptions: potentially undervalued under these assumptions (evidence: moderate)."
+   ],
+   "risks": [
+    "No specific risk stands out in the filed figures; segment, customer and competitive risks are in the filing text."
+   ],
+   "main_opportunity": "Financial resilience",
+   "main_risk": "No specific risk stands out in the filed figures; segment, customer and competitive risks are in the filing text.",
+   "material": "2025-12-31|under",
+   "description": {
+    "classification": 7372,
+    "industry": "Prepackaged software",
+    "sector": "Technology",
+    "note": "This is a classification, not a summary of what the company sells. Read Item 1 (Business) of the latest annual report."
+   },
+   "revenue": {
+    "ttm": 500.0,
+    "ttm_period_end": "2025-12-31",
+    "growth_pct": 25.0,
+    "trend": "steady",
+    "fcf_margin_pct": 18.0,
+    "age_days": 32,
+    "latest_period_end": "2025-12-31"
+   },
+   "rule_of_40": {
+    "applicable": true,
+    "label": "Reaches 40",
+    "score": 43.0
+   },
+   "valuation": {
+    "label": "Potentially undervalued under these assumptions",
+    "label_key": "under",
+    "evidence": "moderate",
+    "base_fair_value": 37.65622696939037
+   },
+   "studied_at": "2026-02-01T12:00:00+00:00",
+   "state": {
+    "seen": false,
+    "opened": false,
+    "saved": false,
+    "shown_count": 0
+   },
+   "why_shown_again": null
+  },
+  {
+   "symbol": "DATA",
+   "name": "Data Platform Inc (synthetic)",
+   "exchange": "Nasdaq",
+   "sector": "Technology",
+   "industry": "Prepackaged software",
+   "country": "United States",
+   "market_cap": 2500000000.0,
+   "size_bucket": "mid",
+   "ipo_year": 2016,
+   "dollar_volume": 36000000.0,
+   "price": 40.0,
+   "price_time": "2026-02-01T12:00:00+00:00",
+   "price_source": "Nasdaq screener (delayed, unofficial)",
+   "score": 78.8,
+   "factors": {
+    "growth": 75.0,
+    "quality": 80.7,
+    "resilience": 100.0,
+    "valuation": 60.0
+   },
+   "why_selected": [
+    "Revenue grew 25.0% over the last twelve months (2025-12-31), and its growth is steady.",
+    "Free-cash-flow margin is 18.0%.",
+    "Gross margin is 75%, a sign of pricing power or a product-like business model.",
+    "Rule of 40 (FCF basis) is 43.0 (reaches 40).",
+    "Valuation under stated assumptions: within estimated fair-value range (evidence: moderate)."
+   ],
+   "risks": [
+    "No specific risk stands out in the filed figures; segment, customer and competitive risks are in the filing text."
+   ],
+   "main_opportunity": "Financial resilience",
+   "main_risk": "No specific risk stands out in the filed figures; segment, customer and competitive risks are in the filing text.",
+   "material": "2025-12-31|within",
+   "description": {
+    "classification": 7372,
+    "industry": "Prepackaged software",
+    "sector": "Technology",
+    "note": "This is a classification, not a summary of what the company sells. Read Item 1 (Business) of the latest annual report."
+   },
+   "revenue": {
+    "ttm": 500.0,
+    "ttm_period_end": "2025-12-31",
+    "growth_pct": 25.0,
+    "trend": "steady",
+    "fcf_margin_pct": 18.0,
+    "age_days": 32,
+    "latest_period_end": "2025-12-31"
+   },
+   "rule_of_40": {
+    "applicable": true,
+    "label": "Reaches 40",
+    "score": 43.0
+   },
+   "valuation": {
+    "label": "Within estimated fair-value range",
+    "label_key": "within",
+    "evidence": "moderate",
+    "base_fair_value": 37.65622696939037
+   },
+   "studied_at": "2026-02-01T12:00:00+00:00",
+   "state": {
+    "seen": false,
+    "opened": false,
+    "saved": false,
+    "shown_count": 0
+   },
+   "why_shown_again": null
+  },
+  {
+   "symbol": "MATU",
+   "name": "Mature Industrial Co (synthetic)",
+   "exchange": "Nasdaq",
+   "sector": "Industrials",
+   "industry": "Prepackaged software",
+   "country": "United States",
+   "market_cap": 2500000000.0,
+   "size_bucket": "mid",
+   "ipo_year": 2016,
+   "dollar_volume": 36000000.0,
+   "price": 40.0,
+   "price_time": "2026-02-01T12:00:00+00:00",
+   "price_source": "Nasdaq screener (delayed, unofficial)",
+   "score": 65.6,
+   "factors": {
+    "growth": 12.1,
+    "quality": 80.0,
+    "resilience": 80.0,
+    "valuation": 100.0
+   },
+   "why_selected": [
+    "Revenue grew 3.0% over the last twelve months (2025-12-31), and its growth is steady.",
+    "Free-cash-flow margin is 10.0%.",
+    "Valuation under stated assumptions: potentially undervalued under these assumptions (evidence: moderate)."
+   ],
+   "risks": [
+    "Debt exceeds cash on the balance sheet (long-term debt line only)."
+   ],
+   "main_opportunity": "Valuation looks interesting under stated assumptions",
+   "main_risk": "Debt exceeds cash on the balance sheet (long-term debt line only).",
+   "material": "2025-12-31|under",
+   "description": {
+    "classification": 3490,
+    "industry": "Prepackaged software",
+    "sector": "Industrials",
+    "note": "This is a classification, not a summary of what the company sells. Read Item 1 (Business) of the latest annual report."
+   },
+   "revenue": {
+    "ttm": 4558.93,
+    "ttm_period_end": "2025-12-31",
+    "growth_pct": 3.0336519990056043,
+    "trend": "steady",
+    "fcf_margin_pct": 10.0,
+    "age_days": 32,
+    "latest_period_end": "2025-12-31"
+   },
+   "rule_of_40": {
+    "applicable": false,
+    "label": "Not applicable",
+    "score": null
+   },
+   "valuation": {
+    "label": "Potentially undervalued under these assumptions",
+    "label_key": "under",
+    "evidence": "moderate",
+    "base_fair_value": 62.56889754211327
+   },
+   "studied_at": "2026-02-01T12:00:00+00:00",
+   "state": {
+    "seen": false,
+    "opened": false,
+    "saved": false,
+    "shown_count": 0
+   },
+   "why_shown_again": null
+  }
+ ],
+ "pool_size": 3,
+ "filters_applied": {
+  "min_market_cap": 0,
+  "max_market_cap": null,
+  "min_dollar_volume": 0
+ },
+ "excluded_by_my_filters": {},
+ "hidden_because_seen": [],
+ "kept_varied": [],
+ "evidence_note": "Showing 3 of a target of 5: fewer are shown when evidence is weak or when I have already seen, saved or dismissed the rest.",
+ "study": {
+  "universe": 103,
+  "after_filters": 103,
+  "studied": 103,
+  "passed": 3,
+  "left_out_reasons": {},
+  "could_not_study": {
+   "No SEC company with ticker FEJ was found": 1,
+   "No SEC company with ticker FHH was found": 1,
+   "No SEC company with ticker FCJ was found": 1,
+   "No SEC company with ticker FGH was found": 1,
+   "No SEC company with ticker FGE was found": 1,
+   "No SEC company with ticker FCI was found": 1,
+   "No SEC company with ticker FDD was found": 1,
+   "No SEC company with ticker FFA was found": 1,
+   "No SEC company with ticker FJF was found": 1,
+   "No SEC company with ticker FJC was found": 1,
+   "No SEC company with ticker FBD was found": 1,
+   "No SEC company with ticker FDF was found": 1,
+   "No SEC company with ticker FHJ was found": 1,
+   "No SEC company with ticker FIE was found": 1,
+   "No SEC company with ticker FAA was found": 1,
+   "No SEC company with ticker FJJ was found": 1,
+   "No SEC company with ticker FGD was found": 1,
+   "No SEC company with ticker FAB was found": 1,
+   "No SEC company with ticker FFD was found": 1,
+   "No SEC company with ticker FJG was found": 1,
+   "No SEC company with ticker FHB was found": 1,
+   "No SEC company with ticker FJE was found": 1,
+   "No SEC company with ticker FII was found": 1,
+   "No SEC company with ticker FFI was found": 1,
+   "No SEC company with ticker FFF was found": 1,
+   "No SEC company with ticker FFG was found": 1,
+   "No SEC company with ticker FCE was found": 1,
+   "No SEC company with ticker FFB was found": 1,
+   "No SEC company with ticker FAE was found": 1,
+   "No SEC company with ticker FFC was found": 1,
+   "No SEC company with ticker FDJ was found": 1,
+   "No SEC company with ticker FDG was found": 1,
+   "No SEC company with ticker FBE was found": 1,
+   "No SEC company with ticker FAG was found": 1,
+   "No SEC company with ticker FGG was found": 1,
+   "No SEC company with ticker FHG was found": 1,
+   "No SEC company with ticker FIA was found": 1,
+   "No SEC company with ticker FJB was found": 1,
+   "No SEC company with ticker FIC was found": 1,
+   "No SEC company with ticker FHF was found": 1,
+   "No SEC company with ticker FEF was found": 1,
+   "No SEC company with ticker FHD was found": 1,
+   "No SEC company with ticker FEG was found": 1,
+   "No SEC company with ticker FGI was found": 1,
+   "No SEC company with ticker FAD was found": 1,
+   "No SEC company with ticker FHE was found": 1,
+   "No SEC company with ticker FEE was found": 1,
+   "No SEC company with ticker FFH was found": 1,
+   "No SEC company with ticker FDE was found": 1,
+   "No SEC company with ticker FFE was found": 1,
+   "No SEC company with ticker FEH was found": 1,
+   "No SEC company with ticker FAJ was found": 1,
+   "No SEC company with ticker FAI was found": 1,
+   "No SEC company with ticker FIG was found": 1,
+   "No SEC company with ticker FBF was found": 1,
+   "No SEC company with ticker FCF was found": 1,
+   "No SEC company with ticker FFJ was found": 1,
+   "No SEC company with ticker FCH was found": 1,
+   "No SEC company with ticker FIF was found": 1,
+   "No SEC company with ticker FDA was found": 1,
+   "No SEC company with ticker FDB was found": 1,
+   "No SEC company with ticker FJA was found": 1,
+   "No SEC company with ticker FEC was found": 1,
+   "No SEC company with ticker FGF was found": 1,
+   "No SEC company with ticker FAH was found": 1,
+   "No SEC company with ticker FID was found": 1,
+   "No SEC company with ticker FJI was found": 1,
+   "No SEC company with ticker FDC was found": 1,
+   "No SEC company with ticker FAF was found": 1,
+   "No SEC company with ticker FBG was found": 1,
+   "No SEC company with ticker FDH was found": 1,
+   "No SEC company with ticker FBJ was found": 1,
+   "No SEC company with ticker FED was found": 1,
+   "No SEC company with ticker FDI was found": 1,
+   "No SEC company with ticker FAC was found": 1,
+   "No SEC company with ticker FGJ was found": 1,
+   "No SEC company with ticker FGA was found": 1,
+   "No SEC company with ticker FIB was found": 1,
+   "No SEC company with ticker FIH was found": 1,
+   "No SEC company with ticker FGB was found": 1,
+   "No SEC company with ticker FCC was found": 1,
+   "No SEC company with ticker FCB was found": 1,
+   "No SEC company with ticker FEA was found": 1,
+   "No SEC company with ticker FHC was found": 1,
+   "No SEC company with ticker FEI was found": 1,
+   "No SEC company with ticker FHI was found": 1,
+   "No SEC company with ticker FBB was found": 1,
+   "No SEC company with ticker FBH was found": 1,
+   "No SEC company with ticker FEB was found": 1,
+   "No SEC company with ticker FGC was found": 1,
+   "No SEC company with ticker FJD was found": 1,
+   "No SEC company with ticker FJH was found": 1,
+   "No SEC company with ticker FIJ was found": 1,
+   "No SEC company with ticker FCA was found": 1,
+   "No SEC company with ticker FBA was found": 1,
+   "No SEC company with ticker FHA was found": 1,
+   "No SEC company with ticker FCD was found": 1,
+   "No SEC company with ticker FBI was found": 1,
+   "No SEC company with ticker FCG was found": 1,
+   "No SEC company with ticker FBC was found": 1
+  }
+ },
+ "method": {
+  "weights": {
+   "growth": 25,
+   "quality": 25,
+   "resilience": 20,
+   "valuation": 20
+  },
+  "min_total": 60.0,
+  "min_factors": 3,
+  "max_per_sector": 2,
+  "cooldown_days": 30
+ },
+ "gaps": [
+  "Companies are studied from SEC filings, so only US-GAAP filers with eight quarters of history can qualify; foreign (IFRS) filers and very new listings do not appear here.",
+  "Scores order candidates for my own research. They are not ratings, predictions or advice, and a high score does not mean a stock is cheap.",
+  "Prices are delayed and come from Nasdaq's public screener feed (unofficial).",
+  "Banks, insurers and REITs are not scored well by company-style measures, and sector-specific measures are not built yet."
+ ],
+ "source": {
+  "universe": "Nasdaq stock screener (public website feed; unofficial; prices delayed)",
+  "filings": "SEC EDGAR XBRL company facts (official)"
+ }
+}

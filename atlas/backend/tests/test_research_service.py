@@ -46,6 +46,12 @@ def test_recent_listing_is_honest_about_short_history_and_gets_no_verdict():
     v = o["valuation"]
     assert v["label"] == "Insufficient evidence" and v["label_key"] == "none"
     assert o["quality"]["available"] is False
+    assert any("short filing history" in w and "post-listing" in w for w in v["warnings"])                           # the share-count caution is visible, not buried
+    assert v["inputs"]["shares_basis"].startswith("weighted-average diluted shares for the quarter ended 2026-09-30") and v["inputs"]["shares"] == 90.0
+    raw = X.software()
+    del raw["facts"]["us-gaap"]["WeightedAverageNumberOfDilutedSharesOutstanding"]
+    assert any("No diluted share count" in w for w in go(raw, 7372, price=10.0)["valuation"]["warnings"])              # no share count on file at all is also said
+    assert go(X.bank(), 6022)["valuation"]["warnings"] == [] and go(X.bank(), 6022)["valuation"]["multiples"] == []   # every valuation answer has the same shape
 
 
 def test_loss_making_company_shows_a_score_but_no_dcf_and_no_earnings_multiple():

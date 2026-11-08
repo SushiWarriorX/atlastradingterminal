@@ -67,3 +67,22 @@ def test_both_daily_jobs_are_registered_and_the_demo_does_not_run_them(tmp_path)
         assert jobs["listings_refresh"]["enabled"] is False and jobs["discovery_refresh"]["enabled"] is False        # demo mode: real events would be mixed with made-up data
         assert jobs["discovery_refresh"]["priority"] >= 4 and jobs["listings_refresh"]["priority"] >= 4             # fundamental research ranks above optional experiments
         assert jobs["discovery_refresh"]["kind"] == "discovery" and jobs["discovery_refresh"]["max_tokens"] == 0
+
+
+def test_a_saved_study_is_served_as_valid_json_even_with_no_upper_limit_filters(tmp_path):
+    """Regression: 'no upper limit' is infinity inside the code and must never reach the JSON (browsers and Starlette reject it)."""
+    import sqlite3
+    with client(tmp_path) as c:
+        pool = [{"symbol": "AAAA", "name": "A Co", "exchange": "Nasdaq", "sector": "Technology", "industry": "x", "country": "United States", "market_cap": 2e9, "size_bucket": "mid", "ipo_year": 2015,
+                 "dollar_volume": 5e6, "price": 10.0, "price_time": "2026-02-01T00:00:00+00:00", "price_source": "t", "score": 80.0, "factors": {}, "why_selected": ["x"], "risks": ["y"],
+                 "main_opportunity": "o", "main_risk": "r", "material": "m", "description": {"note": "n"}, "revenue": {}, "rule_of_40": {}, "valuation": {}, "studied_at": "2026-02-01T00:00:00+00:00"}]
+        run = {"asof": "2026-02-01", "created_at": "2026-02-01T00:00:00+00:00", "available": True, "universe": 1, "after_filters": 1, "studied": 1, "passed": 1, "excluded_by_filters": {}, "left_out_reasons": {},
+               "could_not_study": {}, "errors": [], "pool": pool, "source": {"universe": "u", "filings": "f"}, "gaps": []}
+        con = sqlite3.connect(str(tmp_path / "d.db"))
+        con.execute("INSERT INTO disc_feed_runs(kind,asof,created_at,payload) VALUES('new_to_me','2026-02-01','2026-02-01T00:00:00+00:00',?)", (json.dumps(run),))
+        con.commit()
+        con.close()
+        r = c.get("/api/discover/candidates")
+        assert r.status_code == 200
+        d = json.loads(r.text)["data"]                                                                              # strict JSON: would raise on Infinity
+        assert d["available"] and d["filters_applied"]["max_market_cap"] is None and [i["symbol"] for i in d["items"]] == ["AAAA"]

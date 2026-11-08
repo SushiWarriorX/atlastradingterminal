@@ -187,3 +187,11 @@ def test_evidence_never_reaches_strong_while_only_one_method_exists_and_the_limi
 def test_discount_rate_must_exceed_terminal_growth():
     a = V.assess(inp(), policy={"discount_rate_pct": 3.0, "terminal_growth_pct": 2.8}, now=NOW)
     assert a["label"] == "Insufficient evidence" and "0.5 points" in a["reason"]
+
+
+def test_a_short_history_company_carries_a_visible_share_count_warning_and_normal_ones_do_not():
+    note = "The weighted-average share count lags the post-listing count; the cover-page count is needed."
+    a = V.assess(inp(shares_reliable=False, shares_note=note), now=NOW)
+    assert a["warnings"] == [note]
+    assert V.assess(inp(), now=NOW)["warnings"] == [] and V.assess(inp(sic=6022), now=NOW)["warnings"] == []
+    assert V.assess(inp(fcf_margin_pct=-5.0, shares_reliable=False, shares_note=note), now=NOW)["warnings"] == [note]          # also on the no-DCF path

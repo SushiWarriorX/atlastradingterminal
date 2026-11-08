@@ -188,3 +188,14 @@ def test_changes_since_my_last_review_list_only_what_changed(tmp_path):
     r2 = {**r1, "revenue": {**r1["revenue"], "ttm": {"value": 540.0, "period_end": "2026-03-31"}, "latest_period_end": "2026-03-31"}, "valuation": {**r1["valuation"], "price": 48.0, "label_key": "over"}}
     ch = {c["key"]: c for c in s.changes_since_review("AAA", r2)["changed"]}
     assert set(ch) == {"ttm_revenue", "price", "valuation_label", "latest_filing_period"} and ch["ttm_revenue"]["before"] == 500.0 and ch["ttm_revenue"]["after"] == 540.0 and ch["valuation_label"]["after"] == "over"
+
+
+def test_blank_check_companies_are_labelled_spac_ipo_and_operating_companies_are_not():
+    base = {"deal_id": "d", "symbol": "ZZZ", "exchange": "Nasdaq", "stage": "priced", "priced_date": "2026-11-06", "expected_date": None}
+    for name in ("BHAV Acquisition Corp II", "SPACCircle Acquisition Corp.", "Big Acquisition Holdings Inc", "Some Blank Check Co"):
+        c = L.classify({**base, "name": name}, TODAY)
+        assert c["listing_type"] == "SPAC IPO" and "no revenue to research" in c["listing_type_note"] and "completed merger" in c["listing_type_note"]
+    for name in ("Rezera Inc.", "Narragansett Bancorp, Inc.", "Acquired Therapeutics Inc", "Davion Healthcare PLC"):
+        assert L.classify({**base, "name": name}, TODAY)["listing_type"] == "IPO"
+    real = [x for x in L.build_feed(ROWS, TODAY, days=75)["recent"] if x["listing_type"] == "SPAC IPO"]
+    assert real and all("Acquisition" in x["name"] for x in real)                                                    # the real calendar contains several

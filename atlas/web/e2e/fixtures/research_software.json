@@ -1,0 +1,848 @@
+{
+ "symbol": "SOFTWARE",
+ "as_of": "2026-02-01T12:00:00+00:00",
+ "demo": false,
+ "errors": [],
+ "available": true,
+ "company": {
+  "name": "Cloud Software Inc (synthetic)",
+  "cik": 2002,
+  "sic": 7372,
+  "sector_kind": "software",
+  "special_sector_note": null
+ },
+ "revenue": {
+  "available": true,
+  "currency": "USD",
+  "units": "US dollars, as filed (not thousands)",
+  "annual": [
+   {
+    "period_start": "2024-01-01",
+    "period_end": "2024-12-31",
+    "value": 400.0,
+    "basis": "reported (full fiscal year)",
+    "growth_pct": null,
+    "growth_note": "a comparable earlier period is missing",
+    "source": {
+     "form": "10-K",
+     "filed": "2025-02-20",
+     "link": "https://www.sec.gov/Archives/edgar/data/2002/000099999925900002/0000999999-25-900002-index.htm"
+    }
+   },
+   {
+    "period_start": "2025-01-01",
+    "period_end": "2025-12-31",
+    "value": 500.0,
+    "basis": "reported (full fiscal year)",
+    "growth_pct": 25.0,
+    "growth_note": null,
+    "source": {
+     "form": "10-K",
+     "filed": "2026-02-20",
+     "link": "https://www.sec.gov/Archives/edgar/data/2002/000099999926900002/0000999999-26-900002-index.htm"
+    }
+   }
+  ],
+  "quarterly": [
+   {
+    "period_start": "2024-01-01",
+    "period_end": "2024-03-31",
+    "value": 100.0,
+    "basis": "reported (three-month figure)",
+    "yoy_pct": null,
+    "yoy_note": "a comparable earlier period is missing",
+    "yoy_vs": null,
+    "source": {
+     "form": "10-Q",
+     "filed": "2024-05-02",
+     "link": "https://www.sec.gov/Archives/edgar/data/2002/000099999924000002/0000999999-24-000002-index.htm"
+    }
+   },
+   {
+    "period_start": "2024-04-01",
+    "period_end": "2024-06-30",
+    "value": 100.0,
+    "basis": "reported (three-month figure)",
+    "yoy_pct": null,
+    "yoy_note": "a comparable earlier period is missing",
+    "yoy_vs": null,
+    "source": {
+     "form": "10-Q",
+     "filed": "2024-08-02",
+     "link": "https://www.sec.gov/Archives/edgar/data/2002/000099999924001002/0000999999-24-001002-index.htm"
+    }
+   },
+   {
+    "period_start": "2024-07-01",
+    "period_end": "2024-09-30",
+    "value": 100.0,
+    "basis": "reported (three-month figure)",
+    "yoy_pct": null,
+    "yoy_note": "a comparable earlier period is missing",
+    "yoy_vs": null,
+    "source": {
+     "form": "10-Q",
+     "filed": "2024-11-01",
+     "link": "https://www.sec.gov/Archives/edgar/data/2002/000099999924002002/0000999999-24-002002-index.htm"
+    }
+   },
+   {
+    "period_start": "2024-10-01",
+    "period_end": "2024-12-31",
+    "value": 100.0,
+    "basis": "derived: 12-month total minus 9-month total",
+    "yoy_pct": null,
+    "yoy_note": "a comparable earlier period is missing",
+    "yoy_vs": null,
+    "source": {
+     "form": "10-K",
+     "filed": "2025-02-20",
+     "link": "https://www.sec.gov/Archives/edgar/data/2002/000099999925900002/0000999999-25-900002-index.htm"
+    }
+   },
+   {
+    "period_start": "2025-01-01",
+    "period_end": "2025-03-31",
+    "value": 125.0,
+    "basis": "reported (three-month figure)",
+    "yoy_pct": 25.0,
+    "yoy_note": null,
+    "yoy_vs": "2024-03-31",
+    "source": {
+     "form": "10-Q",
+     "filed": "2025-05-02",
+     "link": "https://www.sec.gov/Archives/edgar/data/2002/000099999925000002/0000999999-25-000002-index.htm"
+    }
+   },
+   {
+    "period_start": "2025-04-01",
+    "period_end": "2025-06-30",
+    "value": 125.0,
+    "basis": "reported (three-month figure)",
+    "yoy_pct": 25.0,
+    "yoy_note": null,
+    "yoy_vs": "2024-06-30",
+    "source": {
+     "form": "10-Q",
+     "filed": "2025-08-02",
+     "link": "https://www.sec.gov/Archives/edgar/data/2002/000099999925001002/0000999999-25-001002-index.htm"
+    }
+   },
+   {
+    "period_start": "2025-07-01",
+    "period_end": "2025-09-30",
+    "value": 125.0,
+    "basis": "reported (three-month figure)",
+    "yoy_pct": 25.0,
+    "yoy_note": null,
+    "yoy_vs": "2024-09-30",
+    "source": {
+     "form": "10-Q",
+     "filed": "2025-11-01",
+     "link": "https://www.sec.gov/Archives/edgar/data/2002/000099999925002002/0000999999-25-002002-index.htm"
+    }
+   },
+   {
+    "period_start": "2025-10-01",
+    "period_end": "2025-12-31",
+    "value": 125.0,
+    "basis": "derived: 12-month total minus 9-month total",
+    "yoy_pct": 25.0,
+    "yoy_note": null,
+    "yoy_vs": "2024-12-31",
+    "source": {
+     "form": "10-K",
+     "filed": "2026-02-20",
+     "link": "https://www.sec.gov/Archives/edgar/data/2002/000099999926900002/0000999999-26-900002-index.htm"
+    }
+   }
+  ],
+  "ttm": {
+   "value": 500.0,
+   "period_start": "2025-01-01",
+   "period_end": "2025-12-31",
+   "basis": "calculated: sum of four consecutive quarters",
+   "quarters": [
+    "2025-03-31",
+    "2025-06-30",
+    "2025-09-30",
+    "2025-12-31"
+   ]
+  },
+  "ttm_previous": {
+   "value": 400.0,
+   "period_end": "2024-12-31"
+  },
+  "ttm_growth_pct": 25.0,
+  "ttm_growth_note": null,
+  "cagr": null,
+  "trend": {
+   "label": "steady",
+   "latest_yoy_pct": 25.0,
+   "earlier_average_pct": 25.0,
+   "change_pp": 0.0,
+   "rule": "latest quarter's year-over-year growth versus the average of up to three earlier quarters; more than 1 point above is accelerating, more than 1 below is decelerating"
+  },
+  "per_share": [
+   {
+    "period_end": "2024-12-31",
+    "revenue_per_diluted_share": 8.0,
+    "diluted_shares": 50.0
+   },
+   {
+    "period_end": "2025-12-31",
+    "revenue_per_diluted_share": 9.615384615384615,
+    "diluted_shares": 52.0
+   }
+  ],
+  "share_count_change": {
+   "from": "2024-12-31",
+   "to": "2025-12-31",
+   "change_pct": 4.0000000000000036,
+   "basis": "weighted-average diluted shares, fiscal years"
+  },
+  "latest_period_end": "2025-12-31",
+  "age_days": 32,
+  "stale": false,
+  "missing": [
+   "only 2 fiscal years of revenue are on file (the request is five)"
+  ],
+  "not_in_structured_data": [
+   "revenue by segment or geography",
+   "organic versus acquisition-driven growth",
+   "currency effects and one-off items",
+   "customer concentration and major contracts",
+   "recurring revenue, retention and backlog",
+   "management guidance"
+  ]
+ },
+ "coverage": {
+  "covered": [
+   "Annual revenue (five years) and quarterly revenue (eight quarters) from 10-K and 10-Q filings",
+   "Trailing-twelve-month revenue, year-over-year growth, multi-year growth rate and acceleration",
+   "Revenue per diluted share and the change in diluted share count",
+   "Margins, cash conversion, free cash flow, stock-based compensation, cash, debt, a pre-tax return on capital",
+   "Rule of 40 (software only), with an EBITDA-basis variant labelled separately",
+   "Enterprise value, multiples, a scenario DCF, a reverse DCF and an evidence-quality grade"
+  ],
+  "not_covered": [
+   "Revenue by segment or geography, organic versus acquired growth, currency effects, one-off items (in the filing text, not in structured data)",
+   "Customer concentration, recurring revenue, retention and backlog (filing text)",
+   "Management guidance (never mixed with reported results; not available from free structured sources)",
+   "Peer comparison and the company's own historical multiples (not built yet)",
+   "Banks, insurers and REITs: sector-specific metrics (not built yet; company-style measures are marked not applicable)",
+   "Foreign filers that report under IFRS (only US-GAAP filings are read)",
+   "Analyst estimates (not available from free sources)"
+  ]
+ },
+ "definitions": {
+  "reported": "filed by the company for exactly that period",
+  "derived": "a difference of two filed cumulative figures",
+  "calculated": "arithmetic done here, formula stated",
+  "estimate": "model output under stated assumptions"
+ },
+ "quality": {
+  "available": true,
+  "basis": "trailing twelve months: the same four consecutive quarters for every line",
+  "rows": [
+   {
+    "key": "gross_margin",
+    "label": "Gross margin",
+    "value": 75.0,
+    "unit": "%",
+    "note": null
+   },
+   {
+    "key": "operating_margin",
+    "label": "Operating margin",
+    "value": 5.0,
+    "unit": "%",
+    "note": "can be negative"
+   },
+   {
+    "key": "fcf_margin",
+    "label": "Free cash flow margin",
+    "value": 18.0,
+    "unit": "%",
+    "note": "operating cash flow minus capital spending on property and equipment; capitalised software is not subtracted"
+   },
+   {
+    "key": "cash_conversion",
+    "label": "Cash conversion (operating cash flow / net income)",
+    "value": 5.0,
+    "unit": "x",
+    "note": "shown only when net income is positive"
+   },
+   {
+    "key": "sbc_pct_revenue",
+    "label": "Stock-based compensation / revenue",
+    "value": 15.0,
+    "unit": "%",
+    "note": "a real cost to shareholders that free cash flow does not subtract"
+   },
+   {
+    "key": "pretax_return_on_capital",
+    "label": "Operating income / invested capital (pre-tax)",
+    "value": 5.0,
+    "unit": "%",
+    "note": "invested capital = equity + long-term debt - cash; a rough, pre-tax measure, not a full ROIC"
+   }
+  ],
+  "balance": {
+   "cash": {
+    "end": "2025-12-31",
+    "value": 400.0,
+    "form": "10-K",
+    "filed": "2026-02-20",
+    "accn": "0000999999-25-003007"
+   },
+   "debt": {
+    "end": "2025-12-31",
+    "value": 0.0,
+    "form": "10-K",
+    "filed": "2026-02-20",
+    "accn": "0000999999-25-003007"
+   },
+   "equity": {
+    "end": "2025-12-31",
+    "value": 900.0,
+    "form": "10-K",
+    "filed": "2026-02-20",
+    "accn": "0000999999-25-003007"
+   },
+   "net_cash": 400.0,
+   "note": "debt here is the long-term debt line the company tags; leases and short-term borrowings may be excluded, so it can understate what is owed",
+   "as_of": "2025-12-31"
+  },
+  "ttm_period_end": "2025-12-31",
+  "capitalised_software_ttm": null
+ },
+ "rule_of_40": {
+  "definition": "Rule of 40 (FCF basis) = TTM revenue growth % + TTM free-cash-flow margin %",
+  "threshold": 40.0,
+  "caveat": "Reaching 40 does not mean a stock is undervalued, and missing it does not disqualify a company. Working-capital timing (for example annual upfront billing), stock-based compensation (not subtracted from free cash flow), acquisitions and unusual cash flows can move the score; check them in the filings.",
+  "applicable": true,
+  "sector": "software",
+  "current": {
+   "end": "2025-12-31",
+   "available": true,
+   "basis": "FCF basis",
+   "growth_pct": 25.0,
+   "margin_pct": 18.0,
+   "score": 43.0,
+   "reaches_40": true,
+   "ttm_revenue": 500.0,
+   "ttm_revenue_previous": 400.0,
+   "ttm_operating_cash_flow": 100.0,
+   "ttm_capital_expenditures": 10.0,
+   "ttm_free_cash_flow": 90.0
+  },
+  "available": true,
+  "history": [
+   {
+    "end": "2025-12-31",
+    "score": 43.0,
+    "growth_pct": 25.0,
+    "margin_pct": 18.0,
+    "reaches_40": true
+   }
+  ],
+  "label": "Reaches 40",
+  "ebitda_variant": {
+   "label": "Rule of 40 (EBITDA basis): a separate measure, not the default",
+   "end": "2025-12-31",
+   "available": true,
+   "basis": "EBITDA basis",
+   "growth_pct": 25.0,
+   "margin_pct": 7.3999999999999995,
+   "score": 32.4,
+   "reaches_40": false,
+   "ttm_revenue": 500.0,
+   "ttm_revenue_previous": 400.0,
+   "ttm_operating_income": 25.0,
+   "ttm_depreciation_amortisation": 12.0,
+   "ttm_ebitda": 37.0
+  },
+  "peers": {
+   "available": false,
+   "reason": "Peer comparison needs the filings of comparable companies; add them to the comparison to see their scores side by side."
+  }
+ },
+ "valuation": {
+  "policy": {
+   "discount_rate_pct": 10.0,
+   "terminal_growth_pct": 2.5,
+   "years": 5,
+   "band_pct": 20.0,
+   "bear": {
+    "growth_factor": 0.5,
+    "margin_shift_pp": -4.0,
+    "extra_dilution_pp": 1.0
+   },
+   "base": {
+    "growth_factor": 1.0,
+    "margin_shift_pp": 0.0,
+    "extra_dilution_pp": 0.0
+   },
+   "bull": {
+    "growth_factor": 1.3,
+    "margin_shift_pp": 3.0,
+    "extra_dilution_pp": 0.0
+   },
+   "max_start_growth_pct": 40.0,
+   "min_start_growth_pct": 0.0,
+   "max_bull_to_bear": 3.0,
+   "stale_price_hours": 36,
+   "stale_financials_days": 135,
+   "min_evidence": "moderate"
+  },
+  "price": 40.0,
+  "price_time": "2026-02-01T12:00:00+00:00",
+  "price_source": "test quote (synthetic)",
+  "caveat": "A model-dependent estimate under stated assumptions: not a forecast, price target or advice. Different reasonable assumptions give different answers.",
+  "sector": "software",
+  "warnings": [],
+  "multiples": [
+   {
+    "key": "market_value",
+    "label": "Market value (diluted)",
+    "value": 2080.0,
+    "basis": "price x diluted shares",
+    "note": null
+   },
+   {
+    "key": "enterprise_value",
+    "label": "Enterprise value",
+    "value": 1680.0,
+    "basis": "market value + debt - cash",
+    "note": null
+   },
+   {
+    "key": "ev_revenue",
+    "label": "EV / revenue",
+    "value": 3.36,
+    "basis": "enterprise value / TTM revenue",
+    "note": null
+   },
+   {
+    "key": "ev_gross_profit",
+    "label": "EV / gross profit",
+    "value": 4.48,
+    "basis": "enterprise value / TTM gross profit",
+    "note": null
+   },
+   {
+    "key": "ev_ebitda",
+    "label": "EV / EBITDA",
+    "value": 45.4054054054054,
+    "basis": "enterprise value / TTM EBITDA (operating income + depreciation and amortisation)",
+    "note": null
+   },
+   {
+    "key": "pe",
+    "label": "P/E",
+    "value": 104.0,
+    "basis": "price / (TTM net income / diluted shares)",
+    "note": null
+   },
+   {
+    "key": "fcf_yield_pct",
+    "label": "Free-cash-flow yield (%)",
+    "value": 4.326923076923077,
+    "basis": "TTM free cash flow / market value x 100",
+    "note": null
+   }
+  ],
+  "evidence": {
+   "level": "moderate",
+   "checks": [
+    {
+     "key": "price_fresh",
+     "ok": true,
+     "essential": true,
+     "text": "The price is recent."
+    },
+    {
+     "key": "financials_fresh",
+     "ok": true,
+     "essential": true,
+     "text": "The latest filed quarter is recent."
+    },
+    {
+     "key": "ttm_growth",
+     "ok": true,
+     "essential": true,
+     "text": "Trailing revenue growth is known from eight consecutive quarters."
+    },
+    {
+     "key": "fcf_positive",
+     "ok": true,
+     "essential": true,
+     "text": "Free cash flow is positive, so a cash-flow model is defensible."
+    },
+    {
+     "key": "balance_sheet",
+     "ok": true,
+     "essential": true,
+     "text": "Cash and debt are on file."
+    },
+    {
+     "key": "shares",
+     "ok": true,
+     "essential": true,
+     "text": "The diluted share count is on file."
+    },
+    {
+     "key": "history",
+     "ok": false,
+     "essential": false,
+     "text": "Fewer than three fiscal years of revenue are on file."
+    }
+   ],
+   "limits": [
+    "Only one valuation method (a scenario DCF) is built, so no independent method can confirm it: the level cannot reach 'strong'.",
+    "Peer multiples and the company's own historical multiples are not built yet."
+   ]
+  },
+  "scenarios": [
+   {
+    "name": "bear",
+    "assumptions": {
+     "start_growth_pct": 12.5,
+     "terminal_growth_pct": 2.5,
+     "fcf_margin_start_pct": 18.0,
+     "fcf_margin_end_pct": 14.0,
+     "discount_rate_pct": 10.0,
+     "years": 5,
+     "annual_dilution_pct": 5.00279384175064
+    },
+    "fair_value_per_share": 24.603786243632236,
+    "equity_value": 1633.0879038317048,
+    "enterprise_value": 1233.0879038317048,
+    "terminal_share_of_ev_pct": 68.97155461100918,
+    "path": [
+     {
+      "year": 1,
+      "growth_pct": 12.5,
+      "revenue": 562.5,
+      "fcf_margin_pct": 17.2,
+      "fcf": 96.74999999999999
+     },
+     {
+      "year": 2,
+      "growth_pct": 10.0,
+      "revenue": 618.75,
+      "fcf_margin_pct": 16.4,
+      "fcf": 101.47499999999998
+     },
+     {
+      "year": 3,
+      "growth_pct": 7.5,
+      "revenue": 665.15625,
+      "fcf_margin_pct": 15.6,
+      "fcf": 103.764375
+     },
+     {
+      "year": 4,
+      "growth_pct": 5.0,
+      "revenue": 698.4140625,
+      "fcf_margin_pct": 14.800000000000002,
+      "fcf": 103.36528125000001
+     },
+     {
+      "year": 5,
+      "growth_pct": 2.5,
+      "revenue": 715.8744140624999,
+      "fcf_margin_pct": 14.000000000000002,
+      "fcf": 100.22241796875
+     }
+    ],
+    "upside_pct": -38.49053439091941
+   },
+   {
+    "name": "base",
+    "assumptions": {
+     "start_growth_pct": 25.0,
+     "terminal_growth_pct": 2.5,
+     "fcf_margin_start_pct": 18.0,
+     "fcf_margin_end_pct": 18.0,
+     "discount_rate_pct": 10.0,
+     "years": 5,
+     "annual_dilution_pct": 4.00279384175064
+    },
+    "fair_value_per_share": 37.65622696939037,
+    "equity_value": 2382.6770212129027,
+    "enterprise_value": 1982.6770212129027,
+    "terminal_share_of_ev_pct": 72.46269818941103,
+    "path": [
+     {
+      "year": 1,
+      "growth_pct": 25.0,
+      "revenue": 625.0,
+      "fcf_margin_pct": 18.0,
+      "fcf": 112.5
+     },
+     {
+      "year": 2,
+      "growth_pct": 19.375,
+      "revenue": 746.09375,
+      "fcf_margin_pct": 18.0,
+      "fcf": 134.296875
+     },
+     {
+      "year": 3,
+      "growth_pct": 13.750000000000002,
+      "revenue": 848.681640625,
+      "fcf_margin_pct": 18.0,
+      "fcf": 152.7626953125
+     },
+     {
+      "year": 4,
+      "growth_pct": 8.125,
+      "revenue": 917.6370239257812,
+      "fcf_margin_pct": 18.0,
+      "fcf": 165.1746643066406
+     },
+     {
+      "year": 5,
+      "growth_pct": 2.5,
+      "revenue": 940.5779495239257,
+      "fcf_margin_pct": 18.0,
+      "fcf": 169.30403091430662
+     }
+    ],
+    "upside_pct": -5.859432576524082
+   },
+   {
+    "name": "bull",
+    "assumptions": {
+     "start_growth_pct": 32.5,
+     "terminal_growth_pct": 2.5,
+     "fcf_margin_start_pct": 18.0,
+     "fcf_margin_end_pct": 21.0,
+     "discount_rate_pct": 10.0,
+     "years": 5,
+     "annual_dilution_pct": 4.00279384175064
+    },
+    "fair_value_per_share": 47.97308913833053,
+    "equity_value": 3035.4707926371134,
+    "enterprise_value": 2635.4707926371134,
+    "terminal_share_of_ev_pct": 74.1840562653892,
+    "path": [
+     {
+      "year": 1,
+      "growth_pct": 32.5,
+      "revenue": 662.5,
+      "fcf_margin_pct": 18.6,
+      "fcf": 123.22500000000002
+     },
+     {
+      "year": 2,
+      "growth_pct": 25.0,
+      "revenue": 828.125,
+      "fcf_margin_pct": 19.2,
+      "fcf": 159.0
+     },
+     {
+      "year": 3,
+      "growth_pct": 17.5,
+      "revenue": 973.046875,
+      "fcf_margin_pct": 19.8,
+      "fcf": 192.66328125
+     },
+     {
+      "year": 4,
+      "growth_pct": 10.0,
+      "revenue": 1070.3515625,
+      "fcf_margin_pct": 20.4,
+      "fcf": 218.35171874999997
+     },
+     {
+      "year": 5,
+      "growth_pct": 2.5,
+      "revenue": 1097.1103515625,
+      "fcf_margin_pct": 21.0,
+      "fcf": 230.393173828125
+     }
+    ],
+    "upside_pct": 19.932722845826323
+   }
+  ],
+  "reverse_dcf": {
+   "available": true,
+   "implied_growth_pct": 28.679067419167687,
+   "reported_ttm_growth_pct": 25.0,
+   "difference_pp": 3.679067419167687,
+   "reading": "Starting growth the price requires if growth then fades to the terminal rate over the forecast years with today's free-cash-flow margin held (a constant-margin DCF)."
+  },
+  "sensitivity": {
+   "rows": "discount rate (%)",
+   "cols": "starting revenue growth (%)",
+   "discount_rates": [
+    8.0,
+    9.0,
+    10.0,
+    11.0,
+    12.0
+   ],
+   "growths": [
+    12.5,
+    18.75,
+    25.0,
+    31.25,
+    37.5
+   ],
+   "values": [
+    [
+     39.49078064412527,
+     44.20760774019527,
+     49.38154800324491,
+     55.03948824845757,
+     61.209020118398186
+    ],
+    [
+     34.335198567968966,
+     38.28518620377744,
+     42.614987522882316,
+     47.34682529754167,
+     52.50350242807456
+    ],
+    [
+     30.55567640425749,
+     33.9442986413583,
+     37.65622696939037,
+     41.71027888982569,
+     46.12576109394916
+    ],
+    [
+     27.66650488500378,
+     30.626682577845116,
+     33.86710610032531,
+     37.404001625114105,
+     41.254015401840235
+    ],
+    [
+     25.38648564451643,
+     28.009136562582036,
+     30.878168539909314,
+     34.007772854506634,
+     37.41250666470226
+    ]
+   ],
+   "unit": "base-case fair value per share"
+  },
+  "influence": [
+   {
+    "input": "free-cash-flow margin +/- 3 points",
+    "low_value": 33.005079162327235,
+    "high_value": 42.3073747764535,
+    "swing": 9.302295614126265
+   },
+   {
+    "input": "discount rate +/- 1 point",
+    "low_value": 42.614987522882316,
+    "high_value": 33.86710610032531,
+    "swing": 8.747881422557008
+   },
+   {
+    "input": "terminal growth +/- 1 point",
+    "low_value": 34.25575455541628,
+    "high_value": 42.10155680730877,
+    "swing": 7.845802251892486
+   },
+   {
+    "input": "starting revenue growth +/- 5 points",
+    "low_value": 34.66022470397641,
+    "high_value": 40.871178941497995,
+    "swing": 6.210954237521584
+   }
+  ],
+  "invalidators": [
+   "If the free-cash-flow margin stayed near 19.3% instead of 18.0% (growth as in the base case), the base-case value would equal today's price.",
+   "The price requires starting growth of about 28.7% a year; reported trailing growth is 25.0%. If growth settles clearly below the required rate, an undervalued reading would not hold.",
+   "A restatement, a large acquisition or a one-off cash flow in the trailing twelve months would change the starting figures; read the filings behind them."
+  ],
+  "methods": {
+   "multiples": "shown above where meaningful",
+   "dcf": {
+    "available": true,
+    "description": "Scenario DCF on free cash flow; see each scenario's assumptions."
+   },
+   "peers": {
+    "available": false,
+    "reason": "Peer comparison is not built yet; a lower multiple alone would not prove cheapness."
+   },
+   "own_history": {
+    "available": false,
+    "reason": "The company's own historical multiples need historical prices and share counts; not built yet."
+   }
+  },
+  "fair_value_range": {
+   "low": 24.603786243632236,
+   "base": 37.65622696939037,
+   "high": 47.97308913833053
+  },
+  "classification_rule": "Potentially undervalued if the price is below the bear case or at least 20% below the base case; potentially overvalued if above the bull case or at least 20% above the base case; otherwise within the range. No verdict when evidence quality is below moderate or the bear-to-bull ratio exceeds 3.",
+  "label": "Within estimated fair-value range",
+  "label_key": "within",
+  "reason": "Price is within 20% of the base case.",
+  "inputs": {
+   "price": 40.0,
+   "price_time": "2026-02-01T12:00:00+00:00",
+   "price_source": "test quote (synthetic)",
+   "shares": 52.0,
+   "shares_reliable": true,
+   "shares_note": null,
+   "shares_basis": "weighted-average diluted shares for the year ended 2025-12-31",
+   "cash": 400.0,
+   "debt": 0.0,
+   "ttm_revenue": 500.0,
+   "ttm_gross_profit": 375.0,
+   "ttm_ebitda": 37.0,
+   "ttm_net_income": 20.0,
+   "ttm_fcf": 90.0,
+   "ttm_growth_pct": 25.0,
+   "fcf_margin_pct": 18.0,
+   "annual_dilution_pct": 4.00279384175064,
+   "financials_end": "2025-12-31",
+   "annual_years": 2
+  }
+ },
+ "thesis": {
+  "what_must_be_true": [
+   "Revenue growth has to start near 28.7% a year and fade toward the terminal rate for today's price to be justified at today's free-cash-flow margin (reported trailing growth: 25.0%).",
+   "Rule of 40 (FCF basis) is 43.0 (25.0% growth + 18.0% free-cash-flow margin); a falling score would weaken the case."
+  ],
+  "what_would_disprove_it": [
+   "Growth settling clearly below about 28.7% a year without a rising margin would argue the price already asks for too much.",
+   "If the free-cash-flow margin stayed near 19.3% instead of 18.0% (growth as in the base case), the base-case value would equal today's price."
+  ],
+  "research_next": [
+   "Open the latest annual report and read the segment, geography and customer-concentration notes (not in structured data).",
+   "Find recurring-revenue, retention and backlog disclosures, and separate organic growth from acquisitions and currency effects.",
+   "Check stock-based compensation and any acquisitions or one-off cash flows inside the trailing twelve months.",
+   "Compare with two or three similar companies side by side (peer comparison is not built into this page yet)."
+  ]
+ },
+ "sources": {
+  "filings": {
+   "origin": "fixture",
+   "fetched_at": "2026-02-01T12:00:00+00:00",
+   "source": "SYNTHETIC SEC-schema fixture (not real company data)"
+  },
+  "submissions": null
+ },
+ "my_state": {
+  "state": {
+   "symbol": "SOFTWARE",
+   "first_seen_at": null,
+   "opened_at": "2026-02-01T12:00:00+00:00",
+   "saved_at": null,
+   "dismissed_at": null,
+   "researched_at": null,
+   "shown_count": 0
+  },
+  "notes": [],
+  "last_review": null
+ }
+}
