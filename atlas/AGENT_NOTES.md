@@ -31,6 +31,9 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 - Parse untrusted XML defensively (refuse a DOCTYPE or entities); never build a link from a field without checking its characters; show only https links.
 - Keep a trimmed real response as the test fixture, and test the failure, stale and demo paths, not only the happy one.
 
+## Phone lists
+- Signal's screens render lists with a scroll view and `map`. That is fine while the server caps the rows (calendar 40 a day over at most 21 days, filings 40, watchlist 100). Any new list that could pass about 100 rows should use `FlatList`, or the server should cap it.
+
 ## Working style the user prefers
 - Short, plain-English reports for a beginner: what changed, what was checked, what was not, what is needed from them.
 - Do not merge, keep the PR draft, ask before anything paid or outward-facing.

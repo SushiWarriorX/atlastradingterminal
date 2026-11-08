@@ -17,3 +17,10 @@ Newest first. Decision: SUGGESTED (card offered, user decides) / ADOPTED (our ow
 | 2026-11-08 | Code Review, claude-code-review-council, code-review-harness | Plugin catalog | REJECTED | The built-in code review already exists. The council plugin also hooks tool calls (broader access than needed). |
 | 2026-11-08 | Ireview | Plugin catalog | REJECTED | Sends code to other AI models outside this setup; not without the user asking. |
 | 2026-11-08 | Axe Accessibility (Deque) | Plugin catalog | DEFERRED | Good tool, but it connects to an outside server. Raise only if the user wants a deeper accessibility audit than A11y Enforcer. |
+| 2026-11-08 | react-native-best-practices (community, a single skill, no extra access) | Plugin catalog | SUGGESTED | Signal's calendar, filings and watchlist are long lists; list performance guidance fits. Card shown; user decides. |
+| 2026-11-08 | Phone-list rule | This repo | ADOPTED | Short note in `atlas/AGENT_NOTES.md`: lists are capped by the server today; anything that could pass about 100 rows needs FlatList or a cap. |
+| 2026-11-08 | Expo skills (Expo Team, partner) | Plugin catalog | DEFERRED | Official and relevant to Expo SDK 58, but it adds a remote server and hooks on every tool call. The repo's AGENTS.md already tells Claude to read the matching Expo docs. Revisit if an Expo upgrade is planned. |
+| 2026-11-08 | Skills For Real React/React Native Engineers | Plugin catalog | REJECTED | Roughly 40 skills plus agents with broad access; far more than the project needs. |
+| 2026-11-08 | Mobile App Design (iOS) | Plugin catalog | REJECTED | iOS-only design review through an outside server. |
+| 2026-11-08 | claude-performance, Chat Auto exporter, Make Documentation, backend-performance-review | Plugin catalog | REJECTED | They run with broad access: hooks that write rules into CLAUDE.md on their own, export conversations to files, or edit docs unprompted. Not appropriate without the user asking. |
+| 2026-11-08 | Performance Coach (RapportScore), Claude Skills Exporter | Plugin catalog | REJECTED | Unrelated to this project (conversation coaching, porting skills to other tools). |
