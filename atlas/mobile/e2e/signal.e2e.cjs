@@ -629,6 +629,11 @@ async function healthy(browser) {
       await page.waitForSelector(V("network-card"));
       await page.waitForSelector(V("network-body") + ", " + V("network-error"), { timeout: 60000 });
       const nt2 = await text(page);
+      await page.waitForSelector(V("tracker-card"));
+      await page.waitForSelector(V("tracker-body") + ", " + V("tracker-error"), { timeout: 60000 });
+      const tk = await text(page);
+      match(tk, /Strategy tracker/); match(tk, /Aroon trend/); match(tk, /Backtest \(frozen on/); match(tk, /Forward record/); match(tk, /Weak evidence|No reliable evidence|Moderate evidence/);
+      noMatch(tk, FORECASTS, "the tracker makes no forecasts"); match(tk, /(too little to say anything|just started|Forward tracking needs real prices)/i, "a thin forward record is called thin");
       match(nt2, /Bitcoin network/); match(nt2, /Not a price signal: fees can be near zero/); noMatch(nt2, FORECASTS, "network card makes no forecasts");
       if (await present(page, "stablecoins-body")) match(st, /not a price signal/, "the liquidity-gauge caveat is shown");
       if (await present(page, "positioning-body")) match(pt, /Net short is not the same as bearish/, "the basis-trade caveat is shown");

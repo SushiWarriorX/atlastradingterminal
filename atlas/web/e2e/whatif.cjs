@@ -66,6 +66,10 @@ fs.mkdirSync(S, { recursive: true });
   const nw = await pg.locator('[data-testid="network"]').innerText();
   if (!/mempool\.space|Demo mode/.test(nw)) fail('network panel lacks its source or demo notice');
   console.log('BTC desk network: ok');
+  if (!(await titles()).some(x => /STRATEGY TRACKER/.test(x))) fail('BTC desk has no strategy tracker panel');
+  const tr = await pg.locator('[data-testid="tracker"]').innerText();
+  if (!/Aroon trend/.test(tr) || !/FORWARD RECORD/i.test(tr)) fail('tracker panel lacks the Aroon entry or its forward record section');
+  console.log('BTC desk strategy tracker: ok');
 
   if (errors.length) fail('browser errors: ' + errors.join(' ; '));
   console.log('PASS');

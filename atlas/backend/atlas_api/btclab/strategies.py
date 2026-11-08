@@ -310,6 +310,30 @@ reg(Strategy("vol_filtered_trend", "Trend only in calm markets", "Volatility", "
              lambda d, p: [_cond(f"Close above {p['n']}-bar average", None if np.isnan(sma(d['c'], p['n']).iloc[-1]) else d["c"].iloc[-1] > sma(d["c"], p["n"]).iloc[-1], f"close {_val(d['c'].iloc[-1])}"),
                            _cond(f"30-bar volatility below {p['k']}x its one-year median", None if np.isnan(d["c"].pct_change().rolling(30).std().rolling(365, min_periods=200).median().iloc[-1]) else bool(d["c"].pct_change().rolling(30).std().iloc[-1] < d["c"].pct_change().rolling(30).std().rolling(365, min_periods=200).median().iloc[-1] * p["k"]), "volatility vs its median")]))
 
+def aroon(d: pd.DataFrame, n: int) -> tuple[pd.Series, pd.Series]:
+    """Aroon Up / Down (Tushar Chande, 1995): how recently the highest high and lowest low of the last n bars happened, 0 to 100 (100 = this very bar)."""
+    up = d["h"].rolling(n + 1).apply(lambda x: 100.0 * int(np.argmax(x)) / n, raw=True)          # position of the highest high inside the window (n = newest bar)
+    dn = d["l"].rolling(n + 1).apply(lambda x: 100.0 * int(np.argmin(x)) / n, raw=True)
+    return up, dn
+
+
+def _aroon_build(d, p):
+    up, dn = aroon(d, p["n"])
+    return hold((up > 70) & (dn < 30), up < 50)
+
+
+def _aroon_conds(d, p):
+    up, dn = aroon(d, p["n"])
+    u, w = up.iloc[-1], dn.iloc[-1]
+    return [_cond("Aroon Up above 70 and Aroon Down below 30 (entry)", None if np.isnan(u) or np.isnan(w) else bool(u > 70 and w < 30), f"up {_val(u)}, down {_val(w)}"),
+            _cond("Aroon Up below 50 (exit)", None if np.isnan(u) else bool(u < 50), f"up {_val(u)}")]
+
+
+reg(Strategy("aroon_trend", "Aroon trend", "Trend", "Holds BTC while a fresh high is recent and a fresh low is old: the Aroon indicator's reading of a young uptrend.",
+             "Aroon Up is above 70 and Aroon Down is below 30 (the highest high of the last N bars is recent, the lowest low is old).", "Aroon Up falls below 50 (the last high is getting old).",
+             "No fixed stop; the exit rule is the stop.", {"n": 25}, {"n": [14, 20, 25, 35, 50]}, _aroon_build, _aroon_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 

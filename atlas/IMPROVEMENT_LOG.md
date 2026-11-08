@@ -16,6 +16,14 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Strategy tracker, strategy loop, and a self-updating launcher (user requests)
+- **Strategy tracker:** every strategy the loop adds is backtested ONCE on all BTC daily history (same evaluation as the Strategy Lab: fees, slippage, 70/30 split, walk-forward, neighbouring settings, doubled costs, luck check counting the whole library) and the result is frozen in `btclab/tracker_ledger.json`; `track_cli` refuses to rerun an id. The app then follows each rule FORWARD on bars after its add date (the only evidence nobody had seen), and says "too little to say anything" under 60 days. `GET /api/btclab/tracker`; terminal BTC desk panel under the Strategy Lab; Signal BTC page card. No forward record in demo mode.
+- **Strategy loop:** `atlas/STRATEGY_LOOP.md` (rules + a queue of 20 published ideas with FIXED settings, so settings are never chosen by looking at BTC results; bad results are kept and reported). Every 10 minutes (session job).
+- **Cycle 1: Aroon trend** (Chande, 1995; n=25). Evidence: weak. Whole history +14,616% vs +26,883% holding (worst drop -69% vs -84%); last 30%: +67.8% vs +187% holding; 22 out-of-sample trades; 100% of nearby settings positive out of sample; the luck check (21 rules in the library) could not rule out luck (safe Sharpe lower bound -0.69), and it did not beat holding on risk-adjusted terms.
+- **Launcher:** `start-windows.ps1` now fetches GitHub on every start and fast-forwards to the latest version, reinstalls packages when `pyproject.toml` or the web `package.json` changed, restarts itself once if the start script changed, resets npm's own lock-file changes, and never overwrites the user's own changes (it says so and starts the version they have). `-NoUpdate` or `ATLAS_NO_UPDATE=1` skips it. The Signal launcher window also checks on open and says when a newer version is waiting. Not run on Windows from here (no PowerShell on the build machine): syntax reviewed only.
+- **Tests:** 10 new tracker tests; 946 backend pass; phone browser 47/47 (extended); terminal browser check extended; web build.
+
 ## 2026-11-08 · Data-source loop, cycle 7: ECB euro reference exchange rates
 - **Verified live first:** data-api.ecb.europa.eu CSV, 7 currencies, latest 2026-11-06 (EUR/USD 1.1165, USD per euro; JPY 176.77, GBP 0.83415 per euro). The real file (trimmed columns) is the test fixture.
 - **Shipped:** `ecb.py`, `GET /api/macro/fx`. The ECB publishes euro-based rates, so dollar pairs are calculated (dollars-per-yen = dollars-per-euro divided by yen-per-euro) and quoted the usual way (EUR/USD, USD/JPY, GBP/USD, USD/CHF, USD/CNY, USD/CAD, AUD/USD). "Dollar vs it" is the change in units of the other currency per dollar, so positive always means the dollar got stronger; a test pins both directions. Terminal: panel on the Macro desk. Signal: card on the Macro screen.

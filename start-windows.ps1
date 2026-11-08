@@ -4,10 +4,11 @@
 #   .\start-windows.bat -IbkrPort 4001   real data AND read-only IBKR prices through IB Gateway (live: 4001, paper: 4002; TWS: 7496 / 7497).
 #                                        Connects by itself and reconnects after Gateway's daily logout. It can only read: it never places orders.
 # Optional: copy local-settings.example.ps1 to local-settings.ps1 and put your keys there (that file is never uploaded to GitHub).
+# Every start first checks GitHub and updates to the latest version by itself (add -NoUpdate to skip that). Your own changes are never overwritten.
 # First run installs everything (a few minutes). Later runs start in seconds.
 # To stop ATLAS, close the two black windows it opens.
 #   start-signal-windows.bat   only the Signal phone app (in your browser) plus the backend it needs. Same as: .\start-windows.ps1 -SignalOnly
-param([switch]$Real, [int]$IbkrPort = 0, [switch]$SignalOnly)
+param([switch]$Real, [int]$IbkrPort = 0, [switch]$SignalOnly, [switch]$NoUpdate)
 
 $ErrorActionPreference = "Continue"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -36,6 +37,79 @@ function Test-Url($url) {
         return $false
     }
 }
+
+# 0. Update to the latest version from GitHub, then carry on.
+# Skipped with -NoUpdate, when git is missing, when GitHub cannot be reached, or when you have changes of your own in this folder. Nothing of yours is ever overwritten.
+function Update-Atlas {
+    if ($NoUpdate -or $env:ATLAS_NO_UPDATE -or $env:ATLAS_UPDATED) { return @() }
+    if (-not (Get-Command git -ErrorAction SilentlyContinue) -or -not (Test-Path (Join-Path $root ".git"))) {
+        Write-Host "Update check skipped (git is not installed, or this folder is not a git checkout)." -ForegroundColor DarkGray
+        return @()
+    }
+    Push-Location $root
+    try {
+        $branch = ((& git rev-parse --abbrev-ref HEAD 2>$null) | Select-Object -First 1)
+        if (-not $branch -or $branch -eq "HEAD") {
+            Write-Host "Update check skipped (no branch is checked out)." -ForegroundColor DarkGray
+            return @()
+        }
+        Write-Host "Checking GitHub for a newer version..."
+        & git fetch origin $branch 2>$null | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Could not reach GitHub, so starting the version you have." -ForegroundColor Yellow
+            return @()
+        }
+        # npm rewrites its lock files by itself. Those are not your changes, so they are reset before updating.
+        & git checkout -- atlas/mobile/package-lock.json atlas/web/package-lock.json 2>$null | Out-Null
+        $before = ((& git rev-parse HEAD 2>$null) | Select-Object -First 1)
+        $remote = ((& git rev-parse "origin/$branch" 2>$null) | Select-Object -First 1)
+        if (-not $remote -or $before -eq $remote) {
+            Write-Host "You already have the latest version." -ForegroundColor Green
+            return @()
+        }
+        & git merge-base --is-ancestor $remote $before 2>$null | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "You already have the latest version." -ForegroundColor Green
+            return @()
+        }
+        $dirty = (& git status --porcelain --untracked-files=no 2>$null)
+        if ($dirty) {
+            Write-Host "A newer version exists, but you have changes of your own in this folder, so it was not updated. Starting the version you have." -ForegroundColor Yellow
+            Write-Host "To update: ask Claude, or run  git stash  then start again." -ForegroundColor Yellow
+            return @()
+        }
+        & git merge --ff-only "origin/$branch" 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Could not update automatically, so starting the version you have." -ForegroundColor Yellow
+            return @()
+        }
+        $after = ((& git rev-parse HEAD 2>$null) | Select-Object -First 1)
+        $files = @(& git diff --name-only $before $after 2>$null)
+        $count = @(& git rev-list "$before..$after" 2>$null).Count
+        Write-Host "Updated to the latest version ($count new change(s))." -ForegroundColor Green
+        foreach ($line in @(& git log --oneline -5 "$before..$after" 2>$null)) { Write-Host "  $line" -ForegroundColor DarkGray }
+        return $files
+    } catch {
+        Write-Host "The update check failed ($($_.Exception.Message)), so starting the version you have." -ForegroundColor Yellow
+        return @()
+    } finally {
+        Pop-Location
+    }
+}
+$changedFiles = @(Update-Atlas)
+if ($changedFiles -contains "start-windows.ps1") {
+    # The start script itself changed, so run the new copy (once) instead of carrying on with the old one.
+    Write-Host "The start script was updated; restarting it..." -ForegroundColor Yellow
+    $env:ATLAS_UPDATED = "1"
+    $relaunch = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $PSCommandPath)
+    if ($Real) { $relaunch += "-Real" }
+    if ($IbkrPort -gt 0) { $relaunch += @("-IbkrPort", "$IbkrPort") }
+    if ($SignalOnly) { $relaunch += "-SignalOnly" }
+    & powershell @relaunch
+    exit $LASTEXITCODE
+}
+$backendChanged = ($changedFiles -contains "atlas/backend/pyproject.toml")
+$webChanged = (($changedFiles -contains "atlas/web/package.json") -or ($changedFiles -contains "atlas/web/package-lock.json"))
 
 if ($IbkrPort -gt 0) { $Real = $true }      # IBKR prices only make sense with real data
 
@@ -90,6 +164,7 @@ if (-not (Test-Path $venvPython)) {
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path $venvPython)) { Stop-WithProblem "Could not create the Python environment." }
 }
 $marker = Join-Path $backend ".venv\atlas-installed"
+if ($backendChanged -and (Test-Path $marker)) { Remove-Item $marker -Force }      # the backend's package list changed: install again
 if (-not (Test-Path $marker)) {
     Write-Host "Installing backend packages. First run only; this takes a few minutes..."
     & $venvPython -m pip install --upgrade pip
@@ -108,7 +183,7 @@ if ($SignalOnly) {
     Pop-Location
     if ($npmCode -ne 0) { Stop-WithProblem "Installing the Signal app packages failed. Copy the red text above and send it to Claude." }
 }
-elseif (-not (Test-Path (Join-Path $web "node_modules"))) {
+elseif ((-not (Test-Path (Join-Path $web "node_modules"))) -or $webChanged) {
     Write-Host "Installing frontend packages. First run only; this takes a few minutes..."
     Push-Location $web
     & npm install

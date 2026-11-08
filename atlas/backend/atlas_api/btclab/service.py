@@ -11,6 +11,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from . import agent as AG
+from . import tracker as TR
 from . import evaluate as E
 from .data import BARS_PER_YEAR, TF_SECONDS, BtcData, DataError, gaps
 from .strategies import DEFAULT_FIVE, FINDINGS, S
@@ -156,3 +157,18 @@ class LabService:
     def agent_history(db, strategy: str | None = None, limit: int = 20) -> list[dict]:
         q = "SELECT id,created_at,strategy,verdict,fixes,data_to FROM btc_agent_runs" + (" WHERE strategy=?" if strategy else "") + " ORDER BY created_at DESC LIMIT ?"
         return [dict(x) for x in db.q(q, ((strategy, limit) if strategy else (limit,)))]
+
+    async def tracker(self) -> dict:
+        """The strategy tracker: frozen backtests from the ledger plus each rule followed forward on bars after the day it was added (real prices only; none in demo mode)."""
+        notes: list[str] = []
+        rows = None
+        if not self.demo:
+            notes = await self.data.ensure("1d", False)
+            rows = self.data.stored("1d") or None
+            if rows is None:
+                notes.append("No BTC price history is saved yet, so forward records could not be calculated.")
+        out = await asyncio.to_thread(TR.overview, rows, self.demo)
+        out["notes"] += notes
+        out["data"] = {"demo": self.demo, "source": "DEMO: synthetic prices, not market data" if self.demo else "Coinbase Exchange public candles (BTC-USD spot, daily)",
+                       "last_bar": datetime.fromtimestamp(rows[-1][0], timezone.utc).isoformat() if rows else None}
+        return out

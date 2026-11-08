@@ -29,7 +29,7 @@ $script:runner = $null
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Signal"
-$form.Size = New-Object System.Drawing.Size(380, 300)
+$form.Size = New-Object System.Drawing.Size(380, 350)
 $form.StartPosition = "CenterScreen"
 $form.FormBorderStyle = "FixedDialog"
 $form.MaximizeBox = $false
@@ -89,6 +89,46 @@ $hint.Location = New-Object System.Drawing.Point(22, 230)
 $hint.Size = New-Object System.Drawing.Size(330, 40)
 $form.Controls.Add($hint)
 
+$updateLabel = New-Object System.Windows.Forms.Label
+$updateLabel.Text = ""
+$updateLabel.ForeColor = [System.Drawing.Color]::FromArgb(150, 205, 160)
+$updateLabel.Location = New-Object System.Drawing.Point(22, 274)
+$updateLabel.Size = New-Object System.Drawing.Size(330, 40)
+$form.Controls.Add($updateLabel)
+
+# Is a newer version waiting on GitHub? (Starting always installs it; this just tells you when the window opens.)
+function Test-UpdateAvailable {
+    try {
+        if (-not (Get-Command git -ErrorAction SilentlyContinue) -or -not (Test-Path (Join-Path $root ".git"))) { return $false }
+        Push-Location $root
+        try {
+            $branch = ((& git rev-parse --abbrev-ref HEAD 2>$null) | Select-Object -First 1)
+            if (-not $branch -or $branch -eq "HEAD") { return $false }
+            & git fetch origin $branch 2>$null | Out-Null
+            if ($LASTEXITCODE -ne 0) { return $false }
+            $local = ((& git rev-parse HEAD 2>$null) | Select-Object -First 1)
+            $remote = ((& git rev-parse "origin/$branch" 2>$null) | Select-Object -First 1)
+            if (-not $remote -or $local -eq $remote) { return $false }
+            & git merge-base --is-ancestor $remote $local 2>$null | Out-Null
+            return ($LASTEXITCODE -ne 0)
+        } finally {
+            Pop-Location
+        }
+    } catch {
+        return $false
+    }
+}
+
+$form.Add_Shown({
+    $updateLabel.Text = "Checking for a newer version..."
+    $form.Refresh()
+    if (Test-UpdateAvailable) {
+        $updateLabel.Text = "A newer version is available. Press Start (or Stop, then Start) and it installs by itself."
+    } else {
+        $updateLabel.Text = "You have the latest version (or GitHub could not be reached)."
+    }
+})
+
 $btnStart.Add_Click({
     if (Test-Url "http://127.0.0.1:8081") {
         $status.Text = "Already running. Press Open."
@@ -98,7 +138,7 @@ $btnStart.Add_Click({
     $argList = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ('"' + $script + '"'), "-SignalOnly")
     if ($real.Checked) { $argList += "-Real" }
     $script:runner = Start-Process powershell -ArgumentList $argList -PassThru -WindowStyle Minimized
-    $status.Text = "Starting... first time takes a few minutes."
+    $status.Text = "Starting... getting the latest version first. The first time takes a few minutes."
 })
 
 $btnOpen.Add_Click({
@@ -128,7 +168,7 @@ $timer.Add_Tick({
     if ($back -and $sig) {
         $status.Text = "Running. Press Open. When Signal asks for a server, type: http://localhost:8000"
     } elseif ($script:runner -and -not $script:runner.HasExited) {
-        $status.Text = "Starting... first time takes a few minutes."
+        $status.Text = "Starting... getting the latest version first. The first time takes a few minutes."
     } elseif ($script:runner -and $script:runner.HasExited) {
         $status.Text = "It stopped. Press Start to try again. If it keeps failing, press Start and read the red text in the small window."
         $script:runner = $null

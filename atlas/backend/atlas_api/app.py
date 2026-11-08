@@ -1097,6 +1097,14 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         except LabError as e:
             raise ApiError("DATA_UNAVAILABLE", str(e), 503)
 
+    @app.get("/api/btclab/tracker")
+    async def btclab_tracker():
+        """Strategies added by the research loop: frozen backtest plus the forward record since each was added. Research only."""
+        try:
+            return ok(await lab.tracker())
+        except LabError as e:
+            raise ApiError("LAB_UNAVAILABLE", str(e), 503)
+
     @app.post("/api/btclab/run")
     async def btclab_run(b: LabRunIn):
         try:

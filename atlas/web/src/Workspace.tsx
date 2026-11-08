@@ -32,6 +32,7 @@ import { PositioningWidget } from "./widgets/Positioning";
 import { StablecoinsWidget } from "./widgets/Stablecoins";
 import { NetworkWidget } from "./widgets/Network";
 import { FxWidget } from "./widgets/Fx";
+import { TrackerWidget } from "./widgets/Tracker";
 import { JournalQuickWidget } from "./widgets/JournalQuick";
 
 const Grid = WidthProvider(RGL);
@@ -63,6 +64,7 @@ function render(w: WidgetCfg, view: string) {
     case "stablecoins": return <StablecoinsWidget />;
     case "network": return <NetworkWidget />;
     case "fx": return <FxWidget />;
+    case "tracker": return <TrackerWidget />;
     case "earnings": return <EarningsWidget />;
     case "journalquick": return <JournalQuickWidget />;
     case "journaltrades": return <JournalTradesWidget />;

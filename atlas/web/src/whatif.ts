@@ -52,3 +52,15 @@ export interface OnChain { as_of: string; demo: boolean; source: string; url: st
 
 export interface FxPair { pair: string; currency: string; rate: number; date: string; dollar_vs_1d_pct: number; dollar_vs_30d_pct: number | null; compared_with_30d: string | null }
 export interface FxData { available: boolean; reason?: string; demo: boolean; as_of: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; pairs?: FxPair[]; breadth?: { stronger_30d: number; of: number }; source?: string; url?: string; note?: string }
+
+export interface TrackMetrics { net_return_pct: number | null; max_drawdown_pct: number | null; sharpe: number | null; trades: number; win_rate_pct?: number | null }
+export interface TrackerForward { error?: string; added?: string; days?: number; from?: string | null; to?: string; enough?: boolean; position_now?: "long" | "flat"; conditions?: { rule: string; met: boolean | null; value: string }[]; note?: string;
+  strategy?: { return_pct: number | null; max_drawdown_pct: number | null; closed_trades: number; win_rate_pct: number | null } | null; buy_and_hold?: { return_pct: number | null; max_drawdown_pct: number | null } | null }
+export interface TrackerEntry {
+  id: string; name: string; family: string; added_at: string; idea: string; why: string; rule: { summary: string; entry: string; exit: string; stop: string } | null;
+  snapshot: { library_size: number; data_from: string; data_to: string; bars: number; full: TrackMetrics; in_sample: TrackMetrics; out_of_sample: TrackMetrics; walk_forward: Partial<TrackMetrics>;
+    buy_and_hold: { full: TrackMetrics; out_of_sample: TrackMetrics }; robustness: { share_positive: number; doubled_costs_oos_return_pct: number };
+    luck_check: { lower_bound: { lower: number; confidence_pct: number; n_compared: number } | null; note: string | null }; evidence: { level: "none" | "weak" | "moderate"; reasons: string[] } };
+  forward: TrackerForward | null;
+}
+export interface TrackerData { as_of: string; demo: boolean; entries: TrackerEntry[]; library_size: number; min_forward_days: number; notes: string[]; data: { demo: boolean; source: string; last_bar: string | null } }

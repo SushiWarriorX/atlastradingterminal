@@ -98,7 +98,7 @@ def test_indicators_are_causal():
 
 
 def test_library_is_complete_and_honest():
-    assert 12 <= len(ST.S) <= 25
+    assert 12 <= len(ST.S) <= 80
     for s in ST.S.values():
         assert s.entry and s.exit and s.stop and s.sizing and s.params and s.grid and s.family
         assert len(next(iter(s.grid.values()))) == 5
