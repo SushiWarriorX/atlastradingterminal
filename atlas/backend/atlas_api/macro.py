@@ -31,6 +31,8 @@ SERIES = {
 RELEASE_SERIES = {
     "PCEPI": ("PCE price index, all items", "index", "monthly", 80, "BEA releases it at the end of the following month, so 6-8 weeks old is normal"),
     "PCEPILFE": ("Core PCE price index, excl. food & energy", "index", "monthly", 80, "same schedule as PCE"),
+    "WPSFD49207": ("PPI final demand (producer prices)", "index", "monthly", 80, "BLS releases it about two weeks after month end, so 6-7 weeks old is normal"),
+    "WPSFD4131": ("Core PPI, final demand excl. foods & energy", "index", "monthly", 80, "same schedule as PPI"),
     "PAYEMS": ("Nonfarm payroll employment", "thousand jobs", "monthly", 60, "BLS releases the Employment Situation on the first Friday of the next month, so up to ~5 weeks old is normal"),
     "UNRATE": ("Unemployment rate", "%", "monthly", 60, "released with the Employment Situation report"),
     "A191RL1Q225SBEA": ("Real GDP growth (annualized, quarterly)", "% annualized", "quarterly", 135, "dated the first day of the quarter; the first estimate comes ~1 month after quarter end and is revised twice"),

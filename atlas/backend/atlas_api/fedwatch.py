@@ -227,6 +227,8 @@ RELEVANCE = {
     "core_cpi": "The Fed watches consumer inflation because price stability is half of its mandate. Core CPI strips out food and energy to show the underlying trend.",
     "pce": "PCE inflation is the measure the Fed's 2% goal is officially based on, so it carries more weight in policy discussion than CPI.",
     "core_pce": "Core PCE (excluding food and energy) is the Fed's preferred gauge of underlying inflation.",
+    "ppi": "PPI measures prices businesses receive at the wholesale level. It often moves before consumer prices (CPI) do, so it is read as an early hint of where inflation may go. It is noisier than CPI.",
+    "core_ppi": "Core PPI strips out food and energy. Markets watch it for the underlying trend in wholesale prices, a few weeks before it can show up in CPI.",
     "payrolls": "Job growth shows how strong the labor market is. Maximum employment is the other half of the Fed's mandate: strong hiring can keep rates higher, sharp weakness can bring cuts.",
     "unemployment": "The unemployment rate is the Fed's main labor-market gauge. A rising rate can signal a cooling economy.",
     "gdp": "GDP growth measures the overall economy. Faster growth can add to inflation pressure, a contraction can increase pressure to ease.",
@@ -262,12 +264,14 @@ def release_facts(P: dict, today: date) -> list[dict]:
     add("core_cpi", lambda: M.cpi_fact("CPILFESL", "core_cpi", P["CPILFESL"], today), "CPILFESL")
     add("pce", lambda: M.cpi_fact("PCEPI", "pce", P["PCEPI"], today), "PCEPI")
     add("core_pce", lambda: M.cpi_fact("PCEPILFE", "core_pce", P["PCEPILFE"], today), "PCEPILFE")
+    add("ppi", lambda: M.cpi_fact("WPSFD49207", "ppi", P["WPSFD49207"], today), "WPSFD49207")
+    add("core_ppi", lambda: M.cpi_fact("WPSFD4131", "core_ppi", P["WPSFD4131"], today), "WPSFD4131")
     add("payrolls", lambda: _monthly_change("PAYEMS", "payrolls", P["PAYEMS"], today, "thousand"), "PAYEMS")
     add("unemployment", lambda: _monthly_change("UNRATE", "unemployment", P["UNRATE"], today, "percentage points"), "UNRATE")
     add("gdp", lambda: _quarterly("A191RL1Q225SBEA", "gdp", P["A191RL1Q225SBEA"], today), "A191RL1Q225SBEA")
     for f in out:
         if "label" in f and f["label"] == f["id"]:
-            f["label"] = {"cpi": "CPI", "core_cpi": "Core CPI", "pce": "PCE inflation", "core_pce": "Core PCE inflation", "payrolls": "Nonfarm payrolls", "unemployment": "Unemployment rate", "gdp": "Real GDP growth"}[f["id"]]
+            f["label"] = {"cpi": "CPI", "core_cpi": "Core CPI", "pce": "PCE inflation", "core_pce": "Core PCE inflation", "ppi": "PPI (producer prices)", "core_ppi": "Core PPI", "payrolls": "Nonfarm payrolls", "unemployment": "Unemployment rate", "gdp": "Real GDP growth"}[f["id"]]
     return out
 
 
@@ -300,8 +304,8 @@ def balance_sheet_fact(pts: list[tuple[date, float]], today: date) -> dict:
 
 
 # --- service ------------------------------------------------------------------------------------------------------------------------------
-FRED_IDS = ["DFEDTARL", "DFEDTARU", "CPIAUCSL", "CPILFESL", "PCEPI", "PCEPILFE", "PAYEMS", "UNRATE", "A191RL1Q225SBEA", "WALCL"]
-HISTORY = {"DFEDTARL": 800, "DFEDTARU": 800, "CPIAUCSL": 900, "CPILFESL": 900, "PCEPI": 900, "PCEPILFE": 900, "PAYEMS": 900, "UNRATE": 900, "A191RL1Q225SBEA": 1500, "WALCL": 200}
+FRED_IDS = ["DFEDTARL", "DFEDTARU", "CPIAUCSL", "CPILFESL", "PCEPI", "PCEPILFE", "WPSFD49207", "WPSFD4131", "PAYEMS", "UNRATE", "A191RL1Q225SBEA", "WALCL"]
+HISTORY = {"DFEDTARL": 800, "DFEDTARU": 800, "CPIAUCSL": 900, "CPILFESL": 900, "PCEPI": 900, "PCEPILFE": 900, "WPSFD49207": 900, "WPSFD4131": 900, "PAYEMS": 900, "UNRATE": 900, "A191RL1Q225SBEA": 1500, "WALCL": 200}
 
 
 class FedWatchService:

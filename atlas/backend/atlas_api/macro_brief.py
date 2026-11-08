@@ -38,7 +38,7 @@ TOPICS = {
                     "Geopolitical shocks usually show up as moves in oil, the dollar, gold and safe-haven bonds first. The effect on stocks and BTC varies and is often short-lived."),
 }
 _TOPIC_RX = {k: re.compile(v[1], re.I) for k, v in TOPICS.items()}
-INDICATOR_ORDER = ["fed", "us10y", "us2y", "curve", "cpi", "core_cpi", "core_pce", "pce", "payrolls", "unemployment", "gdp", "usd", "balance_sheet"]
+INDICATOR_ORDER = ["fed", "us10y", "us2y", "curve", "cpi", "core_cpi", "core_pce", "pce", "ppi", "core_ppi", "payrolls", "unemployment", "gdp", "usd", "balance_sheet"]
 
 
 def topic_of(title: str) -> str | None:

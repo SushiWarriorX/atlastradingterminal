@@ -5,6 +5,13 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Terminal what-if panel + PPI on the macro side (user requests)
+- **Terminal:** the "What if I had bought X?" panel (same server route as Signal) is on the Equities and BTC desks. New browser check `web/e2e/whatif.cjs`. Caught a title bug (BTC showed "SPOT" because its id ends in :SPOT).
+- **Macro:** CPI and PCE (headline and core) were already shown; added PPI and core PPI (FRED `WPSFD49207`, `WPSFD4131`) next to them, with plain "why it matters" notes. A failing PPI series cannot hide CPI or PCE (tested).
+- **Not verified:** FRED is not reachable from this sandbox, so the two PPI series ids are untested against live data. If they are wrong, PPI shows "unavailable" with a reason and nothing else breaks.
+- **Known:** `web/e2e/desks.cjs` still expects the old sidebar names from before the five-destination redesign; it fails on that, unrelated to this change.
+
 ## 2026-11-08 · "What if I had bought it?" simulator + deep-dive fix (user requests)
 - **Deep-dive was empty:** the Windows start script never set `ATLAS_SEC_CONTACT`, so SEC filings were off and the card showed nothing useful. Now: a clear banner with the fix in the phone card, a warning in `start-windows.ps1`, and the setting documented in `local-settings.example.ps1`. The email stays in the user's untracked `local-settings.ps1`.
 - **New Signal section (every asset page):** `GET /api/signal/whatif/{asset}?amount=` and `WhatIfCard`. Five replays from daily closes: one purchase held to today (1/3/5 years ago), the same amount monthly, every possible start date (worst/typical/best), exit rules (20% stop, 30% target, 20% trailing stop), and 2,000 shuffled years. Price-only, no dividends/tax/fees, stops on closes; labelled DEMO in demo mode.

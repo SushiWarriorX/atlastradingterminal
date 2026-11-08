@@ -1,4 +1,4 @@
-export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
@@ -21,6 +21,7 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "mtf", type: "mtf", x: 0, y: 31, w: 12, h: 16 },
     { i: "lab", type: "btclab", x: 0, y: 47, w: 12, h: 30 },
     { i: "deriv", type: "derivatives", x: 0, y: 77, w: 12, h: 15 },
+    { i: "whatif", type: "whatif", x: 0, y: 92, w: 12, h: 22 },
   ] },
   equities: { id: "equities", name: "US Equity Trading Desk (stocks and ETFs only)", scope: "equity", widgets: [
     { i: "chart", type: "chart", x: 0, y: 0, w: 8, h: 13, props: { pick: "equity" } },
@@ -28,9 +29,10 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "quote", type: "quote", x: 0, y: 13, w: 4, h: 11 },
     { i: "tech", type: "tech", x: 4, y: 13, w: 8, h: 11 },
     { i: "research", type: "stockresearch", x: 0, y: 24, w: 12, h: 26 },
-    { i: "earn", type: "earnings", x: 0, y: 50, w: 12, h: 12 },
-    { i: "mtf", type: "mtf", x: 0, y: 62, w: 12, h: 16 },
-    { i: "news", type: "news", x: 0, y: 78, w: 12, h: 10 },
+    { i: "whatif", type: "whatif", x: 0, y: 50, w: 12, h: 22 },
+    { i: "earn", type: "earnings", x: 0, y: 72, w: 12, h: 12 },
+    { i: "mtf", type: "mtf", x: 0, y: 84, w: 12, h: 16 },
+    { i: "news", type: "news", x: 0, y: 100, w: 12, h: 10 },
   ] },
   scanner: { id: "scanner", name: "Discover, Scanner and Backtester", widgets: [
     { i: "disc", type: "discover", x: 0, y: 0, w: 12, h: 34 },

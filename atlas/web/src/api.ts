@@ -1,6 +1,7 @@
 import type { CheckState_ } from "./health";
 import type { FedWatch, MacroBrief, MacroOverview } from "./macro";
 import type { EarningsCal, StockResearch } from "./stocks";
+import type { WhatIf } from "./whatif";
 import type { CalData } from "./calendar";
 import type { DiscoverRanked, DiscoverRun } from "./discover";
 import type { LabReq, LabRun, LabStrategies } from "./btclab";
@@ -76,6 +77,7 @@ export const api = {
   discoverRanked: (q: string) => call<DiscoverRanked>(`/api/discover/ranked?${q}`),
   labStrategies: () => call<LabStrategies>("/api/btclab/strategies"),
   labRun: (b: LabReq) => call<LabRun>("/api/btclab/run", body("POST", b)),
+  whatIf: (id: string, amount: number) => call<WhatIf>(`/api/signal/whatif/${encodeURIComponent(id)}?amount=${amount}`),
   stockResearch: (id: string) => call<StockResearch>(`/api/stocks/${encodeURIComponent(id)}/research`),
   earningsCal: (symbols: string[], days: number) => call<EarningsCal>(`/api/stocks/earnings?symbols=${encodeURIComponent(symbols.join(","))}&days=${days}`),
   macroBrief: () => call<MacroBrief>("/api/macro/brief"),
