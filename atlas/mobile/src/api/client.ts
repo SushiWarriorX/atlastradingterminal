@@ -1,4 +1,4 @@
-import type { CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, OpsOverview, FedOpsData, TgaData, AuctionsData, BudgetData, DebtRatesData, DebtMixData, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
+import type { CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, OpsOverview, FedOpsData, TgaData, AuctionsData, BudgetData, DebtRatesData, DebtMixData, FedHoldingsData, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
 
 /** A failure with a code the UI can act on. `network` means we never got an answer. */
 export class ApiError extends Error {
@@ -93,6 +93,7 @@ export function createApi(opts: ClientOptions) {
     budget: () => call<BudgetData>("/api/macro/budget", { timeoutMs: 45_000 }),
     debtRates: () => call<DebtRatesData>("/api/macro/debtrates", { timeoutMs: 45_000 }),
     debtMix: () => call<DebtMixData>("/api/macro/debtmix", { timeoutMs: 45_000 }),
+    fedHoldings: () => call<FedHoldingsData>("/api/macro/fedholdings", { timeoutMs: 60_000 }),
     tga: () => call<TgaData>("/api/macro/tga", { timeoutMs: 45_000 }),
     btcSentiment: () => call<Sentiment>("/api/btc/sentiment", { timeoutMs: 30_000 }),
     whatIf: (id: string, amount: number) => call<WhatIfData>(`/api/signal/whatif/${enc(id)}?amount=${amount}`, { timeoutMs: 60_000 }),

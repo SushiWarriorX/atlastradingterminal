@@ -15,6 +15,7 @@ import { AuctionsCard } from "./AuctionsCard";
 import { BudgetCard } from "./BudgetCard";
 import { DebtRatesCard } from "./DebtRatesCard";
 import { DebtMixCard } from "./DebtMixCard";
+import { FedHoldingsCard } from "./FedHoldingsCard";
 import { ScreenHeader } from "./ScreenHeader";
 import { Banner, Chip, Divider, ErrorState, Skeleton, Tag, TextButton, Txt } from "./ui";
 import type { MacroIndicator } from "../api/types";
@@ -66,6 +67,7 @@ export function MacroView() {
             <BudgetCard />
             <DebtRatesCard />
             <DebtMixCard />
+            <FedHoldingsCard />
             <WorldCard />
             <Section title="Upcoming" note="Scheduled dates only. What each release contains is not known in advance.">
               {d.upcoming.length === 0 ? <Txt variant="small">No upcoming events could be loaded.</Txt> : d.upcoming.map((e, i) => (

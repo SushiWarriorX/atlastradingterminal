@@ -586,6 +586,11 @@ async function healthy(browser) {
       const dm = await text(page);
       match(dm, /What the US debt is made of/); match(dm, /US Treasury/); noMatch(dm, FORECASTS, "the debt-mix card makes no forecasts");
       if (await present(page, "debtmix-body")) match(dm, /not a market signal or a forecast/, "the debt-mix caveat is shown");
+      await page.waitForSelector(V("fedholdings-card"));
+      await page.waitForSelector(V("fedholdings-body") + ", " + V("fedholdings-unavailable") + ", " + V("fedholdings-error"), { timeout: 60000 });
+      const fh = await text(page);
+      match(fh, /What the Fed holds/); match(fh, /New York Fed/); noMatch(fh, FORECASTS, "the Fed holdings card makes no forecasts");
+      if (await present(page, "fedholdings-body")) match(fh, /not a market signal or a forecast/, "the Fed holdings caveat is shown");
       match(wt, /World economies/); noMatch(wt, FORECASTS, "the World Bank card makes no forecasts");
       if (await present(page, "world-body")) match(wt, /revised later/, "the annual-data caveat is shown");
       match(fxText, /US dollar vs major currencies/); match(fxText, /ECB/); noMatch(fxText, FORECASTS, "the exchange-rate card makes no forecasts");

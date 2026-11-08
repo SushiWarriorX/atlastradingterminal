@@ -101,6 +101,10 @@ fs.mkdirSync(S, { recursive: true });
   const dm = await pg.locator('[data-testid="debtmix"]').innerText();
   if (!/US Treasury|Treasury FiscalData|Demo mode/.test(dm)) fail('Debt breakdown panel lacks its source or demo notice');
   console.log('Macro desk debt breakdown: ok');
+  await pg.locator('[data-testid="fedholdings"]').waitFor({ timeout: 60000 });
+  const fh = await pg.locator('[data-testid="fedholdings"]').innerText();
+  if (!/New York Fed|Federal Reserve Bank of New York|Demo mode/.test(fh)) fail('Fed holdings panel lacks its source or demo notice');
+  console.log('Macro desk Fed holdings: ok');
 
   await cmd('SETTINGS');
   await pg.waitForSelector('[data-testid="ops"]', { timeout: 30000 });

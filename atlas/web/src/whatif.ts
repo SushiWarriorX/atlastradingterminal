@@ -114,3 +114,8 @@ export interface DebtMixRow { name: string; billions: number; share_of_total_pct
 export interface DebtMixData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   rows?: DebtMixRow[]; total_billions?: number; held_by_public_billions?: number; held_by_government_accounts_billions?: number; bills_share_of_marketable_pct?: number | null;
   change_since_billions?: number; since?: string; months_covered?: number; history?: { date: string; total_billions: number }[] }
+
+export interface FedHoldingsData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  total_billions?: number; treasuries_billions?: number; mbs_billions?: number; mix?: { name: string; billions: number; share_pct: number }[];
+  changes?: { period: string; since: string | null; change_billions: number | null; change_pct: number | null }[];
+  peak_billions?: number; peak_date?: string; from_peak_billions?: number; from_peak_pct?: number; history?: { date: string; total_billions: number }[] }

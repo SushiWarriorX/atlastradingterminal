@@ -21,6 +21,13 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+## 2026-11-08 · Data cycle 16: what the Fed holds (SOMA, New York Fed)
+- **Source:** Federal Reserve Bank of New York, System Open Market Account holdings (free, no key, fetched live this cycle; weekly since 2003). Backend `soma.py` (9 tests, fixture is 330 real weeks to 2026-11-04), route `/api/macro/fedholdings`, terminal Macro desk panel with a two-year weekly bar chart, Signal Macro card, macro refresh job.
+- **Shows (as of 2026-11-04):** total holdings $6.36T ($4.47T Treasuries, $1.88T mortgage-backed securities); changes over 1, 4, 13 and 52 weeks (1 week +$1.8B, 4 weeks -$2.9B, 13 weeks +$1.6B, 52 weeks +$205.1B); the peak was $8.42T on 2022-04-13, so holdings are $2.07T (24.5%) below it. The mix: notes and bonds 56.6%, mortgage-backed 29.6%, bills 9.0%, inflation-protected 4.4%, floating-rate 0.4%. Described as the Fed's own portfolio, not a signal. The data says holdings are $205B higher than a year ago; the card reports that as it is.
+- **Checked against the source:** in all 1,218 weekly rows since 2003 the listed parts add up to the source's own total (inflation compensation is correctly excluded), and the test repeats that on the fixture. An empty part (the source writes "" when the Fed holds none) counts as zero; a comparison with no week within seven days shows "n/a", not a guess.
+- **Test lesson:** I first asserted the fixture contains an empty part; it does not (they occur only in the early 2000s), so the test now builds that case itself.
+- **Checks:** backend 1072 passed, phone 43 unit + 48 of 48 browser checks, terminal 10 tests + build + desk browser check (new Fed holdings check).
+
 ## 2026-11-08 · Strategy cycle 8: Stochastic pullback in an uptrend
 - **Rule (fixed from the queue, not tuned):** enter when %K (14, smoothed over 3) crosses up through 20 while the close is above its 200-bar average; exit when %K rises above 80. 28 rules in the library now.
 - **Frozen backtest, evidence: none, and a poor result.** Whole history +180.1% vs holding +26,947.2% (36 trades); worst drop -47.0% vs -83.8%; Sharpe 0.5 vs 1.1. Last 30% (out of sample): +32.4% vs holding +187.7%, 14 trades, worst drop -19.2% vs -53.1%, Sharpe 0.5 vs 0.9. Walk-forward +25.0%; 100% of nearby settings positive out of sample; doubled costs +28.5%. The tool's reason for the label: only 14 trades out of sample (needs 15), so it cannot tell skill from luck and the luck check was not run. It was invested only about 14% of the time and captured about 17% of up moves, so it sits out almost every rally; its smaller drops come from being out of the market, not from better timing.

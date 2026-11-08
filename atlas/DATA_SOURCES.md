@@ -18,6 +18,7 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 | RSS feeds | Headlines | News, Macro |
 | CoinGecko, mempool.space | Crypto fundamentals | Signal |
 | CoinGecko whole-crypto-market snapshot (cycle 9) | Total crypto market value, 24h change and volume, Bitcoin / Ether / stablecoin share ('dominance') | Terminal BTC desk panel, Signal BTC page card |
+| NY Fed System Open Market Account holdings (cycle 16) | What the Fed holds, weekly: total, Treasuries vs mortgage-backed securities, mix and shares, changes over 1, 4, 13 and 52 weeks, distance from the 2022 peak, two years of weekly history | Terminal Macro desk panel, Signal Macro card |
 | US debt by type of security, Monthly Statement of the Public Debt (cycle 15) | Total public debt outstanding split into bills, notes, bonds, TIPS, floating-rate and non-marketable, each with size, share of the total and monthly change; held by the public vs owed to government accounts; bills' share of marketable debt; 10 month-ends of history | Terminal Macro desk panel, Signal Macro card |
 | US Treasury average interest rates on debt (cycle 14) | Average rate the government pays on all debt outstanding, by type (bills, notes, bonds, TIPS, floating-rate, all marketable, all interest-bearing), with change from last month and a year ago; 15-month history | Terminal Macro desk panel, Signal Macro card |
 | US federal budget, Monthly Treasury Statement (cycle 13) | Latest month's receipts, outlays and deficit; fiscal-year-to-date totals against the same months a year earlier; 24-month history | Terminal Macro desk panel, Signal Macro card |
@@ -34,7 +35,7 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 | alternative.me Fear & Greed (cycle 1) | Daily 0-100 crypto mood gauge, 31-day history | Terminal BTC desk, Signal BTC page |
 
 ## QUEUED (candidates, in order; each must be fetched live before it ships)
-(queue is empty: the next cycle searches for new candidates, e.g. Treasury bill auction results, Treasury interest expense (check live first), DefiLlama DeFi value once api.llama.fi answers)
+(queue is empty: the next cycle searches for new candidates, e.g. Treasury bill auction results, Treasury interest expense (check live first), NY Fed reference rates beyond SOFR (EFFR, TGCR, BGCR: check live first), DefiLlama DeFi value once api.llama.fi answers)
 
 ## BLOCKED
 - Exchange and market-data hosts (checked cycle 15, no reply, not on the allowed list): www.deribit.com (BTC options and the DVOL volatility index), api.kraken.com, api.bitfinex.com, www.okx.com, api.bybit.com, fapi.binance.com, ticdata.treasury.gov (foreign holders of Treasuries). **Needs the user:** adding hosts to the environment's allowed list would unlock BTC implied volatility (Deribit) and foreign Treasury holdings (TIC); each is free and keyless.

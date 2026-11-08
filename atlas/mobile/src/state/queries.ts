@@ -256,3 +256,8 @@ export function useDebtMix() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).debtMix, queryFn: () => need(api).debtMix(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
 }
+
+export function useFedHoldings() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).fedHoldings, queryFn: () => need(api).fedHoldings(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
