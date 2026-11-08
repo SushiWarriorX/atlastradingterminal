@@ -1,4 +1,4 @@
-import type { CandidatesFeed, Changes, FundamentalResearch, ListingsFeed, MyState, CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, OpsOverview, FedOpsData, TgaData, AuctionsData, BudgetData, DebtRatesData, DebtMixData, FedHoldingsData, FedRatesData, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
+import type { Brief, CandidatesFeed, Changes, FundamentalResearch, ListingsFeed, MyState, CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, OpsOverview, FedOpsData, TgaData, AuctionsData, BudgetData, DebtRatesData, DebtMixData, FedHoldingsData, FedRatesData, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
 
 /** A failure with a code the UI can act on. `network` means we never got an answer. */
 export class ApiError extends Error {
@@ -99,6 +99,8 @@ export function createApi(opts: ClientOptions) {
     btcSentiment: () => call<Sentiment>("/api/btc/sentiment", { timeoutMs: 30_000 }),
     whatIf: (id: string, amount: number) => call<WhatIfData>(`/api/signal/whatif/${enc(id)}?amount=${amount}`, { timeoutMs: 60_000 }),
     fundamentalResearch: (symbol: string) => call<FundamentalResearch>(`/api/research/${encodeURIComponent(symbol)}`, { timeoutMs: 90_000 }),
+    researchBrief: (symbol: string, b: { detail: string; question?: string; include_notes: boolean; include_position: boolean; shares?: number; buy_price?: number }) =>
+      call<Brief>(`/api/research/${encodeURIComponent(symbol)}/brief`, { method: "POST", body: b, timeoutMs: 90_000 }),
     researchChanges: (symbol: string) => call<Changes>(`/api/research/${encodeURIComponent(symbol)}/changes`, { timeoutMs: 90_000 }),
     researchReview: (symbol: string) => call<{ snapshot: Record<string, unknown> }>(`/api/research/${encodeURIComponent(symbol)}/review`, { method: "POST", body: {}, timeoutMs: 90_000 }),
     researchNoteAdd: (symbol: string, text: string) => call<{ id: number }>(`/api/research/${encodeURIComponent(symbol)}/notes`, { method: "POST", body: { body: text } }),

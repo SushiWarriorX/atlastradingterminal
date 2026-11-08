@@ -6,7 +6,7 @@ import type { SecFilings } from "./secfilings";
 import type { CalData } from "./calendar";
 import type { DiscoverRanked, DiscoverRun } from "./discover";
 import type { LabReq, LabRun, LabStrategies } from "./btclab";
-import type { CandidatesFeed, Changes, FundamentalResearch, ListingsFeed, MyState } from "./research";
+import type { Brief, CandidatesFeed, Changes, FundamentalResearch, ListingsFeed, MyState } from "./research";
 export type Status = "LIVE" | "DELAYED" | "HISTORICAL" | "STALE" | "DEMO" | "UNAVAILABLE";
 
 export interface Prov {
@@ -105,6 +105,8 @@ export const api = {
     const q = new URLSearchParams(); Object.entries(policy ?? {}).forEach(([k, v]) => { if (v != null && Number.isFinite(v)) q.set(k, String(v)); });
     return call<FundamentalResearch>(`/api/research/${encodeURIComponent(sym)}${q.toString() ? `?${q}` : ""}`);
   },
+  researchBrief: (sym: string, b: { detail: string; question?: string; include_notes: boolean; include_position: boolean; shares?: number; buy_price?: number }) =>
+    call<Brief>(`/api/research/${encodeURIComponent(sym)}/brief`, { ...body("POST", b), headers: { "Content-Type": "application/json" } }),
   researchChanges: (sym: string) => call<Changes>(`/api/research/${encodeURIComponent(sym)}/changes`),
   researchReview: (sym: string) => call<{ snapshot: Record<string, unknown> }>(`/api/research/${encodeURIComponent(sym)}/review`, { method: "POST" }),
   researchNoteAdd: (sym: string, text: string) => call<{ id: number }>(`/api/research/${encodeURIComponent(sym)}/notes`, { ...body("POST", { body: text }), headers: { "Content-Type": "application/json" } }),

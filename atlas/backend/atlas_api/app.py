@@ -52,6 +52,7 @@ from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
 from .stocks.edgar import EdgarClient
 from .stocks.research import StockResearch
 from .research.live import FundamentalResearch
+from .research.brief import build_brief
 from .discover.store import DiscoveryStore, STATES as DISC_STATES
 from .discover.listings import NasdaqIpoFeed
 from .discover.listings_service import ListingsService
@@ -1296,6 +1297,34 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         if not discovery_store.delete_note(note_id):
             raise ApiError("NOT_FOUND", "no such note", 404)
         return ok({"deleted": note_id})
+
+    class BriefIn(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        detail: str = Field("concise", pattern=r"^(concise|detailed)$")
+        question: str | None = Field(None, max_length=2000)
+        include_notes: bool = False
+        include_position: bool = False
+        shares: float | None = Field(None, gt=0, le=1e10)
+        buy_price: float | None = Field(None, gt=0, le=1e8)
+
+    @app.post("/api/research/{token}/brief")
+    async def research_brief(token: str, body: BriefIn):
+        """A paste-ready research brief for ChatGPT, built locally from research the app already holds: no AI call, no key. My notes and position are included only when switched on."""
+        inst = I.resolve(token)
+        if inst is None or inst.asset_class != "equity":
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown stock '{token[:40]}'", 404)
+        r = await fundamental_research.research(inst)
+        if not r.get("available"):
+            raise ApiError("NOT_AVAILABLE", r.get("reason") or "there is no research to export for this company right now", 409)
+        run = new_to_me.latest_run()
+        disc = next((p for p in (run or {}).get("pool", []) if p["symbol"] == inst.symbol), None)
+        try:
+            stories = [{"title": s["title"], "link": s.get("link"), "feed": s["feed"], "published": s.get("published")} for s in news.items(symbol=inst.symbol, hours=24 * 14, limit=8)["items"]]
+        except Exception:  # noqa: BLE001  headlines are optional
+            stories = []
+        notes = discovery_store.notes(inst.symbol) if body.include_notes else None
+        pos = {"shares": body.shares, "buy_price": body.buy_price} if body.include_position else None
+        return ok(build_brief(r, detail=body.detail, question=body.question, discovery=disc, filings=r.get("filings"), news=stories, exchange=inst.exchange, notes=notes, position=pos))
 
     @app.post("/api/research/{token}/review")
     async def research_review(token: str):

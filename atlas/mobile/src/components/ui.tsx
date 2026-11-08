@@ -55,8 +55,8 @@ export function Chip({ label, active, onPress, testID }: { label: string; active
 }
 
 /** A real button: a rounded pill with a tinted fill. `solid` makes it the filled main action. */
-export function TextButton({ label, onPress, tint = color.accent, testID, disabled, solid }: { label: string; onPress: () => void; tint?: string; testID?: string; disabled?: boolean; solid?: boolean }) {
-  const box = { borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 9, alignItems: "center" as const, justifyContent: "center" as const };
+export function TextButton({ label, onPress, tint = color.accent, testID, disabled, solid, large }: { label: string; onPress: () => void; tint?: string; testID?: string; disabled?: boolean; solid?: boolean; large?: boolean }) {
+  const box = { borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: large ? 13 : 9, minHeight: large ? 44 : undefined, alignItems: "center" as const, justifyContent: "center" as const };      // large: a 44-point tap target
   return (
     <Pressable onPress={onPress} accessibilityRole="button" testID={testID} disabled={disabled} hitSlop={6} style={({ pressed }) => [pressed && { opacity: 0.7 }, disabled && { opacity: 0.4 }]}>
       {solid && tint === color.accent

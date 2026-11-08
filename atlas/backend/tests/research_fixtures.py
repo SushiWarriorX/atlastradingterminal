@@ -93,3 +93,16 @@ def bank() -> dict:
     """A bank: files interest income, not a revenue line the engine reads."""
     return {"cik": 5005, "entityName": "Sample Bank (synthetic)", "facts": {"us-gaap": {"InterestAndDividendIncomeOperating": {"units": {"USD": [
         {"start": "2025-01-01", "end": "2025-12-31", "val": 900.0, "accn": "0000999999-26-000001", "fy": 2025, "fp": "FY", "form": "10-K", "filed": "2026-02-20"}]}}}}}
+
+
+def research_payload(symbol: str, kind: str = "software", price: float = 40.0) -> dict:
+    """What FundamentalResearch.research returns, for a SYNTHETIC company (test harnesses patch the research source with this; nothing about it is real)."""
+    from datetime import datetime, timezone
+    from atlas_api.research import facts, service
+    makers = {"software": (software, 7372), "mature": (mature, 3490), "loss_making": (loss_making_software, 7372), "recent_ipo": (recent_ipo, 7372), "bank": (bank, 6022)}
+    mk, sic = makers[kind]
+    now = datetime(2026, 11, 8, 12, tzinfo=timezone.utc) if kind == "recent_ipo" else datetime(2026, 2, 1, 12, tzinfo=timezone.utc)
+    out = service.assemble(facts.condense(mk(), now.date()), sic, price, now.isoformat(), "test quote (synthetic)", now)
+    return {"symbol": symbol, "as_of": now.isoformat(), "demo": False, "errors": [], "available": True, **out,
+            "filings": [{"form": "10-K", "filed": "2026-02-20", "items": [], "link": "https://www.sec.gov/Archives/edgar/data/2002/000099999926000001/0000999999-26-000001-index.htm"}],
+            "sources": {"filings": {"origin": "fixture", "fetched_at": now.isoformat(), "source": "SYNTHETIC SEC-schema fixture (not real company data)"}, "submissions": {"sic_description": "Services-Prepackaged Software", "exchanges": ["Nasdaq"]}}}

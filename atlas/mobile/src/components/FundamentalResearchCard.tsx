@@ -8,6 +8,7 @@ import { useConnection } from "../state/connection";
 import { useFundamentalResearch, useResearchChanges } from "../state/queries";
 import { color, radius, space } from "../theme";
 import { Banner, Divider, GCard, Pill, Skeleton, TextButton, Txt } from "./ui";
+import { AskChatGpt } from "./AskChatGpt";
 
 const pc = (x: number | null | undefined, d = 1) => (x == null ? "n/a" : `${x.toFixed(d)}%`);
 const px = (x: number | null | undefined) => (x == null ? "n/a" : `$${x.toFixed(2)}`);
@@ -83,6 +84,7 @@ export function FundamentalResearchCard({ symbol, startOpen = false }: { symbol:
         : !d.available ? <Banner tone={d.demo ? "demo" : "warn"} title={d.demo ? "Demo mode" : "Research unavailable"} testID="fr-unavailable">{d.reason}</Banner>
         : (
           <View style={{ gap: space.lg }} testID="fr-body">
+            <AskChatGpt symbol={symbol} where="research" />
             {d.company?.special_sector_note ? <Banner tone="warn" title="Sector-specific company">This company is a {d.company.special_sector_note}.</Banner> : null}
             {d.errors.map((e, i) => <Txt key={i} variant="tiny" c={color.warn}>{e}</Txt>)}
             <Block title="Revenue (reported, derived and calculated figures are labelled)" testID="fr-revenue">
@@ -121,6 +123,7 @@ export function FundamentalResearchCard({ symbol, startOpen = false }: { symbol:
               {!v ? null : (
                 <View style={{ gap: 5 }}>
                   <Txt variant="h2" testID="fr-label">{v.label}</Txt>
+                  <AskChatGpt symbol={symbol} where="valuation" />
                   <Txt variant="small">{v.reason}</Txt>
                   <Txt variant="tiny">Evidence quality: {v.evidence.level}. Price {px(v.price)}{v.price_time ? ` at ${v.price_time.slice(0, 16).replace("T", " ")} UTC` : ""} · {v.price_source ?? "no price source"}.</Txt>
                   {(v.warnings ?? []).map((w, i) => <Txt key={i} variant="small" c={color.warn} testID="fr-warning">⚠ {w}</Txt>)}

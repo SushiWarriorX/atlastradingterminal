@@ -56,14 +56,16 @@ class FundamentalResearch:
         meta = {"origin": origin, "fetched_at": at.isoformat(), "source": "SEC EDGAR XBRL company facts (official)"}
         sic = None
         subs_meta = None
+        recent = []
         try:
             subs, so, sat = await self.edgar.filings(cik)
             sic = subs.get("sic")
+            recent = [{"form": f["form"], "filed": f["filed"], "items": f.get("items", []), "link": f.get("link")} for f in (subs.get("filings") or [])[:12]]
             subs_meta = {"origin": so, "fetched_at": sat.isoformat(), "sic_description": subs.get("sic_description"), "fiscal_year_end": subs.get("fiscal_year_end"), "exchanges": subs.get("exchanges")}
         except ProviderUnavailable as e:
             base["errors"].append(f"Industry code (SIC): {e.message[:100]}. Sector-specific rules cannot be applied without it, so treat the Rule of 40 and valuation with extra caution.")
         out = assemble(rf, sic, price, price_time, price_source, now, clean_policy(policy), name=title)
-        return {**base, **out, "available": True, "sources": {"filings": meta, "submissions": subs_meta}}
+        return {**base, **out, "available": True, "filings": recent, "sources": {"filings": meta, "submissions": subs_meta}}
 
     async def research(self, inst, policy: dict | None = None, now: datetime | None = None) -> dict:
         now = now or datetime.now(timezone.utc)

@@ -50,6 +50,7 @@ export interface FundamentalResearch {
   revenue?: RevenueAnalysis; quality?: QualityData; rule_of_40?: Rule40; valuation?: Valuation; thesis?: Thesis; coverage?: { covered: string[]; not_covered: string[] };
   definitions?: Record<string, string>; sources?: { filings?: { origin: string; fetched_at: string; source: string }; submissions?: { sic_description?: string | null; exchanges?: string[] | null } | null }; my_state?: MyState;
 }
+export interface Brief { markdown: string; chars: number; detail: "concise" | "detailed"; symbol: string; filename: string; included: { notes: boolean; position: boolean }; redactions: number; explanation: string; default_question_used: boolean; sections: string[] }
 export interface ChangeRow { key: string; label: string; unit: string; before: unknown; after: unknown }
 export interface Changes { available: boolean; has_review: boolean; reason?: string; note?: string; reviewed_at?: string; changed?: ChangeRow[]; unchanged_count?: number }
 

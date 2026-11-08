@@ -5,6 +5,7 @@ import { useSelectedId } from "../scope";
 import { moneyShort as money } from "../research";
 import type { Changes, FundamentalResearch, QualityRow, RevRow, Rule40, Valuation } from "../research";
 import { ErrorBox, Panel } from "../ui";
+import { AskChatGpt } from "./AskChatGpt";
 
 const sym = (id: string) => id.split(":").pop() ?? id;
 const pc = (x: number | null | undefined, d = 1) => (x == null ? "n/a" : `${x.toFixed(d)}%`);
@@ -85,12 +86,12 @@ function Rule40Panel({ r }: { r: Rule40 | undefined }) {
     </div>);
 }
 
-function ValuationPanel({ v, policy, setPolicy }: { v: Valuation | undefined; policy: Record<string, string>; setPolicy: (p: Record<string, string>) => void }) {
+function ValuationPanel({ v, policy, setPolicy, symbol }: { v: Valuation | undefined; policy: Record<string, string>; setPolicy: (p: Record<string, string>) => void; symbol: string }) {
   if (!v) return null;
   const sc = v.scenarios ?? [];
   return (
     <div data-testid="fr-valuation">
-      <div><span className={KIND[v.label_key] ?? "pill"} style={{ fontSize: 14 }} data-testid="fr-label">{v.label}</span> <span className="small dim">evidence quality: <b>{v.evidence.level}</b></span></div>
+      <div><span className={KIND[v.label_key] ?? "pill"} style={{ fontSize: 14 }} data-testid="fr-label">{v.label}</span> <span className="small dim">evidence quality: <b>{v.evidence.level}</b></span> <AskChatGpt symbol={symbol} where="valuation" /></div>
       <div className="small">{v.reason}</div>
       {(v.warnings ?? []).map((w, i) => <div key={i} className="small warnc" data-testid="fr-warning">⚠ {w}</div>)}
       {v.evidence.checks.some((c) => c.essential && !c.ok && !(v.warnings ?? []).includes(c.text)) && <div className="small" data-testid="fr-limits"><b>Why the evidence is limited:</b>{v.evidence.checks.filter((c) => c.essential && !c.ok && !(v.warnings ?? []).includes(c.text)).map((c) => <div key={c.key} className="warnc">• {c.text}</div>)}</div>}
@@ -168,7 +169,7 @@ export function FundamentalResearchWidget() {
   const q = useQuery({ queryKey: ["fundresearch", s, applied], queryFn: () => api.fundamentalResearch(s, Object.fromEntries(Object.entries(applied).map(([k, v]) => [k, Number(v)]))), staleTime: 10 * 60_000, retry: 0 });
   const d = q.data;
   return (
-    <Panel title={`FUNDAMENTAL RESEARCH ${s} · revenue first, from SEC filings`} right={d?.company?.name ? <span className="dim small">{d.company.name}</span> : null}>
+    <Panel title={`FUNDAMENTAL RESEARCH ${s} · revenue first, from SEC filings`} right={<span>{d?.company?.name ? <span className="dim small">{d.company.name} </span> : null}{d?.available ? <AskChatGpt symbol={s} where="research" /> : null}</span>}>
       {q.isLoading && <div className="note">Reading filings…</div>}
       {q.isError && <ErrorBox error={q.error} />}
       {d && <div data-testid="fundamental-research">
@@ -182,7 +183,7 @@ export function FundamentalResearchWidget() {
           <div className="ws-bar" style={{ paddingLeft: 0 }}><span>RULE OF 40 · software companies only</span></div>
           <Rule40Panel r={d.rule_of_40} />
           <div className="ws-bar" style={{ paddingLeft: 0 }}><span>VALUATION · what today's price implies under stated assumptions</span></div>
-          <ValuationPanel v={d.valuation} policy={policy} setPolicy={setPolicy} />
+          <ValuationPanel v={d.valuation} policy={policy} setPolicy={setPolicy} symbol={s} />
           <button className="mini" onClick={() => setApplied(policy)} data-testid="fr-apply">apply assumptions</button>
           <div className="ws-bar" style={{ paddingLeft: 0 }}><span>THESIS · built from the figures above, not from opinion</span></div>
           <div data-testid="fr-thesis">

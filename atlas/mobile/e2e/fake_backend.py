@@ -109,7 +109,16 @@ def main():
     ap.add_argument("--demo", action="store_true", help="ATLAS demo mode: labelled synthetic data, no providers")
     ap.add_argument("--db", default=None, help="keep the database here (default: a fresh temp folder)")
     ap.add_argument("--password", default=None)
+    ap.add_argument("--research", choices=["none", "software", "mature", "loss_making", "recent_ipo", "bank"], default="none",
+                    help="serve SYNTHETIC filing research for every stock (the real routes and brief builder run; only the data source is patched)")
     a = ap.parse_args()
+    if a.research != "none":
+        import research_fixtures as RX
+        from atlas_api.research.live import FundamentalResearch
+
+        async def synthetic(self, inst, policy=None, now=None):
+            return {**RX.research_payload(inst.symbol, a.research), "instrument_id": inst.id}
+        FundamentalResearch.research = synthetic
     os.environ.setdefault("ATLAS_CORS_ORIGINS", "http://localhost:8081")
     if a.demo:
         app = create_app(db_path=a.db or os.path.join(tempfile.mkdtemp(), "demo.db"), demo=True, alert_loop=False, news_loop=False, auth_password=a.password)
