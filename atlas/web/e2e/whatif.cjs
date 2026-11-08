@@ -93,6 +93,10 @@ fs.mkdirSync(S, { recursive: true });
   const bu = await pg.locator('[data-testid="budget"]').innerText();
   if (!/US Treasury|Treasury FiscalData|Demo mode/.test(bu)) fail('Federal budget panel lacks its source or demo notice');
   console.log('Macro desk federal budget: ok');
+  await pg.locator('[data-testid="debtrates"]').waitFor({ timeout: 45000 });
+  const dr = await pg.locator('[data-testid="debtrates"]').innerText();
+  if (!/US Treasury|Treasury FiscalData|Demo mode/.test(dr)) fail('Debt interest rates panel lacks its source or demo notice');
+  console.log('Macro desk debt interest rates: ok');
 
   await cmd('SETTINGS');
   await pg.waitForSelector('[data-testid="ops"]', { timeout: 30000 });

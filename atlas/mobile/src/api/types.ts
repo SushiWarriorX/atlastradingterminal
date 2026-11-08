@@ -293,3 +293,7 @@ export interface BudgetData { available: boolean; reason?: string; demo: boolean
   ytd_months?: number; ytd_receipts_billions?: number; ytd_outlays_billions?: number; ytd_deficit_billions?: number;
   prior_ytd_receipts_billions?: number | null; prior_ytd_outlays_billions?: number | null; prior_ytd_deficit_billions?: number | null;
   history?: { fiscal_year: number; month: string; receipts_billions: number; outlays_billions: number; deficit_billions: number }[] }
+
+export interface DebtRateRow { name: string; rate: number; change_month: number | null; change_year: number | null }
+export interface DebtRatesData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  rows?: DebtRateRow[]; history?: { date: string; rate: number }[] }

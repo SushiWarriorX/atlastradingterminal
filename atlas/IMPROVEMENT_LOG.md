@@ -21,6 +21,13 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+## 2026-11-08 · Data cycle 14: average interest rates on US Treasury debt
+- **Source:** US Treasury FiscalData, "Average Interest Rates on U.S. Treasury Securities" (free, no key, fetched live this cycle). Backend `avgrates.py` (9 tests, fixture from a real 260-row response), route `/api/macro/debtrates`, terminal Macro desk table with a small trend bar chart, Signal Macro card, macro refresh job.
+- **Shows:** the average rate on all debt now outstanding, by type (bills, notes, bonds, TIPS, floating-rate, all marketable, all interest-bearing), the change from last month and from a year earlier, and 15 months of history. October 2026: all interest-bearing debt 3.580%, up from 3.531% in September. Described as a lagging average of what the Treasury already pays (old low-rate debt stays in it until it matures), not a market yield and not a signal. A missing comparison month shows "none", never a guess.
+- **Test lesson:** I assumed 16 months of history from the count of dates; the oldest month was cut off by the page size and the headline series has 15. The test, not the module, was wrong.
+- **Blocker still open:** `api.bls.gov` still does not answer (second cycle). Shipping a different source meant the loop was not stuck, but the Macro key indicators (CPI and so on) stay empty until that host is allowed or FRED becomes reachable.
+- **Checks:** backend 1051 passed, phone 43 unit + 48 of 48 browser checks, terminal 10 tests + build + desk browser check (new debt-rates check).
+
 ## 2026-11-08 · Strategy cycle 6: Keltner channel breakout
 - **Rule (fixed from the queue, not tuned):** enter on a close above EMA(20) + 2 x ATR(10); exit on a close below EMA(20). 26 rules in the library now. **Not an independent test:** it is a close relative of the existing volatility channel rule (EMA 20 + 2 x ATR 14, same exit), so the two share most of their trades and the luck check is stricter without adding a new idea.
 - **Frozen backtest, evidence: weak.** Whole history +11,332.7% vs holding +26,979.1% (50 trades); worst drop -34.6% vs -83.8%. Last 30% (out of sample): +78.7% vs +188.0%, 16 trades, worst drop -25.2% vs -53.1%; Sharpe 0.9 vs 0.9. Walk-forward +465.0%; 100% of nearby settings positive out of sample; doubled costs +73.1%. The tool's reasons: it did not beat holding on risk-adjusted terms out of sample, and with 26 rules to pick from the safe lower estimate of its Sharpe ratio is -0.62 (needs to be above 0), so luck cannot be ruled out. It was invested in only about 27% of up bars, so it misses most rallies; its smaller drops are the main difference from holding.
