@@ -24,3 +24,8 @@ Newest first. Decision: SUGGESTED (card offered, user decides) / ADOPTED (our ow
 | 2026-11-08 | Mobile App Design (iOS) | Plugin catalog | REJECTED | iOS-only design review through an outside server. |
 | 2026-11-08 | claude-performance, Chat Auto exporter, Make Documentation, backend-performance-review | Plugin catalog | REJECTED | They run with broad access: hooks that write rules into CLAUDE.md on their own, export conversations to files, or edit docs unprompted. Not appropriate without the user asking. |
 | 2026-11-08 | Performance Coach (RapportScore), Claude Skills Exporter | Plugin catalog | REJECTED | Unrelated to this project (conversation coaching, porting skills to other tools). |
+| 2026-11-08 | Watchgoose Monitoring | Plugin catalog | REJECTED | Sends job-monitoring pings to an outside service account; the platform upgrade will have its own built-in job monitoring and dashboard. |
+| 2026-11-08 | hygiene-self-monitoring, aspiration-self-monitoring | Plugin catalog | REJECTED | Run with broad access (privileged) to review Claude's own work; unnecessary and not asked for. |
+| 2026-11-08 | Posty (social media scheduler) | Plugin catalog | REJECTED | Publishes posts to social accounts: outward-facing and unrelated to research. |
+| 2026-11-08 | Qdrant skills, DataRobot Agent Skills | Plugin catalog | REJECTED | Vector-database and ML-platform tooling; the project has no need for either, and DataRobot needs an outside account. |
+| 2026-11-08 | (cycle 4 result) | | | Nothing new fits a current gap, so no card was offered this cycle. The scheduler/quota/deployment work now underway is covered by deterministic code in the repo, not by a plugin. |
