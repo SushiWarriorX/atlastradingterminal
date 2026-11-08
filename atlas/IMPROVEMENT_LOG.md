@@ -21,6 +21,12 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+## 2026-11-08 · Strategy cycle 6: Keltner channel breakout
+- **Rule (fixed from the queue, not tuned):** enter on a close above EMA(20) + 2 x ATR(10); exit on a close below EMA(20). 26 rules in the library now. **Not an independent test:** it is a close relative of the existing volatility channel rule (EMA 20 + 2 x ATR 14, same exit), so the two share most of their trades and the luck check is stricter without adding a new idea.
+- **Frozen backtest, evidence: weak.** Whole history +11,332.7% vs holding +26,979.1% (50 trades); worst drop -34.6% vs -83.8%. Last 30% (out of sample): +78.7% vs +188.0%, 16 trades, worst drop -25.2% vs -53.1%; Sharpe 0.9 vs 0.9. Walk-forward +465.0%; 100% of nearby settings positive out of sample; doubled costs +73.1%. The tool's reasons: it did not beat holding on risk-adjusted terms out of sample, and with 26 rules to pick from the safe lower estimate of its Sharpe ratio is -0.62 (needs to be above 0), so luck cannot be ruled out. It was invested in only about 27% of up bars, so it misses most rallies; its smaller drops are the main difference from holding.
+- **Reported as it is:** it did not beat holding on return. Only a forward record can add evidence.
+- **Checks:** hand-worked band test (true range is 4 every bar in the test series, so the band sits 8 above the EMA), breakout/exit and no-look-ahead tests; backend 1042 passed. One slip in my own test (a wrong hand value for the ATR) was corrected, not the strategy. No UI change this cycle.
+
 ## 2026-11-08 · Data cycle 13: US federal budget (Monthly Treasury Statement)
 - **Source:** US Treasury FiscalData, Monthly Treasury Statement Table 1 (free, no key, fetched live this cycle). Backend `mts.py` (9 tests, fixture from a real 60-row response), route `/api/macro/budget`, terminal Macro desk panel, Signal Macro card, macro refresh job.
 - **Shows:** latest month's receipts, outlays and deficit (outlays minus receipts; negative would be a surplus); fiscal-year-to-date totals against the same months of the previous year (only when the earlier year has all those months, otherwise no comparison rather than a wrong one); 24-month history. The statement is for September 2026, the end of fiscal 2026. Described as accounting totals about the past, not signals.

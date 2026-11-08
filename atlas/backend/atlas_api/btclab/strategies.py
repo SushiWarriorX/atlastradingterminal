@@ -460,6 +460,29 @@ reg(Strategy("tsmom_12_1", "Time-series momentum (12 minus 1)", "Momentum", "Hol
              {"lookback": [240, 300, 365, 450, 540]}, _tsmom_build, _tsmom_conds))
 
 
+def keltner(d: pd.DataFrame, n: int, atr_n: int, k: float) -> tuple[pd.Series, pd.Series]:
+    """Keltner channel (Chester Keltner, modern form): an EMA of the close and the same line plus `k` times the average true range. Returns (middle, upper); each value uses bars up to that bar."""
+    mid = ema(d["c"], n)
+    return mid, mid + k * atr(d, atr_n)
+
+
+def _keltner_build(d, p):
+    mid, up = keltner(d, p["n"], p["atr_n"], p["k"])
+    return hold(d["c"] > up, d["c"] < mid)
+
+
+def _keltner_conds(d, p):
+    mid, up = keltner(d, p["n"], p["atr_n"], p["k"])
+    m, u, c = mid.iloc[-1], up.iloc[-1], d["c"].iloc[-1]
+    bad = bool(np.isnan(m) or np.isnan(u))
+    return [_cond(f"Close above the Keltner upper band (EMA {p['n']} + {p['k']:g} x ATR {p['atr_n']}) (entry)", None if bad else bool(c > u), f"close {_val(c)} vs upper {_val(u)}"),
+            _cond(f"Close below the EMA {p['n']} (exit)", None if bad else bool(c < m), f"close {_val(c)} vs EMA {_val(m)}")]
+
+
+reg(Strategy("keltner_breakout", "Keltner channel breakout", "Volatility", "Buys a strong close above a channel drawn around a 20-bar average (2 average true ranges up) and steps aside when the price falls back to that average. Close kin of the volatility channel rule, with a 10-bar range.",
+             "Close is above EMA(20) plus 2 x ATR(10).", "Close falls below EMA(20).", "No fixed stop; the exit rule is the stop.", {"n": 20, "atr_n": 10, "k": 2.0}, {"k": [1.0, 1.5, 2.0, 2.5, 3.0]}, _keltner_build, _keltner_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 

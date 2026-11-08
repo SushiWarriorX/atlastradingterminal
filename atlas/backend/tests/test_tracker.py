@@ -206,3 +206,27 @@ def test_tsmom_strategy_is_fixed_long_only_and_has_no_lookahead():
     pos = st.build(d, st.params).to_numpy()
     assert pos[:365].sum() == 0 and pos[400] == 1.0 and pos[-1] == 0.0 and set(pos) <= {0.0, 1.0}
     assert (st.build(d.iloc[:500], st.params).to_numpy() == pos[:500]).all()                 # bar i uses only bars up to i
+
+
+def test_keltner_bands_are_the_ema_plus_k_times_atr():
+    n = 60
+    c = 100 + np.arange(n, dtype=float)
+    d = pd.DataFrame({"h": c + 2, "l": c - 2, "c": c})
+    mid, up = ST.keltner(d, 20, 10, 2.0)
+    assert mid.iloc[:19].isna().all() and not np.isnan(mid.iloc[19]) and up.iloc[:19].isna().all()
+    assert mid.iloc[-1] == ST.ema(d["c"], 20).iloc[-1] and abs(up.iloc[-1] - (mid.iloc[-1] + 2.0 * ST.atr(d, 10).iloc[-1])) < 1e-12
+    assert abs(ST.atr(d, 10).iloc[-1] - 4.0) < 1e-9                                         # every true range is max(high-low = 4, high-prev close = 3, prev close-low = 1) = 4
+    assert abs(up.iloc[-1] - mid.iloc[-1] - 8.0) < 1e-9                                      # so the upper band sits 2 x 4 above the EMA
+
+
+def test_keltner_strategy_is_fixed_enters_on_a_breakout_exits_below_the_ema_and_has_no_lookahead():
+    st = ST.S["keltner_breakout"]
+    assert st.params == {"n": 20, "atr_n": 10, "k": 2.0} and not st.requires_funding
+    flat = np.full(60, 100.0)
+    surge = 100 + np.arange(1, 31, dtype=float) * 3                                          # a run-up far outside two average ranges
+    fall = surge[-1] - np.arange(1, 41, dtype=float) * 3
+    c = np.concatenate([flat, surge, fall])
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:60].sum() == 0 and pos[62] == 1.0 and pos[-1] == 0.0 and set(pos) <= {0.0, 1.0}
+    assert (st.build(d.iloc[:100], st.params).to_numpy() == pos[:100]).all()                 # bar i uses only bars up to i
