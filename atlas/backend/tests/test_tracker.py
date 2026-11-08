@@ -254,3 +254,30 @@ def test_vortex_strategy_is_fixed_enters_in_an_uptrend_leaves_in_a_downtrend_and
     pos = st.build(d, st.params).to_numpy()
     assert pos[:14].sum() == 0 and pos[30] == 1.0 and pos[-1] == 0.0 and set(pos) <= {0.0, 1.0}
     assert (st.build(d.iloc[:90], st.params).to_numpy() == pos[:90]).all()                    # bar i uses only bars up to i
+
+
+def test_stochastic_k_matches_a_hand_worked_example():
+    h = [10, 12, 11, 13, 12, 14]
+    l = [8, 9, 9, 10, 10, 11]
+    c = [9, 11, 10, 12, 11, 13]
+    d = pd.DataFrame({"h": np.array(h, float), "l": np.array(l, float), "c": np.array(c, float)})
+    k = ST.stoch_k(d, 3, 2)
+    assert k.iloc[:3].isna().all() and not np.isnan(k.iloc[3])                                # 3 bars for the range, 2 raw values to average
+    # raw %K at bar 2: range of bars 0-2 is low 8 / high 12, close 10 -> 50; at bar 3: bars 1-3 low 9 / high 13, close 12 -> 75; at bar 4: bars 2-4 low 9 / high 13, close 11 -> 50
+    assert abs(k.iloc[3] - (50 + 75) / 2) < 1e-9 and abs(k.iloc[4] - (75 + 50) / 2) < 1e-9
+
+
+def test_stoch_strategy_is_fixed_buys_the_dip_in_an_uptrend_only_and_has_no_lookahead():
+    st = ST.S["stoch_uptrend"]
+    assert st.params == {"n": 14, "smooth": 3, "low": 20, "high": 80, "trend": 200} and not st.requires_funding
+    rng = np.random.default_rng(7)
+    base = 100 + np.arange(400, dtype=float) * 0.5
+    wiggle = np.concatenate([np.sin(np.arange(400) / 4.0) * 6])
+    c = base + wiggle
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:200].sum() == 0 and set(pos) <= {0.0, 1.0} and pos[200:].sum() > 0              # no trades until the 200-bar average exists; dips in the uptrend do trigger entries
+    down = 300 - np.arange(400, dtype=float) * 0.5 + np.sin(np.arange(400) / 4.0) * 6
+    dd = pd.DataFrame({"h": down + 1, "l": down - 1, "c": down})
+    assert st.build(dd, st.params).to_numpy().sum() == 0                                        # in a downtrend the close is below its average, so it never enters
+    assert (st.build(d.iloc[:300], st.params).to_numpy() == pos[:300]).all()                    # bar i uses only bars up to i

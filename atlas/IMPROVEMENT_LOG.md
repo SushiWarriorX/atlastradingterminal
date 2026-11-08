@@ -21,6 +21,12 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+## 2026-11-08 · Strategy cycle 8: Stochastic pullback in an uptrend
+- **Rule (fixed from the queue, not tuned):** enter when %K (14, smoothed over 3) crosses up through 20 while the close is above its 200-bar average; exit when %K rises above 80. 28 rules in the library now.
+- **Frozen backtest, evidence: none, and a poor result.** Whole history +180.1% vs holding +26,947.2% (36 trades); worst drop -47.0% vs -83.8%; Sharpe 0.5 vs 1.1. Last 30% (out of sample): +32.4% vs holding +187.7%, 14 trades, worst drop -19.2% vs -53.1%, Sharpe 0.5 vs 0.9. Walk-forward +25.0%; 100% of nearby settings positive out of sample; doubled costs +28.5%. The tool's reason for the label: only 14 trades out of sample (needs 15), so it cannot tell skill from luck and the luck check was not run. It was invested only about 14% of the time and captured about 17% of up moves, so it sits out almost every rally; its smaller drops come from being out of the market, not from better timing.
+- **Reported as it is:** it did far worse than simply holding over every window. Kept in the library and tracker like the others; the forward record is the only thing that can change that.
+- **Checks:** hand-worked %K test (raw values 50, 75, 50 smoothed to 62.5 and 62.5), uptrend-only entry test, downtrend never enters, no-look-ahead test; backend tests passed. No UI change this cycle.
+
 ## 2026-11-08 · Data cycle 15: what the US debt is made of (Monthly Statement of the Public Debt)
 - **Source:** US Treasury FiscalData, Summary of Treasury Securities Outstanding (free, no key, fetched live this cycle). Backend `mspd.py` (8 tests, fixture from a real 140-row, 10-month response), route `/api/macro/debtmix`, terminal Macro desk table, Signal Macro card, macro refresh job.
 - **Shows:** total public debt outstanding ($40.52T at 2026-10-31) split into bills, notes, bonds, TIPS, floating-rate and non-marketable, each with size, share of the total and change from the previous month; how much is held by the public versus owed to government accounts; bills as a share of marketable debt (a rough gauge of how much must be refinanced soon); change since the first month in the window. A month-end accounting record, not a signal.

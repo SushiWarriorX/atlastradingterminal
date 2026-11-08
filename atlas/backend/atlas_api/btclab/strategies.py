@@ -510,6 +510,34 @@ reg(Strategy("vortex_cross", "Vortex indicator (14)", "Trend", "Holds BTC while 
              "VI+ is above VI- (14 bars).", "VI+ drops to VI- or below.", "No fixed stop; the exit rule is the stop.", {"n": 14}, {"n": [10, 14, 20, 28, 40]}, _vortex_build, _vortex_conds))
 
 
+def stoch_k(d: pd.DataFrame, n: int, smooth: int) -> pd.Series:
+    """Slow stochastic %K (Lane): where the close sits inside the last `n` bars' high-low range (0 = at the low, 100 = at the high), averaged over `smooth` bars.
+    Each value uses only bars up to and including that bar."""
+    lo, hi = d["l"].rolling(n, min_periods=n).min(), d["h"].rolling(n, min_periods=n).max()
+    raw = 100 * (d["c"] - lo) / (hi - lo).replace(0, np.nan)
+    return raw.rolling(smooth, min_periods=smooth).mean()
+
+
+def _stoch_build(d, p):
+    k = stoch_k(d, p["n"], p["smooth"])
+    cross_up = (k.shift(1) < p["low"]) & (k >= p["low"])                       # %K crosses up through the low level
+    return hold(cross_up & (d["c"] > sma(d["c"], p["trend"])), k > p["high"])
+
+
+def _stoch_conds(d, p):
+    k = stoch_k(d, p["n"], p["smooth"])
+    trend = sma(d["c"], p["trend"]).iloc[-1]
+    k1, k0, c = k.iloc[-2] if len(k) > 1 else np.nan, k.iloc[-1], d["c"].iloc[-1]
+    bad = bool(np.isnan(k1) or np.isnan(k0) or np.isnan(trend))
+    return [_cond(f"%K crosses up through {p['low']} while the close is above the {p['trend']}-bar average (entry)", None if bad else bool(k1 < p["low"] <= k0 and c > trend), f"%K {_val(k1)} to {_val(k0)}, close {_val(c)} vs average {_val(trend)}"),
+            _cond(f"%K above {p['high']} (exit)", None if np.isnan(k0) else bool(k0 > p["high"]), f"%K {_val(k0)}")]
+
+
+reg(Strategy("stoch_uptrend", "Stochastic pullback in an uptrend", "Mean reversion", "Buys a dip inside an uptrend: when the stochastic oscillator turns up from oversold (crosses up through 20) while the price is above its 200-bar average, and sells once it is stretched (above 80).",
+             "%K (14, smoothed over 3) crosses up through 20 while the close is above the 200-bar average.", "%K rises above 80.", "No fixed stop; the exit rule is the stop.", {"n": 14, "smooth": 3, "low": 20, "high": 80, "trend": 200},
+             {"low": [10, 15, 20, 25, 30]}, _stoch_build, _stoch_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 
