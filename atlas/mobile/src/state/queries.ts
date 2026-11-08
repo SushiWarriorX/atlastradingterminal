@@ -160,3 +160,8 @@ export function useDiscover() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).discover, queryFn: () => need(api).discover(false), enabled: !!api, staleTime: 30 * 60_000, retry: 0 });
 }
+
+export function useSentiment() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).sentiment, queryFn: () => need(api).btcSentiment(), enabled: !!api, staleTime: 15 * 60_000, refetchInterval: 30 * 60_000, retry: 0 });
+}

@@ -26,6 +26,7 @@ from .macro_brief import MacroBriefService
 from .discover.service import DiscoverService
 from .eventcal.service import EventCalendar
 from .btclab.data import BtcData
+from .sentiment import FearGreed
 from .btclab.evaluate import LabError
 from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
 from .stocks.edgar import EdgarClient
@@ -1028,6 +1029,13 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         return ok(await event_calendar.overview(st, days, [k.strip() for k in kinds.split(",") if k.strip()] or None, scope, names))
 
     lab = LabService(BtcData(db), demo)
+    fear_greed = FearGreed(demo=demo)
+
+    @app.get("/api/btc/sentiment")
+    async def btc_sentiment():
+        """Crypto Fear & Greed index (alternative.me), labelled with its source and date. A mood gauge, not a signal."""
+        return ok(await fear_greed.overview())
+
 
     @app.get("/api/btclab/strategies")
     async def btclab_strategies():

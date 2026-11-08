@@ -24,6 +24,7 @@ import { DiscoverWidget } from "./widgets/Discover";
 import { BtcLabWidget } from "./widgets/BtcLab";
 import { EarningsWidget, StockResearchWidget } from "./widgets/StockResearch";
 import { WhatIfWidget } from "./widgets/WhatIf";
+import { SentimentWidget } from "./widgets/Sentiment";
 import { JournalQuickWidget } from "./widgets/JournalQuick";
 
 const Grid = WidthProvider(RGL);
@@ -47,6 +48,7 @@ function render(w: WidgetCfg, view: string) {
     case "btclab": return <BtcLabWidget />;
     case "stockresearch": return <StockResearchWidget />;
     case "whatif": return <WhatIfWidget />;
+    case "sentiment": return <SentimentWidget />;
     case "earnings": return <EarningsWidget />;
     case "journalquick": return <JournalQuickWidget />;
     case "journaltrades": return <JournalTradesWidget />;

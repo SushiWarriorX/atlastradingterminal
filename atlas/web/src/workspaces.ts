@@ -1,4 +1,4 @@
-export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
@@ -18,6 +18,7 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "cd", type: "chart", x: 4, y: 13, w: 4, h: 10, props: { id: BTC, interval: "1d" } },
     { i: "ai", type: "ai", x: 8, y: 13, w: 4, h: 10 },
     { i: "tech", type: "tech", x: 0, y: 23, w: 8, h: 8 },
+    { i: "fng", type: "sentiment", x: 8, y: 23, w: 4, h: 8 },
     { i: "mtf", type: "mtf", x: 0, y: 31, w: 12, h: 16 },
     { i: "lab", type: "btclab", x: 0, y: 47, w: 12, h: 30 },
     { i: "deriv", type: "derivatives", x: 0, y: 77, w: 12, h: 15 },

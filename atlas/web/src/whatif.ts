@@ -10,3 +10,9 @@ export interface WhatIf {
   bootstrap: { paths: number; p5_pct: number; median_pct: number; p95_pct: number; share_positive: number; share_lost_20: number; typical_worst_dip_pct: number; note: string } | null;
   notes: string[]; caveats: string[];
 }
+
+export interface Sentiment {
+  available: boolean; reason?: string; demo: boolean; source: string; url: string; note: string; as_of: string;
+  value?: number; label?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  yesterday?: number | null; a_week_ago?: number | null; a_month_ago?: number | null; history?: { date: string; value: number }[];
+}

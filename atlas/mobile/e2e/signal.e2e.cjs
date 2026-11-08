@@ -592,6 +592,16 @@ async function healthy(browser) {
       await page.click(V("back"));
     });
 
+    await check("Fear & Greed card on the BTC page: shows its source and says it is not a signal, whether the index loads or not", async () => {
+      await openFromWatchlist(page, ID.btc);
+      await page.waitForSelector(V("sentiment-card"));
+      await page.waitForSelector(V("sentiment-body") + ", " + V("sentiment-unavailable") + ", " + V("sentiment-error"), { timeout: 30000 });
+      const t = await text(page);
+      match(t, /Crypto Fear & Greed/); match(t, /not a forecast or a trading signal/i); match(t, /alternative\.me/);
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the sentiment card");
+      await page.click(V("back"));
+    });
+
     await check("no uncaught errors in the browser during the whole run", async () => { eq(S.pageErrors, [], "uncaught page errors"); eq(S.consoleErrors, [], "React warnings in the browser console"); });
   } finally {
     await S.ctx.close().catch(() => undefined);

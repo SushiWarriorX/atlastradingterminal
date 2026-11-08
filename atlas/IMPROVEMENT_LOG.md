@@ -7,6 +7,13 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Data-source loop, cycle 1: Crypto Fear & Greed (user request)
+- **Loop:** `atlas/DATA_LOOP.md` (playbook) and `atlas/DATA_SOURCES.md` (live / queued / blocked / rejected). Runs every 10 minutes inside this session (scheduled tasks cannot go below 1 hour); the session job expires after 7 days.
+- **Network:** the build machine only reached Coinbase and SEC, so ten exact public hosts were added to the allowed list (with approval).
+- **Shipped:** alternative.me Fear & Greed. `GET /api/btc/sentiment`, terminal panel on the BTC desk, Signal card on the BTC page. Source, date and "not a forecast" shown; unreachable source says so; demo mode shows nothing invented.
+- **Tests:** 8 backend, phone browser 46/46, terminal browser check. FRED still unreachable.
+
 ## 2026-11-08 · Macro trimmed to the core numbers (user request)
 - Removed the "What matters today" rule-based notes from the terminal and phone Macro views. Key indicators now show only: Fed rate, CPI, core CPI, PCE, core PCE, PPI, core PPI. Upcoming dates and headlines stay. The server still returns every indicator (yields, jobs, GDP, dollar, balance sheet), so they can be shown again by editing one list (`CORE`) in `MacroToday.tsx` and `MacroView.tsx`.
 - Phone browser test now checks the notes section is gone. 45/45.

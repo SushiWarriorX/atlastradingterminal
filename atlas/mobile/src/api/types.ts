@@ -192,3 +192,9 @@ export interface CalendarEvent {
   importance: "high" | "medium" | "low"; market_cap: number | null; details: Record<string, string | number | boolean | null>; source: string; official: boolean; link: string | null; watch: boolean; instrument_id: string | null;
 }
 export interface CalendarData { as_of: string; from: string; to: string; demo: boolean; scope: string; items: CalendarEvent[]; counts: Record<string, number>; sources: { id: string; name: string; official: boolean; ok: boolean; error: string | null }[]; notes: string[]; importance_note: string }
+
+export interface Sentiment {
+  available: boolean; reason?: string; demo: boolean; source: string; url: string; note: string; as_of: string;
+  value?: number; label?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  yesterday?: number | null; a_week_ago?: number | null; a_month_ago?: number | null; history?: { date: string; value: number }[];
+}

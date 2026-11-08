@@ -39,6 +39,11 @@ fs.mkdirSync(S, { recursive: true });
   if (!t.some(x => /WHAT IF I HAD BOUGHT BTC/.test(x))) fail('BTC desk has no what-if panel: ' + t.join(' | '));
   await pg.locator('[data-testid="whatif"]').waitFor({ timeout: 45000 });
   console.log('BTC desk what-if: ok');
+  t = await titles();
+  if (!t.some(x => /CRYPTO FEAR & GREED/.test(x))) fail('BTC desk has no Fear & Greed panel: ' + t.join(' | '));
+  const fng = await pg.locator('[data-testid="sentiment"]').innerText();
+  if (!/alternative\.me/.test(fng) || !/not a forecast/i.test(fng)) fail('Fear & Greed panel lacks its source or its caveat');
+  console.log('BTC desk Fear & Greed: ok');
 
   if (errors.length) fail('browser errors: ' + errors.join(' ; '));
   console.log('PASS');
