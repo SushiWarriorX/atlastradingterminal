@@ -146,6 +146,11 @@ export function useLabRun() {
   return useMutation({ mutationFn: (body: LabRunBody) => need(api).labRun(body) });
 }
 
+export function useCalendar(query: string, enabled = true) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).calendar(query), queryFn: () => need(api).calendar(query), enabled: !!api && enabled, staleTime: 10 * 60_000, retry: 0, placeholderData: (prev) => prev });      // keep the old list on screen while a new filter loads
+}
+
 export function useDiscover() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).discover, queryFn: () => need(api).discover(false), enabled: !!api, staleTime: 30 * 60_000, retry: 0 });

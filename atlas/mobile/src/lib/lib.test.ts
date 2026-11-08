@@ -8,6 +8,7 @@ import { safeUrl } from "./links";
 import { MAX_RECENTS, parseRecents, pushRecent } from "./recents";
 import { applyAdd, applyRemove, applyReorder, idsOf, moveId, settledRows } from "./watchlist";
 import { busyText } from "./lab";
+import { dayLabel, detailLine, groupByDay } from "./calendar";
 import { contrast } from "./contrast";
 import { color, grad } from "../theme";
 import { blankForm, fromEntry, missingText, resultText, sideLabel, signed, toBody } from "./journal";
@@ -279,5 +280,25 @@ describe("Strategy Lab waiting message", () => {
     expect(busyText("perp", "1d")).toMatch(/funding history/);
     expect(busyText("spot", "1d")).not.toMatch(/hourly/);
     expect(busyText("spot", "4h")).toMatch(/hourly prices/);
+  });
+});
+
+describe("calendar helpers", () => {
+  const ev = (o: Record<string, unknown>) => ({ kind: "earnings", date: "2026-11-10", at_utc: null, time_label: null, title: "t", symbol: "AAPL", name: "Apple", importance: "high", market_cap: null, details: {}, source: "s", official: false, link: null, watch: false, instrument_id: null, ...o }) as import("../api/types").CalendarEvent;
+  it("groups consecutive events by day and keeps their order", () => {
+    const g = groupByDay([ev({ date: "2026-11-10", symbol: "A" }), ev({ date: "2026-11-10", symbol: "B" }), ev({ date: "2026-11-11", symbol: "C" })]);
+    expect(g.map((x) => [x.day, x.events.map((e) => e.symbol)])).toEqual([["2026-11-10", ["A", "B"]], ["2026-11-11", ["C"]]]);
+    expect(groupByDay([])).toEqual([]);
+  });
+  it("labels today and tomorrow and names other days", () => {
+    expect(dayLabel("2026-11-10", "2026-11-10")).toMatch(/^Today · Tuesday, Nov 10/);
+    expect(dayLabel("2026-11-11", "2026-11-10")).toMatch(/^Tomorrow · Wednesday, Nov 11/);
+    expect(dayLabel("2026-11-13", "2026-11-10")).toMatch(/^Friday, Nov 13/);
+  });
+  it("detail lines use only what the source gave and say n/a otherwise", () => {
+    expect(detailLine(ev({ details: { eps_estimate: 1.25, analysts: 30, last_year_eps: 1.1, quarter_ending: "Sep/2026" } }))).toBe("Estimate $1.25 (30 analysts) · a year ago $1.10 · quarter ending Sep/2026");
+    expect(detailLine(ev({ details: { eps_estimate: null, analysts: null, last_year_eps: null } }))).toBe("Estimate n/a · a year ago n/a");
+    expect(detailLine(ev({ kind: "dividend", details: { amount: 0.97, pay_date: "2026-12-10" } }))).toBe("$0.97 per share · pays 2026-12-10");
+    expect(detailLine(ev({ kind: "economy", details: { release: "Consumer Price Index" } }))).toBe("Consumer Price Index");
   });
 });

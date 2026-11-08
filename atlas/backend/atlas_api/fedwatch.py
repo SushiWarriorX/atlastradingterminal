@@ -182,7 +182,7 @@ def communications(batches: list[tuple[str, bool, list]]) -> list[dict]:
 _WANT = (("Consumer Price Index", "cpi", "CPI"), ("Employment Situation", "jobs", "Employment report"))
 
 
-def parse_ics(text: str) -> list[dict]:
+def parse_ics(text: str, want=None) -> list[dict]:
     lines: list[str] = []
     for ln in text.replace("\r\n", "\n").split("\n"):
         if ln[:1] in (" ", "\t") and lines:
@@ -204,7 +204,7 @@ def parse_ics(text: str) -> list[dict]:
     out = []
     for e in events:
         name = e.get("SUMMARY", "")
-        hit = next((w for w in _WANT if w[0].lower() in name.lower()), None)
+        hit = next((w for w in (want or _WANT) if w[0].lower() in name.lower()), None)
         raw = e.get("DTSTART")
         if not hit or not raw:
             continue

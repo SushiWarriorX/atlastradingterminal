@@ -119,12 +119,30 @@ def main():
     stamp = lambda h: (now - timedelta(hours=h)).strftime("%a, %d %b %Y %H:%M:%S +0000")
     rss = RSS.format(t0=stamp(2), t1=stamp(4), t2=stamp(6), t3=stamp(9), t4=stamp(1), t5=stamp(3)).encode()
     net = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(404) if a.news == "fail" else httpx.Response(200, content=rss)), follow_redirects=True)
+    def cal_handler(req: httpx.Request) -> httpx.Response:
+        """Canned calendar sources with dates relative to today, so the browser tests never touch the real internet."""
+        u = str(req.url)
+        d2 = (now + timedelta(days=2)).strftime("%Y%m%d")
+        if "calendar/earnings" in u:
+            rows = [{"lastYearRptDt": "N/A", "lastYearEPS": "$1.10", "time": "time-after-hours", "symbol": "AAPL", "name": "Apple Inc.", "marketCap": "$3,900,000,000,000", "fiscalQuarterEnding": "Sep/2026", "epsForecast": "$1.25", "noOfEsts": "30"},
+                    {"lastYearRptDt": "N/A", "lastYearEPS": "N/A", "time": "time-pre-market", "symbol": "TINY", "name": "Tiny Co", "marketCap": "N/A", "fiscalQuarterEnding": "Sep/2026", "epsForecast": "", "noOfEsts": ""}]
+            return httpx.Response(200, json={"data": {"rows": rows}})
+        if "calendar/dividends" in u:
+            return httpx.Response(200, json={"data": {"calendar": {"rows": []}}})
+        if "bls.ics" in u:
+            return httpx.Response(200, text=f"BEGIN:VCALENDAR\nBEGIN:VEVENT\nDTSTART;TZID=US-Eastern:{d2}T083000\nSUMMARY:Consumer Price Index\nEND:VEVENT\nEND:VCALENDAR\n")
+        if "bea.gov" in u:
+            return httpx.Response(200, text="")
+        if "fiscaldata" in u:
+            return httpx.Response(200, json={"data": []})
+        return httpx.Response(404)
+    cal_client = httpx.AsyncClient(transport=httpx.MockTransport(cal_handler))
     every = {"1m", "5m", "15m", "1h", "4h", "1d", "1w"}
     p = SwingProvider(age=a.age, fail_quote=a.quote == "fail", fail_intervals=every if a.bars == "fail" else set())
     tmp = tempfile.mkdtemp()
     app = create_app(db_path=a.db or os.path.join(tmp, "e2e.db"), demo=False, providers={"yahoo": p, "coinbase": p}, alert_loop=False, news_loop=True, news_client=net,
                      fundamentals_provider=FundProvider(a.fund == "fail"), auth_password=a.password,
-                     signal_registry=A.AssetRegistry(cache_dir=tmp, client_factory=client_factory()),
+                     signal_registry=A.AssetRegistry(cache_dir=tmp, client_factory=client_factory()), calendar_client=cal_client,
                      signal_parts={"etf": FakeEtf(ETF_RAW), "coingecko": FakeCoinGecko(COIN_CAPPED), "mempool": FakeMempool()})
     uvicorn.run(app, host="127.0.0.1", port=a.port, log_level="warning")
 

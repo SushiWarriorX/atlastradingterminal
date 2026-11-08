@@ -6,7 +6,7 @@ import math
 import os
 import time
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from contextlib import asynccontextmanager
 
@@ -24,6 +24,7 @@ from .signal.service import SignalService
 from .macro import MacroService
 from .macro_brief import MacroBriefService
 from .discover.service import DiscoverService
+from .eventcal.service import EventCalendar
 from .btclab.data import BtcData
 from .btclab.evaluate import LabError
 from .btclab.service import LabService, RunIn as LabRunIn
@@ -81,7 +82,7 @@ def ok(data):
     return {"ok": True, "data": data}
 
 
-def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None, fundamentals_provider=None, deriv_client=None, auth_password: str | None = None, signal_registry=None, signal_parts: dict | None = None) -> FastAPI:
+def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None, fundamentals_provider=None, deriv_client=None, auth_password: str | None = None, signal_registry=None, signal_parts: dict | None = None, calendar_client: httpx.AsyncClient | None = None) -> FastAPI:
     demo = os.getenv("ATLAS_DEMO") == "1" if demo is None else demo
     db = DB(db_path or os.getenv("ATLAS_DB", "atlas.db"))
     provs = providers if providers is not None else {"coinbase": CoinbaseProvider(), "yahoo": YahooProvider(), "fred": FredProvider()}
@@ -1013,6 +1014,18 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     @app.get("/api/discover/method")
     async def discover_method():
         return ok(discover.method())
+
+    event_calendar = EventCalendar(db, demo, client=calendar_client)
+
+    @app.get("/api/calendar")
+    async def calendar_route(days: int = 14, start: str | None = None, kinds: str = "", scope: str = "major", symbols: str = ""):
+        """Earnings, economic data, rate decisions, dividends and Treasury auctions in one list."""
+        try:
+            st = date.fromisoformat(start) if start else None
+        except ValueError:
+            raise ApiError("INVALID_DATE", "start must look like 2026-11-10", 422)
+        names = [x.strip().upper() for x in symbols.split(",") if x.strip()][:40]
+        return ok(await event_calendar.overview(st, days, [k.strip() for k in kinds.split(",") if k.strip()] or None, scope, names))
 
     lab = LabService(BtcData(db), demo)
 

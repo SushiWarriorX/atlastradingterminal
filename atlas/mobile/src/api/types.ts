@@ -176,3 +176,9 @@ export interface DiscoverData {
   method: { weights: Record<string, number>; scales: Record<string, string>; steps: string[]; note: string };
   gaps: string[]; disclaimer: string;
 }
+
+export interface CalendarEvent {
+  kind: "earnings" | "economy" | "rates" | "dividend" | "auction"; date: string; at_utc: string | null; time_label: string | null; title: string; symbol: string | null; name: string | null;
+  importance: "high" | "medium" | "low"; market_cap: number | null; details: Record<string, string | number | boolean | null>; source: string; official: boolean; link: string | null; watch: boolean; instrument_id: string | null;
+}
+export interface CalendarData { as_of: string; from: string; to: string; demo: boolean; scope: string; items: CalendarEvent[]; counts: Record<string, number>; sources: { id: string; name: string; official: boolean; ok: boolean; error: string | null }[]; notes: string[]; importance_note: string }

@@ -1,4 +1,4 @@
-export type WidgetType = "discover" | "btclab" | "stockresearch" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
@@ -56,11 +56,12 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "quote", type: "quote", x: 7, y: 24, w: 5, h: 12 },
   ] },
   macro: { id: "macro", name: "Macro Research Desk", widgets: [
-    { i: "c10", type: "chart", x: 0, y: 0, w: 6, h: 12, props: { id: "MACRO:FRED:DGS10", title: "US 10Y YIELD (FRED, daily)" } },
-    { i: "c2", type: "chart", x: 6, y: 0, w: 6, h: 12, props: { id: "MACRO:FRED:DGS2", title: "US 2Y YIELD (FRED, daily)" } },
-    un("fed", "macro_fed", 0, 12, 12, 24),                     // the Macro Dashboard panel (the placeholder id is kept so saved layouts pick it up)
-    { i: "yields", type: "yields", x: 0, y: 36, w: 5, h: 7 },
-    { i: "ai", type: "ai", x: 5, y: 36, w: 7, h: 10 },
+    { i: "cal", type: "calendar", x: 0, y: 0, w: 12, h: 26 },
+    { i: "c10", type: "chart", x: 0, y: 26, w: 6, h: 12, props: { id: "MACRO:FRED:DGS10", title: "US 10Y YIELD (FRED, daily)" } },
+    { i: "c2", type: "chart", x: 6, y: 26, w: 6, h: 12, props: { id: "MACRO:FRED:DGS2", title: "US 2Y YIELD (FRED, daily)" } },
+    un("fed", "macro_fed", 0, 38, 12, 24),                     // the Macro Dashboard panel (the placeholder id is kept so saved layouts pick it up)
+    { i: "yields", type: "yields", x: 0, y: 62, w: 5, h: 7 },
+    { i: "ai", type: "ai", x: 5, y: 62, w: 7, h: 10 },
   ] },
   settings: { id: "settings", name: "Settings", widgets: [
     { i: "settings", type: "settings", x: 0, y: 0, w: 6, h: 12 },

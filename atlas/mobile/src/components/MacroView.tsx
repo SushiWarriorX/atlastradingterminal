@@ -5,6 +5,7 @@ import { localDateTime } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { signed } from "../lib/journal";
 import { color, radius, space } from "../theme";
+import { CalendarCard } from "./CalendarCard";
 import { ScreenHeader } from "./ScreenHeader";
 import { Banner, Chip, Divider, ErrorState, Skeleton, Tag, TextButton, Txt } from "./ui";
 import type { MacroIndicator } from "../api/types";
@@ -33,6 +34,7 @@ export function MacroView() {
           <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.xl, paddingBottom: space.xxl * 2 }} testID="macro-brief">
             {d.demo && <Banner tone="demo" title="Demo data" testID="macro-demo">{d.notice ?? "Official indicators and live headlines are not shown in demo mode."}</Banner>}
             {d.calendar_warning ? <Banner tone="warn" title="Calendar needs updating">{d.calendar_warning}</Banner> : null}
+            <CalendarCard />
             <Section title="What matters today" note="Scheduled dates are facts. Notes marked Interpretation are fixed, rule-based text, not predictions.">
               {d.today.length === 0 ? <Txt variant="small">Nothing scheduled in the next two days, and no indicator crosses a rule threshold.</Txt> : d.today.map((t, i) => (
                 <View key={i} style={{ gap: 4 }}><Tag label={t.kind === "fact" ? "Fact" : "Interpretation"} tint={t.kind === "fact" ? undefined : color.warn} /><Txt variant="body">{t.title}</Txt><Txt variant="tiny">{t.detail} · {t.source}</Txt></View>))}

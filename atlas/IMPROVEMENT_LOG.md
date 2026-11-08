@@ -2,6 +2,15 @@
 
 Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) and by hand.
 
+## 2026-11-08, on request: one calendar for earnings, economic data, rates, dividends and Treasury auctions
+- **Asked for:** an earnings calendar like eToro's: company earnings, CPI data, interest-rate decisions, dividend payments, and so on.
+- **Built:** `/api/calendar` (backend `eventcal` package), a CALENDAR panel at the top of the terminal's Macro desk, and a Calendar card at the top of the phone's Macro tab. Five kinds: company earnings and dividends (Nasdaq's public calendars, unofficial, with the analyst EPS estimate it shows and the last-year figure), economic releases (BLS: CPI, jobs, PPI, JOLTS, employment cost; BEA: GDP and PCE), Fed decisions, minutes and press conferences (the hand-entered FOMC table), and Treasury auctions (US Treasury API). Filters: 7, 14 or 21 days; type; Major companies, My watchlist or Everything; add-to-watchlist in the terminal; tap a company on the phone to open it.
+- **Honest labels:** every event says official or unofficial and names its source; a source that fails is listed by name and the others still show; importance (high, medium, low) is explained as a guide, not a prediction; days with more than 40 small company events show the 40 biggest and say how many are hidden.
+- **Needed:** the sandbox's network allowance was extended to `api.nasdaq.com`, `www.bls.gov`, `api.fiscaldata.treasury.gov` and `www.bea.gov` to check against real data (all four answered; BLS needs a descriptive User-Agent, which the calendar sends).
+- **Verified:** ran against the real sources (85 major earnings, CPI, PPI, FOMC minutes and dividends in a two-week window, about 5 seconds); backend 849 tests (13 new for parsing, filters, failure reporting and caps); phone unit tests 42; browser suite 44 of 44 using canned sources, so the tests never use the real internet.
+- **Known limits:** Nasdaq's feeds are unofficial and can be late or wrong; the Treasury lists only auctions already announced (about a week ahead); central-bank meetings other than the Fed are not included; dividend lists are per ex-date.
+- **Next candidates:** a "Voices" section to follow chosen traders and see their narratives (owner asked; needs a decision about X access because X's API is paid); calendar reminders for watchlist events.
+
 ## 2026-11-08, cycle 7: no luck check for a rule with too few trades
 - **Found (by looking at the real results screen for the first time):** a rule that made a single out-of-sample trade showed "safe lower Sharpe estimate 6.59". The luck check resamples daily returns, so a few long holdings look like many independent days and the number was meaningless. The label said "No reliable evidence" but the figure beside it looked reassuring.
 - **Tried first and rejected:** making the resampling blocks as long as the holding period. A test showed that does not reliably make a Sharpe estimate more cautious (Sharpe of a series with long flat stretches is not monotone in block length), so that change was reverted rather than shipped.

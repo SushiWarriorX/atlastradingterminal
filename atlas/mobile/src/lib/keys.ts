@@ -10,6 +10,7 @@ export const keys = (base: string | null) => ({
   research: (id: string) => ["research", base, id] as const,
   stock: (symbol: string) => ["stock", base, symbol] as const,
   earnings: (days: number) => ["earnings", base, days] as const,
+  calendar: (q: string) => ["calendar", base, q] as const,
   discover: ["discover", base] as const,
   macro: ["macro", base] as const,
   journal: (filters: object) => ["journal", base, filters] as const,

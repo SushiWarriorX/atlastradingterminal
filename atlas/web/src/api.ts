@@ -1,6 +1,7 @@
 import type { CheckState_ } from "./health";
 import type { FedWatch, MacroBrief, MacroOverview } from "./macro";
 import type { EarningsCal, StockResearch } from "./stocks";
+import type { CalData } from "./calendar";
 import type { DiscoverRanked, DiscoverRun } from "./discover";
 import type { LabReq, LabRun, LabStrategies } from "./btclab";
 export type Status = "LIVE" | "DELAYED" | "HISTORICAL" | "STALE" | "DEMO" | "UNAVAILABLE";
@@ -70,6 +71,7 @@ export const api = {
   login: (password: string) => call<{ required: boolean; authenticated: boolean }>("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) }),
   logout: () => call<{ required: boolean; authenticated: boolean }>("/api/auth/logout", { method: "POST" }),
   macroFed: () => call<FedWatch>("/api/macro/fed"),
+  calendar: (q: string) => call<CalData>(`/api/calendar?${q}`),
   discoverShortlist: (refresh = false) => call<DiscoverRun>(`/api/discover/shortlist?refresh=${refresh}`),
   discoverRanked: (q: string) => call<DiscoverRanked>(`/api/discover/ranked?${q}`),
   labStrategies: () => call<LabStrategies>("/api/btclab/strategies"),

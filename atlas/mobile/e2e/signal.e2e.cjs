@@ -533,6 +533,20 @@ async function healthy(browser) {
       match(t, /Consensus forecasts .* not shown/, "the gaps are listed");
       noMatch(t, FORECASTS, "no forecasts");
       eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls on Macro");
+      await page.waitForSelector(V("calendar-body"), { timeout: 20000 });
+      const cal = await inner(page, "calendar-card");
+      match(cal, /CPI \(inflation\)/, "the CPI release is on the calendar");
+      match(cal, /AAPL · Apple Inc\./, "a big company's earnings are listed");
+      match(cal, /Estimate \$1\.25 \(30 analysts\)/, "the estimate and analyst count come from the source");
+      match(cal, /unofficial/, "unofficial sources are labelled");
+      match(cal, /official/);
+      noMatch(cal, /TINY/, "the default Major scope leaves out small unknown companies");
+      await page.click(V("cal-scope-all"));
+      await page.waitForFunction(() => /TINY/.test(document.querySelector('[data-testid="calendar-card"]')?.innerText ?? ""), null, { timeout: 15000 });
+      await page.click(V("cal-kind-economy"));
+      await page.waitForFunction(() => !/AAPL/.test(document.querySelector('[data-testid="calendar-card"]')?.innerText ?? ""), null, { timeout: 15000 });
+      match(await inner(page, "calendar-card"), /CPI \(inflation\)/, "the Economy filter keeps the CPI release");
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls on the calendar");
       await shot(page, "13-macro");
     });
 
