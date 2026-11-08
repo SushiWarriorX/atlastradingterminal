@@ -26,6 +26,11 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 - The cloud machine only reaches hosts on the environment's allowed list; a timeout (no HTTP code) usually means "host not allowed", not "site down".
 - Before finishing: backend `pytest`, `npm run typecheck && npm test` in `mobile` and `web`, then `npm run export:web` and `node e2e/signal.e2e.cjs` after UI changes.
 
+## When code fetches something from the internet
+- Timeout on every request, a short cache, and a labelled "unavailable" result on failure; one failing half must not hide the other.
+- Parse untrusted XML defensively (refuse a DOCTYPE or entities); never build a link from a field without checking its characters; show only https links.
+- Keep a trimmed real response as the test fixture, and test the failure, stale and demo paths, not only the happy one.
+
 ## Working style the user prefers
 - Short, plain-English reports for a beginner: what changed, what was checked, what was not, what is needed from them.
 - Do not merge, keep the PR draft, ask before anything paid or outward-facing.
