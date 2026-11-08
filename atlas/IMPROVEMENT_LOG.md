@@ -19,6 +19,14 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Platform upgrade, phases 1-2: baseline and shared scheduler (user request)
+- **Plan and status:** `atlas/docs/platform-plan.md` (what existed, what was built, what is verified, remaining work, cost assumptions, the three questions only the user can answer).
+- **Built:** durable scheduler (`atlas_api/sched/`: settings, atomic budget reservation, interval adaptation, engine with leases, retries, dead letters, recovery, emergency stop), five default jobs (news, SEC filings, macro, crypto data, health check), `/api/ops/*`, worker process (`python -m atlas_api.worker`) plus a worker container and heartbeat health check in `docker-compose.yml`, Operations screens in the terminal Settings desk and Signal Settings.
+- **Evidence:** 38 new scheduler/ops tests (including two-connection race on one budget, lease across two schedulers, crash recovery, backoff bounds, Retry-After, dead letters); a real worker process was started against a database file, ran four jobs and exited cleanly on SIGTERM; backend 1002 pass; phone browser 48/48; terminal browser check; web build.
+- **Honest limits:** Claude remaining allowance is shown as unknown (no supported server-side signal for subscriptions; the API gives per-call token counts only), prices are user-entered, provider quota defaults are cautious guesses, US market holidays are not modelled, the compose worker has not been run in Docker here, and nothing is deployed.
+- **Fix found on the way:** none of the existing behaviour changed; the SQLite connection now uses WAL and a 30 s busy timeout so the web process and the worker can share the file.
+
 ## 2026-11-08 · Data-source loop, cycle 9: CoinGecko whole-crypto-market snapshot
 - **Queue item skipped:** Hyperliquid open interest/basis is already in the BTC derivatives panel (checked the code and the live API); logged as a duplicate. The loop searched for a new candidate instead.
 - **Verified live first:** api.coingecko.com/api/v3/global (no key): total value $2.52T, Bitcoin share 60.0%, Ether 10.7%, Tether 7.0%, USD Coin 2.8%, 24h change -3.8%. Trimmed real response is the fixture.

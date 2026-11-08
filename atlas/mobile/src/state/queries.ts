@@ -215,3 +215,14 @@ export function useCryptoMarket() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).cryptoMarket, queryFn: () => need(api).btcMarket(), enabled: !!api, staleTime: 10 * 60_000, refetchInterval: 15 * 60_000, retry: 0 });
 }
+
+export function useOps() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).ops, queryFn: () => need(api).opsOverview(), enabled: !!api, staleTime: 15_000, refetchInterval: 30_000, retry: 0 });
+}
+
+export function useOpsAction() {
+  const { api, baseUrl } = useConnection();
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: ({ path, body }: { path: string; body?: unknown }) => need(api).opsPost(path, body ?? {}), onSuccess: (d) => qc.setQueryData(keys(baseUrl).ops, d) });
+}

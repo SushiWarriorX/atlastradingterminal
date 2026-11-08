@@ -1,4 +1,4 @@
-import type { CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
+import type { CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, OpsOverview, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
 
 /** A failure with a code the UI can act on. `network` means we never got an answer. */
 export class ApiError extends Error {
@@ -86,6 +86,8 @@ export function createApi(opts: ClientOptions) {
     strategyTracker: () => call<TrackerData>("/api/btclab/tracker", { timeoutMs: 60_000 }),
     worldBank: () => call<WorldData>("/api/macro/world", { timeoutMs: 60_000 }),
     btcMarket: () => call<CryptoMarket>("/api/btc/market", { timeoutMs: 45_000 }),
+    opsOverview: () => call<OpsOverview>("/api/ops/overview", { timeoutMs: 30_000 }),
+    opsPost: (path: string, body: unknown = {}) => call<OpsOverview>(`/api/ops/${path}`, { method: "POST", body, timeoutMs: 60_000 }),
     btcSentiment: () => call<Sentiment>("/api/btc/sentiment", { timeoutMs: 30_000 }),
     whatIf: (id: string, amount: number) => call<WhatIfData>(`/api/signal/whatif/${enc(id)}?amount=${amount}`, { timeoutMs: 60_000 }),
     stockResearch: (symbol: string) => call<StockResearchData>(`/api/stocks/${encodeURIComponent(symbol)}/research`, { timeoutMs: 60_000 }),

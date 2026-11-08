@@ -440,6 +440,25 @@ async function healthy(browser) {
       await page.waitForSelector(T("tab-stocks"));
     });
 
+    await check("Operations in Settings: scheduler status, jobs with freshness and next run, honest Claude usage, budgets, pause and resume, no trading controls", async () => {
+      await toStocks(page);
+      await page.click(T("profile-button"));
+      await page.waitForSelector(T("settings-title"));
+      await page.waitForSelector(T("ops-body") + ", " + T("ops-error"), { timeout: 30000 });
+      const t = await text(page);
+      match(t, /Operations/); match(t, /Health and data-quality checks/); match(t, /Last success/); match(t, /Claude access: not set/);
+      match(t, /not known to this app/, "remaining Claude allowance is never invented"); match(t, /Dollar cost is unknown/, "no price is assumed");
+      match(t, /ai_tokens \(per day\)/); match(t, /Emergency stop/);
+      await page.click(T("ops-pause"));
+      await page.waitForSelector(T("ops-resume"), { timeout: 20000 });
+      match(await text(page), /Paused/);
+      await page.click(T("ops-resume"));
+      await page.waitForSelector(T("ops-pause"), { timeout: 20000 });
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in Operations");
+      await page.click(T("settings-close"));
+      await page.waitForSelector(T("tab-stocks"));
+    });
+
     await check("offline: the saved list is shown with a clear notice; the server's return clears it; nothing is lost", async () => {
       await page.goto(WEB_ORIGIN); await ready(page);
       await waitRows(page, [ID.btc, ID.btcEtf, ID.aapl]);

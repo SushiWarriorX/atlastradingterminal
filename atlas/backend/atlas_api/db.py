@@ -16,9 +16,14 @@ MIGRATIONS = Path(__file__).resolve().parent.parent / "migrations"
 
 class DB:
     def __init__(self, path: str):
-        self.conn = sqlite3.connect(path, check_same_thread=False)
+        self.path = path
+        self.conn = sqlite3.connect(path, check_same_thread=False, timeout=30)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys=ON")
+        if path not in (":memory:", ""):
+            # The web process and the background worker share this file. WAL lets one write while others read, and a busy timeout makes a second writer wait instead of failing.
+            self.conn.execute("PRAGMA journal_mode=WAL")
+            self.conn.execute("PRAGMA busy_timeout=30000")
         self.lock = threading.Lock()
         self.migrate()
 
@@ -51,11 +56,12 @@ class DB:
             self.conn.commit()
 
     @contextmanager
-    def tx(self):
-        """One atomic transaction. Yields the raw connection: use conn.execute inside (not self.x, which commits)."""
+    def tx(self, immediate: bool = False):
+        """One atomic transaction. Yields the raw connection: use conn.execute inside (not self.x, which commits).
+        immediate=True takes the database's write lock at the start, so two processes cannot both read the same balance and then both spend it."""
         with self.lock:
             try:
-                self.conn.execute("BEGIN")
+                self.conn.execute("BEGIN IMMEDIATE" if immediate else "BEGIN")
                 yield self.conn
                 self.conn.commit()
             except BaseException:

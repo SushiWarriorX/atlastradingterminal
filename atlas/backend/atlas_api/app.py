@@ -35,6 +35,9 @@ from .onchain import OnChain
 from .ecb import EcbFx
 from .worldbank import WorldBank
 from .cgglobal import CoinGeckoGlobal
+from .sched.engine import Scheduler
+from .sched.jobs import register_default_jobs
+from .sched import settings as sched_settings
 from .discover.narratives import NarrativeService
 from .btclab.evaluate import LabError
 from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
@@ -177,6 +180,9 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
                     pass
             await asyncio.sleep(every)
 
+    # The background scheduler runs inside this process by default (local use). In the cloud a separate worker process runs it (ATLAS_SCHEDULER=off here, `python -m atlas_api.worker` there).
+    run_sched = os.getenv("ATLAS_SCHEDULER", "inprocess") == "inprocess" and alert_loop is not False and not demo
+
     @asynccontextmanager
     async def lifespan(_app):
         tasks = []
@@ -188,6 +194,9 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             tasks.append(asyncio.create_task(news.run_loop(news_seconds)))
         if run_derivs:
             tasks.append(asyncio.create_task(derivs.run_loop(deriv_seconds)))
+        sched = getattr(_app.state, "scheduler", None)
+        if sched is not None and run_sched:
+            tasks.append(asyncio.create_task(sched.run_forever()))
         if broker is not None and os.getenv("IBKR_AUTOCONNECT") == "1":
             tasks.append(asyncio.create_task(ibkr_keepalive(float(os.getenv("IBKR_RECONNECT_SECONDS", "30")))))
         yield
@@ -1532,5 +1541,103 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     if dist and os.path.isdir(dist):                       # cloud: one server serves both the API and the built web app (same origin, no CORS)
         from fastapi.staticfiles import StaticFiles
         app.mount("/", StaticFiles(directory=dist, html=True), name="web")
+
+    # --- operations: the shared scheduler -----------------------------------------------------------------------------------------------
+    def sched_notify(severity: str, message: str) -> None:
+        if tg is None:
+            return
+        try:
+            asyncio.get_running_loop().create_task(tg.send_text(f"ATLAS {severity.upper()}: {message}"))
+        except RuntimeError:
+            pass                                                         # no running loop (a synchronous caller): the event is still stored and shown on the dashboard
+
+    scheduler = Scheduler(db, notify=sched_notify)
+    register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
+                                      "extras": {"macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                                 "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
+    app.state.scheduler = scheduler
+
+    class JobPatch(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        enabled: bool | None = None
+        paused: bool | None = None
+        priority: int | None = Field(None, ge=1, le=5)
+        interval_market_s: int | None = Field(None, ge=30, le=7 * 86400)
+        interval_off_s: int | None = Field(None, ge=30, le=7 * 86400)
+        max_tokens: int | None = Field(None, ge=0, le=2_000_000)
+        max_runtime_s: int | None = Field(None, ge=5, le=6 * 3600)
+        max_experiments: int | None = Field(None, ge=0, le=10_000)
+
+    class ClaudePatch(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        access: Literal["unknown", "api", "subscription", "claude_code"] | None = None
+        model: str | None = Field(None, max_length=60)
+        usage_telemetry: Literal["unknown", "per_request", "none"] | None = None
+        price_in_per_mtok: float | None = Field(None, ge=0, le=1000)
+        price_out_per_mtok: float | None = Field(None, ge=0, le=1000)
+        daily_token_limit: int | None = Field(None, ge=0, le=100_000_000)
+        daily_usd_limit: float | None = Field(None, ge=0, le=100_000)
+        monthly_usd_limit: float | None = Field(None, ge=0, le=1_000_000)
+
+    class SchedPatch(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        reserve_pct: float | None = Field(None, ge=0, le=90)
+        max_concurrent: int | None = Field(None, ge=1, le=8)
+        claude: ClaudePatch | None = None
+
+    @app.get("/api/ops/overview")
+    async def ops_overview():
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/jobs/{job_id}")
+    async def ops_job_update(job_id: str, b: JobPatch):
+        if scheduler.job(job_id) is None:
+            raise ApiError("UNKNOWN_JOB", "no such job", 404)
+        patch = {k: (int(v) if isinstance(v, bool) else v) for k, v in b.model_dump(exclude_none=True).items()}
+        scheduler.update_job(job_id, **patch)
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/jobs/{job_id}/run")
+    async def ops_job_run(job_id: str):
+        if scheduler.job(job_id) is None:
+            raise ApiError("UNKNOWN_JOB", "no such job", 404)
+        if not scheduler.request_run(job_id):
+            raise ApiError("STOPPED", "The emergency stop is on, so nothing can be run. Clear it first.", 409)
+        if not run_sched:
+            await scheduler.tick()                                         # no background scheduler in this process (demo or cloud web): run it now
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/pause")
+    async def ops_pause():
+        scheduler.set_global(paused=True)
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/resume")
+    async def ops_resume():
+        scheduler.set_global(paused=False)
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/emergency-stop")
+    async def ops_stop():
+        scheduler.emergency_stop(True)
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/emergency-clear")
+    async def ops_clear():
+        scheduler.emergency_stop(False)
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/settings")
+    async def ops_settings(b: SchedPatch):
+        patch = b.model_dump(exclude_none=True)
+        scheduler.set_global(**patch)
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/dead-letters/{dl_id}/{action}")
+    async def ops_dead_letter(dl_id: int, action: Literal["retry", "dismiss"]):
+        if not scheduler.resolve_dead_letter(dl_id, retry=action == "retry"):
+            raise ApiError("NOT_FOUND", "no such open dead letter", 404)
+        return ok(scheduler.overview())
+
 
     return app

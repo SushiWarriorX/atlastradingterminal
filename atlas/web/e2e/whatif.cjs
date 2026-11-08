@@ -75,6 +75,16 @@ fs.mkdirSync(S, { recursive: true });
   if (!/Aroon trend/.test(tr) || !/FORWARD RECORD/i.test(tr)) fail('tracker panel lacks the Aroon entry or its forward record section');
   console.log('BTC desk strategy tracker: ok');
 
+  await cmd('SETTINGS');
+  await pg.waitForSelector('[data-testid="ops"]', { timeout: 30000 });
+  const ops = await pg.locator('[data-testid="ops"]').innerText();
+  if (!/Health and data-quality checks/.test(ops) || !/not known to this app/.test(ops) || !/EMERGENCY STOP/.test(ops)) fail('Operations panel is missing jobs, the honest Claude usage note or the emergency stop');
+  await pg.click('button:has-text("pause all")');
+  await pg.waitForSelector('button:has-text("resume all")', { timeout: 20000 });
+  await pg.click('button:has-text("resume all")');
+  await pg.waitForSelector('button:has-text("pause all")', { timeout: 20000 });
+  console.log('Settings desk operations: ok');
+
   if (errors.length) fail('browser errors: ' + errors.join(' ; '));
   console.log('PASS');
   await b.close();

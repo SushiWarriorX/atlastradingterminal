@@ -260,3 +260,15 @@ export interface WorldData { available: boolean; reason?: string; demo: boolean;
 export interface CryptoMarket { available: boolean; reason?: string; demo: boolean; as_of: string; source: string; url: string; credit: string; note: string; updated_at?: string; age_minutes?: number; freshness?: "CURRENT" | "OVERDUE";
   total_market_cap_trillions?: number; change_24h_pct?: number; volume_24h_billions?: number; volume_to_cap_pct?: number; btc_dominance_pct?: number; eth_dominance_pct?: number; other_pct?: number;
   stablecoin_share_pct?: number | null; stablecoin_note?: string | null; coins?: number; markets?: number; top?: { symbol: string; share_pct: number }[] }
+
+export interface OpsJob { id: string; title: string; kind: string | null; description: string; registered: boolean; enabled: boolean; paused: boolean; priority: number; uses_ai: boolean;
+  preferred_market_s: number; preferred_off_s: number; preferred_now_s: number; effective_interval_s: number; why_effective: string[]; differs: boolean; next_run_at: string | null; last_success_at: string | null;
+  age_s: number | null; stale: boolean; last_status: string | null; last_error: string | null; deferred_reason: string | null; failures: number; avg_tokens: number | null; avg_runtime_s: number | null;
+  runs_total: number; max_tokens: number; max_runtime_s: number; max_experiments: number; running: boolean }
+export interface OpsBudget { bucket: string; window: string; unit: string; limit: number | null; used: number; resets_at: string; note: string | null; remaining: number | null; remaining_fraction: number | null; optional_work_allowed: boolean }
+export interface OpsRun { id: number; job_id: string; trigger: string; started_at: string; finished_at: string | null; status: string; attempt: number; reason: string | null; tokens_in: number; tokens_out: number; provider_calls: number; duration_s: number | null; error: string | null }
+export interface OpsOverview {
+  as_of: string; scheduler_alive: boolean; scheduler_heartbeat_age_s: number | null; market_open: boolean; paused: boolean; emergency_stop: boolean; reserve_pct: number; max_concurrent: number; market_note: string;
+  claude: { access: string; model: string; telemetry: string; usage_known: boolean; usage_note: string; dollar_cost_known: boolean };
+  budgets: OpsBudget[]; jobs: OpsJob[]; runs: OpsRun[]; dead_letters: { id: number; job_id: string; failed_at: string; attempts: number; error: string | null }[]; events: { ts: string; kind: string; severity: string; message: string }[];
+}
