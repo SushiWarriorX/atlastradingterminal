@@ -38,6 +38,14 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 - A page-size limit can cut the oldest month in half; count what is really there before promising "N months", and show "no comparison" when a month is missing.
 - Check your own arithmetic against a total the source publishes (a deficit, a year-to-date row) in a test.
 
+## Research engine and browser-test lessons (from the fundamentals build)
+- Quarterly figures: companies file 3-, 6-, 9- and 12-month cumulative cash-flow totals and never a fourth quarter; derive a quarter as the difference of two cumulative totals and label it "derived". Never sum quarters that are not consecutive.
+- Tests: the first valid bar of any rolling indicator is bar n-1 (a 50-bar average first exists on bar 49); I wrote this off-by-one three times. Build fixtures from hand-checkable numbers and never write `or True` into an assertion.
+- JSON: infinity and NaN are not JSON. "No upper limit" must become null before it reaches an answer, and a test needs a saved result to see it (an empty state hides the bug).
+- Screens: view screenshots, not just assertions. They showed small amounts printed as $0, warnings buried in collapsed sections, invisible inputs and 35px buttons. A formatter must never turn a small non-zero amount into zero.
+- Clipboard and pop-ups: start the copy and open the tab inside the click; report "copied" only after a real success; `window.open` with `noopener` always returns null, so detach with `opener = null` instead; test with permissions granted, refused and the tab blocked.
+- Test text that denies something (a disclaimer saying "not a price target") will trip a naive advice detector: strip the app's own disclaimers before scanning.
+
 ## Phone lists
 - Signal's screens render lists with a scroll view and `map`. That is fine while the server caps the rows (calendar 40 a day over at most 21 days, filings 40, watchlist 100). Any new list that could pass about 100 rows should use `FlatList`, or the server should cap it.
 
