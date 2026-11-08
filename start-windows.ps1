@@ -48,6 +48,9 @@ if (Test-Path $localSettings) {
     . $localSettings
     Write-Host "Loaded your private settings from local-settings.ps1"
 }
+if ($Real -and -not $env:ATLAS_SEC_CONTACT) {
+    Write-Host "Note: the Company deep-dive and Discover need an email for SEC filings. Without it they show empty. Fix: add this line to local-settings.ps1 (next to this script):  `$env:ATLAS_SEC_CONTACT = 'you@example.com'" -ForegroundColor Yellow
+}
 # Let the browser version of Signal (http://localhost:8081) talk to this backend. Harmless if you do not use it.
 if (-not $env:ATLAS_CORS_ORIGINS) { $env:ATLAS_CORS_ORIGINS = "http://localhost:8081,http://127.0.0.1:8081" }
 if ($IbkrPort -gt 0) {

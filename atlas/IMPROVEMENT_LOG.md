@@ -4,6 +4,13 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · "What if I had bought it?" simulator + deep-dive fix (user requests)
+- **Deep-dive was empty:** the Windows start script never set `ATLAS_SEC_CONTACT`, so SEC filings were off and the card showed nothing useful. Now: a clear banner with the fix in the phone card, a warning in `start-windows.ps1`, and the setting documented in `local-settings.example.ps1`. The email stays in the user's untracked `local-settings.ps1`.
+- **New Signal section (every asset page):** `GET /api/signal/whatif/{asset}?amount=` and `WhatIfCard`. Five replays from daily closes: one purchase held to today (1/3/5 years ago), the same amount monthly, every possible start date (worst/typical/best), exit rules (20% stop, 30% target, 20% trailing stop), and 2,000 shuffled years. Price-only, no dividends/tax/fees, stops on closes; labelled DEMO in demo mode.
+- **Caught on the way:** years were counted as 252 bars, wrong for crypto (365); now derived from the dates.
+- **Tests:** 8 backend, 1 new browser check (45/45), no trade controls.
+
 ## 2026-11-08 · Self-improving loop for the Strategy Lab (user request)
 - **What:** `btclab/agent.py` runs: 5-year stress test -> find where the rule loses money -> pick a fix from a fixed menu -> rerun -> keep or discard. API: `POST /api/btclab/agent`, `GET /api/btclab/agent/history` (runs saved, migration 015).
 - **Guards:** last 30% of the 5 years is a sealed holdout (opened once, at the end; a test proves changing it changes no decision). Fixes are fixed in advance, never tuned. The bar to keep a fix rises with every fix tried. A win on fewer than 3 holdout trades is "inconclusive", not success.

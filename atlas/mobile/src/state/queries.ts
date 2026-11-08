@@ -151,6 +151,11 @@ export function useCalendar(query: string, enabled = true) {
   return useQuery({ queryKey: keys(baseUrl).calendar(query), queryFn: () => need(api).calendar(query), enabled: !!api && enabled, staleTime: 10 * 60_000, retry: 0, placeholderData: (prev) => prev });      // keep the old list on screen while a new filter loads
 }
 
+export function useWhatIf(id: string, amount: number, enabled: boolean) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).whatif(id, amount), queryFn: () => need(api).whatIf(id, amount), enabled: !!api && enabled && amount >= 1, staleTime: 30 * 60_000, retry: 0, placeholderData: (prev) => prev });
+}
+
 export function useDiscover() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).discover, queryFn: () => need(api).discover(false), enabled: !!api, staleTime: 30 * 60_000, retry: 0 });

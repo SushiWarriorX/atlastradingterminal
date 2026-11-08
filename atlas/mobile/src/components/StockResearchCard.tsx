@@ -29,6 +29,7 @@ export function StockResearchCard({ symbol }: { symbol: string }) {
         : q.isError || !d ? <Banner tone="warn" title="Couldn't load the deep-dive" testID="stock-error">{q.error instanceof Error ? q.error.message : "Something went wrong."}</Banner>
         : (
           <View style={{ gap: space.lg }} testID="stock-body">
+            {d.errors.some((e) => /SEC filings are off/.test(e)) ? <Banner tone="warn" title="Company filings are switched off" testID="stock-sec-off">{d.errors.find((e) => /SEC filings are off/.test(e))}</Banner> : null}
             {d.company.sic_description || d.company.sector ? <Txt variant="small">{[d.company.sector, d.company.industry, d.company.sic_description && `SEC industry: ${d.company.sic_description}`].filter(Boolean).join(" · ")}</Txt> : null}
             <Block title="Financials (annual filings)">
               {!d.financials.available || !last ? <Txt variant="small">No filing data loaded. {d.errors.filter((e) => /SEC|Demo/.test(e)).join(" ")}</Txt> : (

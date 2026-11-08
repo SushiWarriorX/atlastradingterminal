@@ -140,7 +140,7 @@ class StockResearch:
         if self.demo:
             errors.append("Demo mode: SEC filings are not loaded; the figures below that exist are synthetic.")
         elif not self.edgar.enabled:
-            errors.append("SEC filings are off: set ATLAS_SEC_CONTACT to an email address to turn on multi-year financials.")
+            errors.append("SEC filings are off: ATLAS_SEC_CONTACT is not set. Windows: add the line $env:ATLAS_SEC_CONTACT = \"you@example.com\" to local-settings.ps1 and restart ATLAS. The email is sent only to sec.gov.")
         else:
             try:
                 hit = await self.edgar.cik(sym)

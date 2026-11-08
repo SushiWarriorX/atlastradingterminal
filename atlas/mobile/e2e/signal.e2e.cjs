@@ -574,6 +574,24 @@ async function healthy(browser) {
       await page.click(V("back"));
     });
 
+    await check("What-if simulator: collapsed, then five labelled replays of the past, amount changes the answer, no trading controls", async () => {
+      await openFromWatchlist(page, ID.aapl);
+      await page.waitForSelector(V("whatif-card"));
+      assert(!(await present(page, "whatif-body")), "the simulator must stay collapsed until asked for");
+      await page.click(V("whatif-toggle"));
+      await page.waitForSelector(V("whatif-body"), { timeout: 45000 });
+      const t = await text(page);
+      match(t, /What if I had bought AAPL\?/); match(t, /One purchase, held to today/); match(t, /The same amount every month/); match(t, /Whichever day you bought/);
+      match(t, /With a rule for getting out/); match(t, /shuffled years/); match(t, /Simulation, not a forecast/); match(t, /Past results do not predict future results/);
+      const first = await page.$eval(V("whatif-lump-0"), (e) => e.innerText);
+      await page.click(V("whatif-amt-5000"));
+      await page.waitForFunction(([id, before]) => { const e = document.querySelector(`[data-testid="${id}"]`); return !!e && e.innerText !== before; }, ["whatif-lump-0", first], { timeout: 30000 });
+      match(await text(page), /\$5,000/, "the chosen amount is used");
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the simulator");
+      await shot(page, "15-what-if");
+      await page.click(V("back"));
+    });
+
     await check("no uncaught errors in the browser during the whole run", async () => { eq(S.pageErrors, [], "uncaught page errors"); eq(S.consoleErrors, [], "React warnings in the browser console"); });
   } finally {
     await S.ctx.close().catch(() => undefined);
