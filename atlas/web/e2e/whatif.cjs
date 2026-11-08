@@ -54,6 +54,10 @@ fs.mkdirSync(S, { recursive: true });
   const fng = await pg.locator('[data-testid="sentiment"]').innerText();
   if (!/alternative\.me/.test(fng) || !/not a forecast/i.test(fng)) fail('Fear & Greed panel lacks its source or its caveat');
   console.log('BTC desk Fear & Greed: ok');
+  if (!(await titles()).some(x => /BTC FUTURES POSITIONING/.test(x))) fail('BTC desk has no positioning panel');
+  const cot = await pg.locator('[data-testid="positioning"]').innerText();
+  if (!/CFTC/.test(cot)) fail('positioning panel lacks its source');
+  console.log('BTC desk positioning: ok');
 
   if (errors.length) fail('browser errors: ' + errors.join(' ; '));
   console.log('PASS');

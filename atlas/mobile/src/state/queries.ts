@@ -180,3 +180,8 @@ export function useTreasury() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).treasury, queryFn: () => need(api).treasury(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 60 * 60_000, retry: 0 });
 }
+
+export function usePositioning() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).positioning, queryFn: () => need(api).btcPositioning(), enabled: !!api, staleTime: 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}

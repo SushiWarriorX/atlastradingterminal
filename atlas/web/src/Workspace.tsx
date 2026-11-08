@@ -28,6 +28,7 @@ import { SentimentWidget } from "./widgets/Sentiment";
 import { SecFilingsWidget } from "./widgets/SecFilings";
 import { NarrativeWidget } from "./widgets/Narrative";
 import { TreasuryWidget } from "./widgets/Treasury";
+import { PositioningWidget } from "./widgets/Positioning";
 import { JournalQuickWidget } from "./widgets/JournalQuick";
 
 const Grid = WidthProvider(RGL);
@@ -55,6 +56,7 @@ function render(w: WidgetCfg, view: string) {
     case "secfilings": return <SecFilingsWidget />;
     case "narrative": return <NarrativeWidget />;
     case "treasury": return <TreasuryWidget />;
+    case "positioning": return <PositioningWidget />;
     case "earnings": return <EarningsWidget />;
     case "journalquick": return <JournalQuickWidget />;
     case "journaltrades": return <JournalTradesWidget />;

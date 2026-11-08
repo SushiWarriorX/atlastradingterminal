@@ -614,6 +614,11 @@ async function healthy(browser) {
       await page.waitForSelector(V("sentiment-body") + ", " + V("sentiment-unavailable") + ", " + V("sentiment-error"), { timeout: 30000 });
       const t = await text(page);
       match(t, /Crypto Fear & Greed/); match(t, /not a forecast or a trading signal/i); match(t, /alternative\.me/);
+      await page.waitForSelector(V("positioning-card"));
+      await page.waitForSelector(V("positioning-body") + ", " + V("positioning-unavailable") + ", " + V("positioning-error"), { timeout: 45000 });
+      const pt = await text(page);
+      match(pt, /Bitcoin futures positioning/); match(pt, /CFTC/); noMatch(pt, FORECASTS, "positioning makes no forecasts");
+      if (await present(page, "positioning-body")) match(pt, /Net short is not the same as bearish/, "the basis-trade caveat is shown");
       eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the sentiment card");
       await page.click(V("back"));
     });

@@ -12,6 +12,13 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Data-source loop, cycle 4: CFTC Commitments of Traders, CME Bitcoin futures
+- **Verified live first:** publicreporting.cftc.gov Traders in Financial Futures, contract 133741 (CME Bitcoin), latest report 2026-11-03: open interest 17,527; leveraged funds long 5,114 / short 7,705. 60 real weeks are the test fixture.
+- **Shipped:** `cftc.py`, `GET /api/btc/positioning`. Per trader group: long, short, net, change on the week, share of open interest, 1-year rank (0-100, only with 20+ weeks of data). Terminal: panel on the BTC desk. Signal: card on the BTC page.
+- **Honesty built in:** covers CME Bitcoin futures only, not spot, ETFs or perps; Tuesday data published Friday (at least 3 days old, marked overdue after 12 days); the screen says net short is not the same as bearish (basis trade). Failure shows nothing; demo mode invents nothing.
+- **Tests:** 8 new backend (912 pass), phone browser 47/47 (extended), terminal browser check extended, web build.
+
 ## 2026-11-08 · Data-source loop, cycle 3: US Treasury yield curve and debt
 - **Verified live first:** home.treasury.gov daily par yield curve XML (10Y 4.86%, 2Y 4.51% on 2026-11-06) and FiscalData Debt to the Penny ($40.56T on 2026-11-05). Real responses are the test fixtures.
 - **Shipped:** `treasury.py` and `GET /api/macro/treasury`. Full curve 1M-30Y with change vs previous day and about a month ago, 2s10s and 3m10y spreads with inversion flags, and total debt (held by public / intragovernmental, daily and yearly change). Terminal: new panel on the Macro desk. Signal: new card on the Macro screen. Each half fails on its own and says so; demo mode shows nothing invented. XML with a DOCTYPE or entities is refused.
