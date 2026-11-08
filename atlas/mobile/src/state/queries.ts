@@ -205,3 +205,8 @@ export function useStrategyTracker() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).tracker, queryFn: () => need(api).strategyTracker(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 2 * 60 * 60_000, retry: 0 });
 }
+
+export function useWorldBank() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).world, queryFn: () => need(api).worldBank(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}

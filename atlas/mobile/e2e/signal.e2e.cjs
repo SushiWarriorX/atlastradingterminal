@@ -534,6 +534,11 @@ async function healthy(browser) {
       await page.waitForSelector(V("fx-card"));
       await page.waitForSelector(V("fx-body") + ", " + V("fx-unavailable") + ", " + V("fx-error"), { timeout: 45000 });
       const fxText = await text(page);
+      await page.waitForSelector(V("world-card"));
+      await page.waitForSelector(V("world-body") + ", " + V("world-unavailable") + ", " + V("world-error"), { timeout: 60000 });
+      const wt = await text(page);
+      match(wt, /World economies/); noMatch(wt, FORECASTS, "the World Bank card makes no forecasts");
+      if (await present(page, "world-body")) match(wt, /revised later/, "the annual-data caveat is shown");
       match(fxText, /US dollar vs major currencies/); match(fxText, /ECB/); noMatch(fxText, FORECASTS, "the exchange-rate card makes no forecasts");
       match(t, /US Treasury/, "the Treasury card is on the Macro screen"); match(t, /Yield curve|Yield curve unavailable|Demo mode/i);
       match(t, /Key indicators/); noMatch(t, /What matters today/, "the rule-based notes section was removed on request"); match(t, /Upcoming/); match(t, /Headlines/);

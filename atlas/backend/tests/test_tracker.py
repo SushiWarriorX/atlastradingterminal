@@ -95,3 +95,39 @@ def test_route_in_demo_mode(tmp_path):
     with TestClient(create_app(db_path=str(tmp_path / "t.db"), demo=True, alert_loop=False, news_loop=False)) as c:
         d = c.get("/api/btclab/tracker").json()["data"]
         assert d["demo"] is True and isinstance(d["entries"], list) and d["min_forward_days"] == 60 and all(e["forward"] is None for e in d["entries"])
+
+
+# --- ADX trend (strategy loop, cycle 2) ----------------------------------------------------------------------------------------------------
+def _trend(n, step):
+    c = 100 + step * np.arange(n, dtype=float)
+    return pd.DataFrame({"t": np.arange(n), "o": c, "h": c + 1, "l": c - 1, "c": c, "v": 1.0})
+
+
+def test_dmi_reads_direction_and_strength():
+    up, down = _trend(120, 1.0), _trend(120, -1.0)
+    a, p, m = ST.dmi(up, 14)
+    # a clean uptrend with high = close + 1 and low = close - 1: true range 2, upward move 1 each bar, so +DI = 100 x 1 / 2 = 50, -DI = 0 and ADX = 100
+    assert p.iloc[-1] == pytest.approx(50.0, abs=0.01) and m.iloc[-1] == pytest.approx(0.0, abs=0.01) and a.iloc[-1] > 99
+    a2, p2, m2 = ST.dmi(down, 14)
+    assert m2.iloc[-1] == pytest.approx(50.0, abs=0.01) and p2.iloc[-1] == pytest.approx(0.0, abs=0.01) and a2.iloc[-1] > 99
+    rng = np.random.default_rng(2)
+    noise = pd.DataFrame({"h": 100 + rng.normal(0, 1, 300), "l": 98 + rng.normal(0, 1, 300), "c": 99 + rng.normal(0, 1, 300)})
+    assert ST.dmi(noise, 14)[0].iloc[-1] < 40                                           # directionless noise: weak trend
+
+
+def test_dmi_directional_movement_follows_the_published_definition():
+    # bar 1: high up 2, low up 1 -> upward move 2 beats downward move (-1 means low rose); bar 2: high down 1, low down 3 -> downward move 3 wins
+    d = pd.DataFrame({"h": [10.0, 12.0, 11.0], "l": [8.0, 9.0, 6.0], "c": [9.0, 11.0, 7.0]})
+    up, down = d["h"].diff(), -d["l"].diff()
+    plus = np.where((up > down) & (up > 0), up, 0.0)
+    minus = np.where((down > up) & (down > 0), down, 0.0)
+    assert list(plus[1:]) == [2.0, 0.0] and list(minus[1:]) == [0.0, 3.0]
+
+
+def test_adx_strategy_is_fixed_has_no_lookahead_and_goes_long_in_a_strong_uptrend():
+    st = ST.S["adx_trend"]
+    assert st.params == {"n": 14, "level": 25} and not st.requires_funding
+    d = pd.concat([_trend(150, 1.0), _trend(150, -1.0).assign(c=lambda x: 250 - np.arange(150) * 1.0, h=lambda x: 251 - np.arange(150) * 1.0, l=lambda x: 249 - np.arange(150) * 1.0)], ignore_index=True)
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[100] == 1.0 and pos[-1] == 0.0                                           # in during the strong rise, out after it reverses
+    assert (st.build(d.iloc[:200], st.params).to_numpy() == pos[:200]).all()            # bar i uses only bars up to i

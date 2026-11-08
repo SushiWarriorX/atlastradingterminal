@@ -33,6 +33,7 @@ from .cftc import CftcBitcoin
 from .stablecoins import Stablecoins
 from .onchain import OnChain
 from .ecb import EcbFx
+from .worldbank import WorldBank
 from .discover.narratives import NarrativeService
 from .btclab.evaluate import LabError
 from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
@@ -341,6 +342,12 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
 
     treasury = Treasury(demo=demo)
     ecb_fx = EcbFx(demo=demo)
+    world_bank = WorldBank(demo=demo)
+
+    @app.get("/api/macro/world")
+    async def macro_world():
+        """Yearly growth, inflation and unemployment for the US and five other big economies (World Bank). Context, not a forecast; figures arrive months late and are revised."""
+        return ok(await world_bank.overview())
 
     @app.get("/api/macro/fx")
     async def macro_fx():

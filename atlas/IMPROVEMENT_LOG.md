@@ -17,6 +17,19 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Data-source loop, cycle 8: World Bank annual indicators
+- **Verified live first:** api.worldbank.org (data updated 2026-10-08): GDP growth, CPI inflation and unemployment for the US, euro area, China, Japan, UK and India; newest year 2025 for most, 2024 for US inflation. Real responses are the test fixtures.
+- **Shipped:** `worldbank.py`, `GET /api/macro/world`. Each country keeps its own newest year (shown), plus the change from the year before by subtraction; one failing indicator leaves the others; demo mode shows nothing. Terminal: panel on the Macro desk. Signal: card on the Macro screen.
+- **Honesty built in:** labelled annual context, not a forecast or what the market expects; figures arrive months late and are revised; unemployment is a modelled estimate.
+- **Tests:** 9 new backend, phone browser 47/47 (extended), web build.
+
+## 2026-11-08 · Strategy loop, cycle 2: ADX trend (Wilder)
+- **Rule (fixed from the source, queue item 1):** enter when ADX(14) > 25 and +DI > -DI; exit when +DI < -DI. Spot, long-only, fees 5 bps and slippage 5 bps per side. Not tuned.
+- **Frozen backtest (all Coinbase daily history to 2026-11-08), evidence: weak.** Whole history +9,353% vs +26,911% holding; worst drop -44% vs -84%. Last 30%: +70.1% vs +187.3% holding, worst drop -31.6% vs -53.1%, 17 trades. Walk-forward +398%. All nearby settings made money out of sample; doubled costs +64% out of sample.
+- **Why only weak:** it did not beat holding on risk-adjusted terms out of sample, and the luck check could not rule out luck (safe Sharpe lower bound -0.76 with 22 rules in the library).
+- **Tests:** 3 new (directional movement hand-checked: in a steady rise +DI is exactly 50; no look-ahead). One test expectation was my own arithmetic slip (I first wrote +DI above 70); corrected to the hand-derived 50, the strategy code was not changed. 958 backend pass.
+
 ## 2026-11-08 · Strategy tracker, strategy loop, and a self-updating launcher (user requests)
 - **Strategy tracker:** every strategy the loop adds is backtested ONCE on all BTC daily history (same evaluation as the Strategy Lab: fees, slippage, 70/30 split, walk-forward, neighbouring settings, doubled costs, luck check counting the whole library) and the result is frozen in `btclab/tracker_ledger.json`; `track_cli` refuses to rerun an id. The app then follows each rule FORWARD on bars after its add date (the only evidence nobody had seen), and says "too little to say anything" under 60 days. `GET /api/btclab/tracker`; terminal BTC desk panel under the Strategy Lab; Signal BTC page card. No forward record in demo mode.
 - **Strategy loop:** `atlas/STRATEGY_LOOP.md` (rules + a queue of 20 published ideas with FIXED settings, so settings are never chosen by looking at BTC results; bad results are kept and reported). Every 10 minutes (session job).

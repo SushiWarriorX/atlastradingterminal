@@ -334,6 +334,37 @@ reg(Strategy("aroon_trend", "Aroon trend", "Trend", "Holds BTC while a fresh hig
              "No fixed stop; the exit rule is the stop.", {"n": 25}, {"n": [14, 20, 25, 35, 50]}, _aroon_build, _aroon_conds))
 
 
+def dmi(d: pd.DataFrame, n: int) -> tuple[pd.Series, pd.Series, pd.Series]:
+    """Welles Wilder's Directional Movement Index (1978): (ADX, +DI, -DI). +DI / -DI measure upward / downward pressure; ADX measures how strong the trend is, whichever way it points."""
+    up, down = d["h"].diff(), -d["l"].diff()
+    plus_dm = pd.Series(np.where((up > down) & (up > 0), up, 0.0), index=d.index)
+    minus_dm = pd.Series(np.where((down > up) & (down > 0), down, 0.0), index=d.index)
+    pc = d["c"].shift(1)
+    tr = pd.concat([d["h"] - d["l"], (d["h"] - pc).abs(), (d["l"] - pc).abs()], axis=1).max(axis=1)
+    sm = lambda x: x.ewm(alpha=1 / n, adjust=False, min_periods=n).mean()          # Wilder's smoothing
+    atr_ = sm(tr)
+    pdi, mdi = 100 * sm(plus_dm) / atr_, 100 * sm(minus_dm) / atr_
+    dx = 100 * (pdi - mdi).abs() / (pdi + mdi).replace(0, np.nan)
+    return sm(dx), pdi, mdi
+
+
+def _adx_build(d, p):
+    adx_, pdi, mdi = dmi(d, p["n"])
+    return hold((adx_ > p["level"]) & (pdi > mdi), pdi < mdi)
+
+
+def _adx_conds(d, p):
+    adx_, pdi, mdi = dmi(d, p["n"])
+    a, u, w = adx_.iloc[-1], pdi.iloc[-1], mdi.iloc[-1]
+    bad = np.isnan(a) or np.isnan(u) or np.isnan(w)
+    return [_cond(f"ADX above {p['level']} and +DI above -DI (entry)", None if bad else bool(a > p["level"] and u > w), f"ADX {_val(a)}, +DI {_val(u)}, -DI {_val(w)}"),
+            _cond("+DI below -DI (exit)", None if bad else bool(u < w), f"+DI {_val(u)} vs -DI {_val(w)}")]
+
+
+reg(Strategy("adx_trend", "ADX trend (Wilder)", "Trend", "Holds BTC only when the trend is strong (ADX above 25) and pointing up (+DI above -DI): Wilder's Directional Movement system.",
+             "ADX is above 25 and +DI is above -DI.", "+DI falls below -DI (sellers are in charge).", "No fixed stop; the exit rule is the stop.", {"n": 14, "level": 25}, {"n": [10, 14, 20, 28, 40]}, _adx_build, _adx_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 
