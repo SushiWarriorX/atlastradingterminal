@@ -18,6 +18,7 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 | RSS feeds | Headlines | News, Macro |
 | CoinGecko, mempool.space | Crypto fundamentals | Signal |
 | CoinGecko whole-crypto-market snapshot (cycle 9) | Total crypto market value, 24h change and volume, Bitcoin / Ether / stablecoin share ('dominance') | Terminal BTC desk panel, Signal BTC page card |
+| US Treasury note and bond auction results (cycle 12) | For 2, 3, 5, 7, 10, 20 and 30-year fixed-rate auctions: high yield, change from the previous auction of the same term, bid-to-cover against the average of the four before, amount offered; auctions held but not yet published are listed as pending | Terminal Macro desk panel, Signal Macro card |
 | US Treasury General Account, Daily Treasury Statement (cycle 11) | The government's cash balance at the Fed: latest closing balance, 1-day and about-a-month change, month average, 1-year low and high, 60-day history | Terminal Macro desk panel, Signal Macro card |
 | NY Fed repo and reverse repo operations (cycle 10) | Cash parked at the Fed overnight (reverse repo) with day change, month average and peak; cash the Fed lent (standing repo) with days used and peak; 40-day history | Terminal Macro desk panel, Signal Macro card |
 | World Bank annual indicators (cycle 8) | Yearly economic growth, inflation and unemployment for the US, euro area, China, Japan, UK and India, each with its own latest year and change from the year before | Terminal Macro desk panel, Signal Macro card |
@@ -30,7 +31,7 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 | alternative.me Fear & Greed (cycle 1) | Daily 0-100 crypto mood gauge, 31-day history | Terminal BTC desk, Signal BTC page |
 
 ## QUEUED (candidates, in order; each must be fetched live before it ships)
-(queue is empty: the next cycle searches for new candidates, e.g. Treasury auction results (the calendar already lists the dates; results would be new), DefiLlama DeFi value once api.llama.fi answers)
+(queue is empty: the next cycle searches for new candidates, e.g. Treasury bill auction results, Treasury monthly interest expense, DefiLlama DeFi value once api.llama.fi answers)
 
 ## BLOCKED
 - api.llama.fi, api.blockchain.info (checked cycle 11): no reply from this machine. DefiLlama stablecoins data shipped earlier; the TVL host is silent now.

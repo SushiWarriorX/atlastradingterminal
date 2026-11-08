@@ -38,6 +38,7 @@ import { CryptoMarketWidget } from "./widgets/CryptoMarket";
 import { OpsWidget } from "./widgets/Ops";
 import { FedOpsWidget } from "./widgets/FedOps";
 import { TgaWidget } from "./widgets/Tga";
+import { AuctionsWidget } from "./widgets/Auctions";
 import { JournalQuickWidget } from "./widgets/JournalQuick";
 
 const Grid = WidthProvider(RGL);
@@ -75,6 +76,7 @@ function render(w: WidgetCfg, view: string) {
     case "ops": return <OpsWidget />;
     case "fedops": return <FedOpsWidget />;
     case "tga": return <TgaWidget />;
+    case "auctions": return <AuctionsWidget />;
     case "earnings": return <EarningsWidget />;
     case "journalquick": return <JournalQuickWidget />;
     case "journaltrades": return <JournalTradesWidget />;

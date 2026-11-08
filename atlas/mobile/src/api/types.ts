@@ -282,3 +282,8 @@ export interface TgaData { available: boolean; reason?: string; demo: boolean; a
   balance_billions?: number; change_1d_billions?: number; change_month_billions?: number | null; month_average_billions?: number; dates_in_window?: number;
   year_low_billions?: number; year_low_date?: string; year_high_billions?: number; year_high_date?: string; days_in_year_range?: number;
   history?: { date: string; balance_billions: number }[] }
+
+export interface AuctionRow { tenor: string; term: string; auction_date: string; reopening: boolean; age_days: number; high_yield: number; previous_yield: number | null; yield_change: number | null;
+  bid_to_cover: number; average_bid_to_cover: number | null; compared_with: number; offering_billions: number | null }
+export interface AuctionsData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  tenors?: AuctionRow[]; pending_results?: { tenor: string; auction_date: string }[] }
