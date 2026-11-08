@@ -307,3 +307,30 @@ def test_mfi_strategy_is_fixed_buys_exhausted_selling_sells_recovery_and_has_no_
     assert pos[40] == 1.0                                                                           # deep into the fall the index is near 0, so it is holding
     assert pos[-1] == 0.0                                                                           # after a long rise the index is above 70, so it has sold
     assert (st.build(d.iloc[:60], st.params).to_numpy() == pos[:60]).all()                          # bar i uses only bars up to i
+
+
+def test_cci_matches_a_hand_worked_example():
+    c = np.array([1, 2, 6, 3, 4], float)
+    d = pd.DataFrame({"h": c, "l": c, "c": c})                                                      # high = low = close, so the typical price is the close
+    x = ST.cci(d, 3)
+    assert x.iloc[:2].isna().all() and not np.isnan(x.iloc[2])
+    # bar 2: window 1, 2, 6: mean 3, mean absolute deviation (2 + 1 + 3) / 3 = 2, CCI = (6 - 3) / (0.015 x 2) = 100
+    assert abs(x.iloc[2] - 100.0) < 1e-9
+    # bar 3: window 2, 6, 3: mean 11/3, deviations 5/3, 7/3, 2/3 -> mean 14/9; CCI = (3 - 11/3) / (0.015 x 14/9)
+    assert abs(x.iloc[3] - ((3 - 11 / 3) / (0.015 * 14 / 9))) < 1e-9
+    flat = pd.DataFrame({"h": [5.0] * 6, "l": [5.0] * 6, "c": [5.0] * 6})
+    assert ST.cci(flat, 3).isna().all()                                                             # no movement at all: undefined, not 0
+
+
+def test_cci_strategy_is_fixed_enters_on_a_strong_push_exits_below_zero_and_has_no_lookahead():
+    st = ST.S["cci_trend"]
+    assert st.params == {"n": 20, "high": 100, "low": 0} and not st.requires_funding
+    flat = np.full(40, 100.0) + np.sin(np.arange(40)) * 0.5
+    surge = flat[-1] + np.arange(1, 21, dtype=float) * 4
+    fall = surge[-1] - np.arange(1, 41, dtype=float) * 3
+    c = np.concatenate([flat, surge, fall])
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:19].sum() == 0 and set(pos) <= {0.0, 1.0}
+    assert pos[55] == 1.0 and pos[-1] == 0.0                                                         # in the surge it is holding; after a long fall it has left
+    assert (st.build(d.iloc[:70], st.params).to_numpy() == pos[:70]).all()                           # bar i uses only bars up to i

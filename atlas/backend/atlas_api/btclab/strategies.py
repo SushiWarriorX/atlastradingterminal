@@ -566,6 +566,31 @@ reg(Strategy("mfi_reversion", "Money Flow Index reversion", "Mean reversion", "B
              "The 14-bar Money Flow Index falls below 20.", "The Money Flow Index rises above 70.", "No fixed stop; the exit rule is the stop.", {"n": 14, "low": 20, "high": 70}, {"low": [10, 15, 20, 25, 30]}, _mfi_build, _mfi_conds))
 
 
+def cci(d: pd.DataFrame, n: int) -> pd.Series:
+    """Commodity Channel Index (Lambert, 1980): how far the typical price (high + low + close) / 3 sits from its n-bar average, in units of 0.015 x the mean absolute deviation.
+    Each value uses only bars up to and including that bar."""
+    tp = (d["h"] + d["l"] + d["c"]) / 3
+    ma = tp.rolling(n, min_periods=n).mean()
+    mad = tp.rolling(n, min_periods=n).apply(lambda x: np.abs(x - x.mean()).mean(), raw=True)
+    return (tp - ma) / (0.015 * mad.replace(0, np.nan))
+
+
+def _cci_build(d, p):
+    x = cci(d, p["n"])
+    return hold(x > p["high"], x < p["low"])
+
+
+def _cci_conds(d, p):
+    x = cci(d, p["n"]).iloc[-1]
+    bad = bool(np.isnan(x))
+    return [_cond(f"CCI above +{p['high']} (entry)", None if bad else bool(x > p["high"]), f"CCI {_val(x)}"),
+            _cond(f"CCI below {p['low']} (exit)", None if bad else bool(x < p["low"]), f"CCI {_val(x)}")]
+
+
+reg(Strategy("cci_trend", "Commodity Channel Index trend", "Momentum", "Holds BTC after the Commodity Channel Index shows an unusually strong push above its average (above +100) and steps aside once it drops back below zero.",
+             "The 20-bar CCI rises above +100.", "The CCI falls below 0.", "No fixed stop; the exit rule is the stop.", {"n": 20, "high": 100, "low": 0}, {"high": [60, 80, 100, 120, 150]}, _cci_build, _cci_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 
