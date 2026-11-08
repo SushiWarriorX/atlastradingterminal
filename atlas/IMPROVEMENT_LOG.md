@@ -13,6 +13,13 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Data-source loop, cycle 5: DefiLlama stablecoin supply
+- **Verified live first:** stablecoins.llama.fi total USD-pegged supply $293.7B on 2026-11-08 (about $307B a month earlier, so shrinking), Tether $176.8B and USD Coin $70.6B the largest. Trimmed real responses are the test fixtures.
+- **Shipped:** `stablecoins.py`, `GET /api/btc/stablecoins`. Total supply, changes over 7 days / 30 days / 90 days / 1 year (a comparison is left out when the history does not reach back, never invented), distance below the peak, 90-day bars, top 6 USD issuers with share and 7d/30d change. Non-USD stablecoins are excluded. Terminal: panel on the BTC desk. Signal: card on the BTC page.
+- **Honesty built in:** labelled a liquidity gauge, not a price signal; a tracker's sum, not an official statistic; failure or either request failing shows nothing; demo mode invents nothing.
+- **Tests:** 8 new backend (920 pass), phone browser 47/47 (extended), terminal browser check extended, web build.
+
 ## 2026-11-08 · Data-source loop, cycle 4: CFTC Commitments of Traders, CME Bitcoin futures
 - **Verified live first:** publicreporting.cftc.gov Traders in Financial Futures, contract 133741 (CME Bitcoin), latest report 2026-11-03: open interest 17,527; leveraged funds long 5,114 / short 7,705. 60 real weeks are the test fixture.
 - **Shipped:** `cftc.py`, `GET /api/btc/positioning`. Per trader group: long, short, net, change on the week, share of open interest, 1-year rank (0-100, only with 20+ weeks of data). Terminal: panel on the BTC desk. Signal: card on the BTC page.

@@ -1,4 +1,4 @@
-import type { CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
+import type { CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
 
 /** A failure with a code the UI can act on. `network` means we never got an answer. */
 export class ApiError extends Error {
@@ -80,6 +80,7 @@ export function createApi(opts: ClientOptions) {
     narrative: (refresh = false) => call<NarrativeData>(`/api/discover/narrative?refresh=${refresh}`, { timeoutMs: 120_000 }),
     treasury: () => call<TreasuryData>("/api/macro/treasury", { timeoutMs: 45_000 }),
     btcPositioning: () => call<Positioning>("/api/btc/positioning", { timeoutMs: 45_000 }),
+    btcStablecoins: () => call<Stablecoins>("/api/btc/stablecoins", { timeoutMs: 60_000 }),
     btcSentiment: () => call<Sentiment>("/api/btc/sentiment", { timeoutMs: 30_000 }),
     whatIf: (id: string, amount: number) => call<WhatIfData>(`/api/signal/whatif/${enc(id)}?amount=${amount}`, { timeoutMs: 60_000 }),
     stockResearch: (symbol: string) => call<StockResearchData>(`/api/stocks/${encodeURIComponent(symbol)}/research`, { timeoutMs: 60_000 }),

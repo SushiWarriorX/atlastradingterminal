@@ -226,3 +226,8 @@ export interface TreasuryData { as_of: string; demo: boolean; curve: TreasuryCur
 export interface PositioningGroup { key: string; name: string; who: string; long: number; short: number; net: number; net_change: number | null; long_pct_oi: number; short_pct_oi: number; net_rank_1y: number | null; net_history: number[] }
 export interface Positioning { available: boolean; reason?: string; demo: boolean; as_of: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; source?: string; market?: string;
   open_interest?: number; open_interest_change?: number | null; traders?: number | null; weeks_of_history?: number; groups?: PositioningGroup[]; note?: string }
+
+export interface StablecoinTop { name: string; symbol: string; billions: number; share_pct: number | null; change_7d_pct: number | null; change_30d_pct: number | null }
+export interface Stablecoins { available: boolean; reason?: string; demo: boolean; as_of: string; source?: string; url?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  total_billions?: number; changes?: { label: string; ref_date: string; change_billions: number; change_pct: number }[]; peak?: { date: string; total_billions: number; below_peak_pct: number };
+  history?: { date: string; total_billions: number }[]; top?: StablecoinTop[] }

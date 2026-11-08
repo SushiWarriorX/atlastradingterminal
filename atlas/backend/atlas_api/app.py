@@ -30,6 +30,7 @@ from .sentiment import FearGreed
 from .nyfed import NyFedSofr
 from .treasury import Treasury
 from .cftc import CftcBitcoin
+from .stablecoins import Stablecoins
 from .discover.narratives import NarrativeService
 from .btclab.evaluate import LabError
 from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
@@ -1053,6 +1054,12 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     lab = LabService(BtcData(db), demo)
     fear_greed = FearGreed(demo=demo)
     cftc_btc = CftcBitcoin(demo=demo)
+    stablecoins = Stablecoins(demo=demo)
+
+    @app.get("/api/btc/stablecoins")
+    async def btc_stablecoins():
+        """US-dollar stablecoin supply (DefiLlama): the cash inside crypto, with changes and the biggest issuers. A liquidity gauge, not a price signal."""
+        return ok(await stablecoins.overview())
 
     @app.get("/api/btc/positioning")
     async def btc_positioning():

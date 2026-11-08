@@ -9,6 +9,7 @@ import { StockResearchCard } from "./StockResearchCard";
 import { WhatIfCard } from "./WhatIfCard";
 import { SentimentCard } from "./SentimentCard";
 import { PositioningCard } from "./PositioningCard";
+import { StablecoinsCard } from "./StablecoinsCard";
 import { SecFilingsCard } from "./SecFilingsCard";
 import { StrategyLabCard } from "./StrategyLabCard";
 import { BTC_ID } from "../state/selection";
@@ -133,6 +134,7 @@ export function AssetView({ id, embedded, hideBack }: { id: string; embedded?: b
           {a ? <WhatIfCard assetId={a.id} symbol={a.symbol} /> : null}
           {a?.id === BTC_ID ? <SentimentCard /> : null}
           {a?.id === BTC_ID ? <PositioningCard /> : null}
+          {a?.id === BTC_ID ? <StablecoinsCard /> : null}
           {a?.id === BTC_ID ? <StrategyLabCard /> : null}
           <View style={{ flexDirection: "row", gap: space.sm, alignItems: "flex-start", marginTop: space.md }}>
             <Ionicons name="information-circle-outline" size={16} color={color.faint} />

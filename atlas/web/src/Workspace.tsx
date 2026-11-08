@@ -29,6 +29,7 @@ import { SecFilingsWidget } from "./widgets/SecFilings";
 import { NarrativeWidget } from "./widgets/Narrative";
 import { TreasuryWidget } from "./widgets/Treasury";
 import { PositioningWidget } from "./widgets/Positioning";
+import { StablecoinsWidget } from "./widgets/Stablecoins";
 import { JournalQuickWidget } from "./widgets/JournalQuick";
 
 const Grid = WidthProvider(RGL);
@@ -57,6 +58,7 @@ function render(w: WidgetCfg, view: string) {
     case "narrative": return <NarrativeWidget />;
     case "treasury": return <TreasuryWidget />;
     case "positioning": return <PositioningWidget />;
+    case "stablecoins": return <StablecoinsWidget />;
     case "earnings": return <EarningsWidget />;
     case "journalquick": return <JournalQuickWidget />;
     case "journaltrades": return <JournalTradesWidget />;

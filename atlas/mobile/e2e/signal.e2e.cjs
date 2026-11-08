@@ -618,6 +618,11 @@ async function healthy(browser) {
       await page.waitForSelector(V("positioning-body") + ", " + V("positioning-unavailable") + ", " + V("positioning-error"), { timeout: 45000 });
       const pt = await text(page);
       match(pt, /Bitcoin futures positioning/); match(pt, /CFTC/); noMatch(pt, FORECASTS, "positioning makes no forecasts");
+      await page.waitForSelector(V("stablecoins-card"));
+      await page.waitForSelector(V("stablecoins-body") + ", " + V("stablecoins-unavailable") + ", " + V("stablecoins-error"), { timeout: 60000 });
+      const st = await text(page);
+      match(st, /Stablecoin supply/); noMatch(st, FORECASTS, "stablecoin card makes no forecasts");
+      if (await present(page, "stablecoins-body")) match(st, /not a price signal/, "the liquidity-gauge caveat is shown");
       if (await present(page, "positioning-body")) match(pt, /Net short is not the same as bearish/, "the basis-trade caveat is shown");
       eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the sentiment card");
       await page.click(V("back"));

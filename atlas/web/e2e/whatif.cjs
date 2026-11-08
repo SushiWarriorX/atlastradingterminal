@@ -58,6 +58,10 @@ fs.mkdirSync(S, { recursive: true });
   const cot = await pg.locator('[data-testid="positioning"]').innerText();
   if (!/CFTC/.test(cot)) fail('positioning panel lacks its source');
   console.log('BTC desk positioning: ok');
+  if (!(await titles()).some(x => /STABLECOIN SUPPLY/.test(x))) fail('BTC desk has no stablecoin panel');
+  const sc = await pg.locator('[data-testid="stablecoins"]').innerText();
+  if (!/DefiLlama|Demo mode/.test(sc)) fail('stablecoin panel lacks its source or demo notice');
+  console.log('BTC desk stablecoins: ok');
 
   if (errors.length) fail('browser errors: ' + errors.join(' ; '));
   console.log('PASS');

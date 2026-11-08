@@ -17,17 +17,17 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 | Yahoo Finance (unofficial) | Stock prices, valuation | Signal, Stocks |
 | RSS feeds | Headlines | News, Macro |
 | CoinGecko, mempool.space | Crypto fundamentals | Signal |
+| DefiLlama stablecoin supply (cycle 5) | Total US-dollar stablecoin supply, changes over 7d/30d/90d/1y, distance from peak, 90-day history, top 6 issuers with share and changes | Terminal BTC desk panel, Signal BTC page card |
 | CFTC Commitments of Traders, CME Bitcoin futures (cycle 4) | Weekly long/short/net by trader group (leveraged funds, asset managers, dealers, others), open interest, 1-year rank | Terminal BTC desk panel, Signal BTC page card |
 | US Treasury yield curve and debt (cycle 3) | Full par yield curve 1M-30Y with 2s10s / 3m10y inversion checks; total public debt outstanding | Macro desk panel (terminal), Macro card (Signal) |
 | NY Fed SOFR (cycle 2) | Overnight funding rate with daily change, next to the Fed target range | Macro key indicators (terminal and Signal) |
 | alternative.me Fear & Greed (cycle 1) | Daily 0-100 crypto mood gauge, 31-day history | Terminal BTC desk, Signal BTC page |
 
 ## QUEUED (candidates, in order; each must be fetched live before it ships)
-1. DefiLlama stablecoin supply (liquidity proxy for crypto)
-2. mempool.space on-chain fees and hashrate (BTC network activity)
-3. ECB reference exchange rates (EUR/USD and others)
-4. World Bank / IMF annual macro series (slow-moving context)
-5. Hyperliquid open interest and basis (extend the existing client)
+1. mempool.space on-chain fees and hashrate (BTC network activity)
+2. ECB reference exchange rates (EUR/USD and others)
+3. World Bank / IMF annual macro series (slow-moving context)
+4. Hyperliquid open interest and basis (extend the existing client)
 
 ## BLOCKED
 - fred.stlouisfed.org: added to the allowed hosts but still no reply after the change (checked cycle 1). Retry next cycle; if still silent, the PPI series ids stay unverified.
