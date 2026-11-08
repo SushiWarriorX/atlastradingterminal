@@ -27,7 +27,7 @@ from .discover.service import DiscoverService
 from .eventcal.service import EventCalendar
 from .btclab.data import BtcData
 from .btclab.evaluate import LabError
-from .btclab.service import LabService, RunIn as LabRunIn
+from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
 from .stocks.edgar import EdgarClient
 from .stocks.research import StockResearch
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
@@ -1048,6 +1048,20 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             raise ApiError("LAB_UNAVAILABLE", str(e), 503)
         db.audit("user", "btclab_run", {"strategies": b.strategies, "timeframe": b.timeframe, "market": b.market, "leverage": b.leverage})
         return ok(res)
+
+    @app.post("/api/btclab/agent")
+    async def btclab_agent(b: LabAgentIn):
+        """Five-year stress test, find where the rule loses money, apply a fix from a fixed menu, rerun. Research only."""
+        try:
+            res = await lab.agent(b, db)
+        except LabError as e:
+            raise ApiError("LAB_UNAVAILABLE", str(e), 503)
+        db.audit("user", "btclab_agent", {"strategies": b.strategies, "rounds": b.rounds})
+        return ok(res)
+
+    @app.get("/api/btclab/agent/history")
+    async def btclab_agent_history(strategy: str = "", limit: int = 20):
+        return ok({"items": lab.agent_history(db, strategy or None, max(1, min(limit, 100)))})
 
     @app.get("/api/stocks/earnings")
     async def stocks_earnings(symbols: str = "", days: int = 30):

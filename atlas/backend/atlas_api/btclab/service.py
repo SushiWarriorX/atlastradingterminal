@@ -10,6 +10,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from . import agent as AG
 from . import evaluate as E
 from .data import BARS_PER_YEAR, TF_SECONDS, BtcData, DataError, gaps
 from .strategies import DEFAULT_FIVE, FINDINGS, S
@@ -55,6 +56,22 @@ def demo_rows(tf: str) -> list[tuple]:
 def demo_funding(rows: list[tuple]) -> list[tuple[int, float]]:
     t = rows[0][0]
     return [(t + 3600 * i, 0.00001 * (1 + math.sin(i / 400))) for i in range((rows[-1][0] - t) // 3600 + 1)]
+
+
+class AgentIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    strategies: list[str] = Field(default_factory=lambda: list(DEFAULT_FIVE), min_length=1, max_length=MAX_STRATEGIES)
+    rounds: int = Field(AG.MAX_ROUNDS, ge=1, le=AG.MAX_ROUNDS)
+    fee_bps: float = Field(5.0, ge=0, le=50)
+    slippage_bps: float = Field(5.0, ge=0, le=100)
+
+    @field_validator("strategies")
+    @classmethod
+    def _known(cls, v):
+        for i in v:
+            if i not in S:
+                raise ValueError(f"unknown strategy '{i}'")
+        return list(dict.fromkeys(v))
 
 
 class LabService:
@@ -111,3 +128,31 @@ class LabService:
             self._cache.pop(next(iter(self._cache)))
         self._cache[key] = out
         return out
+
+    async def agent(self, req: AgentIn, db=None) -> dict:
+        """Run the improvement loop (five-year stress test, diagnose, fix, rerun) and save each result so reruns can be compared."""
+        r = req.model_dump()
+        notes: list[str] = []
+        if self.demo:
+            rows = demo_rows("1d")
+        else:
+            notes = await self.data.ensure("1d", False)
+            rows = self.data.stored("1d")
+        if not rows:
+            raise E.LabError("No BTC price history is saved yet and it could not be downloaded. " + " ".join(notes))
+        out = await asyncio.to_thread(AG.improve_many, rows, r, r["strategies"], r["rounds"])
+        out["data"] = {"demo": self.demo, "source": "DEMO: synthetic prices, not market data" if self.demo else "Coinbase Exchange public candles (BTC-USD spot, daily)",
+                       "status": "DEMO" if self.demo else "HISTORICAL", "last_bar": datetime.fromtimestamp(rows[-1][0], timezone.utc).isoformat(), "notes": notes}
+        out["method"] = AG.__doc__.strip()
+        if db is not None and not self.demo:
+            now = datetime.now(timezone.utc).isoformat()
+            for res in out["results"]:
+                rid = hashlib.sha256(f"{now}{res['strategy']['id']}".encode()).hexdigest()[:16]
+                db.x("INSERT INTO btc_agent_runs(id,created_at,strategy,verdict,fixes,data_to,payload) VALUES(?,?,?,?,?,?,?)",
+                     (rid, now, res["strategy"]["id"], res["verdict"], ",".join(x["id"] for x in res["fixes_kept"]), res["period"]["to"], json.dumps(res, default=float)))
+        return out
+
+    @staticmethod
+    def agent_history(db, strategy: str | None = None, limit: int = 20) -> list[dict]:
+        q = "SELECT id,created_at,strategy,verdict,fixes,data_to FROM btc_agent_runs" + (" WHERE strategy=?" if strategy else "") + " ORDER BY created_at DESC LIMIT ?"
+        return [dict(x) for x in db.q(q, ((strategy, limit) if strategy else (limit,)))]

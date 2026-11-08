@@ -254,3 +254,73 @@ def test_no_luck_check_is_shown_for_a_rule_with_too_few_trades():
     assert r["out_of_sample"]["trades"] < E.MIN_TRADES
     j = r["judgement"]
     assert j["sharpe_lower_bound"] is None and "Too few out-of-sample trades" in j["luck_check_note"] and str(E.MIN_TRADES) in j["luck_check_note"]
+
+
+# --- improvement loop -------------------------------------------------------------------------------------------------------------------
+from atlas_api.btclab import agent as AG
+
+
+def _rows(n=2000, seed=3):
+    rng = np.random.default_rng(seed)
+    px, out = 10000.0, []
+    for i in range(n):
+        o = px
+        px = px * math.exp(rng.normal(0.0004, 0.03))
+        out.append((1_500_000_000 + i * 86400, o, max(o, px) * 1.01, min(o, px) * 0.99, px, 1.0))
+    return out
+
+
+def test_loop_keeps_the_holdout_sealed():
+    # Changing ONLY the holdout bars must not change a single design-period decision.
+    rows = _rows()
+    cut = len(rows[-AG.YEARS * 365 - 1:])
+    k_bars = int((cut - 1) * AG.DESIGN_FRACTION)
+    a = AG.improve(rows, {"fee_bps": 5, "slippage_bps": 5}, "price_above_sma")
+    wild = rows[:-(cut - k_bars - 5)] + [(t, o * 3, h * 3, l * 3, c * 3, v) for t, o, h, l, c, v in rows[-(cut - k_bars - 5):]]
+    b = AG.improve(wild, {"fee_bps": 5, "slippage_bps": 5}, "price_above_sma")
+    assert [(r["round"], r.get("fix"), r.get("kept")) for r in a["rounds"]] == [(r["round"], r.get("fix"), r.get("kept")) for r in b["rounds"]]
+
+
+def test_loop_never_calls_a_thin_holdout_a_success_and_reports_every_try():
+    out = AG.improve(_rows(), {"fee_bps": 5, "slippage_bps": 5}, "donchian_breakout")
+    assert out["verdict"] in {"no_change", "inconclusive", "held_up", "did_not_hold_up"}
+    assert out["recommended"] == ("final" if out["verdict"] == "held_up" else "start")
+    for r in out["rounds"]:
+        if r.get("fix"):
+            assert r["why"] and r["before"] and r["after"]
+    assert out["fixes_tried"] == sum(1 for r in out["rounds"] if r.get("fix"))
+    assert any("Research only" in c for c in out["caveats"])
+
+
+def test_loop_refuses_short_history_and_funding_strategies():
+    with pytest.raises(E.LabError):
+        AG.improve(_rows(400), {"fee_bps": 5, "slippage_bps": 5}, "price_above_sma")
+    with pytest.raises(E.LabError):
+        AG.improve(_rows(), {"fee_bps": 5, "slippage_bps": 5}, "funding_fade")
+
+
+def test_drawdown_episodes_find_the_fall_and_ignore_small_dips():
+    c = np.array([100, 120, 90, 80, 125, 124, 110, 130], float)
+    eps = AG.drawdown_episodes(c, 0, len(c))
+    assert len(eps) == 1 and eps[0][:2] == (1, 3) and eps[0][2] == pytest.approx(-33.33, abs=0.1)
+
+
+def test_each_fix_only_removes_exposure_and_never_adds_it():
+    rows = _rows(1500)
+    f = E.Frame(rows, "1d", None, False)
+    base = np.clip(E.target_for(ST.S["donchian_breakout"], f, dict(ST.S["donchian_breakout"].params), False), 0, 1)
+    for key in ("trend_filter", "calm_only", "confirm_entry", "min_hold"):
+        new, _ = AG.REMEDIES[key]["fn"](f, base, Costs())
+        if key != "min_hold":
+            assert (new <= base + 1e-12).all(), key
+
+
+def test_agent_api_runs_in_demo_mode(tmp_path):
+    with TestClient(create_app(db_path=str(tmp_path / "a.db"), demo=True, alert_loop=False, news_loop=False)) as c:
+        r = c.post("/api/btclab/agent", json={"strategies": ["price_above_sma"], "rounds": 2})
+        assert r.status_code == 200, r.text
+        d = r.json()["data"]
+        assert d["data"]["demo"] and d["results"][0]["holdout"]["final"]["metrics"] is not None
+        assert c.post("/api/btclab/agent", json={"strategies": ["nope"]}).status_code == 422
+        assert c.post("/api/btclab/agent", json={"rounds": 99}).status_code == 422
+        assert c.get("/api/btclab/agent/history").status_code == 200

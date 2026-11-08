@@ -3,6 +3,13 @@
 Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) and by hand.
 
 
+
+## 2026-11-08 · Self-improving loop for the Strategy Lab (user request)
+- **What:** `btclab/agent.py` runs: 5-year stress test -> find where the rule loses money -> pick a fix from a fixed menu -> rerun -> keep or discard. API: `POST /api/btclab/agent`, `GET /api/btclab/agent/history` (runs saved, migration 015).
+- **Guards:** last 30% of the 5 years is a sealed holdout (opened once, at the end; a test proves changing it changes no decision). Fixes are fixed in advance, never tuned. The bar to keep a fix rises with every fix tried. A win on fewer than 3 holdout trades is "inconclusive", not success.
+- **First real run (Coinbase daily, ~5.2y):** 5 library rules. Only "trailing-return momentum" kept a fix (200-day trend filter) and it made 1 holdout trade -> inconclusive. The other four: no menu fix passed. Breakout rules lost 26% on the holdout; the loop correctly did not pretend to fix that.
+- **Next:** Monte Carlo resampling of the 5 years (idea from the public day-trader-skill README) as an extra stress; web/phone view of the loop; scheduled cycles can call the endpoint.
+
 ## 2026-11-08 · Browser console warning fixed (user report)
 - **Problem:** the browser console warned "React does not recognize the `accessibilityElementsHidden` prop on a DOM element" (from the small price lines, `Sparkline`).
 - **Fix:** web now gets `aria-hidden`; phones keep the native prop. Harmless, but noisy.
