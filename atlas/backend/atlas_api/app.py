@@ -34,6 +34,7 @@ from .stablecoins import Stablecoins
 from .onchain import OnChain
 from .ecb import EcbFx
 from .worldbank import WorldBank
+from .cgglobal import CoinGeckoGlobal
 from .discover.narratives import NarrativeService
 from .btclab.evaluate import LabError
 from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
@@ -1071,6 +1072,12 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     cftc_btc = CftcBitcoin(demo=demo)
     stablecoins = Stablecoins(demo=demo)
     onchain = OnChain(demo=demo)
+    cg_global = CoinGeckoGlobal(demo=demo)
+
+    @app.get("/api/btc/market")
+    async def btc_market():
+        """Whole crypto market (CoinGecko): total value, 24h change and volume, Bitcoin and Ether share, stablecoin share. Descriptive, not a signal."""
+        return ok(await cg_global.overview())
 
     @app.get("/api/btc/network")
     async def btc_network():

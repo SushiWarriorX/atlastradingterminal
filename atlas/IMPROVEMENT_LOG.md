@@ -18,6 +18,13 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Data-source loop, cycle 9: CoinGecko whole-crypto-market snapshot
+- **Queue item skipped:** Hyperliquid open interest/basis is already in the BTC derivatives panel (checked the code and the live API); logged as a duplicate. The loop searched for a new candidate instead.
+- **Verified live first:** api.coingecko.com/api/v3/global (no key): total value $2.52T, Bitcoin share 60.0%, Ether 10.7%, Tether 7.0%, USD Coin 2.8%, 24h change -3.8%. Trimmed real response is the fixture.
+- **Shipped:** `cgglobal.py`, `GET /api/btc/market`. Terminal: panel on the BTC desk. Signal: card on the BTC page. Shows the credit "Data provided by CoinGecko"; a rate limit (HTTP 429) is said plainly; descriptive, not a signal.
+- **Tests:** 6 new backend (964 pass), phone browser 47/47 (extended), terminal browser check extended, web build.
+
 ## 2026-11-08 · Data-source loop, cycle 8: World Bank annual indicators
 - **Verified live first:** api.worldbank.org (data updated 2026-10-08): GDP growth, CPI inflation and unemployment for the US, euro area, China, Japan, UK and India; newest year 2025 for most, 2024 for US inflation. Real responses are the test fixtures.
 - **Shipped:** `worldbank.py`, `GET /api/macro/world`. Each country keeps its own newest year (shown), plus the change from the year before by subtraction; one failing indicator leaves the others; demo mode shows nothing. Terminal: panel on the Macro desk. Signal: card on the Macro screen.

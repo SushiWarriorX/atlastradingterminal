@@ -630,6 +630,10 @@ async function healthy(browser) {
       await page.waitForSelector(V("stablecoins-card"));
       await page.waitForSelector(V("stablecoins-body") + ", " + V("stablecoins-unavailable") + ", " + V("stablecoins-error"), { timeout: 60000 });
       const st = await text(page);
+      await page.waitForSelector(V("market-card"));
+      await page.waitForSelector(V("market-body") + ", " + V("market-unavailable") + ", " + V("market-error"), { timeout: 45000 });
+      const mk = await text(page);
+      match(mk, /Crypto market/); match(mk, /CoinGecko/); noMatch(mk, FORECASTS, "the crypto market card makes no forecasts");
       match(st, /Stablecoin supply/); noMatch(st, FORECASTS, "stablecoin card makes no forecasts");
       await page.waitForSelector(V("network-card"));
       await page.waitForSelector(V("network-body") + ", " + V("network-error"), { timeout: 60000 });

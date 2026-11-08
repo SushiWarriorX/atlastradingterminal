@@ -1,4 +1,4 @@
-export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "secfilings" | "narrative" | "treasury" | "positioning" | "stablecoins" | "network" | "fx" | "tracker" | "world" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "secfilings" | "narrative" | "treasury" | "positioning" | "stablecoins" | "network" | "fx" | "tracker" | "world" | "cryptomarket" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
@@ -24,9 +24,10 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "track", type: "tracker", x: 0, y: 77, w: 12, h: 20 },
     { i: "deriv", type: "derivatives", x: 0, y: 97, w: 12, h: 15 },
     { i: "cot", type: "positioning", x: 0, y: 112, w: 12, h: 14 },
-    { i: "stable", type: "stablecoins", x: 0, y: 126, w: 12, h: 13 },
-    { i: "net", type: "network", x: 0, y: 139, w: 12, h: 13 },
-    { i: "whatif", type: "whatif", x: 0, y: 152, w: 12, h: 22 },
+    { i: "mkt", type: "cryptomarket", x: 0, y: 126, w: 12, h: 11 },
+    { i: "stable", type: "stablecoins", x: 0, y: 137, w: 12, h: 13 },
+    { i: "net", type: "network", x: 0, y: 150, w: 12, h: 13 },
+    { i: "whatif", type: "whatif", x: 0, y: 163, w: 12, h: 22 },
   ] },
   equities: { id: "equities", name: "US Equity Trading Desk (stocks and ETFs only)", scope: "equity", widgets: [
     { i: "chart", type: "chart", x: 0, y: 0, w: 8, h: 13, props: { pick: "equity" } },

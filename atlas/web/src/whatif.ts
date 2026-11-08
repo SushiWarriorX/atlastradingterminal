@@ -68,3 +68,7 @@ export interface TrackerData { as_of: string; demo: boolean; entries: TrackerEnt
 export interface WorldRow { country: string; iso: string; available: boolean; year?: number; value?: number; previous_year?: number | null; previous_value?: number | null; change?: number | null; years_old?: number; history?: { year: number; value: number }[] }
 export interface WorldIndicator { key: string; title: string; unit: string; what: string; available: boolean; reason?: string; rows: WorldRow[] }
 export interface WorldData { available: boolean; reason?: string; demo: boolean; as_of: string; source: string; url: string; note: string; indicators: WorldIndicator[] }
+
+export interface CryptoMarket { available: boolean; reason?: string; demo: boolean; as_of: string; source: string; url: string; credit: string; note: string; updated_at?: string; age_minutes?: number; freshness?: "CURRENT" | "OVERDUE";
+  total_market_cap_trillions?: number; change_24h_pct?: number; volume_24h_billions?: number; volume_to_cap_pct?: number; btc_dominance_pct?: number; eth_dominance_pct?: number; other_pct?: number;
+  stablecoin_share_pct?: number | null; stablecoin_note?: string | null; coins?: number; markets?: number; top?: { symbol: string; share_pct: number }[] }

@@ -12,6 +12,7 @@ import { PositioningCard } from "./PositioningCard";
 import { StablecoinsCard } from "./StablecoinsCard";
 import { NetworkCard } from "./NetworkCard";
 import { StrategyTrackerCard } from "./StrategyTrackerCard";
+import { CryptoMarketCard } from "./CryptoMarketCard";
 import { SecFilingsCard } from "./SecFilingsCard";
 import { StrategyLabCard } from "./StrategyLabCard";
 import { BTC_ID } from "../state/selection";
@@ -136,6 +137,7 @@ export function AssetView({ id, embedded, hideBack }: { id: string; embedded?: b
           {a ? <WhatIfCard assetId={a.id} symbol={a.symbol} /> : null}
           {a?.id === BTC_ID ? <SentimentCard /> : null}
           {a?.id === BTC_ID ? <PositioningCard /> : null}
+          {a?.id === BTC_ID ? <CryptoMarketCard /> : null}
           {a?.id === BTC_ID ? <StablecoinsCard /> : null}
           {a?.id === BTC_ID ? <NetworkCard /> : null}
           {a?.id === BTC_ID ? <StrategyLabCard /> : null}
