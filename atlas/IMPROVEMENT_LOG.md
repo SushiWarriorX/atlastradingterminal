@@ -21,6 +21,11 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+## 2026-11-08 · Improvement loop (6-hour): no change
+- **Checked:** clean tree after the data and strategy cycles; backend 1012 passed, phone 43 unit + 48 of 48 browser checks, terminal 10 tests + build + desk browser check, all run minutes earlier. Viewed the phone Macro screenshot: top of screen reads correctly (calendar, plain "indicators could not be loaded" message, SOFR with date).
+- **Not verified:** the new Fed liquidity card sits below the fold of that screenshot and was not looked at as an image (its text and states are covered by the browser checks).
+- **Why no change:** nothing defective found, and the last hour already added a data source and a strategy; no work invented. Next candidates: scroll-through screenshots of the lower Macro cards, Journal CSV export.
+
 ## 2026-11-08 · Data cycle 10 and strategy cycle 3 (parallel loops)
 - **Data:** NY Fed repo and reverse repo operations (free, official, no key). Backend `fedops.py` (7 tests, fixture from a real 120-operation response), route `/api/macro/fedops`, terminal Macro desk panel, Signal Macro card, added to the macro refresh job. Shown with its date, OVERDUE after 6 days, described as plumbing not a signal. Demo mode shows nothing.
 - **Strategy:** Parabolic SAR (Wilder), fixed settings (step 0.02, max 0.2), no tuning. Frozen backtest: evidence **weak**. Whole history +2,255.5% vs holding +26,962.8%; last 30% (out of sample) +68.8% vs +187.8%, 51 trades; worst drop out of sample -35.4% vs -53.1%; 100% of nearby settings positive out of sample; doubled costs +52.4%. It did not beat holding after adjusting for risk, and the luck check (23 rules in the library) could not rule out luck. Reported as it is.
