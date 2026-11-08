@@ -175,3 +175,8 @@ export function useNarrative() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).narrative, queryFn: () => need(api).narrative(false), enabled: !!api, staleTime: 30 * 60_000, retry: 0 });
 }
+
+export function useTreasury() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).treasury, queryFn: () => need(api).treasury(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 60 * 60_000, retry: 0 });
+}

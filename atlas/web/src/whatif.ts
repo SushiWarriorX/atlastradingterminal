@@ -27,3 +27,10 @@ export interface NarrativeData {
   facts: { median_return_1m_pct: number; spy_return_1m_pct: number | null; relative_1m_pct: number; share_above_50d: number | null; median_volume_vs_normal: number | null; headlines_48h: number | null; median_daily_range_pct: number };
   runners_up: { theme: string; name: string; score: number; relative_1m_pct: number }[]; all_themes: { theme: string; name: string; score: number; recently_featured: boolean }[];
 }
+
+export interface TreasuryCurve { available: boolean; reason?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; source?: string; note?: string;
+  points?: { tenor: string; rate: number | null; change_1d_bp: number | null; change_1m_bp: number | null }[];
+  spreads?: { "2s10s_bp": number | null; "3m10y_bp": number | null; "2s10s_inverted": boolean | null; "3m10y_inverted": boolean | null }; compared_with?: { previous_day: string | null; one_month: string | null } }
+export interface TreasuryDebt { available: boolean; reason?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; source?: string; note?: string;
+  total_trillions?: number; held_by_public_trillions?: number; intragovernmental_trillions?: number; change_vs_previous_day_billions?: number | null; change_vs_a_year_ago_pct?: number | null }
+export interface TreasuryData { as_of: string; demo: boolean; curve: TreasuryCurve; debt: TreasuryDebt }

@@ -11,6 +11,12 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+
+## 2026-11-08 · Data-source loop, cycle 3: US Treasury yield curve and debt
+- **Verified live first:** home.treasury.gov daily par yield curve XML (10Y 4.86%, 2Y 4.51% on 2026-11-06) and FiscalData Debt to the Penny ($40.56T on 2026-11-05). Real responses are the test fixtures.
+- **Shipped:** `treasury.py` and `GET /api/macro/treasury`. Full curve 1M-30Y with change vs previous day and about a month ago, 2s10s and 3m10y spreads with inversion flags, and total debt (held by public / intragovernmental, daily and yearly change). Terminal: new panel on the Macro desk. Signal: new card on the Macro screen. Each half fails on its own and says so; demo mode shows nothing invented. XML with a DOCTYPE or entities is refused.
+- **Tests:** 8 new backend (904 pass), phone browser 47/47, web build.
+
 ## 2026-11-08 · Data-source loop, cycle 2: NY Fed SOFR
 - **Verified live first:** markets.newyorkfed.org answered with SOFR 3.92% for 2026-11-05 (percentiles, volume). A real response is the test fixture.
 - **Shipped:** `nyfed.py`; SOFR is a key indicator right after the Fed target range in Macro (terminal and Signal), with its date, daily change and freshness. Failure shows "unavailable" with a reason; demo mode shows nothing.

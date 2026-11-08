@@ -6,6 +6,7 @@ import { safeUrl } from "../lib/links";
 import { signed } from "../lib/journal";
 import { color, radius, space } from "../theme";
 import { CalendarCard } from "./CalendarCard";
+import { TreasuryCard } from "./TreasuryCard";
 import { ScreenHeader } from "./ScreenHeader";
 import { Banner, Chip, Divider, ErrorState, Skeleton, Tag, TextButton, Txt } from "./ui";
 import type { MacroIndicator } from "../api/types";
@@ -49,6 +50,7 @@ export function MacroView() {
                     </View>) : <View style={{ paddingVertical: 8 }}><Txt variant="body">{i.label}</Txt><Txt variant="tiny" c={color.down}>Unavailable: {i.reason}</Txt></View>}
                 </View>))}
             </Section>
+            <TreasuryCard />
             <Section title="Upcoming" note="Scheduled dates only. What each release contains is not known in advance.">
               {d.upcoming.length === 0 ? <Txt variant="small">No upcoming events could be loaded.</Txt> : d.upcoming.map((e, i) => (
                 <View key={i} style={{ flexDirection: "row", gap: space.md }}><Txt variant="small" style={{ width: 120 }}>{e.at_utc ? when(e.at_utc) : e.date}</Txt><View style={{ flex: 1 }}><Txt variant="body">{e.title}</Txt><Txt variant="tiny">{e.source}</Txt></View></View>))}

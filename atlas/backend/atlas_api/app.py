@@ -28,6 +28,7 @@ from .eventcal.service import EventCalendar
 from .btclab.data import BtcData
 from .sentiment import FearGreed
 from .nyfed import NyFedSofr
+from .treasury import Treasury
 from .discover.narratives import NarrativeService
 from .btclab.evaluate import LabError
 from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
@@ -333,6 +334,13 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         if not demo and provs.get("fred") is None:
             raise ApiError("NOT_CONFIGURED", "The FRED provider is not set up.", 503)
         return ok(await fedwatch.overview())
+
+    treasury = Treasury(demo=demo)
+
+    @app.get("/api/macro/treasury")
+    async def macro_treasury():
+        """Full US Treasury yield curve (1 month to 30 years) with 2s10s / 3m10y spreads, plus total public debt. Official free data, with dates."""
+        return ok(await treasury.overview())
 
     macro_brief = MacroBriefService(macro, fedwatch, news, demo, sofr=NyFedSofr(demo=demo))
 

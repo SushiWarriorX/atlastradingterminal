@@ -1,7 +1,7 @@
 import type { CheckState_ } from "./health";
 import type { FedWatch, MacroBrief, MacroOverview } from "./macro";
 import type { EarningsCal, StockResearch } from "./stocks";
-import type { NarrativeData, Sentiment, WhatIf } from "./whatif";
+import type { NarrativeData, Sentiment, TreasuryData, WhatIf } from "./whatif";
 import type { SecFilings } from "./secfilings";
 import type { CalData } from "./calendar";
 import type { DiscoverRanked, DiscoverRun } from "./discover";
@@ -80,6 +80,7 @@ export const api = {
   labRun: (b: LabReq) => call<LabRun>("/api/btclab/run", body("POST", b)),
   secFilings: (symbols: string, forms: string[], limit: number, days: number) => call<SecFilings>(`/api/stocks/filings?symbols=${encodeURIComponent(symbols)}&forms=${encodeURIComponent(forms.join(","))}&limit=${limit}&days=${days}`),
   narrative: (refresh = false) => call<NarrativeData>(`/api/discover/narrative?refresh=${refresh}`),
+  treasury: () => call<TreasuryData>("/api/macro/treasury"),
   btcSentiment: () => call<Sentiment>("/api/btc/sentiment"),
   whatIf: (id: string, amount: number) => call<WhatIf>(`/api/signal/whatif/${encodeURIComponent(id)}?amount=${amount}`),
   stockResearch: (id: string) => call<StockResearch>(`/api/stocks/${encodeURIComponent(id)}/research`),

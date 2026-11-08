@@ -528,7 +528,10 @@ async function healthy(browser) {
     await check("Macro: what matters today, indicators and headlines are labelled, gaps are listed, and a missing FRED key is said plainly", async () => {
       await page.click(T("tab-macro"));
       await page.waitForSelector(V("macro-brief"));
+      await page.waitForSelector(V("treasury-card"));
+      await page.waitForSelector(V("treasury-body") + ", " + V("treasury-error"), { timeout: 45000 });
       const t = await text(page);
+      match(t, /US Treasury/, "the Treasury card is on the Macro screen"); match(t, /Yield curve|Yield curve unavailable|Demo mode/i);
       match(t, /Key indicators/); noMatch(t, /What matters today/, "the rule-based notes section was removed on request"); match(t, /Upcoming/); match(t, /Headlines/);
       match(t, /Official indicators could not be loaded right now/, "missing indicators are said once, in plain words, not invented");
       assert(!/Unavailable: unavailable/i.test(t), "no 'Unavailable: unavailable (CODE)' wording");
