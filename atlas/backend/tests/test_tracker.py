@@ -186,3 +186,23 @@ def test_ichimoku_strategy_is_fixed_has_no_lookahead_and_exits_below_the_cloud()
     pos = st.build(d, st.params).to_numpy()
     assert pos[:77].sum() == 0 and pos[77] == 1.0 and pos[100] == 1.0 and pos[-1] == 0.0
     assert (st.build(d.iloc[:150], st.params).to_numpy() == pos[:150]).all()               # bar i uses only bars up to i
+
+
+def test_tsmom_is_the_return_from_lookback_to_skip_bars_ago_and_ignores_the_recent_month():
+    c = pd.Series(np.arange(1, 501, dtype=float))
+    m = ST.tsmom(c, 365, 30)
+    assert m.iloc[:365].isna().all() and not np.isnan(m.iloc[365])
+    assert m.iloc[400] == c.iloc[370] / c.iloc[35] - 1                                       # bar 400 looks from bar 35 to bar 370
+    spike = c.copy()
+    spike.iloc[-29:] *= 100                                                                  # a jump inside the skipped month does not move the signal on the last bar
+    assert ST.tsmom(spike, 365, 30).iloc[-1] == m.iloc[-1]
+
+
+def test_tsmom_strategy_is_fixed_long_only_and_has_no_lookahead():
+    st = ST.S["tsmom_12_1"]
+    assert st.params == {"lookback": 365, "skip": 30} and not st.requires_funding
+    c = np.concatenate([100 + np.arange(450, dtype=float), 549 - np.arange(1, 301, dtype=float)])
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:365].sum() == 0 and pos[400] == 1.0 and pos[-1] == 0.0 and set(pos) <= {0.0, 1.0}
+    assert (st.build(d.iloc[:500], st.params).to_numpy() == pos[:500]).all()                 # bar i uses only bars up to i

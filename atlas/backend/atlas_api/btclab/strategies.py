@@ -438,6 +438,28 @@ reg(Strategy("ichimoku_cloud", "Ichimoku cloud (9, 26, 52)", "Trend", "Holds BTC
              {"tenkan": 9, "kijun": 26, "senkou": 52}, {"kijun": [20, 23, 26, 30, 34]}, _ichi_build, _ichi_conds))
 
 
+def tsmom(c: pd.Series, lookback: int, skip: int) -> pd.Series:
+    """Time-series momentum "12 minus 1" (Moskowitz, Ooi and Pedersen): the return from `lookback` bars ago to `skip` bars ago. The recent `skip` bars are left out on purpose."""
+    return c.shift(skip) / c.shift(lookback) - 1
+
+
+def _tsmom_build(d, p):
+    m = tsmom(d["c"], p["lookback"], p["skip"])
+    return hold(m > 0, m <= 0)
+
+
+def _tsmom_conds(d, p):
+    m = tsmom(d["c"], p["lookback"], p["skip"]).iloc[-1]
+    bad = bool(np.isnan(m))
+    return [_cond(f"Return from {p['lookback']} to {p['skip']} bars ago is positive (entry)", None if bad else bool(m > 0), f"return {_val(m * 100)}%"),
+            _cond("That return is zero or negative (exit)", None if bad else bool(m <= 0), f"return {_val(m * 100)}%")]
+
+
+reg(Strategy("tsmom_12_1", "Time-series momentum (12 minus 1)", "Momentum", "Holds BTC while its return over the past year, leaving out the most recent month, is positive: the classic 12-minus-1 momentum measure.",
+             "The return from 365 bars ago to 30 bars ago is above zero.", "That return is zero or below.", "No fixed stop; the exit rule is the stop.", {"lookback": 365, "skip": 30},
+             {"lookback": [240, 300, 365, 450, 540]}, _tsmom_build, _tsmom_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 

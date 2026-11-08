@@ -21,6 +21,12 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 
 
+## 2026-11-08 · Strategy cycle 5: Time-series momentum (12 minus 1)
+- **Rule (fixed from the queue, not tuned):** long while the return from 365 bars ago to 30 bars ago is positive, flat otherwise. The latest month is left out on purpose. 25 rules in the library now.
+- **Frozen backtest, evidence: none.** The tool's own reason: only 3 trades out of sample (needs 15), so it cannot tell skill from luck and the luck check was not run. Whole history +12,626.6% vs holding +26,979.4%; worst drop -80.7% vs -83.8%. Last 30% (out of sample): +237.1% vs holding +188.0%, worst drop -32.1% vs -53.1%, but from just 3 trades. 100% of nearby settings positive out of sample; doubled costs +234.9%. It was invested in about 77% of up bars and 73% of down bars, so it mostly behaved like holding with a few exits.
+- **How to read it:** the out-of-sample return beating holding rests on three trades, which is not evidence. Over the whole history it did worse than holding. Reported as it is; only a forward record can add evidence.
+- **Checks:** hand-worked indicator test, skip-month test, long-only and no-look-ahead tests; backend 1031 passed. No UI change this cycle.
+
 ## 2026-11-08 · Data cycle 12: Treasury note and bond auction results
 - **Source:** US Treasury FiscalData auctions dataset (free, no key, fetched live this cycle). Backend `auctions.py` (8 tests, fixture from a real 150-auction response), route `/api/macro/auctions`, terminal Macro desk table, Signal Macro card, macro refresh job.
 - **Shows:** per term (2, 3, 5, 7, 10, 20, 30 years): high yield, change versus the previous auction of that term, bid-to-cover against the average of the previous four, amount offered, auction date. Reopenings are grouped with their original term (a "9-Year 10-Month" is a reopened 10-year). Inflation-protected (TIPS) and floating-rate issues are excluded because their yields are not comparable, bills because they are weekly. Auctions held but with no results in the source yet are listed as pending (the 20-year reopening of 2026-10-21 was, at fetch time), never guessed. Described as finished auctions, not signals. Demo mode shows nothing.
