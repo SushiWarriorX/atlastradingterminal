@@ -348,3 +348,6 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Changed:** the stale scenario now uses 7-day-old prices (stale at any time of the week); expected age text updated to match.
 - **Verified:** phone e2e 48 of 48, type check and 43 unit tests pass. App behaviour unchanged.
 - **Not verified:** the backend and web suites were not touched by this change.
+
+## 2026-11-09: owner changed two loops
+- Skills loop may install plain skills (repo-scoped) without asking; plugins with hooks/servers still need approval. Strategy loop may test up to three rules per cycle until one is credibly profitable, with a strict bar (holdout, luck check, 30+ trades, label at least moderate). Baseline 67 capabilities, target 71, in `atlas/CAPABILITIES.md`.

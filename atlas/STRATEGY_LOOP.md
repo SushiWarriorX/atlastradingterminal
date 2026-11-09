@@ -1,5 +1,7 @@
 # Strategy loop (every 10 minutes)
 
+UPDATE 2026-11-09: the owner wants several rules tested per cycle until one is credibly profitable (see 'Search until profitable' at the end).
+
 Goal: add one new BTC trading RULE per cycle to the Strategy Lab, backtest it once, show it in the Strategy tracker section, and then follow it forward on new bars. Research only: nothing here places a trade or says "buy".
 
 ## Each cycle
@@ -40,3 +42,10 @@ Goal: add one new BTC trading RULE per cycle to the Strategy Lab, backtest it on
 18. `zscore_momentum` 90-bar return z-score (against the past 365 bars) above +1 to enter; below 0 to exit.
 19. `elder_bull` Elder-ray bull power (13): long while EMA(13) is rising and bull power (high minus EMA) is positive and rising.
 20. `donchian_mid` Donchian midline (50): long while the close is above the midpoint of the 50-bar high and low.
+
+## Search until profitable (owner request 2026-11-09)
+- A cycle may now add up to THREE rules from the queue (or new ideas from published sources), each with fixed settings written down BEFORE the backtest. Keep going across cycles until one is credibly profitable, then stop adding and report it.
+- "Credibly profitable" means ALL of: beats buy-and-hold BTC on risk-adjusted terms in the last-30% holdout; positive net of the tool's costs; at least 30 trades; evidence label at least "moderate" after the tool's luck check for the whole library; and a forward record that has not contradicted it. Anything less is reported as "not yet", never as "profitable".
+- Why strict: testing many rules until one looks good is how false winners are made. Every extra rule makes the luck check harder, on purpose. The search is allowed; claiming a win from it without the holdout and the luck check is not.
+- Still never: retune a rule after seeing its result, try variants of one idea to rescue it, delete a bad result, or say "buy". At 60 rules, stop and ask the user (unchanged).
+- Report per cycle (3 lines): rules added (names), best holdout result vs holding with its label, and whether anything met the "credibly profitable" bar (usually: no, and what that means).
