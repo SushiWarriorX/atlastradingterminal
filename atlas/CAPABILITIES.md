@@ -8,12 +8,12 @@ Baseline counted 2026-11-09:
 | Live data sources | 29 | `DATA_SOURCES.md` LIVE table |
 | Strategy library rules | 31 (now 34) | `btclab/strategies.py` (tracker ledger holds 11 frozen) |
 | AI desk tools | 7 | `backend/atlas_api/ai/tools.py` |
-| Repo skills | 0 (now 1) | `atlas/.claude/skills/` |
+| Repo skills | 0 (now 2) | `atlas/.claude/skills/` |
 | **Total** | **67** | |
 
 Target: at least 71 (67 x 1.05 = 70.35, rounded up). Each loop adds its own kind; update the table and the current total when something ships.
 
-Current total: 71 (baseline 67 + 3 strategies + 1 skill). Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
+Current total: 72 (baseline 67 + 3 strategies + 2 skills). Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
 
 ## Added since baseline
 | Date | Kind | Name | Source/loop |
@@ -22,6 +22,7 @@ Current total: 71 (baseline 67 + 3 strategies + 1 skill). Target of 71 reached o
 | 2026-11-09 | Strategy | `donchian_mid` | Strategy loop |
 | 2026-11-09 | Strategy | `hull_trend` | Strategy loop |
 | 2026-11-09 | Skill | `atlas-loop-rules` (repo skill) | Skills loop |
+| 2026-11-09 | Skill | `atlas-research-engine` (repo skill) | Skills loop |
 
 ## Loop budget (measured 2026-11-09)
 - Strategy cycle with 3 rules and the full backend suite: about 4 minutes wall time. Improvement cycle with all suites: roughly 20 to 45 minutes. Skills and data cycles: a few minutes each, data often blocked by hosts the sandbox cannot reach.

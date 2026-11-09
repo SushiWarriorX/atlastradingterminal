@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-09 09:17 | Claude | skills | Catalog empty; wrote repo skill `atlas-research-engine` (capabilities 72) | Next Claude hour 10 = strategy (front of queue `trix_cross`) |
 | 2026-11-09 | Claude | strategy+skills | Added mayer_cap, donchian_mid, hull_trend (all weak); repo skill; capability count 71 | Strategy queue front now `trix_cross`..; back items free for ChatGPT: `donchian_mid` done, take `elder_bull`, `zscore_momentum` |
 
 ## Open items for whoever is next
