@@ -718,7 +718,7 @@ async function healthy(browser) {
 
 // ---------------------------------------------------------------------------------------------------------------- scenario 2: old prices
 async function stale(browser) {
-  const be = await startBackend(["--age", String(3 * 86400)]);
+  const be = await startBackend(["--age", String(7 * 86400)]); // 7 days: stale at any time of week (3-day-old daily bars are the latest session on a Monday morning)
   const S = await phone(browser);
   const page = S.page;
   try {
@@ -734,7 +734,7 @@ async function stale(browser) {
     await check("the asset screen says the price is stale, how old it is, and who supplied it", async () => {
       await openFromWatchlist(page, ID.aapl);
       await page.waitForSelector(V("stale-banner"));
-      match(await inner(page, "stale-banner"), /3 days ago|72 hours|3d/i, "how old");
+      match(await inner(page, "stale-banner"), /7 days ago|168 hours|7d/i, "how old");
       const f = await inner(page, "asset-freshness");
       match(f, /Stale/); match(f, /Yahoo Finance/);
       await shot(page, "02-asset-stale");

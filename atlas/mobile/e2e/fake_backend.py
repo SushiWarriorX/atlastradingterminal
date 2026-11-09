@@ -1,7 +1,7 @@
 """A scripted Signal backend for the browser tests: the REAL app and agents, with scripted market data, news and directory (no network).
 
   python e2e/fake_backend.py --port 8011                      everything works (macro is still unavailable: no FRED provider is configured, and the app says so)
-  python e2e/fake_backend.py --port 8012 --age 259200         prices and bars are three days old (stale data)
+  python e2e/fake_backend.py --port 8012 --age 604800         prices and bars are a week old (stale data)
   python e2e/fake_backend.py --port 8013 --news fail --fund fail      two research agents fail (partial results)
   python e2e/fake_backend.py --port 8014 --quote fail --bars fail     no prices and no charts (missing data)
   python e2e/fake_backend.py --port 8015 --password 'pw'      a login is required

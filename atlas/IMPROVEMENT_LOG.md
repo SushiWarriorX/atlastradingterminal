@@ -341,3 +341,10 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Verified:** phone type check, 43 unit tests and the Ask ChatGPT phone e2e pass. Layout facts confirmed in the browser: the box is 298x64, has the border, and is the element at its own centre point (nothing covers it).
 - **Not verified:** the box still renders blank in element screenshots in headless Chromium, even with a forced red border, so that screenshot path cannot show it. Treated as a screenshot artifact, not confirmed on a real screen.
 - **Pre-existing, not fixed:** phone e2e check "[stale] the research is not presented as current" fails, also with this change stashed. Likely tied to the day/time (a Monday just after midnight UTC); cause not investigated yet. Worth a look next cycle.
+
+## 2026-11-09 (second cycle): fixed a test that only worked midweek
+- **Found:** the phone e2e check "[stale] research is not presented as current" failed on a Monday morning, before and after my last change.
+- **Cause:** a daily bar's age is measured from its close. On a Monday morning, three-day-old (Friday) bars are the latest session, so the app correctly did not call them stale. The test, not the app, was wrong.
+- **Changed:** the stale scenario now uses 7-day-old prices (stale at any time of the week); expected age text updated to match.
+- **Verified:** phone e2e 48 of 48, type check and 43 unit tests pass. App behaviour unchanged.
+- **Not verified:** the backend and web suites were not touched by this change.
