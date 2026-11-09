@@ -356,3 +356,42 @@ def test_obv_strategy_is_fixed_needs_both_conditions_and_has_no_lookahead():
     assert (st.build(d.iloc[:150], st.params).to_numpy() == pos[:150]).all()                          # bar i uses only bars up to i
     flat_volume_up = pd.DataFrame({"h": up + 1, "l": up - 1, "c": up, "v": np.zeros(len(up))})        # price rising but no volume at all: OBV never rises above its average, so no position
     assert st.build(flat_volume_up, st.params).to_numpy().sum() == 0
+
+
+def test_wma_matches_a_hand_worked_example():
+    assert abs(ST.wma(pd.Series([1.0, 2.0, 3.0]), 3).iloc[-1] - 14 / 6) < 1e-12                       # (1*1 + 2*2 + 3*3) / 6
+
+
+def test_mayer_cap_leaves_when_stretched_and_has_no_lookahead():
+    st = ST.S["mayer_cap"]
+    assert st.params == {"n": 200, "cap": 2.4} and not st.requires_funding
+    c = np.concatenate([100 + np.arange(300, dtype=float), [1000.0]])                                  # a steady climb, then one huge jump
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:199].sum() == 0 and pos[199] == 1.0 and pos[299] == 1.0                                  # the 200-bar average first exists on bar 199 (299 vs 199.5: ratio 1.5)
+    assert pos[300] == 0.0                                                                               # 1000 / 303.5 = 3.3 is over 2.4: stand aside
+    assert (st.build(d.iloc[:250], st.params).to_numpy() == pos[:250]).all()
+
+
+def test_donchian_mid_is_fixed_and_follows_the_range_midpoint():
+    st = ST.S["donchian_mid"]
+    assert st.params == {"n": 50}
+    up = 100 + np.arange(120, dtype=float)
+    c = np.concatenate([up, up[-1] - np.arange(1, 121, dtype=float) * 2])
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c})
+    assert ST._dmid(d, 50).iloc[49] == (150 + 99) / 2                                                    # highest high 150, lowest low 99 over bars 0..49
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:49].sum() == 0 and pos[49] == 1.0 and pos[100] == 1.0 and pos[-1] == 0.0
+    assert (st.build(d.iloc[:150], st.params).to_numpy() == pos[:150]).all()
+
+
+def test_hull_trend_follows_a_rise_and_leaves_in_a_fall_without_lookahead():
+    st = ST.S["hull_trend"]
+    assert st.params == {"n": 55}
+    c = np.concatenate([100 + np.arange(150, dtype=float), 249 - np.arange(1, 151, dtype=float) * 2])
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:60].sum() == 0 and pos[100] == 1.0 and pos[-1] == 0.0 and set(pos) <= {0.0, 1.0}         # the Hull average first exists on bar 60 (54 + 6)
+    assert (st.build(d.iloc[:200], st.params).to_numpy() == pos[:200]).all()
+    straight = ST.hull(pd.Series(np.arange(1.0, 100.0)), 55)
+    assert abs(straight.iloc[-1] - (99.0 - 4 / 3)) < 1e-9                                                # on a straight line a WMA(n) lags (n-1)/3 bars: (2*26 - 54)/3 + 6/3 = 4/3 bars here

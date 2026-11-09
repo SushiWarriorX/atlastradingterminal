@@ -351,3 +351,10 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 ## 2026-11-09: owner changed two loops
 - Skills loop may install plain skills (repo-scoped) without asking; plugins with hooks/servers still need approval. Strategy loop may test up to three rules per cycle until one is credibly profitable, with a strict bar (holdout, luck check, 30+ trades, label at least moderate). Baseline 67 capabilities, target 71, in `atlas/CAPABILITIES.md`.
+
+## 2026-11-09: strategy search (3 rules) and capability goal
+- **Added:** `mayer_cap`, `donchian_mid`, `hull_trend` (queue settings fixed beforehand), each with hand-checkable tests and a no-lookahead test; backtested once. Library 34.
+- **Result (last 30% vs holding BTC +182.7% to +182.8%):** mayer_cap +136.9%, donchian_mid +174.0%, hull_trend +177.8%; all three had a shallower worst drop (about -32% vs -53%); trades 47, 97, 90. Evidence label for all: weak (the luck check cannot rule out chance with 34 rules).
+- **Not credibly profitable:** none beat holding on return and none reached "moderate". Reported as "not yet".
+- **Also:** one repo skill (`atlas-loop-rules`) and `CHATGPT_CONTRIBUTOR_PROMPT.md`. Capability count 71 (target 71).
+- **Verified:** backend 1228 tests pass. Phone and web untouched.

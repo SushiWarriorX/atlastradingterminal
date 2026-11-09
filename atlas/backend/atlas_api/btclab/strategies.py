@@ -620,6 +620,82 @@ reg(Strategy("obv_trend", "On-balance volume trend", "Trend", "Holds BTC while v
              {"n_obv": [30, 40, 50, 70, 100]}, _obv_build, _obv_conds))
 
 
+def _mayer_ok(d, p):
+    s = sma(d["c"], p["n"])
+    return (d["c"] > s) & (d["c"] / s < p["cap"])
+
+
+def _mayer_build(d, p):
+    ok = _mayer_ok(d, p)
+    return hold(ok, ~ok)
+
+
+def _mayer_conds(d, p):
+    s = sma(d["c"], p["n"]).iloc[-1]
+    bad = bool(np.isnan(s))
+    c = d["c"].iloc[-1]
+    return [_cond(f"Close above its {p['n']}-bar average (entry, with the next line)", None if bad else bool(c > s), f"close {_val(c)} vs average {_val(s)}"),
+            _cond(f"Close no more than {p['cap']} times that average (entry; if either line fails, exit)", None if bad else bool(c / s < p["cap"]), f"ratio {_val(c / s) if not bad else 'n/a'}")]
+
+
+reg(Strategy("mayer_cap", "Mayer multiple cap", "Trend", "Holds BTC while the price is above its 200-bar average but not stretched: the close is under 2.4 times that average (the Mayer multiple). Steps aside when either fails.",
+             "Close is above the 200-bar average AND the close divided by the average is below 2.4.", "Either of those two stops being true.", "No fixed stop; the exit rule is the stop.", {"n": 200, "cap": 2.4},
+             {"cap": [2.0, 2.2, 2.4, 2.6, 3.0]}, _mayer_build, _mayer_conds))
+
+
+def _dmid(d, n):
+    return (d["h"].rolling(n, min_periods=n).max() + d["l"].rolling(n, min_periods=n).min()) / 2
+
+
+def _donmid_build(d, p):
+    ok = d["c"] > _dmid(d, p["n"])
+    return hold(ok, ~ok)
+
+
+def _donmid_conds(d, p):
+    m = _dmid(d, p["n"]).iloc[-1]
+    c = d["c"].iloc[-1]
+    return [_cond(f"Close above the midpoint of the {p['n']}-bar high and low (entry; below it, exit)", None if np.isnan(m) else bool(c > m), f"close {_val(c)} vs midpoint {_val(m)}")]
+
+
+reg(Strategy("donchian_mid", "Donchian midline", "Trend", "Holds BTC while the close is above the middle of the 50-bar price range (halfway between the highest high and lowest low). Steps aside when it drops below.",
+             "Close is above the midpoint of the 50-bar high and low.", "Close falls to or below that midpoint.", "No fixed stop; the exit rule is the stop.", {"n": 50},
+             {"n": [20, 35, 50, 75, 100]}, _donmid_build, _donmid_conds))
+
+
+def wma(s: pd.Series, n: int) -> pd.Series:
+    """Linearly weighted moving average: the newest of the n values has weight n, the oldest weight 1."""
+    w = np.arange(1, n + 1, dtype=float)
+    return s.rolling(n, min_periods=n).apply(lambda x: float(np.dot(x, w) / w.sum()), raw=True)
+
+
+def hull(s: pd.Series, n: int) -> pd.Series:
+    """Hull moving average (Hull, 2005): WMA(2 x WMA(n/2) - WMA(n), sqrt(n)). Uses only bars up to each bar."""
+    return wma(2 * wma(s, n // 2) - wma(s, n), int(round(np.sqrt(n))))
+
+
+def _hull_ok(d, p):
+    h = hull(d["c"], p["n"])
+    return h.diff() > 0
+
+
+def _hull_build(d, p):
+    ok = _hull_ok(d, p)
+    return hold(ok, ~ok)
+
+
+def _hull_conds(d, p):
+    h = hull(d["c"], p["n"])
+    a, b = h.iloc[-1], h.iloc[-2] if len(h) > 1 else np.nan
+    bad = bool(np.isnan(a) or np.isnan(b))
+    return [_cond(f"The {p['n']}-bar Hull average is rising (entry; flat or falling, exit)", None if bad else bool(a > b), f"{_val(a)} vs previous {_val(b)}")]
+
+
+reg(Strategy("hull_trend", "Hull moving average trend", "Trend", "Holds BTC while the 55-bar Hull moving average (a fast, smooth average) is rising. Steps aside when it stops rising.",
+             "The 55-bar Hull moving average is higher than on the previous bar.", "It is equal or lower than on the previous bar.", "No fixed stop; the exit rule is the stop.", {"n": 55},
+             {"n": [34, 45, 55, 70, 89]}, _hull_build, _hull_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 
