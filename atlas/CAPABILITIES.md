@@ -5,7 +5,7 @@ Owner goal (2026-11-09): grow the system's tools and skills by at least 5% so th
 Baseline counted 2026-11-09:
 | Kind | Count | Where counted |
 | --- | --- | --- |
-| Live data sources | 29 | `DATA_SOURCES.md` LIVE table |
+| Live data sources | 29 (now 30) | `DATA_SOURCES.md` LIVE table |
 | Strategy library rules | 31 (now 37) | `btclab/strategies.py` (tracker ledger holds 11 frozen) |
 | AI desk tools | 7 | `backend/atlas_api/ai/tools.py` |
 | Repo skills | 0 (now 2) | `atlas/.claude/skills/` |
@@ -13,7 +13,7 @@ Baseline counted 2026-11-09:
 
 Target: at least 71 (67 x 1.05 = 70.35, rounded up). Each loop adds its own kind; update the table and the current total when something ships.
 
-Current total: 75 (baseline 67 + 6 strategies + 2 skills). Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
+Current total: 76 (baseline 67 + 6 strategies + 2 skills + 1 data source). Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
 
 ## Added since baseline
 | Date | Kind | Name | Source/loop |
@@ -24,6 +24,7 @@ Current total: 75 (baseline 67 + 6 strategies + 2 skills). Target of 71 reached 
 | 2026-11-09 | Strategy | `pi_cycle` | Strategy loop |
 | 2026-11-09 | Strategy | `heikin_trend` | Strategy loop |
 | 2026-11-09 | Strategy | `trix_cross` | Strategy loop |
+| 2026-11-09 | Data source | Treasury interest expense on the public debt | Data loop |
 | 2026-11-09 | Skill | `atlas-loop-rules` (repo skill) | Skills loop |
 | 2026-11-09 | Skill | `atlas-research-engine` (repo skill) | Skills loop |
 

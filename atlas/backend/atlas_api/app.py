@@ -38,6 +38,7 @@ from .fedops import FedOps
 from .tga import Tga
 from .auctions import Auctions
 from .mts import Mts
+from .intexp import InterestExpense
 from .avgrates import AvgRates
 from .mspd import Mspd
 from .soma import Soma
@@ -371,6 +372,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     tga = Tga(demo=demo)
     auctions = Auctions(demo=demo)
     budget = Mts(demo=demo)
+    interest = InterestExpense(demo=demo)
     debt_rates = AvgRates(demo=demo)
     debt_mix = Mspd(demo=demo)
     fed_holdings = Soma(demo=demo)
@@ -395,6 +397,11 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     async def macro_debtrates():
         """Average interest rate the US government pays on its debt, by security type. Describes what it pays on what it owes; not a signal."""
         return ok(await debt_rates.overview())
+
+    @app.get("/api/macro/interest")
+    async def macro_interest():
+        """Interest the US government owes on debt held by the public, by month and security type. Describes what already happened; not a signal."""
+        return ok(await interest.overview())
 
     @app.get("/api/macro/budget")
     async def macro_budget():
@@ -1740,7 +1747,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
                                       "listings": listings_service, "new_to_me": new_to_me,
-                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

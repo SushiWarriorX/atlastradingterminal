@@ -100,6 +100,10 @@ export interface AuctionRow { tenor: string; term: string; auction_date: string;
 export interface AuctionsData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   tenors?: AuctionRow[]; pending_results?: { tenor: string; auction_date: string }[] }
 
+export interface InterestData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  fiscal_year?: number; month_total_billions?: number; year_ago_month_total_billions?: number | null; month_change_pct?: number | null; ytd_months?: number; ytd_total_billions?: number;
+  year_ago_ytd_billions?: number | null; ytd_change_pct?: number | null; breakdown?: { key: string; label: string; billions: number; share_pct: number | null }[];
+  ytd_check?: { ours_billions: number; source_billions: number; match: boolean } | null; history?: { date: string; total_billions: number }[] }
 export interface BudgetData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   fiscal_year?: number; month?: string; month_receipts_billions?: number; month_outlays_billions?: number; month_deficit_billions?: number;
   ytd_months?: number; ytd_receipts_billions?: number; ytd_outlays_billions?: number; ytd_deficit_billions?: number;

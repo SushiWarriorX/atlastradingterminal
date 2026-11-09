@@ -247,6 +247,11 @@ export function useBudget() {
   return useQuery({ queryKey: keys(baseUrl).budget, queryFn: () => need(api).budget(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
 }
 
+export function useInterest() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).interest, queryFn: () => need(api).interest(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
 export function useDebtRates() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).debtRates, queryFn: () => need(api).debtRates(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });

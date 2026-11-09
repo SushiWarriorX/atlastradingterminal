@@ -13,6 +13,7 @@ import { FedOpsCard } from "./FedOpsCard";
 import { TgaCard } from "./TgaCard";
 import { AuctionsCard } from "./AuctionsCard";
 import { BudgetCard } from "./BudgetCard";
+import { InterestCard } from "./InterestCard";
 import { DebtRatesCard } from "./DebtRatesCard";
 import { DebtMixCard } from "./DebtMixCard";
 import { FedHoldingsCard } from "./FedHoldingsCard";
@@ -67,6 +68,7 @@ export function MacroView() {
             <TgaCard />
             <AuctionsCard />
             <BudgetCard />
+            <InterestCard />
             <DebtRatesCard />
             <DebtMixCard />
             <FedHoldingsCard />

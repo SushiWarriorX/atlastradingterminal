@@ -33,10 +33,10 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 | CFTC Commitments of Traders, CME Bitcoin futures (cycle 4) | Weekly long/short/net by trader group (leveraged funds, asset managers, dealers, others), open interest, 1-year rank | Terminal BTC desk panel, Signal BTC page card |
 | US Treasury yield curve and debt (cycle 3) | Full par yield curve 1M-30Y with 2s10s / 3m10y inversion checks; total public debt outstanding | Macro desk panel (terminal), Macro card (Signal) |
 | NY Fed SOFR (cycle 2) | Overnight funding rate with daily change, next to the Fed target range | Macro key indicators (terminal and Signal) |
+| US Treasury interest expense on debt held by the public (FiscalData `v2/accounting/od/interest_expense`, verified live 2026-11-09: HTTP 200, no key, newest 2026-10-31) | Monthly interest owed on bills, notes, bonds, TIPS, floating rate notes and savings bonds, with the same month and year-to-date a year earlier, checked against the source's own year-to-date figure (FY2026 $1,068.5B, FY2025 $973.7B, exact). Government-account (intragovernmental) rows left out on purpose | Macro: terminal INTEREST ON THE DEBT panel, Signal Macro card |
 | alternative.me Fear & Greed (cycle 1) | Daily 0-100 crypto mood gauge, 31-day history | Terminal BTC desk, Signal BTC page |
 
 ## QUEUED (candidates, in order; each must be fetched live before it ships)
-1. **Treasury interest expense** (verified live 2026-11-08: HTTP 200, no key; `fiscaldata.treasury.gov` `v2/accounting/od/interest_expense`, newest record 2026-10-31, 7,397 rows). Fields: `expense_catg_desc` (public issues vs intragovernmental), `expense_group_desc` (accrued interest, amortisation of premium or discount, TIPS inflation compensation), `expense_type_desc` (bills, notes, bonds, TIPS, FRN, savings, ...), `month_expense_amt`, `fytd_expense_amt` (dollars as text). Needs care before it ships: about 60 rows per month with several levels that must not be double counted, so build totals from one level and check them against the source's own year-to-date figures; fetch about 14 months to compare with a year ago.
 (otherwise the queue is empty: the next cycle searches for new candidates, e.g. Treasury bill auction results, Treasury interest expense (check live first), DefiLlama DeFi value once api.llama.fi answers)
 
 ## BLOCKED

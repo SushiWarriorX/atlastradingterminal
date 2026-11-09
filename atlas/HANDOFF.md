@@ -13,6 +13,7 @@ Only work during your own shift. Outside it, read, do not write. If you are unsu
 ## One job per hour (same rotation for both, by the UTC hour you start)
 | Hour (UTC) | Job | | Hour (UTC) | Job |
 | --- | --- | --- | --- | --- |
+| 2026-11-09 11:21 | Claude | data | Treasury interest expense (live, self-checked against the source's own YTD); capabilities 76 | Next: look at screenshots of the new Interest panel/card; queue now empty, next data job searches for a new free source (Treasury bill auction results already live) |
 | 2026-11-09 10:18 | Claude | strategy | Added pi_cycle, heikin_trend, trix_cross (weak/none; library 37; capabilities 75) | Queue front now `nr7_breakout`; ChatGPT back items free: `elder_bull`, `zscore_momentum`, `kama_trend` |
 | 00 / 12 | improve | | 06 / 18 | improve |
 | 01 / 13 | strategy | | 07 / 19 | strategy |
