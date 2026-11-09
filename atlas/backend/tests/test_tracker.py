@@ -395,3 +395,50 @@ def test_hull_trend_follows_a_rise_and_leaves_in_a_fall_without_lookahead():
     assert (st.build(d.iloc[:200], st.params).to_numpy() == pos[:200]).all()
     straight = ST.hull(pd.Series(np.arange(1.0, 100.0)), 55)
     assert abs(straight.iloc[-1] - (99.0 - 4 / 3)) < 1e-9                                                # on a straight line a WMA(n) lags (n-1)/3 bars: (2*26 - 54)/3 + 6/3 = 4/3 bars here
+
+
+def test_heikin_ashi_matches_a_hand_worked_example():
+    d = pd.DataFrame({"o": [10.0, 10.0], "h": [12.0, 14.0], "l": [8.0, 10.0], "c": [10.0, 13.0]})
+    h = ST.heikin_ashi(d)
+    assert h["c"].tolist() == [10.0, 11.75]                                                              # (10+12+8+10)/4 and (10+14+10+13)/4
+    assert h["o"].tolist() == [10.0, 10.0]                                                               # first: (10+10)/2; second: (10 + 10)/2
+    assert h["l"].iloc[1] == 10.0 and h["h"].iloc[1] == 14.0
+
+
+def test_heikin_trend_needs_two_strong_candles_leaves_on_red_and_has_no_lookahead():
+    st = ST.S["heikin_trend"]
+    assert st.params == {"n": 2}
+    up = 100 + np.arange(40, dtype=float) * 2
+    c = np.concatenate([up, up[-1] - np.arange(1, 41, dtype=float) * 4])
+    o = np.concatenate([[100.0], c[:-1]])
+    d = pd.DataFrame({"o": o, "h": np.maximum(o, c) + 0.5, "l": np.minimum(o, c), "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    assert set(pos) <= {0.0, 1.0} and pos[0] == 0.0 and pos[30] == 1.0 and pos[-1] == 0.0
+    assert pos[:2].sum() == 0                                                                            # two candles are needed before the first entry
+    assert (st.build(d.iloc[:60], st.params).to_numpy() == pos[:60]).all()
+
+
+def test_trix_is_zero_on_a_flat_series_and_follows_acceleration():
+    assert abs(ST.trix(pd.Series([50.0] * 80), 15).dropna()).max() == 0.0
+    st = ST.S["trix_cross"]
+    assert st.params == {"n": 15, "signal": 9}
+    c = np.concatenate([np.full(80, 100.0), 100 + np.arange(1, 81, dtype=float) ** 2 / 10, np.full(5, 740.0)[:0]])
+    c = np.concatenate([c, c[-1] - np.arange(1, 121, dtype=float) * 5])
+    d = pd.DataFrame({"o": c, "h": c, "l": c, "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:80].sum() == 0 and pos[120] == 1.0 and pos[-1] == 0.0 and set(pos) <= {0.0, 1.0}
+    assert (st.build(d.iloc[:150], st.params).to_numpy() == pos[:150]).all()
+
+
+def test_pi_cycle_is_long_until_the_cross_and_returns_after_the_cross_back():
+    st = ST.S["pi_cycle"]
+    assert st.params == {"fast": 111, "slow": 350, "mult": 2.0}
+    c = np.concatenate([np.full(400, 100.0), np.full(100, 10000.0), np.full(400, 100.0)])
+    d = pd.DataFrame({"o": c, "h": c, "l": c, "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    f, s, up, down = ST._pi_state(d, st.params)
+    i_up, i_dn = int(np.argmax(up.to_numpy())), int(np.argmax(down.to_numpy()))
+    assert pos[:349].sum() == 0 and pos[349] == 1.0                                                      # the 350-bar average first exists on bar 349
+    assert i_up > 400 and pos[i_up - 1] == 1.0 and pos[i_up] == 0.0                                      # aside from the bar where the 111-bar average crosses above 2 x the 350-bar one
+    assert i_dn > i_up and pos[i_dn - 1] == 0.0 and pos[i_dn] == 1.0 and pos[-1] == 1.0                  # and back in when it crosses below
+    assert (st.build(d.iloc[:600], st.params).to_numpy() == pos[:600]).all()

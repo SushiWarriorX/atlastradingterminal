@@ -358,3 +358,10 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Not credibly profitable:** none beat holding on return and none reached "moderate". Reported as "not yet".
 - **Also:** one repo skill (`atlas-loop-rules`) and `CHATGPT_CONTRIBUTOR_PROMPT.md`. Capability count 71 (target 71).
 - **Verified:** backend 1228 tests pass. Phone and web untouched.
+
+## 2026-11-09 10:18 UTC (Claude, strategy job): pi_cycle, heikin_trend, trix_cross
+- **Added** (queue settings fixed beforehand, hand-checkable and no-lookahead tests, backtested once). Library 37.
+- **Last 30% vs holding BTC (+181%):** pi_cycle +181.4% (only 2 trades in all history, 0 in the test period, label none: too few trades to say anything); trix_cross +169.7% (Sharpe 1.14 vs 0.89, worst drop -25% vs -53%, 83 trades, weak); heikin_trend +40.7% (203 trades, weak, clearly worse).
+- **Not credibly profitable:** none beat holding on return and none reached "moderate". Reported as "not yet".
+- **Fixes while doing it:** heikin_trend first crashed the tracker (it needs one parameter for the robustness check); "two candles in a row" is now the parameter `n = 2`, fixed before any result. My first test-writing script wiped `tests/test_tracker.py`; restored from git and re-added the tests (diff is additions only).
+- **Verified:** backend 1232 tests pass.

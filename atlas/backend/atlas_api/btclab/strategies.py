@@ -696,6 +696,98 @@ reg(Strategy("hull_trend", "Hull moving average trend", "Trend", "Holds BTC whil
              {"n": [34, 45, 55, 70, 89]}, _hull_build, _hull_conds))
 
 
+def _pi_state(d, p):
+    s_fast, s_slow = sma(d["c"], p["fast"]), p["mult"] * sma(d["c"], p["slow"])
+    above = (s_fast > s_slow).where(s_slow.notna())
+    prev = above.shift(1)
+    up = (above == True) & (prev == False)           # noqa: E712  (NaN means "not known yet")
+    down = (above == False) & (prev == True)         # noqa: E712
+    return s_fast, s_slow, up, down
+
+
+def _pi_build(d, p):
+    _f, s_slow, up, down = _pi_state(d, p)
+    aside = hold(up, down)
+    return pd.Series(np.where(s_slow.notna() & (aside == 0), 1.0, 0.0), index=d.index)
+
+
+def _pi_conds(d, p):
+    f, s, _u, _d = _pi_state(d, p)
+    a, b = f.iloc[-1], s.iloc[-1]
+    bad = bool(np.isnan(a) or np.isnan(b))
+    return [_cond(f"The {p['fast']}-bar average is NOT above {p['mult']} times the {p['slow']}-bar average (holding; once it crosses above, stand aside until it crosses back)", None if bad else bool(a <= b), f"{_val(a)} vs {_val(b)}")]
+
+
+reg(Strategy("pi_cycle", "Pi Cycle top indicator", "Trend", "Holds BTC all the time except between two signals: it steps aside when the 111-bar average crosses above twice the 350-bar average, and comes back when it crosses back below.",
+             "Both averages exist and the 111-bar average is not in its 'crossed above 2 x the 350-bar average' state.", "The 111-bar average crosses above 2 x the 350-bar average (until it crosses back below).", "No fixed stop; the exit rule is the stop.", {"fast": 111, "slow": 350, "mult": 2.0},
+             {"fast": [90, 100, 111, 125, 140]}, _pi_build, _pi_conds))
+
+
+def heikin_ashi(d: pd.DataFrame) -> pd.DataFrame:
+    """Heikin-Ashi candles. Close = average of open, high, low, close. Open = average of the previous Heikin-Ashi open and close (the first uses the real open and close).
+    Each candle uses only bars up to and including itself."""
+    c = (d["o"] + d["h"] + d["l"] + d["c"]) / 4
+    o = np.empty(len(d))
+    if len(d):
+        o[0] = (d["o"].iloc[0] + d["c"].iloc[0]) / 2
+        cv = c.to_numpy()
+        for i in range(1, len(d)):
+            o[i] = (o[i - 1] + cv[i - 1]) / 2
+    o = pd.Series(o, index=d.index)
+    return pd.DataFrame({"o": o, "c": c, "h": pd.concat([d["h"], o, c], axis=1).max(axis=1), "l": pd.concat([d["l"], o, c], axis=1).min(axis=1)})
+
+
+def _heikin_build(d, p):
+    h = heikin_ashi(d)
+    green = h["c"] > h["o"]
+    flat_bottom = h["o"] <= h["l"]
+    strong = green & flat_bottom
+    enter = strong.rolling(p["n"], min_periods=p["n"]).sum() == p["n"]                         # n candles in a row (the rule fixes n = 2)
+    leave = h["c"] < h["o"]
+    return hold(enter, leave)
+
+
+def _heikin_conds(d, p):
+    h = heikin_ashi(d)
+    g, fb = bool(h["c"].iloc[-1] > h["o"].iloc[-1]), bool(h["o"].iloc[-1] <= h["l"].iloc[-1])
+    g2, fb2 = (bool(h["c"].iloc[-2] > h["o"].iloc[-2]), bool(h["o"].iloc[-2] <= h["l"].iloc[-2])) if len(h) > 1 else (False, False)
+    return [_cond("Latest Heikin-Ashi candle is green with no lower wick", g and fb, f"close {_val(h['c'].iloc[-1])} vs open {_val(h['o'].iloc[-1])}"),
+            _cond("The candle before it is also green with no lower wick (entry needs both, n = 2; a red candle is the exit)", g2 and fb2, "previous candle")]
+
+
+reg(Strategy("heikin_trend", "Heikin-Ashi trend", "Trend", "Holds BTC after two Heikin-Ashi (smoothed) candles in a row that are green with no lower wick, and steps aside on the first red one.",
+             "Two consecutive green Heikin-Ashi candles, each with no lower wick.", "A red Heikin-Ashi candle.", "No fixed stop; the exit rule is the stop.", {"n": 2},
+             {"n": [1, 2, 3, 4, 5]}, _heikin_build, _heikin_conds))
+
+
+def trix(s: pd.Series, n: int) -> pd.Series:
+    """TRIX: the one-bar percent change of a triple-smoothed (EMA of EMA of EMA) average."""
+    return ema(ema(ema(s, n), n), n).pct_change(fill_method=None) * 100
+
+
+def _trix_ok(d, p):
+    t = trix(d["c"], p["n"])
+    return t > ema(t.dropna(), p["signal"]).reindex(t.index)
+
+
+def _trix_build(d, p):
+    ok = _trix_ok(d, p)
+    return hold(ok, ~ok)
+
+
+def _trix_conds(d, p):
+    t = trix(d["c"], p["n"])
+    sig = ema(t.dropna(), p["signal"]).reindex(t.index)
+    a, b = t.iloc[-1], sig.iloc[-1]
+    bad = bool(np.isnan(a) or np.isnan(b))
+    return [_cond(f"TRIX({p['n']}) is above its {p['signal']}-bar signal line (entry on the cross up; exit on the cross down)", None if bad else bool(a > b), f"TRIX {_val(a)} vs signal {_val(b)}")]
+
+
+reg(Strategy("trix_cross", "TRIX signal-line cross", "Momentum", "Holds BTC while TRIX (a triple-smoothed rate of change) is above its 9-bar signal line, which marks the momentum turning up; steps aside when it crosses back below.",
+             "TRIX(15) crosses above its 9-bar signal line.", "TRIX(15) crosses below its 9-bar signal line.", "No fixed stop; the exit rule is the stop.", {"n": 15, "signal": 9},
+             {"n": [10, 12, 15, 20, 25]}, _trix_build, _trix_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 
