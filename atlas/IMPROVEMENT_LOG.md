@@ -334,3 +334,10 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - State at start: Signal phone app and ATLAS terminal both have the five destinations (BTC, Stocks, Macro, Discover, Journal), the BTC Strategy Lab, Stock Research, Macro Intelligence, Discover and the Journal, in the silver gradient look.
 - Not yet verified against live data: Yahoo prices (blocked in the sandbox), so Discover prices, earnings dates and stock valuation have only been tested with fakes.
 - Known gaps (see the backlog in `LOOP.md`): Discover covers about 100 large caps; Macro shows only the 2-year and 10-year yields; PCE and GDP release dates are not loaded.
+
+## 2026-11-09: phone question box made clearer (improvement loop)
+- **Found:** in a phone screenshot of the Ask ChatGPT panel, the "What would you like to research?" box looked invisible (faint border, dim placeholder).
+- **Changed:** brighter border (white at 30%), clearer placeholder colour. The phone e2e now checks the box's computed style (border present, not transparent, height 40px or more) so it cannot silently go faint again.
+- **Verified:** phone type check, 43 unit tests and the Ask ChatGPT phone e2e pass. Layout facts confirmed in the browser: the box is 298x64, has the border, and is the element at its own centre point (nothing covers it).
+- **Not verified:** the box still renders blank in element screenshots in headless Chromium, even with a forced red border, so that screenshot path cannot show it. Treated as a screenshot artifact, not confirmed on a real screen.
+- **Pre-existing, not fixed:** phone e2e check "[stale] the research is not presented as current" fails, also with this change stashed. Likely tied to the day/time (a Monday just after midnight UTC); cause not investigated yet. Worth a look next cycle.

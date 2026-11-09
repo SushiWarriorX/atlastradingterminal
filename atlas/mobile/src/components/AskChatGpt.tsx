@@ -73,8 +73,8 @@ export function AskChatGpt({ symbol, where }: { symbol: string; where: "research
           <Txt variant="label">Ask ChatGPT about {symbol}</Txt>
           <Txt variant="tiny" testID="ask-explanation">{d?.explanation ?? "This handoff makes no AI API calls from this app. ChatGPT usage is subject to your own account's plan and limits."}</Txt>
           <Txt variant="small">What would you like to research? (optional)</Txt>
-          <TextInput value={question} onChangeText={setQuestion} multiline maxLength={2000} placeholder="e.g. How durable is the recurring revenue? Leave empty for the default questions." placeholderTextColor={color.faint}
-            accessibilityLabel="What would you like to research?" testID="ask-question" style={{ minHeight: 64, borderRadius: radius.md, padding: space.md, color: color.text, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: color.border }} />
+          <TextInput value={question} onChangeText={setQuestion} multiline maxLength={2000} placeholder="e.g. How durable is the recurring revenue? Leave empty for the default questions." placeholderTextColor={color.dim}
+            accessibilityLabel="What would you like to research?" testID="ask-question" style={{ minHeight: 64, borderRadius: radius.md, padding: space.md, color: color.text, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: "rgba(255,255,255,0.30)" }} />
           <View style={{ flexDirection: "row", gap: space.sm, flexWrap: "wrap" }}>
             <TextButton large solid={detail === "concise"} label="Concise brief" onPress={() => setDetail("concise")} testID="ask-concise" />
             <TextButton large solid={detail === "detailed"} label="Detailed brief" onPress={() => setDetail("detailed")} testID="ask-detailed" />
@@ -84,8 +84,8 @@ export function AskChatGpt({ symbol, where }: { symbol: string; where: "research
           <Txt variant="tiny">Both are left out unless you switch them on.</Txt>
           {position ? (
             <View style={{ flexDirection: "row", gap: space.sm }}>
-              <TextInput value={shares} onChangeText={setShares} keyboardType="decimal-pad" placeholder="Shares" placeholderTextColor={color.faint} accessibilityLabel="Shares" testID="ask-shares" style={{ flex: 1, minHeight: 44, borderRadius: radius.md, padding: space.md, color: color.text, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: color.border }} />
-              <TextInput value={buy} onChangeText={setBuy} keyboardType="decimal-pad" placeholder="Buy price $" placeholderTextColor={color.faint} accessibilityLabel="Buy price" testID="ask-buy" style={{ flex: 1, minHeight: 44, borderRadius: radius.md, padding: space.md, color: color.text, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: color.border }} />
+              <TextInput value={shares} onChangeText={setShares} keyboardType="decimal-pad" placeholder="Shares" placeholderTextColor={color.dim} accessibilityLabel="Shares" testID="ask-shares" style={{ flex: 1, minHeight: 44, borderRadius: radius.md, padding: space.md, color: color.text, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: "rgba(255,255,255,0.30)" }} />
+              <TextInput value={buy} onChangeText={setBuy} keyboardType="decimal-pad" placeholder="Buy price $" placeholderTextColor={color.dim} accessibilityLabel="Buy price" testID="ask-buy" style={{ flex: 1, minHeight: 44, borderRadius: radius.md, padding: space.md, color: color.text, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: "rgba(255,255,255,0.30)" }} />
             </View>) : null}
           {q.isLoading || updating ? <Txt variant="tiny" testID="ask-updating">{q.isLoading ? "Preparing the context…" : "Updating the preview…"}</Txt> : null}
           {q.isError ? <Banner tone="warn" title="Couldn't prepare the context" testID="ask-error">{q.error instanceof Error ? q.error.message : "Something went wrong."}</Banner> : null}
@@ -93,7 +93,7 @@ export function AskChatGpt({ symbol, where }: { symbol: string; where: "research
             <View style={{ gap: 4 }}>
               <Txt variant="tiny" testID="ask-meta">Preview of the context that will be copied · {d.chars.toLocaleString()} characters · {d.detail} · private notes {d.included.notes ? "INCLUDED" : "not included"} · holdings {d.included.position ? "INCLUDED" : "not included"}{d.redactions ? ` · ${d.redactions} item(s) that looked like emails or keys were removed` : ""}</Txt>
               <TextInput ref={(el) => { preview.current = el; }} value={text} multiline editable={false} selectTextOnFocus accessibilityLabel="Context preview" testID="ask-preview"
-                style={{ height: 220, borderRadius: radius.md, padding: space.md, color: color.text, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: color.border, fontSize: 11 }} />
+                style={{ height: 220, borderRadius: radius.md, padding: space.md, color: color.text, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: "rgba(255,255,255,0.30)", fontSize: 11 }} />
             </View>) : null}
           <TextButton large solid label="Copy context & open ChatGPT" onPress={copyOpen} disabled={!text || updating} testID="ask-copy-open" />
           <TextButton large label="Copy context only" onPress={copyOnly} disabled={!text || updating} testID="ask-copy" />

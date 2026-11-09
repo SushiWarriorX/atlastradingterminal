@@ -118,7 +118,12 @@ const status = (page) => page.locator(vis(page, "ask-status")).innerText();
     if (layout.outside.length) fail("controls outside the screen: " + layout.outside.join(", "));
     if (layout.small.length) fail("tap targets under 40px: " + layout.small.join(", "));
     if (layout.count < 8) fail("expected the panel's controls, found " + layout.count);
-    if (SHOTS) { await page.locator(vis(page, "ask-panel")).screenshot({ path: path.join(SHOTS, "phone-panel.png") }); await page.screenshot({ path: path.join(SHOTS, "phone-screen.png") }); }
+    const box = await page.evaluate(() => {                                                                      // the places that take typing must be visibly boxed
+      return ["ask-question", "ask-preview"].map((id) => { const e = [...document.querySelectorAll(`[data-testid="${id}"]`)].find((x) => x.offsetParent); const c = getComputedStyle(e); const r = e.getBoundingClientRect();
+        return { id, tag: e.tagName, border: c.borderTopWidth + " " + c.borderTopStyle + " " + c.borderTopColor, bg: c.backgroundColor, h: Math.round(r.height), w: Math.round(r.width), color: c.color }; });
+    });
+    for (const b of box) if (!/^[1-9]/.test(b.border) || /none|hidden/.test(b.border) || /rgba?\(\d+, \d+, \d+, 0(\.0\d*)?\)/.test(b.border) || b.h < 40) fail(`${b.id} is not visibly boxed: ${JSON.stringify(b)}`);
+    if (SHOTS) { await page.locator(vis(page, "ask-question")).screenshot({ path: path.join(SHOTS, "phone-question.png") }); await page.locator(vis(page, "ask-panel")).screenshot({ path: path.join(SHOTS, "phone-panel.png") }); await page.screenshot({ path: path.join(SHOTS, "phone-screen.png") }); }
     console.log("  ✓ phone layout: no sideways scroll, controls on screen, tap targets 40px or more");
 
     // valuation view button
@@ -147,6 +152,7 @@ const status = (page) => page.locator(vis(page, "ask-status")).innerText();
     // question
     await page.fill(vis(page, "ask-question"), "How durable is the recurring revenue? Reach me at me@example.com");
     await page.waitForFunction(() => [...document.querySelectorAll('[data-testid="ask-preview"]')].some((e) => e.offsetParent && e.value.includes("How durable")));
+    if (SHOTS) await page.locator(vis(page, "ask-question")).screenshot({ path: path.join(SHOTS, "phone-question-filled.png") });
     const q = await preview(page);
     if (!/## My question\nHow durable is the recurring revenue\? Reach me at \[email removed\]$/.test(q)) fail("the question must end the brief with secrets removed: " + q.slice(-120));
     await page.fill(vis(page, "ask-question"), "");
