@@ -463,3 +463,22 @@ def test_nr7_breakout_enters_above_the_narrow_bar_high_and_exits_below_its_low()
     assert pos[:11].sum() == 0 and pos[11] == 1.0 and pos[12] == 1.0 and pos[13] == 0.0              # in on the close above 52, out on the first close below 51
     assert pos[14] == 0.0 and pos[15] == 0.0                                                          # no new narrow bar since, so the jump to 60 does not re-enter
     assert (st.build(d.iloc[:13], st.params).to_numpy() == pos[:13]).all()                            # bar i uses only bars up to i
+
+
+def test_kama_matches_a_hand_worked_example():
+    c = pd.Series(np.arange(0.0, 30.0))                                                              # a perfectly straight rise: efficiency ratio 1, so the constant is the fast one, (2/3)^2
+    k = ST.kama(c, 10, 2, 30).to_numpy()
+    assert np.isnan(k[:10]).all() and k[10] == 10.0                                                  # the first value is the close on bar 10
+    assert abs(k[11] - (10 + (2 / 3) ** 2 * (11 - 10))) < 1e-12                                       # 10 + 0.4444 * 1
+    flat = ST.kama(pd.Series([50.0] * 25), 10, 2, 30).to_numpy()
+    assert (flat[10:] == 50.0).all()                                                                  # no move: no division by zero, the average stays put
+
+
+def test_kama_trend_follows_a_rise_leaves_in_a_fall_and_has_no_lookahead():
+    st = ST.S["kama_trend"]
+    assert st.params == {"n": 10, "fast": 2, "slow": 30}
+    c = np.concatenate([np.arange(0.0, 60.0), 60.0 - np.arange(1.0, 61.0) * 2])
+    d = pd.DataFrame({"h": c + 1, "l": c - 1, "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:11].sum() == 0 and pos[11] == 1.0 and pos[50] == 1.0 and pos[-1] == 0.0 and set(pos) <= {0.0, 1.0}      # the average first exists on bar 10 and equals the close there, so the first long is bar 11
+    assert (st.build(d.iloc[:80], st.params).to_numpy() == pos[:80]).all()

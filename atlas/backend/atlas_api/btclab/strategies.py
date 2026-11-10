@@ -826,6 +826,41 @@ reg(Strategy("nr7_breakout", "NR7 narrow-range breakout", "Breakout", "Waits for
              {"n": [5, 6, 7, 8, 10]}, _nr_build, _nr_conds))
 
 
+def kama(s: pd.Series, n: int, fast: int, slow: int) -> pd.Series:
+    """Kaufman's adaptive moving average. Efficiency ratio = net move over n bars / sum of the n one-bar moves (0 when price does not move). The smoothing constant moves between a fast and a slow
+    average with that ratio. The first value (bar n) is the close itself. Each value uses only bars up to and including that bar."""
+    c = s.to_numpy(float)
+    out = np.full(len(c), np.nan)
+    if len(c) <= n:
+        return pd.Series(out, index=s.index)
+    f, w = 2.0 / (fast + 1), 2.0 / (slow + 1)
+    out[n] = c[n]
+    step = np.abs(np.diff(c))
+    for i in range(n + 1, len(c)):
+        path = step[i - n:i].sum()
+        er = abs(c[i] - c[i - n]) / path if path > 0 else 0.0
+        sc = (er * (f - w) + w) ** 2
+        out[i] = out[i - 1] + sc * (c[i] - out[i - 1])
+    return pd.Series(out, index=s.index)
+
+
+def _kama_build(d, p):
+    k = kama(d["c"], p["n"], p["fast"], p["slow"])
+    ok = d["c"] > k
+    return hold(ok, ~ok)
+
+
+def _kama_conds(d, p):
+    k = kama(d["c"], p["n"], p["fast"], p["slow"]).iloc[-1]
+    c = d["c"].iloc[-1]
+    return [_cond(f"Close above its Kaufman adaptive average (n={p['n']}, fast {p['fast']}, slow {p['slow']}) (entry; at or below it, exit)", None if np.isnan(k) else bool(c > k), f"close {_val(c)} vs average {_val(k)}")]
+
+
+reg(Strategy("kama_trend", "Kaufman adaptive average trend", "Trend", "Holds BTC while the close is above Kaufman's adaptive moving average, an average that speeds up when price trends cleanly and slows down when it chops sideways. Steps aside when the close is at or below it.",
+             "The close is above the adaptive average (n = 10, fast 2, slow 30).", "The close is at or below the adaptive average.", "No fixed stop; the exit rule is the stop.", {"n": 10, "fast": 2, "slow": 30},
+             {"n": [6, 8, 10, 14, 20]}, _kama_build, _kama_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 

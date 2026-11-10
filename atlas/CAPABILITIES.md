@@ -6,14 +6,14 @@ Baseline counted 2026-11-09:
 | Kind | Count | Where counted |
 | --- | --- | --- |
 | Live data sources | 29 (now 31) | `DATA_SOURCES.md` LIVE table |
-| Strategy library rules | 31 (now 38) | `btclab/strategies.py` (tracker ledger holds 11 frozen) |
+| Strategy library rules | 31 (now 39) | `btclab/strategies.py` (tracker ledger holds 11 frozen) |
 | AI desk tools | 7 | `backend/atlas_api/ai/tools.py` |
 | Repo skills | 0 (now 2) | `atlas/.claude/skills/` |
 | **Total** | **67** | |
 
 Target: at least 71 (67 x 1.05 = 70.35, rounded up). Each loop adds its own kind; update the table and the current total when something ships.
 
-Current total: 78 (baseline 67 + 7 strategies + 2 skills + 2 data sources). Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
+Current total: 79 (baseline 67 + 8 strategies + 2 skills + 2 data sources). Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
 
 ## Added since baseline
 | Date | Kind | Name | Source/loop |
@@ -21,6 +21,7 @@ Current total: 78 (baseline 67 + 7 strategies + 2 skills + 2 data sources). Note
 | 2026-11-09 | Strategy | `mayer_cap` | Strategy loop |
 | 2026-11-09 | Strategy | `donchian_mid` | Strategy loop |
 | 2026-11-09 | Strategy | `hull_trend` | Strategy loop |
+| 2026-11-10 | Strategy | `kama_trend` | Strategy loop |
 | 2026-11-10 | Data source | Treasury buyback operations | Data loop |
 | 2026-11-10 | Strategy | `nr7_breakout` (degenerate: acts like holding) | Strategy loop |
 | 2026-11-09 | Strategy | `pi_cycle` | Strategy loop |

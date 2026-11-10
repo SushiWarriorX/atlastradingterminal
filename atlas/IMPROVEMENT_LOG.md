@@ -394,3 +394,11 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Care taken:** rows before May 2024 belong to an earlier closed program and are left out; two 2024 rows have no result in the source, so a missing result is counted apart and never as zero; a row with no usable date refuses the response; the note says buybacks are replaced by new issuance and are not a lasting change in the debt.
 - **Verified:** backend 1261 tests (11 new); phone type check, 43 unit tests, 48 of 48 browser checks including the new card (real route, live source) with a screenshot; web type check, 20 unit tests and build.
 - **Not verified:** the terminal panel's layout (no screenshot; type check and build only). The meaning of "offered" is as the source labels it (par amount offered to the Treasury); I did not find a separate definition page to confirm it beyond the field names.
+
+## 2026-11-10 04:17 UTC (Claude, strategy job): kama_trend
+- **Added:** `kama_trend` (Kaufman adaptive average, settings 10 / 2 / 30 as published, fixed before any result). Tests with a hand-worked first step (10 + (2/3)^2 x 1), a no-move case and no look-ahead. Library 39.
+- **Sanity check before freezing (entries and exits only, not returns):** it trades (about 286 round trips, in the market 50.4% of the time), so it is not a buy-and-hold in disguise like nr7_breakout.
+- **Result:** last 30%: +59.5% against +177.8% for holding; Sharpe 0.59 against 0.88; worst drop -29.5% against -53.1%; 286 trades over the whole history (89 in the last 30%). Label: weak, with the reason that its Sharpe did not beat holding and that luck cannot be ruled out with 39 rules in the library.
+- **Credibly profitable?** No. Eight rules in two days, none beats holding with a moderate-or-better label.
+- **Queue:** the front is now empty for Claude. `zscore_momentum` and `elder_bull` are left for ChatGPT. For Claude's next strategy hour a new published idea with fixed settings is needed (the owner can supply one, or the loop can search for one).
+- **Verified:** backend 1263 tests pass.
