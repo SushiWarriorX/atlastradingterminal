@@ -576,6 +576,20 @@ async function healthy(browser) {
       const bu = await text(page);
       match(bu, /Federal budget/); match(bu, /US Treasury/); noMatch(bu, FORECASTS, "the budget card makes no forecasts");
       if (await present(page, "budget-body")) match(bu, /not market signals or forecasts/, "the budget caveat is shown");
+      await page.waitForSelector(V("interest-card"));
+      await page.waitForSelector(V("interest-body") + ", " + V("interest-unavailable") + ", " + V("interest-error"), { timeout: 45000 });
+      const ie = await text(page);
+      match(ie, /Interest on the debt/); match(ie, /US Treasury/); noMatch(ie, FORECASTS, "the interest card makes no forecasts");
+      if (await present(page, "interest-body")) {
+        match(ie, /not a market signal or a forecast/, "the interest caveat is shown");
+        match(await inner(page, "interest-body"), /Treasury bills[\s\S]*Treasury notes[\s\S]*Treasury bonds/, "the breakdown lists the security types");
+        const ib = await inner(page, "interest-body");
+        match(ib, /^(January|February|March|April|May|June|July|August|September|October|November|December) 20\d\d/, "the month is written out, not a raw 2026-10");
+        noMatch(ib, /\b20\d\d-\d\d\b/, "no raw year-month codes on screen");
+        noMatch(ib, /\([+\u2212-]\d/, "the comparison is a sentence, not a bracketed signed number");
+      }
+      await page.locator(V("interest-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07b-interest");
       await page.waitForSelector(V("debtrates-card"));
       await page.waitForSelector(V("debtrates-body") + ", " + V("debtrates-unavailable") + ", " + V("debtrates-error"), { timeout: 45000 });
       const dr = await text(page);

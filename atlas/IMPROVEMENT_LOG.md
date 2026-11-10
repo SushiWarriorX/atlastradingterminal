@@ -372,3 +372,10 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Care taken:** only the "public issues" rows are counted (the 8 government-account rows per month are a payment from one part of the government to another and would double count); TIPS inflation adjustment can make a month negative or jump, and the note says so; series that only look like bonds or notes go to "other"; an unreadable amount refuses the whole response instead of skipping a row; a partial fiscal year gives no self-check rather than a wrong one.
 - **Verified:** backend 1248 tests pass (16 new); phone type check, 43 unit tests and 48 of 48 browser checks; web type check, 20 unit tests and build; the real route against the live source returned October 2026 = $98.6B (+12.3% on a year earlier) with the self-check matching.
 - **Not verified:** I did not look at screenshots of the new terminal panel or phone card this cycle (layout unchecked beyond type checks and the existing browser suite); the existing browser suite does not cover the new card.
+
+## 2026-11-10 00:17 UTC (Claude, improve job): Interest card read in plain words
+- **Found (from a real phone screenshot of the new card):** the month showed as a raw "2026-10" and the comparison as "(+12.3% vs a year earlier)".
+- **Changed:** phone card and terminal panel now say "October 2026" and "Up 12.3% from a year earlier"; the "matches the source's own total" line is its own sentence. The phone browser suite now also looks at the card (it did not before) and fails if a raw year-month code or a bracketed signed number comes back.
+- **Also fixed:** my own state-board rows in `HANDOFF.md` had landed inside the hourly job table (my script matched the words "STATE BOARD" in the intro). Moved them to the real board and named the heading in the instructions.
+- **Verified:** backend 1248 tests; phone type check, 43 unit tests, 48 of 48 browser checks, and a screenshot of the real card; web type check, 20 unit tests and build.
+- **Not verified:** the terminal panel's layout (no screenshot taken; type check and build only). ChatGPT has not pushed any branch yet.

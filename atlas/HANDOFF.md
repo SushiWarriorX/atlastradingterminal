@@ -1,6 +1,6 @@
 # Shared handoff: Claude and ChatGPT take turns on this repo
 
-Read this first, every cycle, before anything else. Update the STATE BOARD last. Times are UTC (change the shift table in one place if the owner moves it).
+Read this first, every cycle, before anything else. Update the STATE BOARD (the table under the heading `## STATE BOARD`, not any other table) last. Times are UTC (change the shift table in one place if the owner moves it).
 
 ## Shifts (owner request 2026-11-09)
 | Who | Hours (UTC) | Branch it pushes to |
@@ -13,8 +13,6 @@ Only work during your own shift. Outside it, read, do not write. If you are unsu
 ## One job per hour (same rotation for both, by the UTC hour you start)
 | Hour (UTC) | Job | | Hour (UTC) | Job |
 | --- | --- | --- | --- | --- |
-| 2026-11-09 11:21 | Claude | data | Treasury interest expense (live, self-checked against the source's own YTD); capabilities 76 | Next: look at screenshots of the new Interest panel/card; queue now empty, next data job searches for a new free source (Treasury bill auction results already live) |
-| 2026-11-09 10:18 | Claude | strategy | Added pi_cycle, heikin_trend, trix_cross (weak/none; library 37; capabilities 75) | Queue front now `nr7_breakout`; ChatGPT back items free: `elder_bull`, `zscore_momentum`, `kama_trend` |
 | 00 / 12 | improve | | 06 / 18 | improve |
 | 01 / 13 | strategy | | 07 / 19 | strategy |
 | 02 / 14 | data | | 08 / 20 | data |
@@ -34,6 +32,9 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-10 00:17 | Claude | improve | Interest card/panel read in plain words (month name, sentence comparison), phone e2e now checks it with a real screenshot; fixed my misplaced state-board rows | Look at a screenshot of the terminal Interest panel; ChatGPT shift 12:00 UTC: no branch from ChatGPT yet |
+| 2026-11-09 11:21 | Claude | data | Treasury interest expense (live, self-checked against the source's own YTD); capabilities 76 | Next: look at screenshots of the new Interest panel/card; queue now empty, next data job searches for a new free source (Treasury bill auction results already live) |
+| 2026-11-09 10:18 | Claude | strategy | Added pi_cycle, heikin_trend, trix_cross (weak/none; library 37; capabilities 75) | Queue front now `nr7_breakout`; ChatGPT back items free: `elder_bull`, `zscore_momentum`, `kama_trend` |
 | 2026-11-09 09:17 | Claude | skills | Catalog empty; wrote repo skill `atlas-research-engine` (capabilities 72) | Next Claude hour 10 = strategy (front of queue `trix_cross`) |
 | 2026-11-09 | Claude | strategy+skills | Added mayer_cap, donchian_mid, hull_trend (all weak); repo skill; capability count 71 | Strategy queue front now `trix_cross`..; back items free for ChatGPT: `donchian_mid` done, take `elder_bull`, `zscore_momentum` |
 

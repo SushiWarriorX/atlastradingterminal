@@ -6,7 +6,8 @@ import { color, space } from "../theme";
 import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
 
 const b = (x: number) => `${x < 0 ? "−" : ""}$${Math.abs(x).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}B`;
-const pct = (x: number | null | undefined) => (x == null ? "" : ` (${x >= 0 ? "+" : "−"}${Math.abs(x).toFixed(1)}% vs a year earlier)`);
+const monthName = (iso?: string) => (iso ? new Date(`${iso.slice(0, 7)}-15T12:00:00Z`).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }) : "");
+const change = (x: number | null | undefined) => (x == null ? "" : `${x >= 0 ? "Up" : "Down"} ${Math.abs(x).toFixed(1)}% from a year earlier`);
 
 /** Interest the US government owes on debt held by the public, by month and security type. Describes what already happened; not a signal. */
 export function InterestCard() {
@@ -21,13 +22,14 @@ export function InterestCard() {
         : !d.available ? <Banner tone={d.demo ? "demo" : "warn"} title={d.demo ? "Demo mode" : "Interest figures unavailable"} testID="interest-unavailable">{d.reason}</Banner>
         : (
           <View style={{ gap: space.sm }} testID="interest-body">
-            <Txt variant="label">{d.date?.slice(0, 7)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
+            <Txt variant="label">{monthName(d.date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
             <Txt variant="hero">{b(d.month_total_billions!)}</Txt>
-            <Txt variant="tiny">{pct(d.month_change_pct).trim() || "No comparison with a year earlier"}</Txt>
+            <Txt variant="small">{change(d.month_change_pct) || "No comparison with a year earlier"}</Txt>
             <Divider />
             <Txt variant="label">Fiscal {d.fiscal_year} so far ({d.ytd_months} of 12 months)</Txt>
             <Txt variant="h2">{b(d.ytd_total_billions!)}</Txt>
-            <Txt variant="tiny">{pct(d.ytd_change_pct).trim()}{d.ytd_check ? `${pct(d.ytd_change_pct) ? " · " : ""}${d.ytd_check.match ? "matches" : "DOES NOT match"} the source's own total` : ""}</Txt>
+            <Txt variant="small">{change(d.ytd_change_pct)}</Txt>
+            {d.ytd_check ? <Txt variant="tiny">{d.ytd_check.match ? "Matches" : "DOES NOT match"} the source's own year-to-date total.</Txt> : null}
             <Divider />
             {(d.breakdown ?? []).map((r) => (
               <View key={r.key} style={{ flexDirection: "row", justifyContent: "space-between", gap: space.md }}>
