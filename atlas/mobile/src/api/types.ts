@@ -307,6 +307,10 @@ export interface BorrowingData { available: boolean; reason?: string; demo: bool
   latest_day?: { issues_billions: number; redemptions_billions: number; net_billions: number }; month_to_date?: BorrowingPeriod; fiscal_year_to_date?: BorrowingPeriod; year_ago_date?: string | null;
   by_security?: { key: string; label: string; mtd_issues_billions: number; mtd_redemptions_billions: number; mtd_net_billions: number; fytd_net_billions: number }[];
   mtd_check?: { days: number; issues_billions: number; redemptions_billions: number; source_issues_billions: number; source_redemptions_billions: number; match: boolean } | null }
+export interface DealersData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  net_position_billions?: number; previous_date?: string; week_change_billions?: number | null; year_ago_date?: string | null; year_ago_billions?: number | null;
+  range_52w?: { weeks: number; low_billions: number; low_date: string; high_billions: number; high_date: string; weeks_lower_than_now: number };
+  check?: { weeks: number; mismatches: number; match: boolean; latest_ours_billions: number; latest_source_billions: number } | null; history?: { date: string; net_billions: number }[] }
 export interface BudgetData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   fiscal_year?: number; month?: string; month_receipts_billions?: number; month_outlays_billions?: number; month_deficit_billions?: number;
   ytd_months?: number; ytd_receipts_billions?: number; ytd_outlays_billions?: number; ytd_deficit_billions?: number;

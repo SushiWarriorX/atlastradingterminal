@@ -44,6 +44,7 @@ import { InterestExpenseWidget } from "./widgets/InterestExpense";
 import { BuybacksWidget } from "./widgets/Buybacks";
 import { BillAuctionsWidget } from "./widgets/BillAuctions";
 import { BorrowingWidget } from "./widgets/Borrowing";
+import { DealersWidget } from "./widgets/Dealers";
 import { DebtRatesWidget } from "./widgets/DebtRates";
 import { DebtMixWidget } from "./widgets/DebtMix";
 import { FedHoldingsWidget } from "./widgets/FedHoldings";
@@ -94,6 +95,7 @@ function render(w: WidgetCfg, view: string) {
     case "buybacks": return <BuybacksWidget />;
     case "bills": return <BillAuctionsWidget />;
     case "borrowing": return <BorrowingWidget />;
+    case "dealers": return <DealersWidget />;
     case "debtrates": return <DebtRatesWidget />;
     case "debtmix": return <DebtMixWidget />;
     case "fedholdings": return <FedHoldingsWidget />;

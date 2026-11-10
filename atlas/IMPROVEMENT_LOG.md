@@ -434,3 +434,12 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 
 ## 2026-11-10 10:17 UTC (Claude, strategy job): no change
 - Same reason as 07:24 UTC: my side of the strategy queue is empty (`zscore_momentum`, `elder_bull` are left for ChatGPT), the library already covers the classic families, and no owner answer has arrived on the three options (new-data ideas, give strategy hours to data and improve, leave the rest to ChatGPT). No code touched, no tests run.
+
+## 2026-11-10 11:17 UTC (Claude, data job): primary dealers' Treasury positions (data cycle 23)
+- **Added:** the net position of the primary dealers (the big banks that trade directly with the Fed and buy Treasury auctions) in Treasuries excluding TIPS: $452.8B as of Oct 28, up $27.1B on the week, $413.3B a year earlier, 52-week low $382.9B and high $557.1B (higher than 13 of 53 weeks). Backend `dealers.py`, route `/api/macro/dealers`, scheduler refresh, terminal panel with a weekly bar strip, Signal Macro card.
+- **Checked against the source itself:** the week-to-week change equals the source's own "change from previous week" series in all 26 weeks tested (59 in an earlier probe); the year-ago, range and rank figures equal an independent calculation; a test with one week deliberately $20B off makes the check fail.
+- **Held back on purpose:** a breakdown by maturity. Bills, floating rate notes and the seven coupon buckets do not add up to the total (about $36B short in the latest week, growing since 2022), and I could not find the missing component in the published series, so it could not be self-checked and is not shown. Recorded in `DATA_SOURCES.md`.
+- **Care taken:** "*" and "N/A" weeks are left out, never zero; a week missing in the source gives no week-on-week figure instead of a two-week change; the bar strip says its scale starts at the lowest week (so differences look bigger than they are). Caught and replaced a meaningless `or True` assertion in my own test before committing.
+- **Verified:** backend 1300 tests (11 new); phone type check, 43 unit tests, 48 of 48 browser checks including the new card (live source) with a screenshot; terminal `web/e2e/treasury.cjs` now checks five panels against live data, screenshots read; web type check, 20 unit tests, build.
+- **Noticed, not fixed:** an older phone card ("Interest the Treasury pays") shows a raw date, "Bills · 2026-10-31". Left for the next improve job.
+- **Not verified:** the Fed's own definitions page was not read; narrow-window layout.

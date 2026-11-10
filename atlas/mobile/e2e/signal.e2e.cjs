@@ -630,6 +630,20 @@ async function healthy(browser) {
       }
       await page.locator(V("borrowing-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07e-borrowing");
+      await page.waitForSelector(V("dealers-card"));
+      await page.waitForSelector(V("dealers-body") + ", " + V("dealers-unavailable") + ", " + V("dealers-error"), { timeout: 45000 });
+      const dl = await text(page);
+      match(dl, /Dealer Treasury positions/); match(dl, /New York Fed/); noMatch(dl, FORECASTS, "the dealer positions card makes no forecasts");
+      if (await present(page, "dealers-body")) {
+        match(dl, /not a market signal or a forecast/, "the dealer caveat is shown");
+        const dbody = await inner(page, "dealers-body");
+        match(dbody, /Net position in US Treasuries · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(dbody, /Same week a year earlier[\s\S]*Last \d+ weeks/, "year-ago and range are shown");
+        noMatch(dbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+        noMatch(dbody, /DOES NOT MATCH/, "the self-check against the source must pass");
+      }
+      await page.locator(V("dealers-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07f-dealers");
       await page.waitForSelector(V("debtrates-card"));
       await page.waitForSelector(V("debtrates-body") + ", " + V("debtrates-unavailable") + ", " + V("debtrates-error"), { timeout: 45000 });
       const dr = await text(page);

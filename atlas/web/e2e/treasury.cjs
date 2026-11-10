@@ -18,7 +18,7 @@ const OWN_CAVEAT = /not (a|market) (market )?signals? or (a )?forecasts?/gi;
   await pg.goto('http://127.0.0.1:5173'); await pg.waitForSelector('.topbar .cell');
   await pg.keyboard.press('Control+4');                                                              // Macro desk
   await pg.waitForTimeout(800);
-  for (const [id, title, shot] of [['interest', /INTEREST ON THE DEBT/, 'interest'], ['buybacks', /TREASURY BUYBACKS/, 'buybacks'], ['bills', /TREASURY BILL AUCTIONS/, 'bills'], ['borrowing', /TREASURY BORROWING/, 'borrowing']]) {
+  for (const [id, title, shot] of [['interest', /INTEREST ON THE DEBT/, 'interest'], ['buybacks', /TREASURY BUYBACKS/, 'buybacks'], ['bills', /TREASURY BILL AUCTIONS/, 'bills'], ['borrowing', /TREASURY BORROWING/, 'borrowing'], ['dealers', /DEALER TREASURY POSITIONS/, 'dealers']]) {
     const loc = pg.locator(`[data-testid="${id}"]`);
     await loc.waitFor({ timeout: 60000 });
     await loc.scrollIntoViewIfNeeded();
@@ -26,7 +26,7 @@ const OWN_CAVEAT = /not (a|market) (market )?signals? or (a )?forecasts?/gi;
     const panel = pg.locator('.panel', { has: loc });
     const all = (await panel.innerText()).replace(/\s+/g, ' ');
     if (!title.test(all)) fail(`${id}: panel title missing: ${all.slice(0, 80)}`);
-    if (!/US Treasury|Treasury FiscalData/.test(all)) fail(`${id}: the source is not named`);
+    if (!/US Treasury|Treasury FiscalData|New York Fed/.test(all)) fail(`${id}: the source is not named`);
     const stripped = all.replace(OWN_CAVEAT, '');
     if (FORECASTS.test(stripped)) fail(`${id}: forecast-like wording: ${stripped.match(FORECASTS)[0]}`);
     if (/\b20\d\d-\d\d-\d\d\b/.test(all.replace(/https?:\S+/g, ''))) fail(`${id}: a raw ISO date is on screen`);
@@ -39,6 +39,8 @@ const OWN_CAVEAT = /not (a|market) (market )?signals? or (a )?forecasts?/gi;
       if (id === 'bills' && !(/4-week/.test(all) && /13-week/.test(all) && /26-week/.test(all) && /Bid-to-cover/.test(all))) fail('bills: terms and bid-to-cover expected');
       if (id === 'borrowing' && !(/SO FAR \(through [A-Z][a-z]{2} \d{1,2}, 20\d\d\)/.test(all) && /FISCAL 20\d\d SO FAR/.test(all) && /Net new borrowing/.test(all) && /Treasury bills/.test(all) && /Same point a year earlier/.test(all))) fail('borrowing: month, fiscal year, net borrowing, types and the year-ago comparison expected');
       if (id === 'borrowing' && /DOES NOT MATCH/.test(all)) fail('borrowing: the self-check against the source failed');
+      if (id === 'dealers' && !(/NET POSITION IN US TREASURIES \(as of [A-Z][a-z]{2} \d{1,2}, 20\d\d\)/.test(all) && /Same week a year earlier/.test(all) && /Higher than \d+ of those \d+ weeks/.test(all) && /Bars: one per week for the last \d+ weeks, oldest on the left\. The scale starts at the lowest week/.test(all))) fail('dealers: date, year-ago, range and the bar caption (with its scale warning) expected');
+      if (id === 'dealers' && /DOES NOT MATCH/.test(all)) fail('dealers: the self-check against the source failed');
     }
     console.log(`${id}: ${live ? 'live data' : 'unavailable, said so'}: ok`);
     if (S) await panel.screenshot({ path: path.join(S, `terminal-${shot}.png`) }).catch(() => undefined);
