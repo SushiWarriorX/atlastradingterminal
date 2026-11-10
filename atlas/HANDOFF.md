@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-10 10:17 | Claude | strategy | No change (queue empty for Claude; owner decision on strategy hours still pending) | Hour 11 = data; ChatGPT shift starts 12:00 UTC (no ChatGPT branch seen yet) |
 | 2026-11-10 09:17 | Claude | skills | Catalog empty (4th time); added four Treasury FiscalData lessons to AGENT_NOTES.md | Hour 10 = strategy: queue empty for Claude (owner decision pending); hour 11 = data |
 | 2026-11-10 08:18 | Claude | data | Treasury marketable borrowing (DTS public debt transactions; live; self-check passes); `treasury.cjs` now covers four panels; capabilities 81 | Data queue: DefiLlama TVL (host blocked) only; next data job searches again |
 | 2026-11-10 07:24 | Claude | strategy | No change: queue empty on Claude's side; the library covers the classic families and extra look-alike rules only make the luck check stricter | Owner decision: new-data ideas, or give strategy hours to data/improve. ChatGPT may take `zscore_momentum`, `elder_bull` |

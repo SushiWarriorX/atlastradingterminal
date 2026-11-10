@@ -431,3 +431,6 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Caught by looking at the screenshot:** the phone card read "Net new borrowing this month. a year earlier at this point" (lowercase sentence start); the phrase is now "Same point a year earlier: ..." and the browser checks look for it.
 - **Verified:** backend 1289 tests (14 new); phone type check, 43 unit tests, 48 of 48 browser checks including the new card (live source) and a screenshot; terminal: `web/e2e/treasury.cjs` now checks four panels against live data, screenshot read; web type check, 20 unit tests, build.
 - **Not verified:** nothing about the table's meaning beyond its field names and the self-check (the Treasury's own definitions page was not read); the narrow-window layout.
+
+## 2026-11-10 10:17 UTC (Claude, strategy job): no change
+- Same reason as 07:24 UTC: my side of the strategy queue is empty (`zscore_momentum`, `elder_bull` are left for ChatGPT), the library already covers the classic families, and no owner answer has arrived on the three options (new-data ideas, give strategy hours to data and improve, leave the rest to ChatGPT). No code touched, no tests run.
