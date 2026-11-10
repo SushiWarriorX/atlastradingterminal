@@ -37,6 +37,10 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 - Mixed-type tables hide look-alikes (inflation-protected and floating-rate notes inside "Note"): filter with the source's own flag fields, never by guessing from a name or a yield.
 - A page-size limit can cut the oldest month in half; count what is really there before promising "N months", and show "no comparison" when a month is missing.
 - Check your own arithmetic against a total the source publishes (a deficit, a year-to-date row) in a test.
+- A source can be behind: the bill-auction table stopped 26 days before "today". Show OVERDUE with the real gap and list what is pending; never fill the gap or call it current. Keep a test that uses the real fetch date.
+- Daily Treasury Statement amounts are in millions and the month and fiscal-year totals are columns on each row: fetch the newest day, the month's days and the same day a year earlier as three small queries (`filter=record_date:gte:` / `lte:`, `sort=-record_date`), and test that the days add up to the source's own month-to-date figure.
+- Rows that look like part of a total may not be: trust-fund (Government Account Series) rows are trillions of government-to-government debt, and the inflation adjustment on TIPS is an "issue" with no cash. Leave them out or label them on their own line, and say so in the note.
+- Read the phone screenshot for sentence grammar, not only numbers: a phrase reused mid-line and as a sentence start produced "this month. a year earlier". Write phrases that work in both places.
 
 ## Research engine and browser-test lessons (from the fundamentals build)
 - Quarterly figures: companies file 3-, 6-, 9- and 12-month cumulative cash-flow totals and never a fourth quarter; derive a quarter as the difference of two cumulative totals and label it "derived". Never sum quarters that are not consecutive.
