@@ -1,5 +1,7 @@
 # Strategy loop (every 10 minutes)
 
+> UPDATE 2026-11-10: the classic families are covered. Strategy hours now follow `EDGE_PLAN.md` (different kinds of ideas, settings fixed first). The queue below is for ChatGPT and the owner.
+
 UPDATE 2026-11-09: the owner wants several rules tested per cycle until one is credibly profitable (see 'Search until profitable' at the end).
 
 Goal: add one new BTC trading RULE per cycle to the Strategy Lab, backtest it once, show it in the Strategy tracker section, and then follow it forward on new bars. Research only: nothing here places a trade or says "buy".

@@ -5,10 +5,10 @@ Read this first, every cycle, before anything else. Update the STATE BOARD (the 
 ## Shifts (owner request 2026-11-09)
 | Who | Hours (UTC) | Branch it pushes to |
 | --- | --- | --- |
-| Claude | 00:00 to 12:00 | `feature/research-modules` |
+| Claude | every hour, all day (owner request 2026-11-10: use the full quota) | `feature/research-modules` |
 | ChatGPT | 12:00 to 24:00 | `chatgpt/<job>-<yyyymmdd>`, then a DRAFT pull request into `feature/research-modules` |
 
-Only work during your own shift. Outside it, read, do not write. If you are unsure of the hour, use `date -u`.
+ChatGPT works only 12:00 to 24:00 UTC on its own `chatgpt/...` branches; Claude now runs every hour on `feature/research-modules` (the two never write to the same branch). Read `EDGE_PLAN.md` first: strategy hours follow it. If you are unsure of the hour, use `date -u`.
 
 ## One job per hour (same rotation for both, by the UTC hour you start)
 | Hour (UTC) | Job | | Hour (UTC) | Job |
@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-10 23:20 | Claude | plan | Wrote `EDGE_PLAN.md` (honest status: none of 40 rules beats holding; carry trade currently ~ bills; next: volatility-targeted holding, cross-sectional momentum); routine now hourly all day | Next strategy hour: build fractional positions in the simulator, then test the volatility-targeted holding rule with settings fixed in EDGE_PLAN.md |
 | 2026-11-10 11:17 | Claude | data | NY Fed primary dealer Treasury positions (live; change check passes; maturity breakdown held back, does not add up); `treasury.cjs` now covers five panels; capabilities 82 | Next improve job: the older phone card 'Interest the Treasury pays' shows a raw date (Bills · 2026-10-31). ChatGPT shift starts 12:00 UTC |
 | 2026-11-10 10:17 | Claude | strategy | No change (queue empty for Claude; owner decision on strategy hours still pending) | Hour 11 = data; ChatGPT shift starts 12:00 UTC (no ChatGPT branch seen yet) |
 | 2026-11-10 09:17 | Claude | skills | Catalog empty (4th time); added four Treasury FiscalData lessons to AGENT_NOTES.md | Hour 10 = strategy: queue empty for Claude (owner decision pending); hour 11 = data |
