@@ -402,3 +402,11 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Credibly profitable?** No. Eight rules in two days, none beats holding with a moderate-or-better label.
 - **Queue:** the front is now empty for Claude. `zscore_momentum` and `elder_bull` are left for ChatGPT. For Claude's next strategy hour a new published idea with fixed settings is needed (the owner can supply one, or the loop can search for one).
 - **Verified:** backend 1263 tests pass.
+
+## 2026-11-10 05:17 UTC (Claude, data job): Treasury bill auction results (data cycle 21)
+- **Added:** bill auctions by term (4, 6, 8, 13, 17, 26, 52 weeks): rate (investment rate), change from the previous auction of the same term, bid-to-cover versus the average of the four before, size, and who bought (primary dealers, direct, indirect bidders). The existing auction card covered notes and bonds only and said bills were left out. Backend `billauctions.py`, route `/api/macro/bills`, scheduler refresh, terminal panel, Signal Macro card.
+- **Checked against the raw rows:** the 8-week row (4.132%, bid-to-cover 2.26, $105.0B offered, $112.1B accepted, dealers 47.4% / direct 5.7% / indirect 46.9%) equals the source; the rate change and the four-auction average equal an independent calculation; in all 127 completed auctions the three buyer groups add up to the competitive awards.
+- **Found about the source:** its newest completed bill auction was Oct 15 and results for Oct 19 and 20 were not yet published when fetched (Nov 10), so the card honestly shows OVERDUE with the 26-day gap and lists the pending auctions. I did not fill the gap.
+- **Care taken:** cash management bills and odd terms left out; a completed auction with a missing rate or bid-to-cover refuses the response; an auction with no result is "pending", never zero. Caught and removed an `or len(...) == 3` escape hatch from my own test before committing.
+- **Verified:** backend 1275 tests (12 new); phone type check, 43 unit tests, 48 of 48 browser checks including the new card (real route, live source) with a screenshot; web type check, 20 unit tests and build.
+- **Not verified:** the terminal panel's layout (no screenshot; type check and build only). Why the source is behind (a pause in publishing, or a wider outage) is not known.

@@ -40,6 +40,7 @@ from .auctions import Auctions
 from .mts import Mts
 from .intexp import InterestExpense
 from .buybacks import Buybacks
+from .billauctions import BillAuctions
 from .avgrates import AvgRates
 from .mspd import Mspd
 from .soma import Soma
@@ -375,6 +376,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     budget = Mts(demo=demo)
     interest = InterestExpense(demo=demo)
     buybacks = Buybacks(demo=demo)
+    bill_auctions = BillAuctions(demo=demo)
     debt_rates = AvgRates(demo=demo)
     debt_mix = Mspd(demo=demo)
     fed_holdings = Soma(demo=demo)
@@ -409,6 +411,11 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     async def macro_buybacks():
         """US Treasury buyback operations: what dealers offered and what the Treasury bought. Describes what already happened; not a signal."""
         return ok(await buybacks.overview())
+
+    @app.get("/api/macro/bills")
+    async def macro_bills():
+        """US Treasury bill auction results by term: rate, bid-to-cover, size and who bought. Describes auctions that already happened; not a signal."""
+        return ok(await bill_auctions.overview())
 
     @app.get("/api/macro/budget")
     async def macro_budget():
@@ -1754,7 +1761,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
                                       "listings": listings_service, "new_to_me": new_to_me,
-                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

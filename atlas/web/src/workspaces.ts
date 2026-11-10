@@ -1,4 +1,4 @@
-export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "secfilings" | "narrative" | "treasury" | "positioning" | "stablecoins" | "network" | "fx" | "tracker" | "world" | "cryptomarket" | "ops" | "fedops" | "tga" | "auctions" | "budget" | "interest" | "buybacks" | "debtrates" | "debtmix" | "fedholdings" | "fedrates" | "fundresearch" | "listings" | "newtome" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "secfilings" | "narrative" | "treasury" | "positioning" | "stablecoins" | "network" | "fx" | "tracker" | "world" | "cryptomarket" | "ops" | "fedops" | "tga" | "auctions" | "budget" | "interest" | "buybacks" | "bills" | "debtrates" | "debtmix" | "fedholdings" | "fedrates" | "fundresearch" | "listings" | "newtome" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
@@ -82,12 +82,13 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "budget", type: "budget", x: 0, y: 137, w: 12, h: 12 },
     { i: "interest", type: "interest", x: 0, y: 149, w: 12, h: 15 },
     { i: "buybacks", type: "buybacks", x: 0, y: 164, w: 12, h: 16 },
-    { i: "debtrates", type: "debtrates", x: 0, y: 180, w: 12, h: 13 },
-    { i: "debtmix", type: "debtmix", x: 0, y: 193, w: 12, h: 15 },
-    { i: "fedholdings", type: "fedholdings", x: 0, y: 208, w: 12, h: 14 },
-    { i: "world", type: "world", x: 0, y: 222, w: 12, h: 16 },
-    { i: "yields", type: "yields", x: 0, y: 238, w: 5, h: 7 },
-    { i: "ai", type: "ai", x: 5, y: 238, w: 7, h: 10 },
+    { i: "bills", type: "bills", x: 0, y: 180, w: 12, h: 15 },
+    { i: "debtrates", type: "debtrates", x: 0, y: 195, w: 12, h: 13 },
+    { i: "debtmix", type: "debtmix", x: 0, y: 208, w: 12, h: 15 },
+    { i: "fedholdings", type: "fedholdings", x: 0, y: 223, w: 12, h: 14 },
+    { i: "world", type: "world", x: 0, y: 237, w: 12, h: 16 },
+    { i: "yields", type: "yields", x: 0, y: 253, w: 5, h: 7 },
+    { i: "ai", type: "ai", x: 5, y: 253, w: 7, h: 10 },
   ] },
   settings: { id: "settings", name: "Settings", widgets: [
     { i: "settings", type: "settings", x: 0, y: 0, w: 6, h: 12 },

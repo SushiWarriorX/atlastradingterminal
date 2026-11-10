@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-10 05:17 | Claude | data | Treasury bill auctions (live; source itself ~26 days behind, shown as OVERDUE); capabilities 80 | Queue: DefiLlama TVL (host blocked), Daily Treasury Statement debt issues/redemptions. Terminal Interest, Buybacks and Bills panels still need a screenshot |
 | 2026-11-10 04:17 | Claude | strategy | Added kama_trend (trades ~286 times; weak: +59.5% vs hold +177.8% in the last 30%; library 39; capabilities 79) | Queue left: `zscore_momentum`, `elder_bull` for ChatGPT. Claude's front is empty: needs new published ideas with fixed settings |
 | 2026-11-10 03:17 | Claude | skills | Catalog empty (3rd time); added five lessons to AGENT_NOTES.md (file edits, table edits, clock-dependent tests, hand-derived numbers, degenerate stops) | Hour 04 = strategy: ChatGPT-free back items `elder_bull`, `zscore_momentum`, `kama_trend`; front of queue is empty for Claude, so propose new ideas or skip |
 | 2026-11-10 02:19 | Claude | data | Treasury buyback operations (live; independent sum matches); capabilities 78 | Next data job: queue empty, search again; terminal Interest and Buybacks panels still need a screenshot |

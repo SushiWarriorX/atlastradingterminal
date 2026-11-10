@@ -603,6 +603,19 @@ async function healthy(browser) {
       }
       await page.locator(V("buybacks-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07c-buybacks");
+      await page.waitForSelector(V("bills-card"));
+      await page.waitForSelector(V("bills-body") + ", " + V("bills-unavailable") + ", " + V("bills-error"), { timeout: 45000 });
+      const bl = await text(page);
+      match(bl, /Treasury bill auctions/); match(bl, /US Treasury/); noMatch(bl, FORECASTS, "the bill auctions card makes no forecasts");
+      if (await present(page, "bills-body")) {
+        match(bl, /not market signals or forecasts/, "the bill auctions caveat is shown");
+        const bbody = await inner(page, "bills-body");
+        match(bbody, /4-week[\s\S]*13-week[\s\S]*26-week/, "the terms are listed");
+        match(bbody, /Newest completed auction · [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        noMatch(bbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("bills-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07d-bills");
       await page.waitForSelector(V("debtrates-card"));
       await page.waitForSelector(V("debtrates-body") + ", " + V("debtrates-unavailable") + ", " + V("debtrates-error"), { timeout: 45000 });
       const dr = await text(page);

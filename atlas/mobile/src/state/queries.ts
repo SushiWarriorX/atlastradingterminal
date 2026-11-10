@@ -257,6 +257,11 @@ export function useBuybacks() {
   return useQuery({ queryKey: keys(baseUrl).buybacks, queryFn: () => need(api).buybacks(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
 }
 
+export function useBillAuctions() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).bills, queryFn: () => need(api).bills(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
 export function useDebtRates() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).debtRates, queryFn: () => need(api).debtRates(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });

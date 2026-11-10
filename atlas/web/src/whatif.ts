@@ -109,6 +109,11 @@ export interface BuybackWindow { operations: number; with_result: number; no_res
 export interface BuybackGroup { key: string; label: string; operations: number; accepted_billions: number; offered_billions: number }
 export interface BuybacksData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   latest?: BuybackOp; last_90_days?: BuybackWindow; last_365_days?: BuybackWindow; by_security?: BuybackGroup[]; by_type?: BuybackGroup[]; by_maturity?: BuybackGroup[]; recent?: BuybackOp[]; anomalies?: number; program_start?: string }
+export interface BillTerm { term: string; auction_date: string; reopening: boolean; age_days: number; investment_rate: number; discount_rate: number; previous_rate: number | null; rate_change_bps: number | null;
+  bid_to_cover: number; average_bid_to_cover: number | null; compared_with: number; offering_billions: number | null; accepted_billions: number | null;
+  mix: { dealers_pct: number; direct_pct: number; indirect_pct: number; sum_ok: boolean } | null }
+export interface BillAuctionsData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  terms?: BillTerm[]; pending_results?: { term: string; auction_date: string; offering_billions: number | null }[] }
 export interface BudgetData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   fiscal_year?: number; month?: string; month_receipts_billions?: number; month_outlays_billions?: number; month_deficit_billions?: number;
   ytd_months?: number; ytd_receipts_billions?: number; ytd_outlays_billions?: number; ytd_deficit_billions?: number;
