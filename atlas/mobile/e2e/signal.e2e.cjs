@@ -616,6 +616,20 @@ async function healthy(browser) {
       }
       await page.locator(V("bills-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07d-bills");
+      await page.waitForSelector(V("borrowing-card"));
+      await page.waitForSelector(V("borrowing-body") + ", " + V("borrowing-unavailable") + ", " + V("borrowing-error"), { timeout: 45000 });
+      const bo = await text(page);
+      match(bo, /Treasury borrowing/); match(bo, /US Treasury/); noMatch(bo, FORECASTS, "the borrowing card makes no forecasts");
+      if (await present(page, "borrowing-body")) {
+        match(bo, /not a market signal or a forecast/, "the borrowing caveat is shown");
+        const bbody = await inner(page, "borrowing-body");
+        match(bbody, /^(January|February|March|April|May|June|July|August|September|October|November|December) 20\d\d so far · through [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the month and the date are written out");
+        match(bbody, /Net new borrowing this month[\s\S]*Fiscal 20\d\d so far[\s\S]*Treasury bills[\s\S]*Treasury notes[\s\S]*Treasury bonds/, "month, fiscal year and the types are shown");
+        noMatch(bbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+        noMatch(bbody, /DOES NOT MATCH/, "the self-check against the source must pass");
+      }
+      await page.locator(V("borrowing-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07e-borrowing");
       await page.waitForSelector(V("debtrates-card"));
       await page.waitForSelector(V("debtrates-body") + ", " + V("debtrates-unavailable") + ", " + V("debtrates-error"), { timeout: 45000 });
       const dr = await text(page);

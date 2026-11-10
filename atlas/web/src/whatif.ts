@@ -114,6 +114,11 @@ export interface BillTerm { term: string; auction_date: string; reopening: boole
   mix: { dealers_pct: number; direct_pct: number; indirect_pct: number; sum_ok: boolean } | null }
 export interface BillAuctionsData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   terms?: BillTerm[]; pending_results?: { term: string; auction_date: string; offering_billions: number | null }[] }
+export interface BorrowingPeriod { issues_billions: number; redemptions_billions: number; net_billions: number; year_ago_net_billions?: number | null }
+export interface BorrowingData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; fiscal_year?: number;
+  latest_day?: { issues_billions: number; redemptions_billions: number; net_billions: number }; month_to_date?: BorrowingPeriod; fiscal_year_to_date?: BorrowingPeriod; year_ago_date?: string | null;
+  by_security?: { key: string; label: string; mtd_issues_billions: number; mtd_redemptions_billions: number; mtd_net_billions: number; fytd_net_billions: number }[];
+  mtd_check?: { days: number; issues_billions: number; redemptions_billions: number; source_issues_billions: number; source_redemptions_billions: number; match: boolean } | null }
 export interface BudgetData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   fiscal_year?: number; month?: string; month_receipts_billions?: number; month_outlays_billions?: number; month_deficit_billions?: number;
   ytd_months?: number; ytd_receipts_billions?: number; ytd_outlays_billions?: number; ytd_deficit_billions?: number;

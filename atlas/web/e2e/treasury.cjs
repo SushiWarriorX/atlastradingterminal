@@ -18,7 +18,7 @@ const OWN_CAVEAT = /not (a|market) (market )?signals? or (a )?forecasts?/gi;
   await pg.goto('http://127.0.0.1:5173'); await pg.waitForSelector('.topbar .cell');
   await pg.keyboard.press('Control+4');                                                              // Macro desk
   await pg.waitForTimeout(800);
-  for (const [id, title, shot] of [['interest', /INTEREST ON THE DEBT/, 'interest'], ['buybacks', /TREASURY BUYBACKS/, 'buybacks'], ['bills', /TREASURY BILL AUCTIONS/, 'bills']]) {
+  for (const [id, title, shot] of [['interest', /INTEREST ON THE DEBT/, 'interest'], ['buybacks', /TREASURY BUYBACKS/, 'buybacks'], ['bills', /TREASURY BILL AUCTIONS/, 'bills'], ['borrowing', /TREASURY BORROWING/, 'borrowing']]) {
     const loc = pg.locator(`[data-testid="${id}"]`);
     await loc.waitFor({ timeout: 60000 });
     await loc.scrollIntoViewIfNeeded();
@@ -37,6 +37,8 @@ const OWN_CAVEAT = /not (a|market) (market )?signals? or (a )?forecasts?/gi;
       if (id === 'interest' && !/Bars: interest for each of the last \d+ months, oldest on the left, drawn from zero\. Lowest \$[\d.,]+B, highest \$[\d.,]+B, latest \$[\d.,]+B\./.test(all)) fail('interest: the bar strip needs its caption (what the bars are, their order, the baseline and the range)');
       if (id === 'buybacks' && !(/Latest operation/.test(all) && /LAST 90 DAYS/.test(all) && /LAST 12 MONTHS/.test(all) && /RECENT OPERATIONS/.test(all))) fail('buybacks: latest operation, both windows and recent list expected');
       if (id === 'bills' && !(/4-week/.test(all) && /13-week/.test(all) && /26-week/.test(all) && /Bid-to-cover/.test(all))) fail('bills: terms and bid-to-cover expected');
+      if (id === 'borrowing' && !(/SO FAR \(through [A-Z][a-z]{2} \d{1,2}, 20\d\d\)/.test(all) && /FISCAL 20\d\d SO FAR/.test(all) && /Net new borrowing/.test(all) && /Treasury bills/.test(all) && /Same point a year earlier/.test(all))) fail('borrowing: month, fiscal year, net borrowing, types and the year-ago comparison expected');
+      if (id === 'borrowing' && /DOES NOT MATCH/.test(all)) fail('borrowing: the self-check against the source failed');
     }
     console.log(`${id}: ${live ? 'live data' : 'unavailable, said so'}: ok`);
     if (S) await panel.screenshot({ path: path.join(S, `terminal-${shot}.png`) }).catch(() => undefined);
