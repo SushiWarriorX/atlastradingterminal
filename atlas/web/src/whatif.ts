@@ -104,6 +104,11 @@ export interface InterestData { available: boolean; reason?: string; demo: boole
   fiscal_year?: number; month_total_billions?: number; year_ago_month_total_billions?: number | null; month_change_pct?: number | null; ytd_months?: number; ytd_total_billions?: number;
   year_ago_ytd_billions?: number | null; ytd_change_pct?: number | null; breakdown?: { key: string; label: string; billions: number; share_pct: number | null }[];
   ytd_check?: { ours_billions: number; source_billions: number; match: boolean } | null; history?: { date: string; total_billions: number }[] }
+export interface BuybackOp { date: string; type: string; security: string; maturity: string | null; offered_billions: number | null; accepted_billions: number | null; maximum_billions: number | null; bought_share_pct: number | null; issues_accepted: number | null }
+export interface BuybackWindow { operations: number; with_result: number; no_result: number; accepted_billions: number; offered_billions: number; bought_share_pct: number | null }
+export interface BuybackGroup { key: string; label: string; operations: number; accepted_billions: number; offered_billions: number }
+export interface BuybacksData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  latest?: BuybackOp; last_90_days?: BuybackWindow; last_365_days?: BuybackWindow; by_security?: BuybackGroup[]; by_type?: BuybackGroup[]; by_maturity?: BuybackGroup[]; recent?: BuybackOp[]; anomalies?: number; program_start?: string }
 export interface BudgetData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   fiscal_year?: number; month?: string; month_receipts_billions?: number; month_outlays_billions?: number; month_deficit_billions?: number;
   ytd_months?: number; ytd_receipts_billions?: number; ytd_outlays_billions?: number; ytd_deficit_billions?: number;

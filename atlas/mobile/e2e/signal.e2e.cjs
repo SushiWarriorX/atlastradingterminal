@@ -590,6 +590,19 @@ async function healthy(browser) {
       }
       await page.locator(V("interest-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07b-interest");
+      await page.waitForSelector(V("buybacks-card"));
+      await page.waitForSelector(V("buybacks-body") + ", " + V("buybacks-unavailable") + ", " + V("buybacks-error"), { timeout: 45000 });
+      const bb = await text(page);
+      match(bb, /Treasury buybacks/); match(bb, /US Treasury/); noMatch(bb, FORECASTS, "the buybacks card makes no forecasts");
+      if (await present(page, "buybacks-body")) {
+        match(bb, /not a market signal or a forecast/, "the buybacks caveat is shown");
+        const bbody = await inner(page, "buybacks-body");
+        match(bbody, /Latest operation · [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(bbody, /Last 90 days[\s\S]*Last 12 months/, "both windows are shown");
+        noMatch(bbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("buybacks-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07c-buybacks");
       await page.waitForSelector(V("debtrates-card"));
       await page.waitForSelector(V("debtrates-body") + ", " + V("debtrates-unavailable") + ", " + V("debtrates-error"), { timeout: 45000 });
       const dr = await text(page);

@@ -1,7 +1,7 @@
 import type { CheckState_ } from "./health";
 import type { FedWatch, MacroBrief, MacroOverview } from "./macro";
 import type { EarningsCal, StockResearch } from "./stocks";
-import type { FedRatesData, FedHoldingsData, DebtMixData, DebtRatesData, BudgetData, InterestData, AuctionsData, TgaData, FedOpsData, OpsOverview, CryptoMarket, WorldData, TrackerData, FxData, NarrativeData, OnChain, Positioning, Sentiment, Stablecoins, TreasuryData, WhatIf } from "./whatif";
+import type { FedRatesData, FedHoldingsData, DebtMixData, DebtRatesData, BudgetData, InterestData, BuybacksData, AuctionsData, TgaData, FedOpsData, OpsOverview, CryptoMarket, WorldData, TrackerData, FxData, NarrativeData, OnChain, Positioning, Sentiment, Stablecoins, TreasuryData, WhatIf } from "./whatif";
 import type { SecFilings } from "./secfilings";
 import type { CalData } from "./calendar";
 import type { DiscoverRanked, DiscoverRun } from "./discover";
@@ -95,6 +95,7 @@ export const api = {
   auctions: () => call<AuctionsData>("/api/macro/auctions"),
   budget: () => call<BudgetData>("/api/macro/budget"),
   interest: () => call<InterestData>("/api/macro/interest"),
+  buybacks: () => call<BuybacksData>("/api/macro/buybacks"),
   debtRates: () => call<DebtRatesData>("/api/macro/debtrates"),
   debtMix: () => call<DebtMixData>("/api/macro/debtmix"),
   fedHoldings: () => call<FedHoldingsData>("/api/macro/fedholdings"),
