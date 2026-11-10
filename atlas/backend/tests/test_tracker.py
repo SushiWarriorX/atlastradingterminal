@@ -442,3 +442,24 @@ def test_pi_cycle_is_long_until_the_cross_and_returns_after_the_cross_back():
     assert i_up > 400 and pos[i_up - 1] == 1.0 and pos[i_up] == 0.0                                      # aside from the bar where the 111-bar average crosses above 2 x the 350-bar one
     assert i_dn > i_up and pos[i_dn - 1] == 0.0 and pos[i_dn] == 1.0 and pos[-1] == 1.0                  # and back in when it crosses below
     assert (st.build(d.iloc[:600], st.params).to_numpy() == pos[:600]).all()
+
+def test_nr7_setup_needs_a_strictly_narrower_range_than_the_six_before():
+    d = pd.DataFrame({"h": [10.0] * 6 + [10.0, 10.0, 10.0], "l": [0.0] * 6 + [5.0, 0.0, 2.0]})       # ranges 10 x6, then 5, 10, 8
+    s = ST.nr_setups(d, 7).to_numpy()
+    assert s.tolist() == [False] * 6 + [True, False, False]                                         # 5 < 10; a range of 10 is not narrower; 8 is not narrower than the earlier 5
+    flat = pd.DataFrame({"h": [10.0] * 12, "l": [0.0] * 12})
+    assert not ST.nr_setups(flat, 7).any()                                                           # equal ranges are ties, never "narrowest"
+
+
+def test_nr7_breakout_enters_above_the_narrow_bar_high_and_exits_below_its_low():
+    st = ST.S["nr7_breakout"]
+    assert st.params == {"n": 7}
+    # bars 0-9 wide (range 10, close 50); bar 10 narrow (high 52, low 51); bar 11 closes 53 (above 52: enter); bar 12 closes 51.5 (still above the stop 51); bar 13 closes 50.5 (below 51: exit)
+    h = [55.0] * 10 + [52.0, 54.0, 53.0, 53.0, 53.0, 53.0]
+    l = [45.0] * 10 + [51.0, 52.0, 51.0, 50.0, 49.0, 49.0]
+    c = [50.0] * 10 + [51.5, 53.0, 51.5, 50.5, 50.0, 60.0]
+    d = pd.DataFrame({"h": h, "l": l, "c": c})
+    pos = st.build(d, st.params).to_numpy()
+    assert pos[:11].sum() == 0 and pos[11] == 1.0 and pos[12] == 1.0 and pos[13] == 0.0              # in on the close above 52, out on the first close below 51
+    assert pos[14] == 0.0 and pos[15] == 0.0                                                          # no new narrow bar since, so the jump to 60 does not re-enter
+    assert (st.build(d.iloc[:13], st.params).to_numpy() == pos[:13]).all()                            # bar i uses only bars up to i

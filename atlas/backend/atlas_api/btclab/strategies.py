@@ -788,6 +788,44 @@ reg(Strategy("trix_cross", "TRIX signal-line cross", "Momentum", "Holds BTC whil
              {"n": [10, 12, 15, 20, 25]}, _trix_build, _trix_conds))
 
 
+def nr_setups(d: pd.DataFrame, n: int) -> pd.Series:
+    """True on a bar whose high-low range is strictly narrower than each of the previous n - 1 ranges (the narrowest of n bars; a tie does not count). Uses only bars up to that bar."""
+    rng = d["h"] - d["l"]
+    return rng < rng.shift(1).rolling(n - 1, min_periods=n - 1).min()
+
+
+def _nr_build(d, p):
+    setup = nr_setups(d, p["n"]).to_numpy(bool)
+    h, l, c = d["h"].to_numpy(float), d["l"].to_numpy(float), d["c"].to_numpy(float)
+    out = np.zeros(len(d))
+    pos, hi, lo, stop = 0, None, None, None
+    for i in range(len(d)):
+        if pos == 1:
+            if c[i] < stop:
+                pos = 0
+        elif hi is not None and c[i] > hi:
+            pos, stop, hi, lo = 1, lo, None, None                      # enter on a close above the setup bar's high; exit below the setup bar's low (fixed at entry)
+        if setup[i]:
+            if pos == 0:
+                hi, lo = h[i], l[i]                                      # the latest narrow-range bar is the one to watch while flat
+        out[i] = pos
+    return pd.Series(out, index=d.index)
+
+
+def _nr_conds(d, p):
+    s = nr_setups(d, p["n"])
+    last = int(np.flatnonzero(s.to_numpy(bool))[-1]) if s.any() else None
+    if last is None:
+        return [_cond(f"A narrowest-of-{p['n']}-bars range has appeared", False, "none in the data")]
+    hi, lo, c = float(d["h"].iloc[last]), float(d["l"].iloc[last]), float(d["c"].iloc[-1])
+    return [_cond(f"Latest narrow-range bar's high is {_val(hi)}: close above it enters; close below its low {_val(lo)} exits", bool(c > hi), f"close {_val(c)}")]
+
+
+reg(Strategy("nr7_breakout", "NR7 narrow-range breakout", "Breakout", "Waits for the narrowest daily range of the last 7 days, then holds BTC after a close above that bar's high and steps aside on a close below that bar's low.",
+             "A close above the high of the latest narrowest-of-7 bar (a tie in range does not count as narrowest).", "A close below the low of that same bar.", "The low of the narrow bar is the stop; it is fixed at entry. Because it is set once, after a big rally it can sit far below the price, so this rule can end up behaving like simply holding.", {"n": 7},
+             {"n": [5, 6, 7, 8, 10]}, _nr_build, _nr_conds))
+
+
 DEFAULT_FIVE = ["price_above_sma", "donchian_breakout", "rsi2_trend", "momentum_roc", "atr_channel"]
 
 

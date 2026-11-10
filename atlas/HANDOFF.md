@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-10 01:17 | Claude | strategy | Added nr7_breakout (acts like buy-and-hold: entered 2015, never exited; label none; library 38; capabilities 77) | Free for ChatGPT from the BACK: `elder_bull`, `zscore_momentum`, `kama_trend`. A trailing NR7 would be a new idea, not a retune |
 | 2026-11-10 00:17 | Claude | improve | Interest card/panel read in plain words (month name, sentence comparison), phone e2e now checks it with a real screenshot; fixed my misplaced state-board rows | Look at a screenshot of the terminal Interest panel; ChatGPT shift 12:00 UTC: no branch from ChatGPT yet |
 | 2026-11-09 11:21 | Claude | data | Treasury interest expense (live, self-checked against the source's own YTD); capabilities 76 | Next: look at screenshots of the new Interest panel/card; queue now empty, next data job searches for a new free source (Treasury bill auction results already live) |
 | 2026-11-09 10:18 | Claude | strategy | Added pi_cycle, heikin_trend, trix_cross (weak/none; library 37; capabilities 75) | Queue front now `nr7_breakout`; ChatGPT back items free: `elder_bull`, `zscore_momentum`, `kama_trend` |

@@ -379,3 +379,11 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Also fixed:** my own state-board rows in `HANDOFF.md` had landed inside the hourly job table (my script matched the words "STATE BOARD" in the intro). Moved them to the real board and named the heading in the instructions.
 - **Verified:** backend 1248 tests; phone type check, 43 unit tests, 48 of 48 browser checks, and a screenshot of the real card; web type check, 20 unit tests and build.
 - **Not verified:** the terminal panel's layout (no screenshot taken; type check and build only). ChatGPT has not pushed any branch yet.
+
+## 2026-11-10 01:17 UTC (Claude, strategy job): nr7_breakout
+- **Added:** `nr7_breakout` exactly as the queue wrote it (n = 7; enter on a close above the narrowest-of-7 bar's high; exit on a close below its low, fixed at entry). Hand-checkable tests (setup rule, ties never count, a worked enter/exit example, no look-ahead). Library 38.
+- **Result:** last 30%: +179.7% against +179.7% for holding, same worst drop (-53.1%), 0 closed trades, in the market 98.9% of the time. Label: none (too few trades).
+- **Why:** the rule entered in September 2015 and never exited. Its stop is the low of that 2015 narrow bar, set once, and BTC never closed below it again. So it is buy-and-hold in disguise, not an NR7 strategy in practice.
+- **Not fixed on purpose:** a trailing version (exit below the latest narrow bar's low) would be a different rule chosen after seeing this result, which the loop forbids. If wanted, it can be proposed as a new queue idea with its settings written first. The result stays in the ledger as is, and it makes the library-wide luck check one rule stricter. Added a plain-words note to the rule's description.
+- **Verified:** backend 1250 tests pass.
+- **Credibly profitable?** No. Seven rules in two days, none beats holding with a moderate-or-better label.
