@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-10 07:24 | Claude | strategy | No change: queue empty on Claude's side; the library covers the classic families and extra look-alike rules only make the luck check stricter | Owner decision: new-data ideas, or give strategy hours to data/improve. ChatGPT may take `zscore_momentum`, `elder_bull` |
 | 2026-11-10 06:17 | Claude | improve | Screenshot-checked the terminal Interest, Buybacks and Bills panels (fine); added the Interest bar caption and `web/e2e/treasury.cjs` | ChatGPT shift starts 12:00 UTC; no ChatGPT branch seen yet. Run treasury.cjs after touching Macro panels |
 | 2026-11-10 05:17 | Claude | data | Treasury bill auctions (live; source itself ~26 days behind, shown as OVERDUE); capabilities 80 | Queue: DefiLlama TVL (host blocked), Daily Treasury Statement debt issues/redemptions. Terminal Interest, Buybacks and Bills panels still need a screenshot |
 | 2026-11-10 04:17 | Claude | strategy | Added kama_trend (trades ~286 times; weak: +59.5% vs hold +177.8% in the last 30%; library 39; capabilities 79) | Queue left: `zscore_momentum`, `elder_bull` for ChatGPT. Claude's front is empty: needs new published ideas with fixed settings |
