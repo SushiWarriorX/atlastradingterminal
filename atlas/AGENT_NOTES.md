@@ -46,6 +46,13 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 - Clipboard and pop-ups: start the copy and open the tab inside the click; report "copied" only after a real success; `window.open` with `noopener` always returns null, so detach with `opener = null` instead; test with permissions granted, refused and the tab blocked.
 - Test text that denies something (a disclaimer saying "not a price target") will trip a naive advice detector: strip the app's own disclaimers before scanning.
 
+## Mistakes from the shift loops (2026-11-09 and 10)
+- Editing a file from a script: never open it for writing before reading it (`open(p, "w").write(open(p).read() + ...)` empties it first). Read into a variable, then write; check the diff shows only additions.
+- Editing a markdown table by searching for a heading word: the word also appears in the intro, so rows landed in the wrong table. Search for the full heading line, and re-read the result.
+- A test that depends on the clock or weekday fails at odd hours (three-day-old prices were "the latest session" on a Monday morning). Make fixtures stale by a margin that holds on any day, or fix the clock in the test.
+- Derive a hand-checked number before trusting it (a Hull average on a straight line lags 4/3 bars, not 0). If the code and the expectation disagree, work out which is right first.
+- A rule with a stop fixed at entry can end up as buy-and-hold (the NR7 rule entered in 2015 and never exited). Look at the entry and exit dates of a new backtest, not only the totals, and a rule needs at least one parameter for the robustness check.
+
 ## Phone lists
 - Signal's screens render lists with a scroll view and `map`. That is fine while the server caps the rows (calendar 40 a day over at most 21 days, filings 40, watchlist 100). Any new list that could pass about 100 rows should use `FlatList`, or the server should cap it.
 
