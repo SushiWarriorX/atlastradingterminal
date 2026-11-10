@@ -32,9 +32,10 @@ export function InterestExpenseWidget() {
           <table className="tbl" style={{ marginTop: 8 }}><tbody>
             {(d.breakdown ?? []).map((r) => <tr key={r.key}><td>{r.label}</td><td className="mono" style={{ textAlign: "right" }}>{b(r.billions)}</td><td className="mono dim" style={{ textAlign: "right" }}>{r.share_pct == null ? "" : `${r.share_pct.toFixed(1)}%`}</td></tr>)}
           </tbody></table>
-          <div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 32, margin: "8px 0" }} aria-label="Monthly interest, last months">
+          <div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 32, margin: "8px 0 2px" }} aria-label={`Monthly interest, last ${hist.length} months`}>
             {hist.map((h) => <span key={h.date} title={`${monthName(h.date)}: ${b(h.total_billions)}`} style={{ flex: 1, height: `${Math.max((h.total_billions / hi) * 95, 4)}%`, background: "var(--accent)", opacity: 0.6 }} />)}
           </div>
+          {hist.length > 0 && <div className="small dim" data-testid="interest-bars-caption" style={{ marginBottom: 8 }}>Bars: interest for each of the last {hist.length} months, oldest on the left, drawn from zero. Lowest {b(Math.min(...hist.map((h) => h.total_billions)))}, highest {b(hi)}, latest {b(hist[hist.length - 1].total_billions)}.</div>}
           <div className="small dim">{d.note}</div></>}
         <div className="small dim">Source: <a href={d.url} target="_blank" rel="noreferrer noopener">{d.source ?? "US Treasury FiscalData"}</a>.</div>
       </div>}
