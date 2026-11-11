@@ -4,6 +4,7 @@ import { api, errText } from "../api";
 import type { Pick } from "../discover";
 import { useStore } from "../store";
 import { ErrorBox, Panel } from "../ui";
+import { ymdLabel as ymd } from "../fmt";
 
 const FACTOR = { growth: "Growth", profitability: "Profitability", momentum: "Momentum", valuation: "Valuation", balance_sheet: "Balance sheet", liquidity: "Liquidity" } as const;
 const val = (v: number | null, u: string) => (v === null ? "n/a" : `${v.toFixed(u === "x" ? 1 : 1)}${u === "%" ? "%" : u === "x" ? "x" : ""}`);
@@ -21,7 +22,7 @@ function Card({ p, onAdd, saved }: { p: Pick; onAdd: () => void; saved: boolean 
       {p.risks.map((r, i) => <div key={i} className="small warnc">• {r}</div>)}
       <button className="mini" onClick={() => setOpen(!open)}>{open ? "hide evidence" : "show evidence and score breakdown"}</button>
       {open && <>
-        <table className="tbl"><thead><tr><th>Evidence</th><th className="r">Value</th><th>Source</th><th>As of</th></tr></thead><tbody>{p.evidence.map((e) => <tr key={e.label}><td>{e.label}</td><td className="r mono">{val(e.value, e.unit)}</td><td className="dim small">{e.source}</td><td className="mono small">{e.as_of}</td></tr>)}</tbody></table>
+        <table className="tbl"><thead><tr><th>Evidence</th><th className="r">Value</th><th>Source</th><th>As of</th></tr></thead><tbody>{p.evidence.map((e) => <tr key={e.label}><td>{e.label}</td><td className="r mono">{val(e.value, e.unit)}</td><td className="dim small">{e.source}</td><td className="mono small">{ymd(e.as_of)}</td></tr>)}</tbody></table>
         <div className="small">{Object.entries(FACTOR).map(([k, label]) => <span key={k} style={{ marginRight: 12 }}>{label}: <b className="mono">{p.factors[k] ? p.factors[k]!.score.toFixed(0) : "n/a"}</b></span>)}</div></>}
     </div>);
 }
@@ -47,7 +48,7 @@ export function DiscoverWidget() {
       {run.isLoading && <div className="note">Scanning the universe and reading filings. The first scan of the day takes about 20 seconds…</div>}
       {run.isError && <ErrorBox error={run.error} />}
       {d && <div data-testid="discover">
-        <div className="small dim">{d.universe.name}: {d.universe.size} stocks, {d.universe.priced} with prices, {d.universe.liquid} liquid enough, {d.universe.scored} scored · scan of {d.asof} · prices {d.data.prices} ({d.data.prices_status.toLowerCase()}{d.data.prices_as_of ? `, as of ${d.data.prices_as_of.slice(0, 10)}` : ""}) · financials: {d.data.fundamentals}</div>
+        <div className="small dim">{d.universe.name}: {d.universe.size} stocks, {d.universe.priced} with prices, {d.universe.liquid} liquid enough, {d.universe.scored} scored · scan of {ymd(d.asof)} · prices {d.data.prices} ({d.data.prices_status.toLowerCase()}{d.data.prices_as_of ? `, as of ${ymd(d.data.prices_as_of)}` : ""}) · financials: {d.data.fundamentals}</div>
         {d.stale_notice && <div className="note warn">{d.stale_notice}</div>}
         {d.notes.map((n, i) => <div key={i} className="note warn">{n}</div>)}
         {d.shortlist.length === 0 && !d.notes.length && <div className="note">No stock had enough data to be ranked today.</div>}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import type { BriefIndicator } from "../macro";
+import { wordDates, ymdLabel as ymd } from "../fmt";
 import { ErrorBox } from "../ui";
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
@@ -27,8 +28,8 @@ export function MacroToday() {
       <div className="ws-bar" style={{ paddingLeft: 0 }}><span>KEY INDICATORS · Fed rate, CPI, PCE, PPI · official, with observation date</span><span className="dim small">updated {when(d.as_of)}</span></div>
       <table className="tbl"><tbody>{core.map((i) => i.available ? (
         <tr key={i.id}><td><b>{i.label}</b></td><td className="r mono">{fmt(i)}</td>
-          <td className="small">{i.change ? `${i.change.value >= 0 ? "+" : "−"}${Math.abs(i.change.value).toFixed(2)} ${i.change.unit}` : ""} <span className="dim">{i.change?.label.replace("vs ", "")}</span></td>
-          <td className="mono small">{i.obs_date}</td><td className={`small ${i.freshness === "OVERDUE" ? "warnc" : "dim"}`}>{i.freshness === "OVERDUE" ? "Overdue" : "Current"}</td></tr>
+          <td className="small">{i.change ? `${i.change.value >= 0 ? "+" : "−"}${Math.abs(i.change.value).toFixed(2)} ${i.change.unit}` : ""} <span className="dim">{wordDates(i.change?.label.replace("vs ", ""))}</span></td>
+          <td className="mono small">{ymd(i.obs_date)}</td><td className={`small ${i.freshness === "OVERDUE" ? "warnc" : "dim"}`}>{i.freshness === "OVERDUE" ? "Overdue" : "Current"}</td></tr>
       ) : <tr key={i.id}><td><b>{i.label}</b></td><td colSpan={4} className="down small">Unavailable: {i.reason}</td></tr>)}</tbody></table>
       {d.indicators_note && <div className="note warn" data-testid="macro-indicators-note">{d.indicators_note}</div>}
       {core.length === 0 && !d.indicators_note && <div className="note warn">No official indicators to show.</div>}

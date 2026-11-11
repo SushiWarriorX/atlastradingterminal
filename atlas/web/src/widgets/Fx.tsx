@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { ErrorBox, Panel } from "../ui";
+import { ymdLabel as ymd } from "../fmt";
 
 const pc = (x: number | null | undefined) => (x === null || x === undefined ? "n/a" : `${x > 0 ? "+" : ""}${x.toFixed(2)}%`);
 const cls = (x: number | null | undefined) => (x === null || x === undefined ? "dim" : x > 0 ? "up" : x < 0 ? "down" : "");
@@ -10,7 +11,7 @@ export function FxWidget() {
   const q = useQuery({ queryKey: ["fx"], queryFn: api.fx, staleTime: 30 * 60_000, refetchInterval: 60 * 60_000, retry: 0 });
   const d = q.data;
   return (
-    <Panel title="US DOLLAR vs MAJOR CURRENCIES · ECB reference rates" right={d && d.available && <span className={`pill ${d.freshness === "OVERDUE" ? "warn" : ""}`}>{d.freshness === "OVERDUE" ? "OVERDUE" : d.date}</span>}>
+    <Panel title="US DOLLAR vs MAJOR CURRENCIES · ECB reference rates" right={d && d.available && <span className={`pill ${d.freshness === "OVERDUE" ? "warn" : ""}`}>{d.freshness === "OVERDUE" ? "OVERDUE" : ymd(d.date)}</span>}>
       {q.isLoading && <div className="note">Loading…</div>}
       {q.isError && <ErrorBox error={q.error} />}
       {d && <div data-testid="fx">

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, errText } from "../api";
 import { CalEvent, KIND_LABEL } from "../calendar";
 import { ErrorBox, Panel } from "../ui";
+import { ymdLabel as ymd } from "../fmt";
 
 const KINDS = ["", "earnings", "economy", "rates", "dividend", "auction"] as const;
 const SCOPES: [string, string][] = [["major", "Major companies"], ["watchlist", "My watchlist"], ["all", "Everything"]];
@@ -38,7 +39,7 @@ export function CalendarWidget() {
   const today = new Date().toISOString().slice(0, 10);
   const groups = (d?.items ?? []).reduce<Record<string, CalEvent[]>>((a, e) => ({ ...a, [e.date]: [...(a[e.date] ?? []), e] }), {});
   return (
-    <Panel title="CALENDAR · earnings, economy, rates, dividends" right={d && <span className={`pill ${d.demo ? "warn" : ""}`}>{d.demo ? "DEMO" : `${d.from} to ${d.to}`}</span>}>
+    <Panel title="CALENDAR · earnings, economy, rates, dividends" right={d && <span className={`pill ${d.demo ? "warn" : ""}`}>{d.demo ? "DEMO" : `${ymd(d.from)} to ${ymd(d.to)}`}</span>}>
       <div className="toolbar" data-testid="cal-controls">
         <span className="savedchip">{[7, 14, 21].map((n) => <button key={n} className={`mini ${days === n ? "on" : ""}`} onClick={() => setDays(n)}>{n}d</button>)}</span>
         <span className="savedchip">{KINDS.map((k) => <button key={k || "all"} className={`mini ${kind === k ? "on" : ""}`} onClick={() => setKind(k)} data-testid={`cal-kind-${k || "all"}`}>{k ? KIND_LABEL[k] : "All"}</button>)}</span>

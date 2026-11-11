@@ -4,6 +4,7 @@ import { api, errText } from "../api";
 import { useSelectedId } from "../scope";
 import type { Case, Year } from "../stocks";
 import { ErrorBox, Panel } from "../ui";
+import { ymdLabel as ymd } from "../fmt";
 
 const money = (x: number | null) => (x === null ? "n/a" : `${x < 0 ? "−" : ""}$${(Math.abs(x) / 1e9).toFixed(2)}B`);
 const pc = (x: number | null) => (x === null ? "n/a" : `${x.toFixed(1)}%`);
@@ -42,7 +43,7 @@ export function StockResearchWidget() {
         <div className="ws-bar" style={{ paddingLeft: 0 }}><span>EARNINGS AND CATALYSTS</span></div>
         <div className="small">Next earnings: <b className="mono">{d.earnings.next_date ?? "not available"}</b> <span className="dim">· {d.earnings.source}</span></div>
         <div className="small dim">Guidance: {d.earnings.guidance.reason} Consensus: {d.earnings.consensus.reason}</div>
-        {d.catalysts.map((c, i) => <div key={i} className="small">{c.date} · {c.title} <span className="dim">· {c.source}</span>{c.link && <> · <a href={c.link} target="_blank" rel="noreferrer noopener">filing</a></>}</div>)}
+        {d.catalysts.map((c, i) => <div key={i} className="small">{ymd(c.date)} · {c.title} <span className="dim">· {c.source}</span>{c.link && <> · <a href={c.link} target="_blank" rel="noreferrer noopener">filing</a></>}</div>)}
         <div className="ws-bar" style={{ paddingLeft: 0 }}><span>BULL AND BEAR POINTS</span></div>
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}><Cases title="Bull" items={d.bull} /><Cases title="Bear" items={d.bear} /></div>
         <div className="small dim">{d.case_note}</div>
@@ -75,7 +76,7 @@ export function EarningsWidget() {
       {q.isError && <ErrorBox error={q.error} />}
       {q.data && q.data.items.length === 0 && <div className="note">None of the {q.data.checked} symbols report in the next {q.data.window_days} days (as far as the source knows).</div>}
       {q.data && q.data.items.length > 0 && <table className="tbl" data-testid="earnings-list"><thead><tr><th>Date</th><th>Symbol</th><th>Name</th><th>In</th><th>Sector</th><th /></tr></thead><tbody>{q.data.items.map((r) => (
-        <tr key={r.symbol}><td className="mono">{r.date}</td><td><b>{r.symbol}</b></td><td className="dim">{r.name}</td><td className="mono">{r.days_away}d</td><td className="dim">{r.sector}</td>
+        <tr key={r.symbol}><td className="mono">{ymd(r.date)}</td><td><b>{r.symbol}</b></td><td className="dim">{r.name}</td><td className="mono">{r.days_away}d</td><td className="dim">{r.sector}</td>
           <td>{wl && !wl.items.includes(r.instrument_id) && <button className="mini" onClick={() => add.mutate(r.instrument_id)}>add to watchlist</button>}</td></tr>))}</tbody></table>}
       {add.isError && <div className="warnc small">{errText(add.error)}</div>}
       {q.data && <div className="small dim">{q.data.note} Dates: Yahoo Finance (unofficial, delayed); confirm with the company. {q.data.errors.length ? `Could not check: ${q.data.errors.join("; ")}` : ""}</div>}

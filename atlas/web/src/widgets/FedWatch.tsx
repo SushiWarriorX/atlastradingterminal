@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { countdown, fmtChange, fmtValue, localTime, OUTCOME_TEXT, FedRelease } from "../macro";
 import { ErrorBox } from "../ui";
+import { wordDates, ymdLabel as ymd } from "../fmt";
 
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const Tag = ({ kind }: { kind: "Scheduled" | "Published fact" | "Interpretation" }) => <span className="pill neutral" style={{ marginRight: 6 }}>{kind}</span>;
@@ -20,8 +21,8 @@ function ReleaseRow({ f }: { f: FedRelease }) {
     <tr>
       <td><b>{f.label}</b><div className="dim small">{f.relevance}</div><div className="dim small">{f.consensus_note}</div></td>
       <td className="r mono">{f.value === undefined || f.value === null ? "n/a" : f.id === "payrolls" ? `${f.value >= 0 ? "+" : "−"}${Math.abs(f.value).toFixed(0)}k` : fmtValue(f)}<div className="dim small">{f.unit}</div></td>
-      <td className="small">{(f.changes ?? []).map((c) => <div key={c.label}>{fmtChange(c)} <span className="dim">{c.label.replace("vs ", "")}</span></div>)}{f.note && <div className="dim">{f.note}</div>}</td>
-      <td className="mono small">{f.obs_date}</td>
+      <td className="small">{(f.changes ?? []).map((c) => <div key={c.label}>{fmtChange(c)} <span className="dim">{wordDates(c.label.replace("vs ", ""))}</span></div>)}{f.note && <div className="dim">{f.note}</div>}</td>
+      <td className="mono small">{ymd(f.obs_date)}</td>
       <td className={`small ${fr?.state === "OVERDUE" ? "warnc" : "up"}`} title={fr?.rule}>{fr?.state === "OVERDUE" ? "Overdue" : "Current"}<div className="dim">{fr ? `${fr.age_days}d old` : ""}</div></td>
     </tr>);
 }
@@ -88,8 +89,8 @@ export function FedWatchTab() {
       {d.balance_sheet && <>
         <div className="ws-bar" style={{ paddingLeft: 0 }}><span><Tag kind="Published fact" />BALANCE SHEET (runoff / expansion)</span></div>
         {d.balance_sheet.error ? <div className="note warn">Unavailable: {d.balance_sheet.error}</div> : <>
-          <div className="small"><b className="mono">${d.balance_sheet.value?.toFixed(2)} trillion</b> total assets, observed {d.balance_sheet.obs_date}{d.balance_sheet.trend && <> · <b>{d.balance_sheet.trend}</b> over ~13 weeks</>}
-            {(d.balance_sheet.changes ?? []).map((c) => <span key={c.label} className="dim"> · {fmtChange(c)} {c.label.replace("vs ", "")}</span>)}</div>
+          <div className="small"><b className="mono">${d.balance_sheet.value?.toFixed(2)} trillion</b> total assets, observed {ymd(d.balance_sheet.obs_date)}{d.balance_sheet.trend && <> · <b>{d.balance_sheet.trend}</b> over ~13 weeks</>}
+            {(d.balance_sheet.changes ?? []).map((c) => <span key={c.label} className="dim"> · {fmtChange(c)} {wordDates(c.label.replace("vs ", ""))}</span>)}</div>
           <div className="dim small">{d.balance_sheet.trend_rule}</div>
           <div className="small"><Tag kind="Interpretation" />{d.balance_sheet.why_it_matters}</div></>}
       </>}

@@ -33,3 +33,7 @@ export function ymdLabel(iso?: string | null): string {
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 }
+/** Rewrites every ISO date inside a sentence the server wrote ("previous UTC day (2026-11-10)") into words ("previous UTC day (Nov 10, 2026)"). Text without dates is returned unchanged. */
+export function wordDates(text?: string | null): string {
+  return (text ?? "").replace(/\b(20\d\d-\d\d-\d\d)\b/g, (m) => ymdLabel(m));
+}

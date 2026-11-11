@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, errText } from "../api";
 import { CheckRow, STATE_HELP, STATE_TEXT, stateClass, stepText } from "../health";
-import { ago, dir, num, pct, px } from "../fmt";
+import { ago, dir, num, pct, px, wordDates } from "../fmt";
 import { useStore } from "../store";
 import { useSelectedId } from "../scope";
 import { Badge, ErrorBox, Panel, ProvLine } from "../ui";
@@ -58,7 +58,7 @@ export function TechWidget() {
       <table className="tbl"><thead><tr><th>Level</th><th className="r">Price</th><th className="r">vs last</th><th>Derivation</th></tr></thead>
         <tbody>{levels.map((l) => (
           <tr key={l.id}><td>{l.kind.replace(/_/g, " ")}</td><td className="r mono">{px(l.price)}</td>
-            <td className={`r mono ${last ? dir(l.price - last) : ""}`}>{last ? pct((l.price / last - 1) * 100) : "—"}</td><td className="dim small">{l.derivation}</td></tr>))}</tbody></table>
+            <td className={`r mono ${last ? dir(l.price - last) : ""}`}>{last ? pct((l.price / last - 1) * 100) : "—"}</td><td className="dim small">{wordDates(l.derivation)}</td></tr>))}</tbody></table>
       <div className="note">Levels computed in code (fractal swings, prior-day range, SMA). Rules shown per row; not trade signals.</div>
     </Panel>
   );

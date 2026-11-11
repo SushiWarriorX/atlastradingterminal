@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { ErrorBox, Panel } from "../ui";
+import { ymdLabel as ymd } from "../fmt";
 
 const n = (x: number) => x.toLocaleString("en-US");
 const pc = (x: number) => `${x > 0 ? "+" : ""}${x.toFixed(1)}%`;
@@ -37,7 +38,7 @@ export function NetworkWidget() {
               {d.difficulty.block_height != null && <tr><td className="dim">Block height</td><td className="r mono">{n(d.difficulty.block_height)}</td></tr>}
               <tr><td className="dim">Through this 2,016-block cycle</td><td className="r mono">{d.difficulty.progress_pct}%</td></tr>
               <tr><td className="dim">Estimated next change (estimate)</td><td className={`r mono ${cls(d.difficulty.estimated_change_pct!)}`}>{pc(d.difficulty.estimated_change_pct!)}</td></tr>
-              <tr><td className="dim">Blocks left · estimated date</td><td className="r mono">{n(d.difficulty.remaining_blocks!)} · {d.difficulty.estimated_date ?? "n/a"}</td></tr>
+              <tr><td className="dim">Blocks left · estimated date</td><td className="r mono">{n(d.difficulty.remaining_blocks!)} · {d.difficulty.estimated_date ? ymd(d.difficulty.estimated_date) : "n/a"}</td></tr>
               <tr><td className="dim">Last change</td><td className={`r mono ${cls(d.difficulty.previous_change_pct!)}`}>{pc(d.difficulty.previous_change_pct!)}</td></tr>
             </tbody></table>
             <div className="small dim">{d.difficulty.note}</div></>}
@@ -45,10 +46,10 @@ export function NetworkWidget() {
         <div style={{ flex: 1, minWidth: 250 }}>
           <div className="ws-bar" style={{ paddingLeft: 0 }}><span>HASHRATE</span></div>
           {!d.hashrate.available ? <div className="note warn">{d.hashrate.reason}</div> : <>
-            <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}><b className="mono" style={{ fontSize: 20 }}>{n(d.hashrate.seven_day_average_eh!)} EH/s</b><span className="dim small">7-day average · {d.hashrate.date}</span>
+            <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}><b className="mono" style={{ fontSize: 20 }}>{n(d.hashrate.seven_day_average_eh!)} EH/s</b><span className="dim small">7-day average · {ymd(d.hashrate.date)}</span>
               {d.hashrate.changes!.map((c) => <span key={c.label} className={`small ${cls(c.change_pct)}`}>{c.label}: {pc(c.change_pct)}</span>)}</div>
             <div style={{ display: "flex", gap: 1, alignItems: "flex-end", height: 28, margin: "6px 0" }} aria-label="Last 90 days of hashrate">
-              {hist.map((h) => <span key={h.date} title={`${h.date}: ${h.eh} EH/s`} style={{ flex: 1, height: `${Math.max(((h.eh - lo) / Math.max(hi - lo, 0.001)) * 90 + 10, 10)}%`, background: "var(--accent)", opacity: 0.6 }} />)}
+              {hist.map((h) => <span key={h.date} title={`${ymd(h.date)}: ${h.eh} EH/s`} style={{ flex: 1, height: `${Math.max(((h.eh - lo) / Math.max(hi - lo, 0.001)) * 90 + 10, 10)}%`, background: "var(--accent)", opacity: 0.6 }} />)}
             </div>
             <div className="small dim">{d.hashrate.note}</div></>}
         </div>

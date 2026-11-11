@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { ErrorBox, Panel } from "../ui";
+import { ymdLabel as ymd } from "../fmt";
 
 const pc = (x: number | null | undefined) => (x === null || x === undefined ? "n/a" : `${x > 0 ? "+" : ""}${x.toFixed(1)}%`);
 const cls = (x: number | null | undefined) => (x === null || x === undefined ? "dim" : x > 0 ? "up" : x < 0 ? "down" : "");
@@ -12,7 +13,7 @@ export function NarrativeWidget() {
   const [more, setMore] = useState(false);
   const d = q.data;
   return (
-    <Panel title="NARRATIVE OF THE DAY" right={d && <span className={`pill ${d.demo ? "warn" : ""}`}>{d.demo ? "DEMO" : d.asof}</span>}>
+    <Panel title="NARRATIVE OF THE DAY" right={d && <span className={`pill ${d.demo ? "warn" : ""}`}>{d.demo ? "DEMO" : ymd(d.asof)}</span>}>
       {q.isLoading && <div className="note">Reading the market… the first load of the day fetches prices for every theme and can take a few seconds.</div>}
       {q.isError && <ErrorBox error={q.error} />}
       {d && !d.theme && <div className="note warn" data-testid="narrative-none">No narrative today. {d.notes.join(" ")}</div>}

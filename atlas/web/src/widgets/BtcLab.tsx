@@ -4,6 +4,7 @@ import { api, errText } from "../api";
 import type { LabResult, LabRun, LabStrategy, Metrics } from "../btclab";
 import { busyText } from "../labText";
 import { ErrorBox, Panel } from "../ui";
+import { ymdLabel as ymd } from "../fmt";
 
 const pc = (x: number | null | undefined, d = 1) => (x === null || x === undefined ? "n/a" : `${x >= 0 ? "+" : "−"}${Math.abs(x).toFixed(d)}%`);
 const n2 = (x: number | null | undefined) => (x === null || x === undefined ? "n/a" : x.toFixed(2));
@@ -44,7 +45,7 @@ function Detail({ r, run }: { r: LabResult; run: LabRun }) {
         <span className="dim">{r.judgement.note}</span></div>
       <div className="small" style={{ marginTop: 6 }}><b>Robustness.</b> Out of sample, {Math.round(r.robustness.share_positive * 100)}% of five nearby values of "{r.robustness.param}" made money ({r.robustness.neighbours.map((x) => `${x[r.robustness.param]}: ${pc(x.oos_return_pct, 0)}`).join(", ")}). With fees and slippage doubled: {pc(r.robustness.doubled_costs_oos_return_pct)}.</div>
       <div className="small"><b>Costs paid over the history:</b> fees {r.costs.fees_paid_pct.toFixed(1)}% of equity-notional{run.settings.market === "perp" ? `, funding ${r.costs.funding_paid_pct >= 0 ? "paid" : "received"} ${Math.abs(r.costs.funding_paid_pct).toFixed(1)}%` : ""}{r.costs.liquidated ? ". LIQUIDATED." : "."}</div>
-      <div className="small" style={{ marginTop: 6 }}><b>Right now ({r.now.as_of}):</b> the rule is <b>{r.now.rule_position}</b>. {r.now.conditions.map((c, i) => <span key={i}>{c.met === null ? "?" : c.met ? "✓" : "✗"} {c.rule} <span className="dim">({c.value})</span>{i < r.now.conditions.length - 1 ? "; " : ""}</span>)} <div className="dim">{r.now.note}</div></div>
+      <div className="small" style={{ marginTop: 6 }}><b>Right now ({ymd(r.now.as_of)}):</b> the rule is <b>{r.now.rule_position}</b>. {r.now.conditions.map((c, i) => <span key={i}>{c.met === null ? "?" : c.met ? "✓" : "✗"} {c.rule} <span className="dim">({c.value})</span>{i < r.now.conditions.length - 1 ? "; " : ""}</span>)} <div className="dim">{r.now.note}</div></div>
       <details style={{ marginTop: 6 }}><summary className="small">Walk-forward folds ({r.walk_forward.folds.length})</summary>
         <table className="tbl"><tbody>{r.walk_forward.folds.map((f, i) => <tr key={i}><td className="mono">{f.from} to {f.to}</td><td>chose {Object.entries(f.chosen).map(([k, v]) => `${k}=${v}`).join(", ")}</td><td className="r mono">{pc(f.test_return_pct)}</td></tr>)}</tbody></table></details>
       <details style={{ marginTop: 6 }}><summary className="small">Recent trades ({r.trades.total} in all)</summary>
@@ -72,7 +73,7 @@ export function BtcLabWidget() {
   return (
     <Panel title="BTC STRATEGY LAB" right={d && <span className={`pill ${d.data.demo ? "warn" : ""}`}>{d.data.status}</span>}>
       {lib.isError && <ErrorBox error={lib.error} />}
-      {lib.data && <details className="note" data-testid="lab-findings"><summary className="small"><b>What the research has found so far</b> (dated {lib.data.findings.as_of}; past data, not a forecast)</summary>
+      {lib.data && <details className="note" data-testid="lab-findings"><summary className="small"><b>What the research has found so far</b> (dated {ymd(lib.data.findings.as_of)}; past data, not a forecast)</summary>
         {lib.data.findings.points.map((x, i) => <div key={i} className="small">• {x}</div>)}<div className="small dim">{lib.data.findings.data}</div></details>}
       <div className="note">Research only. Each rule is fixed in advance and tested after fees, slippage and funding on history it was not tuned to. A rule being "on" now is a description, not a forecast.</div>
       <div className="toolbar" data-testid="lab-controls">

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { ErrorBox, Panel } from "../ui";
+import { ymdLabel as ymd } from "../fmt";
 
 const n = (x: number) => x.toLocaleString("en-US");
 const sgn = (x: number | null | undefined) => (x === null || x === undefined ? "n/a" : `${x > 0 ? "+" : ""}${n(x)}`);
@@ -11,7 +12,7 @@ export function PositioningWidget() {
   const q = useQuery({ queryKey: ["btc-positioning"], queryFn: api.btcPositioning, staleTime: 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
   const d = q.data;
   return (
-    <Panel title="BTC FUTURES POSITIONING · CFTC Commitments of Traders" right={d && d.available && <span className={`pill ${d.freshness === "OVERDUE" ? "warn" : ""}`}>{d.freshness === "OVERDUE" ? "OVERDUE" : `as of ${d.date}`}</span>}>
+    <Panel title="BTC FUTURES POSITIONING · CFTC Commitments of Traders" right={d && d.available && <span className={`pill ${d.freshness === "OVERDUE" ? "warn" : ""}`}>{d.freshness === "OVERDUE" ? "OVERDUE" : `as of ${ymd(d.date)}`}</span>}>
       {q.isLoading && <div className="note">Loading…</div>}
       {q.isError && <ErrorBox error={q.error} />}
       {d && <div data-testid="positioning">

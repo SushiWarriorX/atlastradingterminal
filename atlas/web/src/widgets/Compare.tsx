@@ -5,10 +5,11 @@ import { api, PairStats } from "../api";
 import { pct } from "../fmt";
 import { useStore } from "../store";
 import { ErrorBox, ProvLine } from "../ui";
+import { ymdLabel as ymd } from "../fmt";
 
 const COLORS = ["--accent", "--info", "--ai", "--warn"];
 const css = (v: string) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-const fmtDate = (t: number) => new Date(t * 1000).toISOString().slice(0, 10);
+const fmtDate = (t: number) => ymd(new Date(t * 1000).toISOString());
 const cc = (x: number | null | undefined) => (x === null || x === undefined ? "—" : x.toFixed(2));
 
 export function CompareView({ ids, interval, onInterval }: { ids: string[]; interval: string; onInterval: (i: string) => void }) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ago, dir, num, pct, px, ymdLabel } from "./fmt";
+import { ago, dir, num, pct, px, wordDates, ymdLabel } from "./fmt";
 
 describe("fmt", () => {
   it("never renders missing values as numbers", () => {
@@ -35,5 +35,14 @@ describe("ymdLabel", () => {
     expect(ymdLabel(undefined)).toBe("");
     expect(ymdLabel("soon")).toBe("soon");
     expect(ymdLabel("2026-13-45")).toBe("2026-13-45");
+  });
+});
+
+describe("wordDates", () => {
+  it("rewrites dates inside a sentence and leaves everything else alone", () => {
+    expect(wordDates("previous UTC day (2026-11-10) high")).toBe("previous UTC day (Nov 10, 2026) high");
+    expect(wordDates("2026-01-02 to 2026-12-31")).toBe("Jan 2, 2026 to Dec 31, 2026");
+    expect(wordDates("no dates here, 12-34 and 2026-13-45x")).toBe("no dates here, 12-34 and 2026-13-45x");
+    expect(wordDates(null)).toBe("");
   });
 });
