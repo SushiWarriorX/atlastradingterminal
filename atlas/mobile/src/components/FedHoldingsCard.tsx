@@ -1,3 +1,4 @@
+import { ymdLabel } from "../lib/format";
 import React from "react";
 import { Linking, Pressable, View } from "react-native";
 import { safeUrl } from "../lib/links";
@@ -21,9 +22,9 @@ export function FedHoldingsCard() {
         : !d.available ? <Banner tone={d.demo ? "demo" : "warn"} title={d.demo ? "Demo mode" : "Fed holdings unavailable"} testID="fedholdings-unavailable">{d.reason}</Banner>
         : (
           <View style={{ gap: space.sm }} testID="fedholdings-body">
-            <Txt variant="label">Total holdings · {d.date}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
+            <Txt variant="label">Total holdings · {ymdLabel(d.date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
             <Txt variant="hero">{money(d.total_billions!)}</Txt>
-            <Txt variant="small">{chg(d.from_peak_billions!)} ({d.from_peak_pct}%) from the peak of {money(d.peak_billions!)} on {d.peak_date}</Txt>
+            <Txt variant="small">{chg(d.from_peak_billions!)} ({d.from_peak_pct}%) from the peak of {money(d.peak_billions!)} on {ymdLabel(d.peak_date)}</Txt>
             <Txt variant="tiny">{(d.changes ?? []).map((c) => `${c.period}: ${chg(c.change_billions)}`).join(" · ")}</Txt>
             {(d.mix ?? []).map((m) => (
               <View key={m.name} style={{ gap: 2 }}>

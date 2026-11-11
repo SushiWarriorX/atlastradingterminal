@@ -1,3 +1,4 @@
+import { ymdLabel } from "../lib/format";
 import React from "react";
 import { Linking, Pressable, View } from "react-native";
 import { safeUrl } from "../lib/links";
@@ -21,10 +22,10 @@ export function DebtMixCard() {
         : !d.available ? <Banner tone={d.demo ? "demo" : "warn"} title={d.demo ? "Demo mode" : "Debt breakdown unavailable"} testID="debtmix-unavailable">{d.reason}</Banner>
         : (
           <View style={{ gap: space.sm }} testID="debtmix-body">
-            <Txt variant="label">Total public debt · {d.date}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
+            <Txt variant="label">Total public debt · {ymdLabel(d.date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
             <Txt variant="hero">{money(d.total_billions!)}</Txt>
             <Txt variant="small">{money(d.held_by_public_billions!)} held by the public · {money(d.held_by_government_accounts_billions!)} owed to government accounts</Txt>
-            {d.bills_share_of_marketable_pct != null ? <Txt variant="tiny">Short-term bills are {d.bills_share_of_marketable_pct}% of marketable debt. Change since {d.since}: {money(Math.abs(d.change_since_billions!))} {d.change_since_billions! >= 0 ? "more" : "less"} ({d.months_covered} month-ends).</Txt> : null}
+            {d.bills_share_of_marketable_pct != null ? <Txt variant="tiny">Short-term bills are {d.bills_share_of_marketable_pct}% of marketable debt. Change since {ymdLabel(d.since)}: {money(Math.abs(d.change_since_billions!))} {d.change_since_billions! >= 0 ? "more" : "less"} ({d.months_covered} month-ends).</Txt> : null}
             {(d.rows ?? []).filter((r) => !r.name.startsWith("Total")).map((r) => (
               <View key={r.name} style={{ gap: 2 }}>
                 <Divider />

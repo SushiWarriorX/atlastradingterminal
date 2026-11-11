@@ -1,3 +1,4 @@
+import { ymdLabel } from "../lib/format";
 import React from "react";
 import { Linking, Pressable, View } from "react-native";
 import { safeUrl } from "../lib/links";
@@ -23,8 +24,8 @@ export function FedOpsCard() {
           <View style={{ gap: space.sm }} testID="fedops-body">
             <Txt variant="label">Cash parked at the Fed (reverse repo)</Txt>
             <Txt variant="hero">{b(d.reverse_repo!.billions)}</Txt>
-            <Txt variant="small">{chg(d.reverse_repo!.change_billions)} vs the day before · {d.date}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
-            <Txt variant="tiny">About a month: average {b(d.reverse_repo!.average_billions)}, highest {b(d.reverse_repo!.highest_billions)} on {d.reverse_repo!.highest_date}.</Txt>
+            <Txt variant="small">{chg(d.reverse_repo!.change_billions)} vs the day before · {ymdLabel(d.date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
+            <Txt variant="tiny">About a month: average {b(d.reverse_repo!.average_billions)}, highest {b(d.reverse_repo!.highest_billions)} on {ymdLabel(d.reverse_repo!.highest_date)}.</Txt>
             <Divider />
             <Txt variant="label">Cash the Fed lent (standing repo)</Txt>
             <Txt variant="h2">{b(d.repo!.billions)}</Txt>

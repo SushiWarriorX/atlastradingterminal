@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Asset, Briefing, Finding, Prov, WatchlistResponse, WatchRow } from "../api/types";
 import { AGENT_ORDER, briefingSections, coverageNote, lineText, rowKind } from "./briefing";
-import { countdown, dateOnly, directionOf, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime } from "./format";
+import { countdown, dateOnly, directionOf, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime, ymdLabel } from "./format";
 import { describeFreshness, isOutdated, summarizeTones, worstTone } from "./freshness";
 import { keys } from "./keys";
 import { safeUrl } from "./links";
@@ -60,6 +60,11 @@ describe("formatting", () => {
     expect(localDateTime("nope")).toBe("n/a");
     expect(dateOnly("2026-12-09")).toBe("Dec 9");
     expect(dateOnly(null)).toBe("n/a");
+    expect(ymdLabel("2026-10-31")).toBe("Oct 31, 2026");                                           // a date a person can read
+    expect(ymdLabel("2026-01-05")).toBe("Jan 5, 2026");
+    expect(ymdLabel("2026-10")).toBe("October 2026");
+    expect(ymdLabel("2026-10-31T12:00:00Z")).toBe("2026-10-31T12:00:00Z");                          // other shapes are shown as they came, never hidden or guessed
+    expect(ymdLabel(null)).toBe("n/a");
   });
   it("gives each asset id its own avatar colour and short initials", () => {
     expect(hueFor("EQUITY:NASDAQ:AAPL")).toBe(hueFor("EQUITY:NASDAQ:AAPL"));

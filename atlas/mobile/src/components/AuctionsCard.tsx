@@ -1,3 +1,4 @@
+import { ymdLabel } from "../lib/format";
 import React from "react";
 import { Linking, Pressable, View } from "react-native";
 import { safeUrl } from "../lib/links";
@@ -23,12 +24,12 @@ export function AuctionsCard() {
             {(d.tenors ?? []).map((t, i) => (
               <View key={t.tenor} style={{ gap: 2 }}>
                 {i > 0 ? <Divider /> : null}
-                <Txt variant="label">{t.tenor}{t.reopening ? " (reopening)" : ""} · {t.auction_date}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
+                <Txt variant="label">{t.tenor}{t.reopening ? " (reopening)" : ""} · {ymdLabel(t.auction_date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
                 <Txt variant="h2">{t.high_yield.toFixed(3)}%</Txt>
                 <Txt variant="small">{pts(t.yield_change)}</Txt>
                 <Txt variant="tiny">Bid-to-cover {t.bid_to_cover.toFixed(2)}{t.average_bid_to_cover != null ? ` (average of the previous ${t.compared_with}: ${t.average_bid_to_cover.toFixed(2)})` : ""}{t.offering_billions != null ? ` · offered $${t.offering_billions}B` : ""}</Txt>
               </View>))}
-            {(d.pending_results ?? []).length > 0 ? <Txt variant="tiny">Results not yet published by the source: {d.pending_results!.map((p) => `${p.tenor} auction of ${p.auction_date}`).join(", ")}.</Txt> : null}
+            {(d.pending_results ?? []).length > 0 ? <Txt variant="tiny">Results not yet published by the source: {d.pending_results!.map((p) => `${p.tenor} auction of ${ymdLabel(p.auction_date)}`).join(", ")}.</Txt> : null}
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
       {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Treasury FiscalData</Txt></Pressable> : null}

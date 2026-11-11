@@ -1,3 +1,4 @@
+import { ymdLabel } from "../lib/format";
 import React from "react";
 import { Linking, Pressable, View } from "react-native";
 import { safeUrl } from "../lib/links";
@@ -21,7 +22,7 @@ export function FxCard() {
         : !d.available ? <Banner tone={d.demo ? "demo" : "warn"} title={d.demo ? "Demo mode" : "Exchange rates unavailable"} testID="fx-unavailable">{d.reason}</Banner>
         : (
           <View style={{ gap: space.sm }} testID="fx-body">
-            <Txt variant="small">As of {d.date}{d.freshness === "OVERDUE" ? " · overdue" : ""}. Stronger than a month ago against {d.breadth!.stronger_30d} of {d.breadth!.of} of these currencies.</Txt>
+            <Txt variant="small">As of {ymdLabel(d.date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}. Stronger than a month ago against {d.breadth!.stronger_30d} of {d.breadth!.of} of these currencies.</Txt>
             {d.pairs!.map((p, i) => (
               <View key={p.pair}>{i > 0 && <Divider />}
                 <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5, gap: space.md }}>

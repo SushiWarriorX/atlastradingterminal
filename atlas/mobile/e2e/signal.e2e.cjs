@@ -644,11 +644,19 @@ async function healthy(browser) {
       }
       await page.locator(V("dealers-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07f-dealers");
+      const macroAll = await page.evaluate(() => { const el = document.querySelector('[data-testid="macro-brief"]'); return el ? el.innerText : ""; });          // the Macro screen only: screens stay mounted under the one on top
+      assert(macroAll.length > 500, "the Macro screen text should be read in full");
+      const rawDates = [...new Set(macroAll.match(/\b20\d\d-\d\d(-\d\d)?\b/g) || [])];
+      const allLines = macroAll.split("\n");
+      const rawLines = allLines.map((l, i) => (/\b20\d\d-\d\d(-\d\d)?\b/.test(l) ? `${(allLines[i - 1] || "").trim().slice(0, 40)} >> ${l.trim().slice(0, 60)}` : "")).filter(Boolean);
+      assert(rawDates.length === 0, `the Macro screen must write dates in words, found raw dates in: ${rawLines.join(" || ")}`);
       await page.waitForSelector(V("debtrates-card"));
       await page.waitForSelector(V("debtrates-body") + ", " + V("debtrates-unavailable") + ", " + V("debtrates-error"), { timeout: 45000 });
       const dr = await text(page);
       match(dr, /Interest the Treasury pays/); match(dr, /US Treasury/); noMatch(dr, FORECASTS, "the debt-rates card makes no forecasts");
       if (await present(page, "debtrates-body")) match(dr, /not a market signal or a forecast/, "the debt-rates caveat is shown");
+      await page.locator(V("debtrates-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07a-debtrates");
       await page.waitForSelector(V("debtmix-card"));
       await page.waitForSelector(V("debtmix-body") + ", " + V("debtmix-unavailable") + ", " + V("debtmix-error"), { timeout: 45000 });
       const dm = await text(page);

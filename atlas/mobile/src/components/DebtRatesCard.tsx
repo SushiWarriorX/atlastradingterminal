@@ -1,3 +1,4 @@
+import { ymdLabel } from "../lib/format";
 import React from "react";
 import { Linking, Pressable, View } from "react-native";
 import { safeUrl } from "../lib/links";
@@ -23,7 +24,7 @@ export function DebtRatesCard() {
             {(d.rows ?? []).map((r, i) => (
               <View key={r.name} style={{ gap: 2 }}>
                 {i > 0 ? <Divider /> : null}
-                <Txt variant="label">{r.name}{i === 0 ? ` · ${d.date}${d.freshness === "OVERDUE" ? " · overdue" : ""}` : ""}</Txt>
+                <Txt variant="label">{r.name}{i === 0 ? ` · ${ymdLabel(d.date)}${d.freshness === "OVERDUE" ? " · overdue" : ""}` : ""}</Txt>
                 <Txt variant="h2">{r.rate.toFixed(3)}%</Txt>
                 <Txt variant="tiny">{pp(r.change_month, "last month")} · {pp(r.change_year, "a year ago")}</Txt>
               </View>))}

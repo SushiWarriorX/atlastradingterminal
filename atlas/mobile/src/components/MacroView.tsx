@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Linking, Pressable, ScrollView, View } from "react-native";
 import { useMacroBrief } from "../state/queries";
-import { localDateTime } from "../lib/format";
+import { localDateTime, ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { signed } from "../lib/journal";
 import { color, radius, space } from "../theme";
@@ -60,7 +60,7 @@ export function MacroView() {
                 <View key={i.id}>{n > 0 && <Divider />}
                   {i.available ? (
                     <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, gap: space.md }}>
-                      <View style={{ flex: 1 }}><Txt variant="body">{i.label}</Txt><Txt variant="tiny">{i.obs_date}{i.freshness === "OVERDUE" ? " · overdue" : ""}</Txt></View>
+                      <View style={{ flex: 1 }}><Txt variant="body">{i.label}</Txt><Txt variant="tiny">{ymdLabel(i.obs_date)}{i.freshness === "OVERDUE" ? " · overdue" : ""}</Txt></View>
                       <View style={{ alignItems: "flex-end" }}><Txt variant="h2">{value(i)}</Txt>{i.change ? <Txt variant="tiny">{signed(i.change.value)} {i.change.unit}</Txt> : null}</View>
                     </View>) : <View style={{ paddingVertical: 8 }}><Txt variant="body">{i.label}</Txt><Txt variant="tiny" c={color.down}>Unavailable: {i.reason}</Txt></View>}
                 </View>))}
@@ -83,7 +83,7 @@ export function MacroView() {
             <WorldCard />
             <Section title="Upcoming" note="Scheduled dates only. What each release contains is not known in advance.">
               {d.upcoming.length === 0 ? <Txt variant="small">No upcoming events could be loaded.</Txt> : d.upcoming.map((e, i) => (
-                <View key={i} style={{ flexDirection: "row", gap: space.md }}><Txt variant="small" style={{ width: 120 }}>{e.at_utc ? when(e.at_utc) : e.date}</Txt><View style={{ flex: 1 }}><Txt variant="body">{e.title}</Txt><Txt variant="tiny">{e.source}</Txt></View></View>))}
+                <View key={i} style={{ flexDirection: "row", gap: space.md }}><Txt variant="small" style={{ width: 120 }}>{e.at_utc ? when(e.at_utc) : ymdLabel(e.date)}</Txt><View style={{ flex: 1 }}><Txt variant="body">{e.title}</Txt><Txt variant="tiny">{e.source}</Txt></View></View>))}
             </Section>
             <Section title="Headlines" note="Titles and links as published by the named feed, not summarised or scored.">
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 4 }}>

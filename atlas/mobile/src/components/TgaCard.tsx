@@ -1,3 +1,4 @@
+import { ymdLabel } from "../lib/format";
 import React from "react";
 import { Linking, Pressable, View } from "react-native";
 import { safeUrl } from "../lib/links";
@@ -22,8 +23,8 @@ export function TgaCard() {
         : (
           <View style={{ gap: space.sm }} testID="tga-body">
             <Txt variant="hero">{b(d.balance_billions!)}</Txt>
-            <Txt variant="small">{chg(d.change_1d_billions!)} on the day{d.change_month_billions != null ? ` · ${chg(d.change_month_billions)} over about a month` : ""} · {d.date}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
-            <Txt variant="tiny">Month average {b(d.month_average_billions!)}. Past year: low {b(d.year_low_billions!)} on {d.year_low_date}, high {b(d.year_high_billions!)} on {d.year_high_date}.</Txt>
+            <Txt variant="small">{chg(d.change_1d_billions!)} on the day{d.change_month_billions != null ? ` · ${chg(d.change_month_billions)} over about a month` : ""} · {ymdLabel(d.date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
+            <Txt variant="tiny">Month average {b(d.month_average_billions!)}. Past year: low {b(d.year_low_billions!)} on {ymdLabel(d.year_low_date)}, high {b(d.year_high_billions!)} on {ymdLabel(d.year_high_date)}.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
       {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Treasury FiscalData</Txt></Pressable> : null}

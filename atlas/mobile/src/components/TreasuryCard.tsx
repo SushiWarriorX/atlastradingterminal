@@ -1,3 +1,4 @@
+import { ymdLabel } from "../lib/format";
 import React from "react";
 import { View } from "react-native";
 import { useTreasury } from "../state/queries";
@@ -20,7 +21,7 @@ export function TreasuryCard() {
           <View style={{ gap: space.md }} testID="treasury-body">
             {d.curve.available ? (
               <View style={{ gap: 2 }}>
-                <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}><Txt variant="label">Yield curve</Txt><Txt variant="tiny">{d.curve.date}{d.curve.freshness === "OVERDUE" ? " · overdue" : ""}</Txt></View>
+                <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}><Txt variant="label">Yield curve</Txt><Txt variant="tiny">{ymdLabel(d.curve.date)}{d.curve.freshness === "OVERDUE" ? " · overdue" : ""}</Txt></View>
                 {d.curve.points!.map((p, i) => (
                   <View key={p.tenor}>{i > 0 && <Divider />}
                     <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 }}>
@@ -41,7 +42,7 @@ export function TreasuryCard() {
               <View style={{ gap: 2 }}>
                 <Txt variant="label">Total public debt</Txt>
                 <Txt variant="h2">${d.debt.total_trillions!.toFixed(2)} trillion</Txt>
-                <Txt variant="small">On {d.debt.date}{d.debt.change_vs_previous_day_billions != null ? ` · ${d.debt.change_vs_previous_day_billions >= 0 ? "+" : "−"}$${Math.abs(d.debt.change_vs_previous_day_billions).toFixed(1)}B vs the previous day` : ""}{d.debt.change_vs_a_year_ago_pct != null ? ` · ${d.debt.change_vs_a_year_ago_pct >= 0 ? "+" : "−"}${Math.abs(d.debt.change_vs_a_year_ago_pct).toFixed(1)}% vs a year ago` : ""}</Txt>
+                <Txt variant="small">On {ymdLabel(d.debt.date)}{d.debt.change_vs_previous_day_billions != null ? ` · ${d.debt.change_vs_previous_day_billions >= 0 ? "+" : "−"}$${Math.abs(d.debt.change_vs_previous_day_billions).toFixed(1)}B vs the previous day` : ""}{d.debt.change_vs_a_year_ago_pct != null ? ` · ${d.debt.change_vs_a_year_ago_pct >= 0 ? "+" : "−"}${Math.abs(d.debt.change_vs_a_year_ago_pct).toFixed(1)}% vs a year ago` : ""}</Txt>
                 <Txt variant="tiny">Held by the public ${d.debt.held_by_public_trillions!.toFixed(2)}T · intragovernmental ${d.debt.intragovernmental_trillions!.toFixed(2)}T. {d.debt.note}</Txt>
               </View>) : d.debt.reason ? <Txt variant="small" c={color.warn}>{d.debt.reason}</Txt> : null}
           </View>)}

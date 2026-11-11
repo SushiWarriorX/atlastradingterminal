@@ -443,3 +443,11 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Verified:** backend 1300 tests (11 new); phone type check, 43 unit tests, 48 of 48 browser checks including the new card (live source) with a screenshot; terminal `web/e2e/treasury.cjs` now checks five panels against live data, screenshots read; web type check, 20 unit tests, build.
 - **Noticed, not fixed:** an older phone card ("Interest the Treasury pays") shows a raw date, "Bills · 2026-10-31". Left for the next improve job.
 - **Not verified:** the Fed's own definitions page was not read; narrow-window layout.
+
+## 2026-11-11 00:17 UTC (Claude, improve job): the whole Macro screen now writes dates in words
+- **Found:** the older phone cards printed raw dates (`Bills · 2026-10-31`, `highest $5.09B on 2026-11-02`, `2-year · 2026-09-22`, `peak of $8.42T on 2022-04-13`, `Change since 2026-01-31`, `auction of 2026-10-21`); a new check found 19 on the Macro screen.
+- **Changed:** one shared helper `ymdLabel` (`2026-10-31` becomes `Oct 31, 2026`, `2026-10` becomes `October 2026`, any other shape is shown as it came) used by the Treasury, Fed rates, Fed holdings, Fed operations, cash balance, debt breakdown, debt rates, auctions, FX and key-indicator cards and the upcoming list. Unit tests for the helper.
+- **Guard added:** the phone browser suite now fails if the Macro screen's text contains any raw `YYYY-MM-DD` date (only that screen is read, because the phone keeps other screens mounted underneath).
+- **Verified:** phone type check, 43 unit tests, 48 of 48 browser checks, the ask-ChatGPT phone checks, and a screenshot of the older "Interest the Treasury pays" card now reading "Bills · Oct 31, 2026".
+- **Not verified:** the terminal's older widgets still show ISO dates (terminal users may prefer them; not changed); backend and web were not touched, so their suites were not rerun.
+- **Credibly profitable?** Nothing tested this cycle (improve hour). Status unchanged: not yet.

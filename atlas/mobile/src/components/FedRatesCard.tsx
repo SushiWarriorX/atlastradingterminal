@@ -1,3 +1,4 @@
+import { ymdLabel } from "../lib/format";
 import React from "react";
 import { Linking, Pressable, View } from "react-native";
 import { safeUrl } from "../lib/links";
@@ -21,15 +22,15 @@ export function FedRatesCard() {
         : !d.available ? <Banner tone={d.demo ? "demo" : "warn"} title={d.demo ? "Demo mode" : "Fed rate unavailable"} testID="fedrates-unavailable">{d.reason}</Banner>
         : (
           <View style={{ gap: space.sm }} testID="fedrates-body">
-            <Txt variant="label">Effective federal funds rate · {d.date}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
+            <Txt variant="label">Effective federal funds rate · {ymdLabel(d.date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
             <Txt variant="hero">{pct(d.effr!)}</Txt>
             <Txt variant="small">{pp(d.effr_change_pp)} pts on the day · Fed target range {pct(d.target_low!)} to {pct(d.target_high!)}, the rate is {d.effr_position} it</Txt>
-            {d.last_change ? <Txt variant="tiny">Range last changed on {d.last_change.date} ({d.last_change.days_ago} days ago): {pct(d.last_change.from_range[0])}–{pct(d.last_change.from_range[1])} to {pct(d.last_change.to_range[0])}–{pct(d.last_change.to_range[1])} ({pp(d.last_change.change_pp)} pts).</Txt>
+            {d.last_change ? <Txt variant="tiny">Range last changed on {ymdLabel(d.last_change.date)} ({d.last_change.days_ago} days ago): {pct(d.last_change.from_range[0])}–{pct(d.last_change.from_range[1])} to {pct(d.last_change.to_range[0])}–{pct(d.last_change.to_range[1])} ({pp(d.last_change.change_pp)} pts).</Txt>
               : d.history_available ? <Txt variant="tiny">The target range has not changed in the data window.</Txt> : <Txt variant="tiny">{d.history_reason}</Txt>}
             {(d.rates ?? []).filter((r) => r.code !== "EFFR").map((r) => (
               <View key={r.code} style={{ gap: 2 }}>
                 <Divider />
-                <Txt variant="label">{r.name} · {r.date}</Txt>
+                <Txt variant="label">{r.name} · {ymdLabel(r.date)}</Txt>
                 <Txt variant="h2">{pct(r.rate)}</Txt>
               </View>))}
             <Txt variant="tiny">{d.note}</Txt>
