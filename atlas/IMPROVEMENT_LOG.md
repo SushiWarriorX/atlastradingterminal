@@ -451,3 +451,12 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Verified:** phone type check, 43 unit tests, 48 of 48 browser checks, the ask-ChatGPT phone checks, and a screenshot of the older "Interest the Treasury pays" card now reading "Bills · Oct 31, 2026".
 - **Not verified:** the terminal's older widgets still show ISO dates (terminal users may prefer them; not changed); backend and web were not touched, so their suites were not rerun.
 - **Credibly profitable?** Nothing tested this cycle (improve hour). Status unchanged: not yet.
+
+## 2026-11-11 01:20 UTC (Claude, strategy job): experiment 1, volatility-targeted holding: failed, logged
+- **Built:** a fractional-exposure simulator (`btclab/weights.py`) for rules that hold part of the account in BTC: the weight is decided at a close, traded at the next open, costs charged on the amount traded from the drifted weight, cash earns nothing (stated). Validated: hand-worked numbers (volatility weight 0.40812 for alternating +/-5% days, half weight 1.047375 after +10/-10/+10, 10 bps once on entry), no look-ahead (a prefix of the series gives the same weights), the weight decided at a close is not used on that same bar, and a weight of 1 agrees with the whole-position engine within 0.2% over 300 random bars.
+- **Pre-registered first:** the rule and the four pass conditions were written into `EDGE_PLAN.md` and pushed (commit 5402546) before the run.
+- **Result:** failed. Sealed last 30%: Sharpe 0.775 against 0.84 for holding; worst drop -52.4% against -53.1%; return 73% of holding's; Sharpe also below a constant-exposure hold at the same average weight (0.839). Details in the findings log. Nothing was retuned.
+- **Why it matters:** an honest negative result. Scaling down when volatility rises did not protect BTC in the sealed period beyond what holding less would have; this closes one tempting "risk-managed BTC" idea.
+- **Verified:** backend tests for the new simulator and runner (8 new); full backend suite below.
+- **Not verified:** cash earning a bill rate; other windows or targets (deliberately not tried: that would be tuning); multi-asset ideas (experiment 2, next).
+- **Credibly profitable?** No. Status: not yet.
