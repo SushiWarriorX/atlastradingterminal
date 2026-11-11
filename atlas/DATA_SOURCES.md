@@ -44,6 +44,11 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 ## QUEUED (candidates, in order; each must be fetched live before it ships)
 (otherwise the queue is empty: the next cycle searches for new candidates, e.g. DefiLlama DeFi value once api.llama.fi answers)
 
+## HELD (reachable, but not shipped, with the reason)
+- NY Fed primary dealers' Treasury trading volume, excluding TIPS (`markets.newyorkfed.org/api/pd/get/PDGSWOEXTTOT.json`, checked live 2026-11-11: HTTP 200, no key, newest as-of 2026-10-28, 709 weeks since 2013). The source's own change series (`PDGSWOEXTTOTC`) reproduces from the levels in 704 of 705 consecutive weeks (one week in 2019 is off by 6, rounding), so the numbers are internally consistent. NOT shipped because the unit is not stated in anything this machine can read: the series descriptions say neither "per week" nor "per day", and the NY Fed page that would say is not reachable here (403). The size ($513B in 2013, $888B in 2026) looks like an average per day, not a weekly total, but that is my inference. Ship it only once the unit is confirmed from the source's own documentation; the change check alone cannot settle it.
+- Also checked 2026-11-11, empty right now (HTTP 200 with no operations): NY Fed central bank swap operations (`/api/fxs/all/latest.json`), securities lending (`/api/seclending/all/results/summary/latest.json`) and Treasury operations summary (`/api/tsy/all/results/summary/latest.json`).
+- Treasury General Account cash balance: already live (`tga`), so not a new source.
+
 ## BLOCKED
 - Nasdaq public website feeds (cycle: fundamentals upgrade): `api.nasdaq.com/api/ipo/calendar` and `/api/screener/stocks` answer from this machine and feed the new Discover panels (listings and the "new to me" universe). They are unofficial, undocumented and their terms were not reviewed; if you do not want them, say so and those two panels will be switched off.
 - SEC EDGAR from this session: the request needs `ATLAS_SEC_CONTACT`; this session's safety check refused a command containing the contact email, so live SEC data for the new research engine is unverified here.

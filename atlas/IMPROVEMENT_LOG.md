@@ -483,3 +483,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Verified:** 11 new tests; full backend suite: 1333 passed.
 - **Not verified:** how much of the result survivorship explains (no delisted-coin data is available free); other lookbacks or coin counts (deliberately not tried: tuning); cash earning a bill rate.
 - **Credibly profitable?** No. Status: not yet. Nearest miss so far.
+
+## 2026-11-11 05:17 UTC (Claude, data job): no new source shipped; one candidate held with the reason
+- Queue was empty, so I searched. Treasury General Account cash is already live. NY Fed swaps, securities lending and Treasury operations summaries answer but are empty. Primary dealers' Treasury trading volume answers and passes a change-series check (704 of 705 weeks), but its unit (per week or per day) is not stated anywhere reachable from here, so it is HELD, not shipped (see DATA_SOURCES.md, HELD).
+- **Verified:** live HTTP 200s and the change check above. **Not verified:** the unit of the volume series. No code changed.
