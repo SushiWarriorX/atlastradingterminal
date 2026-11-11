@@ -1,4 +1,4 @@
-export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "secfilings" | "narrative" | "treasury" | "positioning" | "stablecoins" | "network" | "fx" | "tracker" | "world" | "cryptomarket" | "ops" | "fedops" | "tga" | "auctions" | "budget" | "interest" | "buybacks" | "bills" | "borrowing" | "dealers" | "customs" | "realyields" | "futurespos" | "commoditypos" | "currencypos" | "debtrates" | "debtmix" | "fedholdings" | "fedrates" | "fundresearch" | "listings" | "newtome" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
+export type WidgetType = "calendar" | "discover" | "btclab" | "stockresearch" | "whatif" | "sentiment" | "secfilings" | "narrative" | "treasury" | "positioning" | "stablecoins" | "network" | "fx" | "tracker" | "world" | "cryptomarket" | "ops" | "fedops" | "tga" | "auctions" | "budget" | "interest" | "buybacks" | "bills" | "borrowing" | "dealers" | "receipts" | "customs" | "realyields" | "futurespos" | "commoditypos" | "currencypos" | "debtrates" | "debtmix" | "fedholdings" | "fedrates" | "fundresearch" | "listings" | "newtome" | "earnings" | "journalquick" | "derivatives" | "news" | "newsfeeds" | "backtest" | "journaltrades" | "journaleditor" | "journalimport" | "journalsources" | "performance2" | "mtf" | "scanner" | "chart" | "watchlist" | "quote" | "tech" | "ai" | "health" | "yields" | "unavailable" | "settings";
 export interface WidgetCfg { i: string; type: WidgetType; x: number; y: number; w: number; h: number; props?: Record<string, string> }
 export interface WorkspaceDef { id: string; name: string; widgets: WidgetCfg[]; scope?: "btc" | "equity" }
 
@@ -85,17 +85,18 @@ export const WORKSPACES: Record<string, WorkspaceDef> = {
     { i: "bills", type: "bills", x: 0, y: 180, w: 12, h: 15 },
     { i: "borrowing", type: "borrowing", x: 0, y: 195, w: 12, h: 14 },
     { i: "dealers", type: "dealers", x: 0, y: 209, w: 12, h: 13 },
-    { i: "customs", type: "customs", x: 0, y: 222, w: 12, h: 22 },
-    { i: "realyields", type: "realyields", x: 0, y: 244, w: 12, h: 14 },
-    { i: "futurespos", type: "futurespos", x: 0, y: 258, w: 12, h: 35 },
-    { i: "commoditypos", type: "commoditypos", x: 0, y: 293, w: 12, h: 29 },
-    { i: "currencypos", type: "currencypos", x: 0, y: 322, w: 12, h: 29 },
-    { i: "debtrates", type: "debtrates", x: 0, y: 351, w: 12, h: 13 },
-    { i: "debtmix", type: "debtmix", x: 0, y: 364, w: 12, h: 15 },
-    { i: "fedholdings", type: "fedholdings", x: 0, y: 379, w: 12, h: 14 },
-    { i: "world", type: "world", x: 0, y: 393, w: 12, h: 16 },
-    { i: "yields", type: "yields", x: 0, y: 409, w: 5, h: 7 },
-    { i: "ai", type: "ai", x: 5, y: 409, w: 7, h: 10 },
+    { i: "receipts", type: "receipts", x: 0, y: 222, w: 12, h: 18 },
+    { i: "customs", type: "customs", x: 0, y: 240, w: 12, h: 22 },
+    { i: "realyields", type: "realyields", x: 0, y: 262, w: 12, h: 14 },
+    { i: "futurespos", type: "futurespos", x: 0, y: 276, w: 12, h: 35 },
+    { i: "commoditypos", type: "commoditypos", x: 0, y: 311, w: 12, h: 29 },
+    { i: "currencypos", type: "currencypos", x: 0, y: 340, w: 12, h: 29 },
+    { i: "debtrates", type: "debtrates", x: 0, y: 369, w: 12, h: 13 },
+    { i: "debtmix", type: "debtmix", x: 0, y: 382, w: 12, h: 15 },
+    { i: "fedholdings", type: "fedholdings", x: 0, y: 397, w: 12, h: 14 },
+    { i: "world", type: "world", x: 0, y: 411, w: 12, h: 16 },
+    { i: "yields", type: "yields", x: 0, y: 427, w: 5, h: 7 },
+    { i: "ai", type: "ai", x: 5, y: 427, w: 7, h: 10 },
   ] },
   settings: { id: "settings", name: "Settings", widgets: [
     { i: "settings", type: "settings", x: 0, y: 0, w: 6, h: 12 },

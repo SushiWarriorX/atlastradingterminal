@@ -717,6 +717,20 @@ async function healthy(browser) {
       }
       await page.locator(V("customs-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07k-customs");
+
+      await page.waitForSelector(V("receipts-card"));
+      await page.waitForSelector(V("receipts-body") + ", " + V("receipts-unavailable") + ", " + V("receipts-error"), { timeout: 45000 });
+      const rc = await text(page);
+      match(rc, /Where federal revenue comes from/); match(rc, /US Treasury/); noMatch(rc, FORECASTS, "the receipts card makes no forecasts");
+      if (await present(page, "receipts-body")) {
+        const gbody = await inner(page, "receipts-body");
+        match(gbody, /Fiscal 20\d\d so far \(\d+ months? from October\) · through (January|February|March|April|May|June|July|August|September|October|November|December) 20\d\d/, "the month is written out");
+        match(gbody, /Individual income taxes: \$[\d,.]+B/); match(gbody, /Corporate income taxes: /); match(gbody, /Customs duties \(tariffs\): /);
+        match(gbody, /Checked: the seven sources add up/); match(gbody, /does not say why any category rose or fell/); match(gbody, /not a market signal or a forecast/);
+        noMatch(gbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("receipts-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07l-receipts");
       const macroAll = await page.evaluate(() => { const el = document.querySelector('[data-testid="macro-brief"]'); return el ? el.innerText : ""; });          // the Macro screen only: screens stay mounted under the one on top
       assert(macroAll.length > 500, "the Macro screen text should be read in full");
       const rawDates = [...new Set(macroAll.match(/\b20\d\d-\d\d(-\d\d)?\b/g) || [])];

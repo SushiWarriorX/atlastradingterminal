@@ -234,6 +234,7 @@ body { font: 12.5px/1.4 "Inter", system-ui, -apple-system, "Segoe UI", sans-seri
 @container (max-width: 360px) {
   .wl-data { display: none; }
   .wl-badge-inline { display: block; margin-top: 2px; }
+  .wl-badge-inline .badge { font-size: 8px; letter-spacing: 0; padding: 1px 4px; white-space: nowrap; }
   .wl-wrap .tbl th, .wl-wrap .tbl td { padding-left: 3px; padding-right: 3px; }
   .wl-wrap .tbl .mini { padding: 1px 5px; }
   .wl-wrap .tbl td { font-size: 12px; }

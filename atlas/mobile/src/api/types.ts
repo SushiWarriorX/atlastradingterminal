@@ -433,3 +433,8 @@ export interface CustomsData { available: boolean; reason?: string; demo: boolea
   year_so_far?: { gross_billions: number; refunds_billions: number; net_billions: number; same_point_last_year_net_billions: number; change_vs_last_year_pct: number | null; months: number };
   months?: { date: string; gross_billions: number; refunds_billions: number; net_billions: number }[];
   checks?: { months_checked: number; identity_failures: number; fytd_sum_checks: number; fytd_sum_mismatches: number; ok: boolean } }
+
+export interface ReceiptCategory { name: string; what: string; month_billions: number; year_so_far_billions: number; share_of_year_pct: number | null; same_point_last_year_billions: number; change_vs_last_year_pct: number | null }
+export interface ReceiptsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; fiscal_year?: number; months_in_year?: number;
+  total?: { month_billions: number; year_so_far_billions: number; same_point_last_year_billions: number; change_vs_last_year_pct: number | null }; categories?: ReceiptCategory[];
+  checks?: { categories_add_up_to_total: boolean; on_plus_off_budget_equals_total: boolean; problems: string[]; ok: boolean } }
