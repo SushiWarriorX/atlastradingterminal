@@ -42,7 +42,7 @@ from .intexp import InterestExpense
 from .buybacks import Buybacks
 from .billauctions import BillAuctions
 from .borrowing import Borrowing
-from .cftc_futures import CftcFutures
+from .cftc_futures import CftcCommodities, CftcFutures
 from .dealers import Dealers
 from .avgrates import AvgRates
 from .mspd import Mspd
@@ -383,6 +383,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     borrowing = Borrowing(demo=demo)
     dealers = Dealers(demo=demo)
     futures_positioning = CftcFutures(demo=demo)
+    commodity_positioning = CftcCommodities(demo=demo)
     debt_rates = AvgRates(demo=demo)
     debt_mix = Mspd(demo=demo)
     fed_holdings = Soma(demo=demo)
@@ -432,6 +433,11 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     async def macro_futures_positioning():
         """Who holds S&P 500, Nasdaq-100, 2-year and 10-year Treasury and dollar index futures (CFTC Commitments of Traders), weekly. Checked against the report's own totals; describes what already happened, not a signal."""
         return ok(await futures_positioning.overview())
+
+    @app.get("/api/macro/commodity-positioning")
+    async def macro_commodity_positioning():
+        """Who holds gold, crude oil, copper and natural gas futures (CFTC Commitments of Traders, Disaggregated report), weekly. Checked against the report's own totals; describes what already happened, not a signal."""
+        return ok(await commodity_positioning.overview())
 
     @app.get("/api/macro/dealers")
     async def macro_dealers():
@@ -1782,7 +1788,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
                                       "listings": listings_service, "new_to_me": new_to_me,
-                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "commodity_positioning": commodity_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { ymdLabel as day } from "../fmt";
+import type { FuturesPositioningData } from "../whatif";
 import { ErrorBox, Panel } from "../ui";
 
 const n = (x: number) => `${x < 0 ? "\u2212" : ""}${Math.abs(x).toLocaleString("en-US")}`;
@@ -9,13 +10,22 @@ const rankText = (r: number | null) => (r == null ? "not enough history" : `at o
 
 /** Who holds S&P 500, Nasdaq-100, 2-year and 10-year Treasury and dollar index futures (CFTC Commitments of Traders), weekly. Checked against the report's own totals; describes what already happened, not a signal. */
 export function FuturesPositioningWidget() {
-  const q = useQuery({ queryKey: ["futurespos"], queryFn: api.futuresPositioning, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+  return <PositioningPanel id="futurespos" title="FUTURES POSITIONING · who holds stock, Treasury and dollar futures (CFTC)" fetcher={api.futuresPositioning} />;
+}
+
+/** Same layout for gold, crude oil, copper and natural gas (CFTC Disaggregated report). */
+export function CommodityPositioningWidget() {
+  return <PositioningPanel id="commoditypos" title="COMMODITY POSITIONING · who holds gold, oil, copper and natural gas futures (CFTC)" fetcher={api.commodityPositioning} />;
+}
+
+function PositioningPanel({ id, title, fetcher }: { id: string; title: string; fetcher: () => Promise<FuturesPositioningData> }) {
+  const q = useQuery({ queryKey: [id], queryFn: fetcher, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
   const d = q.data;
   return (
-    <Panel title="FUTURES POSITIONING · who holds stock, Treasury and dollar futures (CFTC)" right={d && d.available && <span className={`pill ${d.freshness === "OVERDUE" ? "warn" : ""}`}>{d.freshness === "OVERDUE" ? `OVERDUE \u00b7 ${day(d.date)}` : `as of ${day(d.date)}`}</span>}>
+    <Panel title={title} right={d && d.available && <span className={`pill ${d.freshness === "OVERDUE" ? "warn" : ""}`}>{d.freshness === "OVERDUE" ? `OVERDUE \u00b7 ${day(d.date)}` : `as of ${day(d.date)}`}</span>}>
       {q.isLoading && <div className="note">Loading…</div>}
       {q.isError && <ErrorBox error={q.error} />}
-      {d && <div data-testid="futurespos">
+      {d && <div data-testid={id}>
         {!d.available ? <div className="note warn">{d.reason}</div> : <>
           {(d.contracts ?? []).map((c) => <div key={c.code} style={{ marginBottom: 10 }}>
             <div className="ws-bar" style={{ paddingLeft: 0 }}><span>{c.name.toUpperCase()}{c.available ? ` \u00b7 as of ${day(c.date)}` : ""}</span></div>

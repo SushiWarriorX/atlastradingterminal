@@ -267,6 +267,11 @@ export function useBorrowing() {
   return useQuery({ queryKey: keys(baseUrl).borrowing, queryFn: () => need(api).borrowing(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
 }
 
+export function useCommodityPositioning() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).commodityPositioning, queryFn: () => need(api).commodityPositioning(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
 export function useFuturesPositioning() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).futuresPositioning, queryFn: () => need(api).futuresPositioning(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });

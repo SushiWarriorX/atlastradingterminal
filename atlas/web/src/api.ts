@@ -99,6 +99,7 @@ export const api = {
   bills: () => call<BillAuctionsData>("/api/macro/bills"),
   borrowing: () => call<BorrowingData>("/api/macro/borrowing"),
   futuresPositioning: () => call<FuturesPositioningData>("/api/macro/futures-positioning"),
+  commodityPositioning: () => call<FuturesPositioningData>("/api/macro/commodity-positioning"),
   dealers: () => call<DealersData>("/api/macro/dealers"),
   debtRates: () => call<DebtRatesData>("/api/macro/debtrates"),
   debtMix: () => call<DebtMixData>("/api/macro/debtmix"),

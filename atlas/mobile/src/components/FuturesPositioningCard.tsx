@@ -2,7 +2,8 @@ import React from "react";
 import { Linking, Pressable, View } from "react-native";
 import { ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
-import { useFuturesPositioning } from "../state/queries";
+import { useCommodityPositioning, useFuturesPositioning } from "../state/queries";
+import type { FuturesPositioningData } from "../api/types";
 import { color, space } from "../theme";
 import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
 
@@ -11,17 +12,25 @@ const moved = (x: number | null | undefined) => (x == null ? "no change shown" :
 
 /** Who holds S&P 500, Nasdaq-100, 2-year and 10-year Treasury and dollar index futures (CFTC Commitments of Traders), weekly. Checked against the report's own totals; describes what already happened, not a signal. */
 export function FuturesPositioningCard() {
-  const q = useFuturesPositioning();
+  return <PositioningCard id="futurespos" heading="Futures positioning" sub="Who holds stock, Treasury and dollar futures, from the CFTC" q={useFuturesPositioning()} />;
+}
+
+/** Same layout for gold, crude oil, copper and natural gas (CFTC Disaggregated report). */
+export function CommodityPositioningCard() {
+  return <PositioningCard id="commoditypos" heading="Commodity positioning" sub="Who holds gold, oil, copper and natural gas futures, from the CFTC" q={useCommodityPositioning()} />;
+}
+
+function PositioningCard({ id, heading, sub, q }: { id: string; heading: string; sub: string; q: { data?: FuturesPositioningData; isLoading: boolean; isError: boolean; error: unknown } }) {
   const d = q.data;
   const link = safeUrl(d?.url ?? null);
   return (
-    <GCard style={{ padding: space.lg, gap: space.md }} testID="futurespos-card">
-      <View><Txt variant="h2">Futures positioning</Txt><Txt variant="tiny">Who holds stock, Treasury and dollar futures, from the CFTC</Txt></View>
+    <GCard style={{ padding: space.lg, gap: space.md }} testID={`${id}-card`}>
+      <View><Txt variant="h2">{heading}</Txt><Txt variant="tiny">{sub}</Txt></View>
       {q.isLoading ? <Skeleton h={80} />
-        : q.isError || !d ? <Banner tone="warn" title="Couldn't load the futures positioning" testID="futurespos-error">{q.error instanceof Error ? q.error.message : "Something went wrong."}</Banner>
-        : !d.available ? <Banner tone={d.demo ? "demo" : "warn"} title={d.demo ? "Demo mode" : "Futures positioning unavailable"} testID="futurespos-unavailable">{d.reason}</Banner>
+        : q.isError || !d ? <Banner tone="warn" title="Couldn't load the positioning" testID={`${id}-error`}>{q.error instanceof Error ? q.error.message : "Something went wrong."}</Banner>
+        : !d.available ? <Banner tone={d.demo ? "demo" : "warn"} title={d.demo ? "Demo mode" : "Positioning unavailable"} testID={`${id}-unavailable`}>{d.reason}</Banner>
         : (
-          <View style={{ gap: space.sm }} testID="futurespos-body">
+          <View style={{ gap: space.sm }} testID={`${id}-body`}>
             {(d.contracts ?? []).map((c, i) => (
               <View key={c.code} style={{ gap: 2 }}>
                 {i > 0 ? <Divider /> : null}

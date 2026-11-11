@@ -18,7 +18,7 @@ const OWN_CAVEAT = /not (a|market) (market )?signals? or (a )?forecasts?/gi;
   await pg.goto('http://127.0.0.1:5173'); await pg.waitForSelector('.topbar .cell');
   await pg.keyboard.press('Control+4');                                                              // Macro desk
   await pg.waitForTimeout(800);
-  for (const [id, title, shot] of [['interest', /INTEREST ON THE DEBT/, 'interest'], ['buybacks', /TREASURY BUYBACKS/, 'buybacks'], ['bills', /TREASURY BILL AUCTIONS/, 'bills'], ['borrowing', /TREASURY BORROWING/, 'borrowing'], ['dealers', /DEALER TREASURY POSITIONS/, 'dealers'], ['futurespos', /FUTURES POSITIONING/, 'futurespos']]) {
+  for (const [id, title, shot] of [['interest', /INTEREST ON THE DEBT/, 'interest'], ['buybacks', /TREASURY BUYBACKS/, 'buybacks'], ['bills', /TREASURY BILL AUCTIONS/, 'bills'], ['borrowing', /TREASURY BORROWING/, 'borrowing'], ['dealers', /DEALER TREASURY POSITIONS/, 'dealers'], ['futurespos', /FUTURES POSITIONING/, 'futurespos'], ['commoditypos', /COMMODITY POSITIONING/, 'commoditypos']]) {
     const loc = pg.locator(`[data-testid="${id}"]`);
     await loc.waitFor({ timeout: 60000 });
     await loc.scrollIntoViewIfNeeded();
@@ -43,6 +43,8 @@ const OWN_CAVEAT = /not (a|market) (market )?signals? or (a )?forecasts?/gi;
       if (id === 'dealers' && /DOES NOT MATCH/.test(all)) fail('dealers: the self-check against the source failed');
       if (id === 'futurespos' && !(/S&P 500 FUTURES \(E-MINI\) · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/.test(all) && /10-YEAR TREASURY NOTE FUTURES/.test(all) && /Leveraged funds/.test(all) && /Asset managers/.test(all) && /Dealers/.test(all) && /Checked: the groups add up to the report's own totals/.test(all) && /not a market signal or a forecast/.test(all))) fail('futurespos: contracts, groups, the dated header, the check line and the caveat are expected');
       if (id === 'futurespos' && /did not add up/.test(all)) fail('futurespos: a contract failed its own totals check');
+      if (id === 'commoditypos' && !(/GOLD FUTURES · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/.test(all) && /CRUDE OIL FUTURES \(WTI\)/.test(all) && /COPPER FUTURES/.test(all) && /NATURAL GAS FUTURES/.test(all) && /Managed money/.test(all) && /Producers and merchants/.test(all) && /Swap dealers/.test(all) && /Checked: the groups add up to the report's own totals/.test(all) && /not a market signal or a forecast/.test(all))) fail('commoditypos: contracts, groups, the dated header, the check line and the caveat are expected');
+      if (id === 'commoditypos' && /did not add up/.test(all)) fail('commoditypos: a contract failed its own totals check');
     }
     console.log(`${id}: ${live ? 'live data' : 'unavailable, said so'}: ok`);
     if (S) await panel.screenshot({ path: path.join(S, `terminal-${shot}.png`) }).catch(() => undefined);

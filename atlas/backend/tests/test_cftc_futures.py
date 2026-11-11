@@ -130,3 +130,56 @@ def test_route_is_served_and_labelled(tmp_path):
     with TestClient(app) as c:
         r = c.get("/api/macro/futures-positioning")
         assert r.status_code == 200 and r.json()["data"]["available"] is False and r.json()["data"]["demo"] is True
+
+
+# ---- the commodity family (Disaggregated report): gold, crude oil, copper, natural gas; real responses fetched 2026-11-11, 30 weeks each
+RAWC = json.loads((Path(__file__).parent / "fixtures" / "cftc_disagg_commodities.json").read_text())
+
+
+def _sc(raw=None, today=TODAY):
+    return C.summarize({k: C.parse(v, C.COMMODITY.groups) for k, v in (raw or RAWC).items()}, today, C.COMMODITY)
+
+
+def test_commodity_gold_latest_week_matches_the_report_by_hand():
+    s = _sc()
+    g = {x["key"]: x for x in _contract(s, "088691")["groups"]}
+    gold = _contract(s, "088691")
+    assert [x["code"] for x in s["contracts"]] == ["088691", "067651", "085692", "023651"] and s["date"] == "2026-11-03" and "Disaggregated" in s["source"]
+    assert gold["open_interest"] == 399169 and gold["open_interest_change"] == 2359
+    assert g["m_money"]["net"] == 122283 - 18669 == 103614 and g["m_money"]["net_change"] == 103614 - (122508 - 16946) == -1948        # managed money, then the week before
+    assert g["prod_merc"]["net"] == 18914 - 27826 == -8912 and g["swap"]["net"] == 19301 - 215291 == -195990
+    assert g["prod_merc"]["spread"] == 0                                                                                                # producers have no spreading column: counted as zero, not missing
+
+
+def test_commodity_totals_reconcile_for_all_four_contracts_over_26_weeks():
+    for x in _sc()["contracts"]:
+        assert x["available"] and x["checks"] == {"weeks_checked": 26, "groups_add_up": True, "oi_change_pairs": 25, "oi_change_mismatches": 0, "ok": True}
+
+
+def test_commodity_week_that_does_not_add_up_removes_only_that_contract():
+    bad = json.loads(json.dumps(RAWC))
+    bad["067651"][0]["swap_positions_long_all"] = str(int(bad["067651"][0]["swap_positions_long_all"]) + 1)
+    s = _sc(bad)
+    assert _contract(s, "067651")["available"] is False and "did not add up" in _contract(s, "067651")["reason"] and _contract(s, "088691")["available"]
+
+
+def test_commodity_overview_uses_its_own_dataset_and_wording():
+    seen = []
+
+    def handler(req):
+        seen.append(str(req.url).split("?")[0])
+        code = str(req.url.params["$where"]).split("'")[1]
+        return httpx.Response(200, json=RAWC[code])
+
+    r = asyncio.run(C.CftcCommodities(client=_client(handler)).overview(NOW))
+    assert r["available"] and len(r["contracts"]) == 4 and set(seen) == {"https://publicreporting.cftc.gov/resource/72hh-3qpy.json"} and "producers and merchants" in r["note"]
+    assert "not a market signal or a forecast" in r["note"]
+    d = asyncio.run(C.CftcCommodities(demo=True).overview(NOW))
+    assert d["available"] is False and "Demo" in d["reason"] and "contracts" not in d
+
+
+def test_commodity_route_is_served_and_labelled(tmp_path):
+    app = create_app(db_path=str(tmp_path / "a.db"), demo=True, alert_loop=False, news_loop=False)
+    with TestClient(app) as c:
+        r = c.get("/api/macro/commodity-positioning")
+        assert r.status_code == 200 and r.json()["data"]["available"] is False and r.json()["data"]["demo"] is True

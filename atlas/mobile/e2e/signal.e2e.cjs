@@ -659,6 +659,21 @@ async function healthy(browser) {
       }
       await page.locator(V("futurespos-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07g-futurespos");
+
+      await page.waitForSelector(V("commoditypos-card"));
+      await page.waitForSelector(V("commoditypos-body") + ", " + V("commoditypos-unavailable") + ", " + V("commoditypos-error"), { timeout: 45000 });
+      const cp = await text(page);
+      match(cp, /Commodity positioning/); match(cp, /CFTC/); noMatch(cp, FORECASTS, "the commodity positioning card makes no forecasts");
+      if (await present(page, "commoditypos-body")) {
+        const cbody = await inner(page, "commoditypos-body");
+        match(cbody, /Gold futures · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(cbody, /Managed money: net/); match(cbody, /Swap dealers: net/); match(cbody, /Natural gas futures/);
+        match(cbody, /checked against the report's own totals/, "the self-check is stated");
+        match(cbody, /not a market signal or a forecast/, "the caveat is shown");
+        noMatch(cbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("commoditypos-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07h-commoditypos");
       const macroAll = await page.evaluate(() => { const el = document.querySelector('[data-testid="macro-brief"]'); return el ? el.innerText : ""; });          // the Macro screen only: screens stay mounted under the one on top
       assert(macroAll.length > 500, "the Macro screen text should be read in full");
       const rawDates = [...new Set(macroAll.match(/\b20\d\d-\d\d(-\d\d)?\b/g) || [])];
