@@ -13,6 +13,7 @@ ChatGPT works only 12:00 to 24:00 UTC on its own `chatgpt/...` branches; Claude 
 ## One job per hour (same rotation for both, by the UTC hour you start)
 | Hour (UTC) | Job | | Hour (UTC) | Job |
 | --- | --- | --- | --- | --- |
+| 2026-11-11 10:17 | Claude | strategy | No change: no cleared experiment (see 07:17 row); no ChatGPT branch seen | Hour 11 = data. Owner decision on experiment 3 still open |
 | 2026-11-11 09:17 | Claude | skills | Catalog empty (6th time); five tooling traps from this session added to AGENT_NOTES.md (now 71 lines) | Hour 10 = strategy: no cleared experiment unless the owner picks experiment 3 (see 04:18 row); otherwise log no change. Hour 11 = data |
 | 2026-11-11 08:17 | Claude | data | CFTC futures positioning (S&P 500, Nasdaq-100, 2y and 10y Treasury, USD index): live, 150 real weeks reconcile to the report's own totals, terminal panel + phone card, 12 tests, browser checks; capabilities 85 | Hour 09 = skills. Owner decision on experiment 3 still open. Queue: dealer Treasury volume held (unit unconfirmed); other CFTC contracts (gold, oil, VIX) would need a separate non-financial dataset |
 | 2026-11-11 07:17 | Claude | strategy | No change: no cleared experiment (1 and 2 failed; 3 needs point-in-time stock data; forward record is 3 days old, counts from 60) | Hour 08 = data. Owner decision still open: experiment 3 choice (BTC-trend-filtered momentum as a pre-registered rescue, a new idea, or pause the search) |
