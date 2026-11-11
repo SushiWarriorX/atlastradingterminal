@@ -57,9 +57,20 @@ def eligible_mask(c, lookback: int) -> np.ndarray:
     return ok
 
 
-def momentum_targets(c, lookback: int = 90, k: int = 5, every: int = 7, min_eligible: int = 10, pick: str = "momentum", seed: int | None = None) -> np.ndarray:
+def trend_gate(close, window: int = 200) -> np.ndarray:
+    """gate[t] is True when the close at t is ABOVE the simple average of the last `window` closes up to and including t. False while there is not a full clean window. Uses bars <= t only."""
+    c = np.asarray(close, float)
+    out = np.zeros(len(c), bool)
+    for t in range(window - 1, len(c)):
+        w = c[t - window + 1:t + 1]
+        if not np.isnan(w).any():
+            out[t] = c[t] > w.mean()
+    return out
+
+
+def momentum_targets(c, lookback: int = 90, k: int = 5, every: int = 7, min_eligible: int = 10, pick: str = "momentum", seed: int | None = None, gate=None) -> np.ndarray:
     """Target weights decided at each rebalance close; NaN rows elsewhere. pick: 'momentum' (top k by lookback return), 'random' (k random eligible coins), 'all' (every eligible coin, equal weight).
-    Fewer than min_eligible eligible coins means cash (all-zero row). Rebalance days are every `every`-th day counted from the first day with enough eligible coins. Uses bars <= t only."""
+    Fewer than min_eligible eligible coins means cash (all-zero row). gate (optional bool array, one per day): at a rebalance day where gate is False the row is all zeros (cash) until the next rebalance. Rebalance days are every `every`-th day counted from the first day with enough eligible coins. Uses bars <= t only."""
     c = np.asarray(c, float)
     T, N = c.shape
     ok = eligible_mask(c, lookback)
@@ -71,7 +82,7 @@ def momentum_targets(c, lookback: int = 90, k: int = 5, every: int = 7, min_elig
     for t in range(first, T, every):
         elig = np.flatnonzero(ok[t])
         row = np.zeros(N)
-        if len(elig) >= min_eligible:
+        if len(elig) >= min_eligible and (gate is None or bool(gate[t])):
             if pick == "all":
                 chosen = elig
             elif pick == "random":

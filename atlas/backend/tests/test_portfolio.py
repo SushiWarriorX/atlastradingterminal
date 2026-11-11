@@ -122,3 +122,51 @@ def test_experiment_runner_reports_the_pre_registered_conditions_on_a_known_pane
     s = out["sealed_last_30pct"]
     assert s["momentum"]["sharpe"] is not None and s["btc_hold"]["net_return_pct"] is not None and out["first_decision_day"] == 90 and out["coins"] == 14
     assert "Survivorship" in out["caveat"]
+
+
+def test_trend_gate_is_true_only_above_the_average_of_the_last_window_by_hand():
+    c = np.array([1.0, 2.0, 3.0, 2.0, 1.0, 5.0])
+    g = P.trend_gate(c, window=3)
+    # windows: t=2 [1,2,3] mean 2 -> 3>2 True; t=3 [2,3,2] mean 2.333 -> 2 False; t=4 [3,2,1] mean 2 -> 1 False; t=5 [2,1,5] mean 2.667 -> 5 True
+    assert g.tolist() == [False, False, True, False, False, True]
+
+
+def test_trend_gate_needs_a_full_clean_window_and_uses_only_the_past():
+    c = np.array([1.0, 2.0, NAN, 4.0, 5.0, 6.0])
+    assert P.trend_gate(c, window=3).tolist() == [False, False, False, False, False, True]          # the hole at index 2 blocks windows that contain it
+    rng = np.random.default_rng(1)
+    x = 100 * np.cumprod(1 + rng.normal(0, 0.02, 80))
+    assert np.array_equal(P.trend_gate(x, 10)[:50], P.trend_gate(x[:50], 10))                        # truncating the future changes nothing before it
+
+
+def test_a_closed_gate_turns_the_rebalance_into_cash_and_an_open_gate_changes_nothing():
+    rng = np.random.default_rng(6)
+    c = 100 * np.cumprod(1 + rng.normal(0, 0.02, (60, 12)), axis=0)
+    base = P.momentum_targets(c, 5, 3, 7, 10)
+    open_ = P.momentum_targets(c, 5, 3, 7, 10, gate=np.ones(60, bool))
+    assert np.array_equal(base, open_, equal_nan=True)
+    gate = np.ones(60, bool)
+    rebal = [i for i in range(60) if not np.isnan(base[i]).all()]
+    gate[rebal[2]] = False
+    g = P.momentum_targets(c, 5, 3, 7, 10, gate=gate)
+    assert (g[rebal[2]] == 0).all() and not np.isnan(g[rebal[2]]).any()                              # a closed gate is an all-cash row, not a missing row
+    assert np.array_equal(g[rebal[0]], base[rebal[0]]) and np.array_equal(g[rebal[3]], base[rebal[3]])  # other weeks are untouched
+
+
+def test_experiment_3_runner_reports_the_pre_registered_conditions_on_a_known_panel(monkeypatch):
+    from atlas_api.btclab import exp_momentum as X0
+    from atlas_api.btclab import exp_momentum_filter as X
+    rng = np.random.default_rng(33)
+    n, coins = 900, 14
+    days = np.arange(n) * 86400
+    closes = 100 * np.cumprod(1 + rng.normal(0.0006, 0.03, (n, coins)), axis=0)
+    syms = ["BTC"] + [f"C{i}" for i in range(coins - 1)]
+    rows = {s: [(int(days[t]), closes[max(t - 1, 0), j], closes[t, j] * 1.01, closes[t, j] * 0.99, closes[t, j], 1.0) for t in range(n)] for j, s in enumerate(syms)}
+    monkeypatch.setattr(X, "NULL_RUNS", 5)
+    out = X.run(rows, days)
+    assert set(out["conditions"]) == {"a_sharpe_at_least_0.15_above_gated_equal_weight_all", "b_sharpe_above_btc_hold", "c_worst_drop_shallower_than_btc_hold", "d_sharpe_above_gated_random_95th_percentile",
+                                      "e_net_return_above_zero", "f_at_least_30_portfolio_changes"}
+    assert out["passes"] == all(out["conditions"].values())                                       # a pass is exactly all conditions together
+    d = out["diagnostics"]
+    assert d["weeks_in_market"] + d["weeks_in_cash"] == d["weekly_decisions_in_sealed_period"] and out["sealed_from_day"] == int(n * 0.70)
+    assert "Survivorship" in out["caveat"] and out["params"]["gate"].startswith("BTC close above its 200-day")
