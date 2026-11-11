@@ -63,3 +63,10 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 ## Working style the user prefers
 - Short, plain-English reports for a beginner: what changed, what was checked, what was not, what is needed from them.
 - Do not merge, keep the PR draft, ask before anything paid or outward-facing.
+
+## Tooling traps found 2026-11-11
+- Inside a Python script written through a shell heredoc, "\\n" puts a literal backslash-n into the target file (and `rstrip("\\n")` strips backslashes and the letter n). Use real "\n", or the Edit tool, and grep the diff for `\\n` before committing.
+- A `sed` line holding `$` and `${` (template strings) made the sandbox refuse the WHOLE command, including later steps, as an unverifiable removal. Make such edits with the Edit tool and run build and test commands as separate calls.
+- The terminal saves panel sizes on the server the first time a layout renders. A new default height is ignored by a profile that already saved the layout: `DELETE /api/layouts/<workspace>` on the test backend before taking the screenshot, or the panel looks cut off.
+- When a fix is for a whole class of bug (raw dates, missing caveat), put the check for the class into the browser script; the raw-date check found five spots a manual pass missed.
+- A source whose unit is not stated anywhere reachable (per day or per week) is HELD, not shipped, even when its numbers are internally consistent; a self-check proves consistency, not meaning.
