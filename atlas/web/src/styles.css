@@ -227,3 +227,16 @@ body { font: 12.5px/1.4 "Inter", system-ui, -apple-system, "Segoe UI", sans-seri
 :root:not([data-theme="light"]) .up { color: var(--up); } :root:not([data-theme="light"]) .down { color: var(--down); }
 :root:not([data-theme="light"]) input, :root:not([data-theme="light"]) select, :root:not([data-theme="light"]) textarea { background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 12px; padding: 4px 10px; }
 :root:not([data-theme="light"]) input:focus, :root:not([data-theme="light"]) select:focus, :root:not([data-theme="light"]) textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(213,217,224,.2); }
+
+/* Watchlist: when the panel is narrow, the data-status badge moves under the symbol instead of sitting in a column that gets cut off. The badge (LIVE / DEMO / UNAVAILABLE) is never dropped. */
+.wl-wrap { container-type: inline-size; }
+.wl-badge-inline { display: none; }
+@container (max-width: 360px) {
+  .wl-data { display: none; }
+  .wl-badge-inline { display: block; margin-top: 2px; }
+  .wl-wrap .tbl th, .wl-wrap .tbl td { padding-left: 3px; padding-right: 3px; }
+  .wl-wrap .tbl .mini { padding: 1px 5px; }
+  .wl-wrap .tbl td { font-size: 12px; }
+  .wl-wrap .tbl th { font-size: 9.5px; }
+  .wl-wrap .tbl { margin: 0 -8px; width: calc(100% + 16px); }
+}

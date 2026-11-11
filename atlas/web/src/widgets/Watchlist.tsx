@@ -46,26 +46,28 @@ export function WatchlistWidget() {
           </div>)}
       </div>
       {lists.isError && <ErrorBox error={lists.error} />}
+      <div className="wl-wrap">
       <table className="tbl">
-        <thead><tr><th>Symbol</th><th className="r">Last</th><th className="r">Chg%</th><th>Data</th><th /></tr></thead>
+        <thead><tr><th>Symbol</th><th className="r">Last</th><th className="r">Chg%</th><th className="wl-data">Data</th><th /></tr></thead>
         <tbody>
           {wl?.items.map((id) => {
             const x = byId.get(id);
             const sym = id.split(":").slice(2, 3)[0] ?? id;
             return (
               <tr key={id} className={id === selected ? "sel" : ""} onClick={() => select(id)}>
-                <td><b>{sym}</b></td>
+                <td><b>{sym}</b>{x && !isErr(x) ? <span className="wl-badge-inline"><Badge status={x.prov.status} /></span> : <span className="wl-badge-inline"><Badge status="UNAVAILABLE" title={x && isErr(x) ? x.error : "no quote"} /></span>}</td>
                 {x && !isErr(x) ? <>
                   <td className="r mono">{px(x.price)}</td>
                   <td className={`r mono ${dir(x.change_pct)}`}>{pct(x.change_pct)}</td>
-                  <td><Badge status={x.prov.status} /></td></> : <>
+                  <td className="wl-data"><Badge status={x.prov.status} /></td></> : <>
                   <td className="r dim" colSpan={2} title={x && isErr(x) ? x.error : undefined}>{quotes.isLoading ? "…" : "no data"}</td>
-                  <td><Badge status="UNAVAILABLE" title={x && isErr(x) ? x.error : "no quote"} /></td></>}
+                  <td className="wl-data"><Badge status="UNAVAILABLE" title={x && isErr(x) ? x.error : "no quote"} /></td></>}
                 <td className="r"><button className="mini" onClick={(e) => { e.stopPropagation(); rm.mutate(id); }} aria-label={`Remove ${sym}`}>✕</button></td>
               </tr>);
           })}
         </tbody>
       </table>
+      </div>
       {wl && !wl.items.length && <div className="note">Empty list. Search above to add symbols.</div>}
     </Panel>
   );
