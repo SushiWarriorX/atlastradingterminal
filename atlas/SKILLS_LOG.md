@@ -51,3 +51,6 @@ Newest first. Decision: SUGGESTED (card offered, user decides) / ADOPTED (our ow
 ## 2026-11-11 09:17 UTC (Claude, skills job)
 - Skill catalog search (backtest, trading, data validation, testing): empty for the 6th time. Nothing to install or suggest.
 - Adopted as project guidance instead: five tooling traps found this session, written in our own words in `AGENT_NOTES.md` (heredoc backslash-n, a `sed` with `$` blocking a whole command, saved layouts hiding new panel sizes, put class-of-bug checks in the browser script, hold sources with an unstated unit).
+
+## 2026-11-11 15:18 UTC (Claude, skills job)
+- Skill catalog search (quantitative, backtesting, financial data, browser testing, playwright): empty for the 7th time. Nothing to install or suggest; no new note written (the five tooling lessons from 09:17 still cover what has come up since). No change.
