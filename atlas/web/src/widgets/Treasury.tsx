@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
+import { ymdLabel as day } from "../fmt";
 import { ErrorBox, Panel } from "../ui";
 
 const bp = (x: number | null | undefined) => (x === null || x === undefined ? "n/a" : `${x > 0 ? "+" : ""}${x} bp`);
@@ -11,7 +12,7 @@ export function TreasuryWidget() {
   const d = q.data;
   const c = d?.curve, debt = d?.debt;
   return (
-    <Panel title="US TREASURY · yield curve and debt" right={c?.available && <span className={`pill ${c.freshness === "OVERDUE" ? "warn" : ""}`}>{c.freshness === "OVERDUE" ? "OVERDUE" : c.date}</span>}>
+    <Panel title="US TREASURY · yield curve and debt" right={c?.available && <span className={`pill ${c.freshness === "OVERDUE" ? "warn" : ""}`}>{c.freshness === "OVERDUE" ? "OVERDUE" : day(c.date)}</span>}>
       {q.isLoading && <div className="note">Loading…</div>}
       {q.isError && <ErrorBox error={q.error} />}
       {d && <div data-testid="treasury">
@@ -25,7 +26,7 @@ export function TreasuryWidget() {
           <div className="small dim">{c!.note} Source: {c!.source}.</div></>}
         <div className="ws-bar" style={{ paddingLeft: 0 }}><span>TOTAL PUBLIC DEBT</span></div>
         {!debt!.available ? <div className="note warn">{debt!.reason}</div> : <>
-          <div className="small"><b className="mono" style={{ fontSize: 18 }}>${debt!.total_trillions!.toFixed(2)}T</b> <span className="dim">on {debt!.date}{debt!.freshness === "OVERDUE" ? " · overdue" : ""}</span>
+          <div className="small"><b className="mono" style={{ fontSize: 18 }}>${debt!.total_trillions!.toFixed(2)}T</b> <span className="dim">on {day(debt!.date)}{debt!.freshness === "OVERDUE" ? " · overdue" : ""}</span>
             {debt!.change_vs_previous_day_billions != null && <> · {debt!.change_vs_previous_day_billions >= 0 ? "+" : ""}${debt!.change_vs_previous_day_billions.toFixed(1)}B vs the previous day</>}
             {debt!.change_vs_a_year_ago_pct != null && <> · {debt!.change_vs_a_year_ago_pct >= 0 ? "+" : ""}{debt!.change_vs_a_year_ago_pct.toFixed(1)}% vs a year ago</>}</div>
           <div className="small dim">Held by the public ${debt!.held_by_public_trillions!.toFixed(2)}T · intragovernmental ${debt!.intragovernmental_trillions!.toFixed(2)}T. {debt!.note} Source: {debt!.source}.</div></>}

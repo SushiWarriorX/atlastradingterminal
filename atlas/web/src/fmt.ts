@@ -24,3 +24,12 @@ export function clock(tz: string, d = new Date()): string {
 export function nyDate(d = new Date()): string {
   return d.toLocaleDateString("en-US", { timeZone: "America/New_York", weekday: "short", month: "short", day: "2-digit", year: "numeric" });
 }
+/** A source date written in words ("Nov 6, 2026"). Takes the date part of an ISO string only; anything unreadable comes back unchanged so a bad value is visible, never hidden. */
+export function ymdLabel(iso?: string | null): string {
+  if (!iso) return "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return iso;
+  const d = new Date(`${m[1]}-${m[2]}-${m[3]}T12:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+}

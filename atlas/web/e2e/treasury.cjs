@@ -45,6 +45,17 @@ const OWN_CAVEAT = /not (a|market) (market )?signals? or (a )?forecasts?/gi;
     console.log(`${id}: ${live ? 'live data' : 'unavailable, said so'}: ok`);
     if (S) await panel.screenshot({ path: path.join(S, `terminal-${shot}.png`) }).catch(() => undefined);
   }
+  // The older Macro panels (written before dates were put in words) must not show raw ISO dates either.
+  for (const [title, shot] of [[/FED INTEREST RATE/, 'fedrates'], [/TREASURY CASH BALANCE/, 'tga'], [/FED LIQUIDITY OPERATIONS/, 'fedops'], [/WHAT THE FED HOLDS/, 'fedholds'], [/INTEREST THE TREASURY PAYS/, 'debtrates'], [/WHAT THE US DEBT IS MADE OF/, 'debtmix'], [/TREASURY AUCTIONS/, 'auctions'], [/US TREASURY . yield curve/, 'curve']]) {
+    const panel = pg.locator('.panel', { hasText: title }).last();
+    if (!(await panel.count())) { console.log(`${shot}: panel not on screen, skipped`); continue; }
+    await panel.scrollIntoViewIfNeeded();
+    await pg.waitForTimeout(300);
+    const text = (await panel.innerText()).replace(/\s+/g, ' ').replace(/https?:\S+/g, '');
+    if (/\b20\d\d-\d\d-\d\d\b/.test(text)) fail(`${shot}: a raw ISO date is on screen: ${text.match(/\b20\d\d-\d\d-\d\d\b/)[0]}`);
+    console.log(`${shot}: no raw dates: ok`);
+    if (S) await panel.screenshot({ path: path.join(S, `terminal-${shot}.png`) }).catch(() => undefined);
+  }
   if (errors.length) fail('browser errors: ' + errors.slice(0, 3).join(' | '));
   await b.close();
   console.log('TREASURY PANELS OK');
