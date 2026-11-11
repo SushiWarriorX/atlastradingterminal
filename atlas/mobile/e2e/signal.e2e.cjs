@@ -703,6 +703,20 @@ async function healthy(browser) {
       }
       await page.locator(V("realyields-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07i-realyields");
+
+      await page.waitForSelector(V("customs-card"));
+      await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
+      const cd = await text(page);
+      match(cd, /Customs duties/); match(cd, /US Treasury/); noMatch(cd, FORECASTS, "the customs card makes no forecasts");
+      if (await present(page, "customs-body")) {
+        const kbody = await inner(page, "customs-body");
+        match(kbody, /(January|February|March|April|May|June|July|August|September|October|November|December) 20\d\d/, "the month is written out");
+        match(kbody, /Kept after refunds\. Collected/); match(kbody, /Fiscal 20\d\d so far/); match(kbody, /Same point last year/); match(kbody, /Last \d+ months, kept after refunds/);
+        match(kbody, /Checked: each month's collected minus refunded equals what was kept/); match(kbody, /does not say why refunds/); match(kbody, /not a market signal or a forecast/);
+        noMatch(kbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("customs-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07k-customs");
       const macroAll = await page.evaluate(() => { const el = document.querySelector('[data-testid="macro-brief"]'); return el ? el.innerText : ""; });          // the Macro screen only: screens stay mounted under the one on top
       assert(macroAll.length > 500, "the Macro screen text should be read in full");
       const rawDates = [...new Set(macroAll.match(/\b20\d\d-\d\d(-\d\d)?\b/g) || [])];

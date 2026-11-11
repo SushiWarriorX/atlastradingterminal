@@ -46,6 +46,7 @@ import { BillAuctionsWidget } from "./widgets/BillAuctions";
 import { BorrowingWidget } from "./widgets/Borrowing";
 import { DealersWidget } from "./widgets/Dealers";
 import { RealYieldsWidget } from "./widgets/RealYields";
+import { CustomsWidget } from "./widgets/Customs";
 import { CommodityPositioningWidget, CurrencyPositioningWidget, FuturesPositioningWidget } from "./widgets/FuturesPositioning";
 import { DebtRatesWidget } from "./widgets/DebtRates";
 import { DebtMixWidget } from "./widgets/DebtMix";
@@ -99,6 +100,7 @@ function render(w: WidgetCfg, view: string) {
     case "borrowing": return <BorrowingWidget />;
     case "dealers": return <DealersWidget />;
     case "realyields": return <RealYieldsWidget />;
+    case "customs": return <CustomsWidget />;
     case "futurespos": return <FuturesPositioningWidget />;
     case "commoditypos": return <CommodityPositioningWidget />;
     case "currencypos": return <CurrencyPositioningWidget />;

@@ -427,3 +427,9 @@ export interface RealYieldRow { tenor: string; nominal_pct: number | null; real_
 export interface RealYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   month_ago_date?: string | null; year_ago_date?: string | null; rows?: RealYieldRow[]; history?: { date: string; breakeven_10y_pct: number }[];
   checks?: { same_day: boolean; range_ok: boolean; latest_dates_differ: boolean; maturities_left_out: string[] } }
+
+export interface CustomsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; fiscal_year?: number;
+  latest?: { gross_billions: number; refunds_billions: number; net_billions: number; refunds_share_of_gross_pct: number | null };
+  year_so_far?: { gross_billions: number; refunds_billions: number; net_billions: number; same_point_last_year_net_billions: number; change_vs_last_year_pct: number | null; months: number };
+  months?: { date: string; gross_billions: number; refunds_billions: number; net_billions: number }[];
+  checks?: { months_checked: number; identity_failures: number; fytd_sum_checks: number; fytd_sum_mismatches: number; ok: boolean } }
