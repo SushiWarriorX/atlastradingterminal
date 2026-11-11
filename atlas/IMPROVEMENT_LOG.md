@@ -468,3 +468,9 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Verified:** 14 new tests (real candle order, malformed rows refused, 300-bar windows, incremental refresh, not-listed, one failure not stopping others, late listings, completed days only, gaps not filled, panel alignment); full backend suite below.
 - **Not verified:** that Coinbase's free limits hold for a daily refresh (the loop will notice if not); the list's market-cap ranking (chosen by availability, written down, not by past performance).
 - **Credibly profitable?** Nothing tested. Status: not yet.
+
+## 2026-11-11 03:17 UTC (Claude, skills job): `atlas-experiments`
+- **Found:** the catalog was empty again; the real gap was that the experiment process used in the edge plan (pre-register the rule and a numeric pass bar with fair comparisons, commit it first, test once, log whatever happens, state biases and what was not verified) existed only in my own habits.
+- **Added:** repo skill `atlas/.claude/skills/atlas-experiments/SKILL.md` (own words), linked from `EDGE_PLAN.md`, so ChatGPT and future sessions run experiments the same way. Capability count 84.
+- **Verified:** the file reads cleanly and the plan links to it; no code changed, so no tests were run.
+- **Credibly profitable?** Nothing tested. Status: not yet.
