@@ -43,7 +43,7 @@ FINANCIAL = Family(
     "https://publicreporting.cftc.gov/resource/gpe5-46if.json",
     [("13874A", "S&P 500 futures (E-mini)", "US large-company stocks"), ("209742", "Nasdaq-100 futures (E-mini)", "US large technology-heavy stocks"),
      ("042601", "2-year Treasury note futures", "short-term US interest rates"), ("043602", "10-year Treasury note futures", "long-term US interest rates"),
-     ("098662", "US dollar index futures", "the dollar against a basket of currencies")],
+     ("098662", "US dollar index futures", "The dollar against a basket of currencies")],
     GROUPS, "CFTC Commitments of Traders, Traders in Financial Futures (official, free public data)",
     "Positions are counted on Tuesdays and published the following Friday, so they are at least three days old. Net is long minus short, with spreading positions left out. Net short is not the same as bearish: "
     "asset managers hold stock futures as a way to own stocks, and leveraged funds are often short Treasury futures as the other half of a basis trade (long the bond, short the future). " + TAIL)
@@ -53,6 +53,14 @@ COMMODITY = Family(
     COMMODITY_GROUPS, "CFTC Commitments of Traders, Disaggregated Futures Only report (official, free public data)",
     "Positions are counted on Tuesdays and published the following Friday, so they are at least three days old. Net is long minus short, with spreading positions left out. Net short is not the same as bearish: "
     "producers and merchants are usually short futures to lock in a price for what they make or store, and swap dealers are on the other side of their clients. " + TAIL)
+
+CURRENCY = Family(
+    FINANCIAL.url,
+    [("099741", "Euro futures", "The euro against the dollar"), ("097741", "Japanese yen futures", "The yen against the dollar"), ("096742", "British pound futures", "The pound against the dollar"),
+     ("1170E1", "VIX futures", "Expected stock-market swings (the VIX volatility index)")],
+    GROUPS, "CFTC Commitments of Traders, Traders in Financial Futures (official, free public data)",
+    "Positions are counted on Tuesdays and published the following Friday, so they are at least three days old. Net is long minus short, with spreading positions left out. Net short is not the same as bearish: "
+    "companies and funds use currency futures to hedge what they own or owe, dealers sit on the other side of their clients, and VIX futures are often used as insurance against a fall in stocks. " + TAIL)
 
 # kept for the financial family's callers and tests
 URL, CONTRACTS, SOURCE, NOTE = FINANCIAL.url, FINANCIAL.contracts, FINANCIAL.source, FINANCIAL.note
@@ -199,3 +207,10 @@ class CftcCommodities(CftcFutures):
 
     def __init__(self, client: httpx.AsyncClient | None = None, demo: bool = False):
         super().__init__(client=client, demo=demo, family=COMMODITY)
+
+
+class CftcCurrencies(CftcFutures):
+    """Euro, yen, pound and VIX futures from the CFTC's Traders in Financial Futures report."""
+
+    def __init__(self, client: httpx.AsyncClient | None = None, demo: bool = False):
+        super().__init__(client=client, demo=demo, family=CURRENCY)

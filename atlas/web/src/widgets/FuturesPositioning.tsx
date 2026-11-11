@@ -18,6 +18,11 @@ export function CommodityPositioningWidget() {
   return <PositioningPanel id="commoditypos" title="COMMODITY POSITIONING · who holds gold, oil, copper and natural gas futures (CFTC)" fetcher={api.commodityPositioning} />;
 }
 
+/** Same layout for euro, yen, pound and VIX futures (CFTC Traders in Financial Futures). */
+export function CurrencyPositioningWidget() {
+  return <PositioningPanel id="currencypos" title="CURRENCY & VOLATILITY POSITIONING · who holds euro, yen, pound and VIX futures (CFTC)" fetcher={api.currencyPositioning} />;
+}
+
 function PositioningPanel({ id, title, fetcher }: { id: string; title: string; fetcher: () => Promise<FuturesPositioningData> }) {
   const q = useQuery({ queryKey: [id], queryFn: fetcher, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
   const d = q.data;

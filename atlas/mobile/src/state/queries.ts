@@ -272,6 +272,11 @@ export function useRealYields() {
   return useQuery({ queryKey: keys(baseUrl).realYields, queryFn: () => need(api).realYields(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
 }
 
+export function useCurrencyPositioning() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).currencyPositioning, queryFn: () => need(api).currencyPositioning(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
 export function useCommodityPositioning() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).commodityPositioning, queryFn: () => need(api).commodityPositioning(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });

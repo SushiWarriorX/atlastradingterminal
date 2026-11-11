@@ -183,3 +183,43 @@ def test_commodity_route_is_served_and_labelled(tmp_path):
     with TestClient(app) as c:
         r = c.get("/api/macro/commodity-positioning")
         assert r.status_code == 200 and r.json()["data"]["available"] is False and r.json()["data"]["demo"] is True
+
+
+# ---- the currency and volatility family (same report as the financial futures): euro, yen, pound, VIX; real responses fetched 2026-11-11, 30 weeks each
+RAWX = json.loads((Path(__file__).parent / "fixtures" / "cftc_tff_fx_vol.json").read_text())
+
+
+def _sx(raw=None, today=TODAY):
+    return C.summarize({k: C.parse(v) for k, v in (raw or RAWX).items()}, today, C.CURRENCY)
+
+
+def test_currency_euro_and_vix_latest_week_match_the_report_by_hand():
+    s = _sx()
+    eu, vix = {x["key"]: x for x in _contract(s, "099741")["groups"]}, {x["key"]: x for x in _contract(s, "1170E1")["groups"]}
+    assert [x["code"] for x in s["contracts"]] == ["099741", "097741", "096742", "1170E1"] and s["date"] == "2026-11-03"
+    assert _contract(s, "099741")["open_interest"] == 876122 and _contract(s, "099741")["open_interest_change"] == 7934
+    assert eu["lev_money"]["net"] == 119238 - 197797 == -78559 and eu["lev_money"]["net_change"] == -78559 - (125046 - 196620) == -6985
+    assert eu["asset_mgr"]["net"] == 485147 - 340222 == 144925
+    assert vix["lev_money"]["net"] == 66970 - 98449 == -31479 and vix["lev_money"]["net_change"] == -31479 - (73606 - 99940) == -5145
+
+
+def test_currency_totals_reconcile_for_all_four_contracts_over_26_weeks_and_a_tampered_one_is_dropped():
+    for x in _sx()["contracts"]:
+        assert x["available"] and x["checks"]["ok"] and x["checks"]["weeks_checked"] == 26 and x["checks"]["oi_change_mismatches"] == 0
+    bad = json.loads(json.dumps(RAWX))
+    bad["097741"][0]["nonrept_positions_short_all"] = str(int(bad["097741"][0]["nonrept_positions_short_all"]) + 1)
+    s = _sx(bad)
+    assert _contract(s, "097741")["available"] is False and _contract(s, "099741")["available"] and "VIX" in _contract(s, "1170E1")["name"]
+
+
+def test_currency_overview_wording_demo_and_route(tmp_path):
+    def handler(req):
+        return httpx.Response(200, json=RAWX[str(req.url.params["$where"]).split("'")[1]])
+    r = asyncio.run(C.CftcCurrencies(client=_client(handler)).overview(NOW))
+    assert r["available"] and len(r["contracts"]) == 4 and "insurance against a fall in stocks" in r["note"] and "not a market signal or a forecast" in r["note"]
+    d = asyncio.run(C.CftcCurrencies(demo=True).overview(NOW))
+    assert d["available"] is False and "Demo" in d["reason"] and "contracts" not in d
+    app = create_app(db_path=str(tmp_path / "a.db"), demo=True, alert_loop=False, news_loop=False)
+    with TestClient(app) as c:
+        rr = c.get("/api/macro/currency-positioning")
+        assert rr.status_code == 200 and rr.json()["data"]["available"] is False and rr.json()["data"]["demo"] is True

@@ -19,7 +19,7 @@ import { BillAuctionsCard } from "./BillAuctionsCard";
 import { BorrowingCard } from "./BorrowingCard";
 import { DealersCard } from "./DealersCard";
 import { RealYieldsCard } from "./RealYieldsCard";
-import { CommodityPositioningCard, FuturesPositioningCard } from "./FuturesPositioningCard";
+import { CommodityPositioningCard, CurrencyPositioningCard, FuturesPositioningCard } from "./FuturesPositioningCard";
 import { DebtRatesCard } from "./DebtRatesCard";
 import { DebtMixCard } from "./DebtMixCard";
 import { FedHoldingsCard } from "./FedHoldingsCard";
@@ -82,6 +82,7 @@ export function MacroView() {
             <RealYieldsCard />
             <FuturesPositioningCard />
             <CommodityPositioningCard />
+            <CurrencyPositioningCard />
             <DebtRatesCard />
             <DebtMixCard />
             <FedHoldingsCard />

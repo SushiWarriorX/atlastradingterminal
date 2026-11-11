@@ -99,6 +99,7 @@ export function createApi(opts: ClientOptions) {
     realYields: () => call<RealYieldsData>("/api/macro/real-yields", { timeoutMs: 45_000 }),
     futuresPositioning: () => call<FuturesPositioningData>("/api/macro/futures-positioning", { timeoutMs: 45_000 }),
     commodityPositioning: () => call<FuturesPositioningData>("/api/macro/commodity-positioning", { timeoutMs: 45_000 }),
+    currencyPositioning: () => call<FuturesPositioningData>("/api/macro/currency-positioning", { timeoutMs: 45_000 }),
     debtRates: () => call<DebtRatesData>("/api/macro/debtrates", { timeoutMs: 45_000 }),
     debtMix: () => call<DebtMixData>("/api/macro/debtmix", { timeoutMs: 45_000 }),
     fedHoldings: () => call<FedHoldingsData>("/api/macro/fedholdings", { timeoutMs: 60_000 }),

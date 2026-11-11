@@ -675,6 +675,20 @@ async function healthy(browser) {
       await page.locator(V("commoditypos-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07h-commoditypos");
 
+      await page.waitForSelector(V("currencypos-card"));
+      await page.waitForSelector(V("currencypos-body") + ", " + V("currencypos-unavailable") + ", " + V("currencypos-error"), { timeout: 45000 });
+      const cu = await text(page);
+      match(cu, /Currency and volatility positioning/); match(cu, /CFTC/); noMatch(cu, FORECASTS, "the currency positioning card makes no forecasts");
+      if (await present(page, "currencypos-body")) {
+        const ubody = await inner(page, "currencypos-body");
+        match(ubody, /Euro futures · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(ubody, /Leveraged funds: net/); match(ubody, /VIX futures/); match(ubody, /Japanese yen futures/);
+        match(ubody, /checked against the report's own totals/); match(ubody, /not a market signal or a forecast/);
+        noMatch(ubody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("currencypos-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07j-currencypos");
+
       await page.waitForSelector(V("realyields-card"));
       await page.waitForSelector(V("realyields-body") + ", " + V("realyields-unavailable") + ", " + V("realyields-error"), { timeout: 45000 });
       const ry = await text(page);
