@@ -13,6 +13,7 @@ ChatGPT works only 12:00 to 24:00 UTC on its own `chatgpt/...` branches; Claude 
 ## One job per hour (same rotation for both, by the UTC hour you start)
 | Hour (UTC) | Job | | Hour (UTC) | Job |
 | --- | --- | --- | --- | --- |
+| 2026-11-11 22:17 | Claude | strategy | No change: nothing cleared (experiments 1 to 3 closed), no owner reply since '1', no ChatGPT branch | Hour 23 = data. Owner decision open (see 17:14 row) |
 | 2026-11-11 21:17 | Claude | skills | Catalog empty (8th time); no change | Hour 22 = strategy: nothing cleared (experiments 1 to 3 closed) unless the owner picks from the 17:14 row. Hour 23 = data |
 | 2026-11-11 20:17 | Claude | data | US customs duties (tariff revenue) from the Monthly Treasury Statement: collected, refunded, kept, fiscal year so far vs last year; monthly nets reconcile to the year-so-far figure (36 of 36); terminal panel + phone card, 10 tests, 1378 backend tests pass; BLOCKED hosts logged (Chicago Fed, federalreserve.gov, newyorkfed.org, Kansas City Fed); capabilities 89 | Hour 21 = skills. Owner decisions open: forward-track the gated momentum rule / a different idea / pause the search; allow the blocked Fed hosts if wanted. Run `treasury.cjs`, `dates.cjs`, `narrow.cjs` after touching Macro panels |
 | 2026-11-11 19:18 | Claude | strategy | No change: nothing cleared (experiments 1 to 3 closed), no owner reply since '1', no ChatGPT branch | Hour 20 = data. Owner decision open: track the gated momentum rule forward on paper, a different idea, or pause the search (see 17:14 row) |
