@@ -460,3 +460,11 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Verified:** backend tests for the new simulator and runner (8 new); full backend suite below.
 - **Not verified:** cash earning a bill rate; other windows or targets (deliberately not tried: that would be tuning); multi-asset ideas (experiment 2, next).
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-11 02:18 UTC (Claude, data job): multi-coin daily history for the next experiment (data cycle 24)
+- **Added:** `btclab/coins.py` plus migration `019_coin_bars.sql`: a fixed list of 28 coins' daily Coinbase bars, fetched in 300-bar windows, cached in SQLite, only completed days returned, gaps reported never filled, an aligned panel with empty (NaN) cells where a coin has no bar. A coin Coinbase does not list is marked not_listed; one coin failing does not stop the rest. No screen yet: it exists to feed EDGE_PLAN experiment 2 (cross-sectional momentum).
+- **Verified live:** all 28 coins fetched in 90 seconds, 67,989 bars to 2026-11-10; the real candle shape (time, low, high, open, close, volume) is covered by a real saved response and by internal-consistency checks on every saved candle.
+- **Findings the next experiment must respect:** XRP has a 904-day hole (Coinbase paused it); ETH, LTC and BCH have a few missing days; MATIC and EOS are not served; the list is made of coins listed today (survivorship); some coins have extreme single days (SHIB +708%).
+- **Verified:** 14 new tests (real candle order, malformed rows refused, 300-bar windows, incremental refresh, not-listed, one failure not stopping others, late listings, completed days only, gaps not filled, panel alignment); full backend suite below.
+- **Not verified:** that Coinbase's free limits hold for a daily refresh (the loop will notice if not); the list's market-cap ranking (chosen by availability, written down, not by past performance).
+- **Credibly profitable?** Nothing tested. Status: not yet.
