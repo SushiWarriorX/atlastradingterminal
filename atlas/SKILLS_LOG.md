@@ -54,3 +54,6 @@ Newest first. Decision: SUGGESTED (card offered, user decides) / ADOPTED (our ow
 
 ## 2026-11-11 15:18 UTC (Claude, skills job)
 - Skill catalog search (quantitative, backtesting, financial data, browser testing, playwright): empty for the 7th time. Nothing to install or suggest; no new note written (the five tooling lessons from 09:17 still cover what has come up since). No change.
+
+## 2026-11-11 21:17 UTC (Claude, skills job)
+- Skill catalog search (data pipeline, API integration, treasury, macro economics, test generation): empty for the 8th time. Nothing to install or suggest; no new note (nothing new to record since the 09:17 lessons). No change.
