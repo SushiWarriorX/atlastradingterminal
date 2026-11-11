@@ -13,6 +13,7 @@ ChatGPT works only 12:00 to 24:00 UTC on its own `chatgpt/...` branches; Claude 
 ## One job per hour (same rotation for both, by the UTC hour you start)
 | Hour (UTC) | Job | | Hour (UTC) | Job |
 | --- | --- | --- | --- | --- |
+| 2026-11-11 07:17 | Claude | strategy | No change: no cleared experiment (1 and 2 failed; 3 needs point-in-time stock data; forward record is 3 days old, counts from 60) | Hour 08 = data. Owner decision still open: experiment 3 choice (BTC-trend-filtered momentum as a pre-registered rescue, a new idea, or pause the search) |
 | 2026-11-11 06:22 | Claude | improve | Eight older terminal Macro panels now write dates in words (shared tested `ymdLabel`); `treasury.cjs` now fails on raw dates in them; TGA thousands separator | Hour 07 = strategy: owner choice for experiment 3 still pending; if none, pause the search and take a research-app improvement. Raw dates remain in Calendar/Discover/BTC lab; `npm run build` not run this hour |
 | 00 / 12 | improve | | 06 / 18 | improve |
 | 01 / 13 | strategy | | 07 / 19 | strategy |

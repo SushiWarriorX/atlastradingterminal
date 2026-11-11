@@ -494,3 +494,8 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Check added:** `web/e2e/treasury.cjs` now also fails if any of those eight panels shows a raw ISO date. It caught five spots I had missed on the first pass (year low/high dates, reverse repo high, Fed peak, auction dates, the debt "since" date), which are fixed.
 - **Verified:** web typecheck clean; web vitest 22 passed (2 new); browser check passes on all 13 panels against the non-demo backend; read the Treasury cash balance and Treasury auctions screenshots (dates in words, nothing cut off).
 - **Not verified:** `npm run build` and the phone suite were not run this hour (the build step was blocked by the sandbox's removal safety check); only web source files changed, so the phone app is unaffected. Older panels outside the Macro desk (Calendar, Discover, BTC lab) still show some raw dates.
+
+## 2026-11-11 07:17 UTC (Claude, strategy job): no change
+- No experiment in EDGE_PLAN.md is cleared to run. 1 and 2 are done (both failed their pre-registered bars). 3 (stock side) cannot be backtested honestly without point-in-time data, which is not free. 4 (forward record): the library's frozen rules have been followed only since 2026-11-08 (3 days); nothing counts before 60 days (about early January 2027).
+- A momentum-with-BTC-trend-filter variant would be a rescue of experiment 2; it needs the owner's decision first (see the 04:18 board row). Nothing was run, nothing was tuned.
+- **Verified:** read the plan, ledger dates and the pass bar. **Not verified:** nothing new tested. Credibly profitable? No, not yet.
