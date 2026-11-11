@@ -153,3 +153,7 @@ export interface FuturesGroup { key: string; name: string; who: string; long: nu
 export interface FuturesContract { code: string; name: string; what: string; available: boolean; reason?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; open_interest?: number; open_interest_change?: number | null; traders?: number | null; weeks_of_history?: number;
   groups?: FuturesGroup[]; checks?: { weeks_checked: number; groups_add_up: boolean; oi_change_pairs: number; oi_change_mismatches: number; ok: boolean } }
 export interface FuturesPositioningData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; contracts?: FuturesContract[] }
+export interface RealYieldRow { tenor: string; nominal_pct: number | null; real_pct: number | null; breakeven_pct: number; breakeven_change_1m_bp: number | null; breakeven_change_1y_bp: number | null; real_change_1y_bp: number | null }
+export interface RealYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  month_ago_date?: string | null; year_ago_date?: string | null; rows?: RealYieldRow[]; history?: { date: string; breakeven_10y_pct: number }[];
+  checks?: { same_day: boolean; range_ok: boolean; latest_dates_differ: boolean; maturities_left_out: string[] } }

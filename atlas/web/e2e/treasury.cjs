@@ -18,7 +18,7 @@ const OWN_CAVEAT = /not (a|market) (market )?signals? or (a )?forecasts?/gi;
   await pg.goto('http://127.0.0.1:5173'); await pg.waitForSelector('.topbar .cell');
   await pg.keyboard.press('Control+4');                                                              // Macro desk
   await pg.waitForTimeout(800);
-  for (const [id, title, shot] of [['interest', /INTEREST ON THE DEBT/, 'interest'], ['buybacks', /TREASURY BUYBACKS/, 'buybacks'], ['bills', /TREASURY BILL AUCTIONS/, 'bills'], ['borrowing', /TREASURY BORROWING/, 'borrowing'], ['dealers', /DEALER TREASURY POSITIONS/, 'dealers'], ['futurespos', /FUTURES POSITIONING/, 'futurespos'], ['commoditypos', /COMMODITY POSITIONING/, 'commoditypos']]) {
+  for (const [id, title, shot] of [['interest', /INTEREST ON THE DEBT/, 'interest'], ['buybacks', /TREASURY BUYBACKS/, 'buybacks'], ['bills', /TREASURY BILL AUCTIONS/, 'bills'], ['borrowing', /TREASURY BORROWING/, 'borrowing'], ['dealers', /DEALER TREASURY POSITIONS/, 'dealers'], ['futurespos', /FUTURES POSITIONING/, 'futurespos'], ['commoditypos', /COMMODITY POSITIONING/, 'commoditypos'], ['realyields', /REAL YIELDS & BREAKEVEN INFLATION/, 'realyields']]) {
     const loc = pg.locator(`[data-testid="${id}"]`);
     await loc.waitFor({ timeout: 60000 });
     await loc.scrollIntoViewIfNeeded();
@@ -45,6 +45,7 @@ const OWN_CAVEAT = /not (a|market) (market )?signals? or (a )?forecasts?/gi;
       if (id === 'futurespos' && /did not add up/.test(all)) fail('futurespos: a contract failed its own totals check');
       if (id === 'commoditypos' && !(/GOLD FUTURES · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/.test(all) && /CRUDE OIL FUTURES \(WTI\)/.test(all) && /COPPER FUTURES/.test(all) && /NATURAL GAS FUTURES/.test(all) && /Managed money/.test(all) && /Producers and merchants/.test(all) && /Swap dealers/.test(all) && /Checked: the groups add up to the report's own totals/.test(all) && /not a market signal or a forecast/.test(all))) fail('commoditypos: contracts, groups, the dated header, the check line and the caveat are expected');
       if (id === 'commoditypos' && /did not add up/.test(all)) fail('commoditypos: a contract failed its own totals check');
+      if (id === 'realyields' && !(/as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/.test(all) && /10-year/.test(all) && /30-year/.test(all) && /Breakeven inflation/.test(all) && /Real yield \(TIPS\)/.test(all) && /Compared with [A-Z][a-z]{2} \d{1,2}, 20\d\d and [A-Z][a-z]{2} \d{1,2}, 20\d\d/.test(all) && /Bars: 10-year breakeven inflation for each of the last \d+ days, oldest on the left\. The scale starts at the lowest day/.test(all) && /Checked: both curves are for the same day/.test(all) && /not a market signal or a forecast/.test(all) && /not a forecast of inflation/.test(all))) fail('realyields: date, maturities, comparison dates, bar caption with its scale warning, the check line and the caveats are expected');
     }
     console.log(`${id}: ${live ? 'live data' : 'unavailable, said so'}: ok`);
     if (S) await panel.screenshot({ path: path.join(S, `terminal-${shot}.png`) }).catch(() => undefined);

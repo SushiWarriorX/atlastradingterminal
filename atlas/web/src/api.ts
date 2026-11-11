@@ -1,7 +1,7 @@
 import type { CheckState_ } from "./health";
 import type { FedWatch, MacroBrief, MacroOverview } from "./macro";
 import type { EarningsCal, StockResearch } from "./stocks";
-import type { FedRatesData, FedHoldingsData, DebtMixData, DebtRatesData, BudgetData, InterestData, BuybacksData, BillAuctionsData, BorrowingData, DealersData, FuturesPositioningData, AuctionsData, TgaData, FedOpsData, OpsOverview, CryptoMarket, WorldData, TrackerData, FxData, NarrativeData, OnChain, Positioning, Sentiment, Stablecoins, TreasuryData, WhatIf } from "./whatif";
+import type { FedRatesData, FedHoldingsData, DebtMixData, DebtRatesData, BudgetData, InterestData, BuybacksData, BillAuctionsData, BorrowingData, DealersData, FuturesPositioningData, RealYieldsData, AuctionsData, TgaData, FedOpsData, OpsOverview, CryptoMarket, WorldData, TrackerData, FxData, NarrativeData, OnChain, Positioning, Sentiment, Stablecoins, TreasuryData, WhatIf } from "./whatif";
 import type { SecFilings } from "./secfilings";
 import type { CalData } from "./calendar";
 import type { DiscoverRanked, DiscoverRun } from "./discover";
@@ -98,6 +98,7 @@ export const api = {
   buybacks: () => call<BuybacksData>("/api/macro/buybacks"),
   bills: () => call<BillAuctionsData>("/api/macro/bills"),
   borrowing: () => call<BorrowingData>("/api/macro/borrowing"),
+  realYields: () => call<RealYieldsData>("/api/macro/real-yields"),
   futuresPositioning: () => call<FuturesPositioningData>("/api/macro/futures-positioning"),
   commodityPositioning: () => call<FuturesPositioningData>("/api/macro/commodity-positioning"),
   dealers: () => call<DealersData>("/api/macro/dealers"),

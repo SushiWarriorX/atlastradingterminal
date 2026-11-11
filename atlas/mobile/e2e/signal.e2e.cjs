@@ -674,6 +674,21 @@ async function healthy(browser) {
       }
       await page.locator(V("commoditypos-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07h-commoditypos");
+
+      await page.waitForSelector(V("realyields-card"));
+      await page.waitForSelector(V("realyields-body") + ", " + V("realyields-unavailable") + ", " + V("realyields-error"), { timeout: 45000 });
+      const ry = await text(page);
+      match(ry, /Real yields and breakeven inflation/); match(ry, /US Treasury/); noMatch(ry, FORECASTS, "the real yields card makes no forecasts");
+      if (await present(page, "realyields-body")) {
+        const rbody = await inner(page, "realyields-body");
+        match(rbody, /As of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(rbody, /10-year: breakeven inflation \d\.\d\d% \(regular yield \d\.\d\d%, real yield -?\d\.\d\d%\)/, "a 10-year line with the three numbers");
+        match(rbody, /Compared with [A-Z][a-z]{2} \d{1,2}, 20\d\d and [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "comparison dates in words");
+        match(rbody, /Checked: both curves are for the same day/); match(rbody, /not a forecast of inflation/); match(rbody, /not a market signal or a forecast/);
+        noMatch(rbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("realyields-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07i-realyields");
       const macroAll = await page.evaluate(() => { const el = document.querySelector('[data-testid="macro-brief"]'); return el ? el.innerText : ""; });          // the Macro screen only: screens stay mounted under the one on top
       assert(macroAll.length > 500, "the Macro screen text should be read in full");
       const rawDates = [...new Set(macroAll.match(/\b20\d\d-\d\d(-\d\d)?\b/g) || [])];
