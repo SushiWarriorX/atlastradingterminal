@@ -23,3 +23,9 @@ Owner goal (2026-11-10): build a research app and a strategy the owner can make 
 
 ## Rules the loop keeps
 Research and paper only; no invented data; settings fixed before results; no retuning; bad results kept; every report says what was NOT verified. Do not claim anything "makes money".
+
+## Experiment 1, pre-registered 2026-11-11 01:20 UTC (written BEFORE the run)
+- **Rule (fixed):** hold BTC with weight w = min(1, 40% / annualised 20-day realised volatility), where volatility is the sample standard deviation of the last 20 daily close-to-close returns times sqrt(365), using bars up to the decision close only; no weight until 20 returns exist. The weight is applied from the next open (same timing as every other rule). Costs: 5 bps fee plus 5 bps slippage on the amount traded each day, charged on the change from the drifted weight to the new weight. Data: Coinbase BTC-USD daily bars from 2015, same sealed split as the rest of the lab (first 70% to design, last 30% sealed).
+- **One test, no variants.** The 20 days, 40% and 1x cap are not to be changed after the result.
+- **Pass means ALL of, on the sealed last 30%:** (a) Sharpe at least 0.10 above holding; (b) worst drop at least 10 percentage points shallower than holding; (c) net return at least 70% of holding's; (d) Sharpe above a constant-exposure hold with the same average weight (this separates "it reacts to volatility" from "it simply holds less BTC").
+- **If it fails** any of these, it is logged as "not yet" with the numbers, and not adjusted. If it passes, it is only a candidate: the forward record and the luck check still decide.
