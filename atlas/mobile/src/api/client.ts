@@ -1,4 +1,4 @@
-import type { Brief, CandidatesFeed, Changes, FundamentalResearch, ListingsFeed, MyState, CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, OpsOverview, FedOpsData, TgaData, AuctionsData, BudgetData, InterestData, BuybacksData, BillAuctionsData, BorrowingData, DealersData, DebtRatesData, DebtMixData, FedHoldingsData, FedRatesData, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
+import type { Brief, CandidatesFeed, Changes, FundamentalResearch, ListingsFeed, MyState, CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, OpsOverview, FedOpsData, TgaData, AuctionsData, BudgetData, InterestData, BuybacksData, BillAuctionsData, BorrowingData, DealersData, FuturesPositioningData, DebtRatesData, DebtMixData, FedHoldingsData, FedRatesData, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
 
 /** A failure with a code the UI can act on. `network` means we never got an answer. */
 export class ApiError extends Error {
@@ -96,6 +96,7 @@ export function createApi(opts: ClientOptions) {
     bills: () => call<BillAuctionsData>("/api/macro/bills", { timeoutMs: 45_000 }),
     borrowing: () => call<BorrowingData>("/api/macro/borrowing", { timeoutMs: 45_000 }),
     dealers: () => call<DealersData>("/api/macro/dealers", { timeoutMs: 45_000 }),
+    futuresPositioning: () => call<FuturesPositioningData>("/api/macro/futures-positioning", { timeoutMs: 45_000 }),
     debtRates: () => call<DebtRatesData>("/api/macro/debtrates", { timeoutMs: 45_000 }),
     debtMix: () => call<DebtMixData>("/api/macro/debtmix", { timeoutMs: 45_000 }),
     fedHoldings: () => call<FedHoldingsData>("/api/macro/fedholdings", { timeoutMs: 60_000 }),

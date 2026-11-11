@@ -417,3 +417,8 @@ export interface CandidatesFeed {
   study?: { universe: number; after_filters: number; studied: number; passed: number; left_out_reasons: Record<string, number>; could_not_study: Record<string, number> };
   method?: { weights: Record<string, number>; min_total: number; min_factors: number; max_per_sector: number; cooldown_days: number }; source?: { universe: string; filings: string };
 }
+
+export interface FuturesGroup { key: string; name: string; who: string; long: number; short: number; spread: number; net: number; net_change: number | null; long_pct_oi: number; short_pct_oi: number; net_rank_1y: number | null; net_history: number[] }
+export interface FuturesContract { code: string; name: string; what: string; available: boolean; reason?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; open_interest?: number; open_interest_change?: number | null; traders?: number | null; weeks_of_history?: number;
+  groups?: FuturesGroup[]; checks?: { weeks_checked: number; groups_add_up: boolean; oi_change_pairs: number; oi_change_mismatches: number; ok: boolean } }
+export interface FuturesPositioningData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; contracts?: FuturesContract[] }

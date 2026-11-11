@@ -149,3 +149,7 @@ export interface FedRatesData { available: boolean; reason?: string; demo: boole
   history_available?: boolean; history_reason?: string;
   last_change?: { date: string; days_ago: number; from_range: number[]; to_range: number[]; change_pp: number; window_days: number } | null;
   history?: { date: string; rate: number }[] }
+export interface FuturesGroup { key: string; name: string; who: string; long: number; short: number; spread: number; net: number; net_change: number | null; long_pct_oi: number; short_pct_oi: number; net_rank_1y: number | null; net_history: number[] }
+export interface FuturesContract { code: string; name: string; what: string; available: boolean; reason?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; open_interest?: number; open_interest_change?: number | null; traders?: number | null; weeks_of_history?: number;
+  groups?: FuturesGroup[]; checks?: { weeks_checked: number; groups_add_up: boolean; oi_change_pairs: number; oi_change_mismatches: number; ok: boolean } }
+export interface FuturesPositioningData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; contracts?: FuturesContract[] }

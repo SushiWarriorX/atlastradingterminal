@@ -644,6 +644,21 @@ async function healthy(browser) {
       }
       await page.locator(V("dealers-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07f-dealers");
+
+      await page.waitForSelector(V("futurespos-card"));
+      await page.waitForSelector(V("futurespos-body") + ", " + V("futurespos-unavailable") + ", " + V("futurespos-error"), { timeout: 45000 });
+      const fp = await text(page);
+      match(fp, /Futures positioning/); match(fp, /CFTC/); noMatch(fp, FORECASTS, "the futures positioning card makes no forecasts");
+      if (await present(page, "futurespos-body")) {
+        const fbody = await inner(page, "futurespos-body");
+        match(fbody, /S&P 500 futures \(E-mini\) · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(fbody, /Leveraged funds: net/); match(fbody, /Asset managers: net/); match(fbody, /10-year Treasury note futures/);
+        match(fbody, /checked against the report's own totals/, "the self-check is stated");
+        match(fbody, /not a market signal or a forecast/, "the caveat is shown");
+        noMatch(fbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("futurespos-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07g-futurespos");
       const macroAll = await page.evaluate(() => { const el = document.querySelector('[data-testid="macro-brief"]'); return el ? el.innerText : ""; });          // the Macro screen only: screens stay mounted under the one on top
       assert(macroAll.length > 500, "the Macro screen text should be read in full");
       const rawDates = [...new Set(macroAll.match(/\b20\d\d-\d\d(-\d\d)?\b/g) || [])];
