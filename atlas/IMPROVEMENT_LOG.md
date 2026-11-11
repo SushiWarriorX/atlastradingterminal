@@ -457,7 +457,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Pre-registered first:** the rule and the four pass conditions were written into `EDGE_PLAN.md` and pushed (commit 5402546) before the run.
 - **Result:** failed. Sealed last 30%: Sharpe 0.775 against 0.84 for holding; worst drop -52.4% against -53.1%; return 73% of holding's; Sharpe also below a constant-exposure hold at the same average weight (0.839). Details in the findings log. Nothing was retuned.
 - **Why it matters:** an honest negative result. Scaling down when volatility rises did not protect BTC in the sealed period beyond what holding less would have; this closes one tempting "risk-managed BTC" idea.
-- **Verified:** backend tests for the new simulator and runner (8 new); full backend suite below.
+- **Verified:** backend tests for the new simulator and runner (8 new); full backend suite: 1333 passed.
 - **Not verified:** cash earning a bill rate; other windows or targets (deliberately not tried: that would be tuning); multi-asset ideas (experiment 2, next).
 - **Credibly profitable?** No. Status: not yet.
 
@@ -465,7 +465,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Added:** `btclab/coins.py` plus migration `019_coin_bars.sql`: a fixed list of 28 coins' daily Coinbase bars, fetched in 300-bar windows, cached in SQLite, only completed days returned, gaps reported never filled, an aligned panel with empty (NaN) cells where a coin has no bar. A coin Coinbase does not list is marked not_listed; one coin failing does not stop the rest. No screen yet: it exists to feed EDGE_PLAN experiment 2 (cross-sectional momentum).
 - **Verified live:** all 28 coins fetched in 90 seconds, 67,989 bars to 2026-11-10; the real candle shape (time, low, high, open, close, volume) is covered by a real saved response and by internal-consistency checks on every saved candle.
 - **Findings the next experiment must respect:** XRP has a 904-day hole (Coinbase paused it); ETH, LTC and BCH have a few missing days; MATIC and EOS are not served; the list is made of coins listed today (survivorship); some coins have extreme single days (SHIB +708%).
-- **Verified:** 14 new tests (real candle order, malformed rows refused, 300-bar windows, incremental refresh, not-listed, one failure not stopping others, late listings, completed days only, gaps not filled, panel alignment); full backend suite below.
+- **Verified:** 14 new tests (real candle order, malformed rows refused, 300-bar windows, incremental refresh, not-listed, one failure not stopping others, late listings, completed days only, gaps not filled, panel alignment); full backend suite: 1333 passed.
 - **Not verified:** that Coinbase's free limits hold for a daily refresh (the loop will notice if not); the list's market-cap ranking (chosen by availability, written down, not by past performance).
 - **Credibly profitable?** Nothing tested. Status: not yet.
 
@@ -474,3 +474,12 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Added:** repo skill `atlas/.claude/skills/atlas-experiments/SKILL.md` (own words), linked from `EDGE_PLAN.md`, so ChatGPT and future sessions run experiments the same way. Capability count 84.
 - **Verified:** the file reads cleanly and the plan links to it; no code changed, so no tests were run.
 - **Credibly profitable?** Nothing tested. Status: not yet.
+
+## 2026-11-11 04:18 UTC (Claude, strategy job): experiment 2, cross-sectional crypto momentum: failed one condition (near miss), logged
+- **Pre-registered first** (commit 2a93f19): rule, comparisons (BTC hold, equal-weight of all eligible coins, 200 random 5-coin portfolios) and four pass conditions, written and pushed before any code ran.
+- **Built:** `btclab/portfolio.py`: a multi-asset simulator (decide at a close, trade at the next open, 20 bps on the amount traded from the drifted weights, a NaN row means no trade, a held coin with no price adds nothing and is counted) and the momentum rule (eligibility needs a bar on every day of the lookback, so XRP's 904-day hole is handled; fewer than 10 eligible coins means cash). 11 tests: hand-worked numbers, costs, no-trade rows, missing prices, eligibility, selection, schedule, no look-ahead, agreement with the single-asset simulator to 1e-9, and the runner's four conditions.
+- **Result:** sealed last 30%: momentum +206.2%, Sharpe 0.81, worst drop -63.0%; BTC hold +174.6%, Sharpe 0.876, worst drop -53.1%. Passed (a) beating the equal-weight list by 0.15 Sharpe, (c) return at least BTC's, (d) beating the 95th percentile of random 5-coin portfolios (0.81 against 0.495). Failed (b) Sharpe above BTC. So: not a candidate, nothing adjusted.
+- **Honest reading:** momentum ranking genuinely beat random picking and beat the whole list in this sample, but not on risk-adjusted terms against BTC, and the list is survivors-only, so even the parts it passed are flattered.
+- **Verified:** 11 new tests; full backend suite: 1333 passed.
+- **Not verified:** how much of the result survivorship explains (no delisted-coin data is available free); other lookbacks or coin counts (deliberately not tried: tuning); cash earning a bill rate.
+- **Credibly profitable?** No. Status: not yet. Nearest miss so far.
