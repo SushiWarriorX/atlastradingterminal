@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-12 21:17 | Claude | skills | No change: catalog search empty (12th time); nothing installed. Owner asked for a one-click desktop start: `Install-Signal.bat` added | If the owner reports a Windows error, fix `Install-Signal.bat` / the launcher first |
 | 2026-11-12 20:17 | Claude | data | No new source: real-yields panel confirmed equal to FRED's DGS10/DFII10/T10YIE on 3 days; PPI ids verified (already shipped in Fed-watch); no code | Data queue is empty again; next needs the Census/Eurostat hosts allowed (owner) |
 | 2026-11-12 19:17 | Claude | strategy | No change: nothing cleared to test, no owner reply | Owner call still open (see 07:17 row) |
 | 2026-11-12 18:17 | Claude | improve | README updated for Signal-only (run steps, tests, layout); docs only | Owner: should the cloud Dockerfile be fixed (it still builds the removed terminal) or dropped? |

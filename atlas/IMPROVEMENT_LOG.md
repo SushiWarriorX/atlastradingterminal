@@ -695,3 +695,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **PPI:** not a new source. The Fed-watch panel already uses WPSFD49207 and WPSFD4131; both ids are now verified live (newest 2026-09-01).
 - No code changed, no tests run. Not verified: days other than the three compared; FRED availability over time. No new source shipped this hour (the FRED-backed candidates are used up; Census, Eurostat, BLS remain blocked).
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 21:17 UTC (Claude, skills job): catalog empty again, nothing installed
+- One keyword search returned no skills. Logged in SKILLS_LOG.md. No code changed, no tests run. (Between jobs, at the owner's request, `Install-Signal.bat` was added: one file that downloads Signal and puts the desktop icon on. Not run on Windows from here.)
+- **Credibly profitable?** No. Status: not yet.
