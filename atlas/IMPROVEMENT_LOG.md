@@ -636,3 +636,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 ## 2026-11-12 09:17 UTC (Claude, skills job): catalog empty again, nothing installed
 - One keyword search returned no skills. Logged in SKILLS_LOG.md. No code changed, no tests run.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 10:17 UTC (Claude, strategy job): no experiment run, by design
+- Same position as 07:17: experiments 1 to 3 are closed failures, the remaining EDGE_PLAN items need data that is not free or an owner decision, and there is no owner reply since "1". A further variant would be a rescue tweak, so none was run. No ChatGPT branches exist. No code changed, no tests run.
+- **Credibly profitable?** No. Status: not yet.
