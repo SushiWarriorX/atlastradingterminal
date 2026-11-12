@@ -645,3 +645,9 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Owner asked to remove the ATLAS app and keep only Signal. Deleted `atlas/web` (the React terminal, its widgets and browser scripts) and its CI job. Kept the backend (Signal's data source) and `atlas/mobile`. Recoverable from git history (commit before this one).
 - Verified: backend pytest 1402 passed; phone vitest 43 passed; phone typecheck clean. Not verified: CI run on GitHub; the phone browser script (`mobile/e2e/signal.e2e.cjs`) was not re-run.
 - Docs (README, HANDOFF, older log entries) still mention the terminal in places; history is left as written.
+
+## 2026-11-12 11:17 UTC (Claude, data job): no new source; Signal browser test re-run after the terminal removal
+- No new reachable free source (same blocked hosts as 08:17; nothing re-probed beyond that).
+- Closed the gap from the terminal removal: rebuilt the Signal web export and ran `mobile/e2e/signal.e2e.cjs` (healthy and demo scenarios): 35 of 35 passed.
+- Not verified: the stale, partial, missing and login scenarios this hour; GitHub CI.
+- **Credibly profitable?** No. Status: not yet.
