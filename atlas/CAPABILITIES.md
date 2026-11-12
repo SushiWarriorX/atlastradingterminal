@@ -13,7 +13,7 @@ Baseline counted 2026-11-09:
 
 Target: at least 71 (67 x 1.05 = 70.35, rounded up). Each loop adds its own kind; update the table and the current total when something ships.
 
-Current total: 92 (baseline 67 + 8 strategies + 3 skills + 14 data sources). Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
+Current total: 93 (baseline 67 + 8 strategies + 3 skills + 15 data sources). Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
 
 ## Added since baseline
 | Date | Kind | Name | Source/loop |

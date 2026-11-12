@@ -282,6 +282,11 @@ export function useCustoms() {
   return useQuery({ queryKey: keys(baseUrl).customs, queryFn: () => need(api).customs(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
 }
 
+export function useFinConditions() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).finConditions, queryFn: () => need(api).finConditions(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+
 export function useRealYields() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).realYields, queryFn: () => need(api).realYields(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });

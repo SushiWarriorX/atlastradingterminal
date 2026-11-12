@@ -673,3 +673,10 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 ## 2026-11-12 16:17 UTC (Claude, strategy job): no experiment run, by design
 - Unchanged since 13:17: experiments 1 to 3 closed failures, remaining EDGE_PLAN items need data that is not free or an owner decision, no owner reply. No rescue variants run. No ChatGPT branches. No code changed, no tests run.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 17:17 UTC (Claude, data job): Chicago Fed financial conditions index (NFCI) shipped, from FRED
+- **Built:** `fincond.py` (five FRED series, no key), route `/api/macro/financial-conditions`, scheduler refresh, Signal Macro card (`FinConditionsCard`), real fixture (last 80 weeks), 12 tests, a browser check in `signal.e2e.cjs`.
+- **Found while building:** (1) the three pieces (risk, credit, leverage) do NOT sum to the headline index in the real data (error up to about 1.4 over history; -0.435 against -0.462 now), so I did not claim that check and a test pins it; (2) FRED stalls and drops connections when the request carries a custom User-Agent ("ATLAS research terminal"), and answers in 0.2 s with the default one, so none is sent (a test pins it).
+- **Verified live:** the module fetched real FRED data: week ending 2026-11-06, NFCI -0.462 (looser than average), adjusted -0.477, matching the by-hand test numbers. Backend pytest 1414 passed; phone vitest 43 passed, typecheck clean; Signal browser test healthy scenario 30 of 30; screenshot read (card shows the week in words, plain reading, pieces, note, source).
+- **Not verified:** other Signal scenarios and GitHub CI this hour; FRED availability over time (it was refused in earlier cycles). Capability count 93.
+- **Credibly profitable?** No. Status: not yet.

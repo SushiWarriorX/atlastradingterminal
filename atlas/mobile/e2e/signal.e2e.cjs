@@ -718,6 +718,21 @@ async function healthy(browser) {
       await page.locator(V("realyields-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07i-realyields");
 
+      await page.waitForSelector(V("fincond-card"));
+      await page.waitForSelector(V("fincond-body") + ", " + V("fincond-unavailable") + ", " + V("fincond-error"), { timeout: 45000 });
+      const fc = await text(page);
+      match(fc, /Financial conditions/); match(fc, /Chicago Fed/); noMatch(fc, FORECASTS, "the financial conditions card makes no forecasts");
+      if (await present(page, "fincond-body")) {
+        const fbody = await inner(page, "fincond-body");
+        match(fbody, /Week ending [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(fbody, /Index [+-]?\d\.\d{3}: (tighter|looser) than average|Index [+-]?\d\.\d{3}: at the average/, "the index with a plain reading");
+        match(fbody, /Pieces as published: risk [+-]?\d\.\d{3}, credit [+-]?\d\.\d{3}, leverage [+-]?\d\.\d{3}/, "the three pieces");
+        match(fbody, /Checked: every series is for the same week/); match(fbody, /not a market signal or a forecast/);
+        noMatch(fbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("fincond-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07o-fincond");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);
