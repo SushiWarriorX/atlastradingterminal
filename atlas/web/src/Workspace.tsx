@@ -49,7 +49,7 @@ import { RealYieldsWidget } from "./widgets/RealYields";
 import { CustomsWidget } from "./widgets/Customs";
 import { ReceiptsWidget } from "./widgets/Receipts";
 import { OutlaysWidget } from "./widgets/Outlays";
-import { CommodityPositioningWidget, CurrencyPositioningWidget, FuturesPositioningWidget } from "./widgets/FuturesPositioning";
+import { AgriPositioningWidget, CommodityPositioningWidget, CurrencyPositioningWidget, FuturesPositioningWidget } from "./widgets/FuturesPositioning";
 import { DebtRatesWidget } from "./widgets/DebtRates";
 import { DebtMixWidget } from "./widgets/DebtMix";
 import { FedHoldingsWidget } from "./widgets/FedHoldings";
@@ -108,6 +108,7 @@ function render(w: WidgetCfg, view: string) {
     case "futurespos": return <FuturesPositioningWidget />;
     case "commoditypos": return <CommodityPositioningWidget />;
     case "currencypos": return <CurrencyPositioningWidget />;
+    case "agripos": return <AgriPositioningWidget />;
     case "debtrates": return <DebtRatesWidget />;
     case "debtmix": return <DebtMixWidget />;
     case "fedholdings": return <FedHoldingsWidget />;

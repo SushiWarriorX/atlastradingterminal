@@ -43,6 +43,7 @@ export const keys = (base: string | null) => ({
   futuresPositioning: ["futurespos", base] as const,
   commodityPositioning: ["commoditypos", base] as const,
   currencyPositioning: ["currencypos", base] as const,
+  agriPositioning: ["agripos", base] as const,
   auctions: ["auctions", base] as const,
   sentiment: ["sentiment", base] as const,
   whatif: (id: string, amount: number) => ["whatif", base, id, amount] as const,

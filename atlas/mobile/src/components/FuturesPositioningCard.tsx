@@ -2,7 +2,7 @@ import React from "react";
 import { Linking, Pressable, View } from "react-native";
 import { ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
-import { useCommodityPositioning, useCurrencyPositioning, useFuturesPositioning } from "../state/queries";
+import { useAgriPositioning, useCommodityPositioning, useCurrencyPositioning, useFuturesPositioning } from "../state/queries";
 import type { FuturesPositioningData } from "../api/types";
 import { color, space } from "../theme";
 import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
@@ -23,6 +23,11 @@ export function CommodityPositioningCard() {
 /** Same layout for euro, yen, pound and VIX futures (CFTC Traders in Financial Futures). */
 export function CurrencyPositioningCard() {
   return <PositioningCard id="currencypos" heading="Currency and volatility positioning" sub="Who holds euro, yen, pound and VIX futures, from the CFTC" q={useCurrencyPositioning()} />;
+}
+
+/** Same layout for silver, corn, soybean, wheat, coffee and sugar futures (CFTC Disaggregated report). */
+export function AgriPositioningCard() {
+  return <PositioningCard id="agripos" heading="Silver and farm positioning" sub="Who holds silver, corn, soybean, wheat, coffee and sugar futures, from the CFTC" q={useAgriPositioning()} />;
 }
 
 function PositioningCard({ id, heading, sub, q }: { id: string; heading: string; sub: string; q: { data?: FuturesPositioningData; isLoading: boolean; isError: boolean; error: unknown } }) {

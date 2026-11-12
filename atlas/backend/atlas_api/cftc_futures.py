@@ -62,6 +62,14 @@ CURRENCY = Family(
     "Positions are counted on Tuesdays and published the following Friday, so they are at least three days old. Net is long minus short, with spreading positions left out. Net short is not the same as bearish: "
     "companies and funds use currency futures to hedge what they own or owe, dealers sit on the other side of their clients, and VIX futures are often used as insurance against a fall in stocks. " + TAIL)
 
+AGRI = Family(
+    COMMODITY.url,
+    [("084691", "Silver futures", "Silver"), ("002602", "Corn futures", "US corn"), ("005602", "Soybean futures", "US soybeans"), ("001602", "Wheat futures (Chicago soft red winter)", "US wheat"),
+     ("083731", "Coffee futures", "Arabica coffee"), ("080732", "Sugar futures (No. 11)", "Raw sugar")],
+    COMMODITY_GROUPS, COMMODITY.source,
+    "Positions are counted on Tuesdays and published the following Friday, so they are at least three days old. Net is long minus short, with spreading positions left out. Net short is not the same as bearish: "
+    "producers and merchants (farmers, grain handlers, roasters and refiners) are usually short futures to lock in a price for what they grow or store, and swap dealers are on the other side of their clients. " + TAIL)
+
 # kept for the financial family's callers and tests
 URL, CONTRACTS, SOURCE, NOTE = FINANCIAL.url, FINANCIAL.contracts, FINANCIAL.source, FINANCIAL.note
 TTL = 6 * 3600.0
@@ -214,3 +222,10 @@ class CftcCurrencies(CftcFutures):
 
     def __init__(self, client: httpx.AsyncClient | None = None, demo: bool = False):
         super().__init__(client=client, demo=demo, family=CURRENCY)
+
+
+class CftcAgriculture(CftcFutures):
+    """Silver, corn, soybean, wheat, coffee and sugar futures from the CFTC's Disaggregated report."""
+
+    def __init__(self, client: httpx.AsyncClient | None = None, demo: bool = False):
+        super().__init__(client=client, demo=demo, family=AGRI)

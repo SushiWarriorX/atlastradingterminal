@@ -22,7 +22,7 @@ import { RealYieldsCard } from "./RealYieldsCard";
 import { CustomsCard } from "./CustomsCard";
 import { ReceiptsCard } from "./ReceiptsCard";
 import { OutlaysCard } from "./OutlaysCard";
-import { CommodityPositioningCard, CurrencyPositioningCard, FuturesPositioningCard } from "./FuturesPositioningCard";
+import { AgriPositioningCard, CommodityPositioningCard, CurrencyPositioningCard, FuturesPositioningCard } from "./FuturesPositioningCard";
 import { DebtRatesCard } from "./DebtRatesCard";
 import { DebtMixCard } from "./DebtMixCard";
 import { FedHoldingsCard } from "./FedHoldingsCard";
@@ -89,6 +89,7 @@ export function MacroView() {
             <FuturesPositioningCard />
             <CommodityPositioningCard />
             <CurrencyPositioningCard />
+            <AgriPositioningCard />
             <DebtRatesCard />
             <DebtMixCard />
             <FedHoldingsCard />

@@ -223,3 +223,48 @@ def test_currency_overview_wording_demo_and_route(tmp_path):
     with TestClient(app) as c:
         rr = c.get("/api/macro/currency-positioning")
         assert rr.status_code == 200 and rr.json()["data"]["available"] is False and rr.json()["data"]["demo"] is True
+
+
+# ---- the silver and farm-commodity family (Disaggregated report): silver, corn, soybeans, wheat, coffee, sugar; real responses fetched 2026-11-12, 30 weeks each
+RAWA = json.loads((Path(__file__).parent / "fixtures" / "cftc_disagg_ag_silver.json").read_text())
+
+
+def _sa(raw=None, today=TODAY):
+    return C.summarize({k: C.parse(v, C.AGRI.groups) for k, v in (raw or RAWA).items()}, today, C.AGRI)
+
+
+def test_agri_silver_and_corn_latest_week_match_the_report_by_hand():
+    s = _sa()
+    sil, corn = {x["key"]: x for x in _contract(s, "084691")["groups"]}, {x["key"]: x for x in _contract(s, "002602")["groups"]}
+    assert [x["code"] for x in s["contracts"]] == ["084691", "002602", "005602", "001602", "083731", "080732"] and s["date"] == "2026-11-03"
+    assert _contract(s, "084691")["open_interest"] == 115583 and _contract(s, "084691")["open_interest_change"] == -643
+    assert sil["m_money"]["net"] == 17522 - 13487 == 4035 and sil["m_money"]["net_change"] == 4035 - (16864 - 13543) == 714
+    assert sil["prod_merc"]["net"] == 5067 - 18212 == -13145
+    assert corn["m_money"]["net"] == 229341 - 220546 == 8795 and corn["m_money"]["net_change"] == 8795 - (249351 - 168238) == -72318
+    assert _contract(s, "002602")["open_interest"] == 1918622 and _contract(s, "002602")["open_interest_change"] == 59537
+
+
+def test_agri_totals_reconcile_for_all_six_contracts_and_a_tampered_one_is_dropped():
+    for x in _sa()["contracts"]:
+        assert x["available"] and x["checks"]["ok"] and x["checks"]["weeks_checked"] == 26 and x["checks"]["oi_change_mismatches"] == 0
+    bad = json.loads(json.dumps(RAWA))
+    bad["005602"][0]["swap_positions_long_all"] = str(int(bad["005602"][0]["swap_positions_long_all"]) + 1)
+    s = _sa(bad)
+    assert _contract(s, "005602")["available"] is False and "did not add up" in _contract(s, "005602")["reason"] and _contract(s, "002602")["available"]
+
+
+def test_agri_overview_wording_demo_and_route(tmp_path):
+    seen = []
+
+    def handler(req):
+        seen.append(str(req.url).split("?")[0])
+        return httpx.Response(200, json=RAWA[str(req.url.params["$where"]).split("'")[1]])
+    r = asyncio.run(C.CftcAgriculture(client=_client(handler)).overview(NOW))
+    assert r["available"] and len(r["contracts"]) == 6 and set(seen) == {"https://publicreporting.cftc.gov/resource/72hh-3qpy.json"} and "farmers, grain handlers" in r["note"]
+    assert "not a market signal or a forecast" in r["note"]
+    d = asyncio.run(C.CftcAgriculture(demo=True).overview(NOW))
+    assert d["available"] is False and "Demo" in d["reason"] and "contracts" not in d
+    app = create_app(db_path=str(tmp_path / "a.db"), demo=True, alert_loop=False, news_loop=False)
+    with TestClient(app) as c:
+        rr = c.get("/api/macro/agriculture-positioning")
+        assert rr.status_code == 200 and rr.json()["data"]["available"] is False and rr.json()["data"]["demo"] is True

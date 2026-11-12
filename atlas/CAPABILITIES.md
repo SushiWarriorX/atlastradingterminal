@@ -13,7 +13,7 @@ Baseline counted 2026-11-09:
 
 Target: at least 71 (67 x 1.05 = 70.35, rounded up). Each loop adds its own kind; update the table and the current total when something ships.
 
-Current total: 91 (baseline 67 + 8 strategies + 3 skills + 13 data sources). Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
+Current total: 92 (baseline 67 + 8 strategies + 3 skills + 14 data sources). Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
 
 ## Added since baseline
 | Date | Kind | Name | Source/loop |
@@ -42,6 +42,7 @@ Current total: 91 (baseline 67 + 8 strategies + 3 skills + 13 data sources). Not
 | 2026-11-11 | Data source | US customs duties (tariff revenue): collected, refunded, net | Data loop |
 | 2026-11-11 | Data source | Where federal revenue comes from: the seven receipt categories vs last year | Data loop |
 | 2026-11-12 | Data source | Where federal money goes: outlays by purpose, receipts and the deficit | Data loop |
+| 2026-11-12 | Data source | CFTC silver and farm positioning (silver, corn, soybeans, wheat, coffee, sugar) | Data loop |
 
 ## Loop budget (measured 2026-11-09)
 - Strategy cycle with 3 rules and the full backend suite: about 4 minutes wall time. Improvement cycle with all suites: roughly 20 to 45 minutes. Skills and data cycles: a few minutes each, data often blocked by hosts the sandbox cannot reach.

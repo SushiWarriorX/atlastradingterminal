@@ -689,6 +689,20 @@ async function healthy(browser) {
       await page.locator(V("currencypos-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07j-currencypos");
 
+      await page.waitForSelector(V("agripos-card"));
+      await page.waitForSelector(V("agripos-body") + ", " + V("agripos-unavailable") + ", " + V("agripos-error"), { timeout: 45000 });
+      const ag = await text(page);
+      match(ag, /Silver and farm positioning/); match(ag, /CFTC/); noMatch(ag, FORECASTS, "the silver and farm positioning card makes no forecasts");
+      if (await present(page, "agripos-body")) {
+        const abody = await inner(page, "agripos-body");
+        match(abody, /Silver futures · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(abody, /Managed money: net/); match(abody, /Corn futures/); match(abody, /Sugar futures/);
+        match(abody, /checked against the report's own totals/); match(abody, /not a market signal or a forecast/);
+        noMatch(abody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("agripos-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07n-agripos");
+
       await page.waitForSelector(V("realyields-card"));
       await page.waitForSelector(V("realyields-body") + ", " + V("realyields-unavailable") + ", " + V("realyields-error"), { timeout: 45000 });
       const ry = await text(page);

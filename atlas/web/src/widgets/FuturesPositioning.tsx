@@ -23,6 +23,11 @@ export function CurrencyPositioningWidget() {
   return <PositioningPanel id="currencypos" title="CURRENCY & VOLATILITY POSITIONING · who holds euro, yen, pound and VIX futures (CFTC)" fetcher={api.currencyPositioning} />;
 }
 
+/** Same layout for silver, corn, soybean, wheat, coffee and sugar futures (CFTC Disaggregated report). */
+export function AgriPositioningWidget() {
+  return <PositioningPanel id="agripos" title="SILVER & FARM POSITIONING · who holds silver, corn, soybean, wheat, coffee and sugar futures (CFTC)" fetcher={api.agriPositioning} />;
+}
+
 function PositioningPanel({ id, title, fetcher }: { id: string; title: string; fetcher: () => Promise<FuturesPositioningData> }) {
   const q = useQuery({ queryKey: [id], queryFn: fetcher, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
   const d = q.data;

@@ -105,6 +105,7 @@ export const api = {
   futuresPositioning: () => call<FuturesPositioningData>("/api/macro/futures-positioning"),
   commodityPositioning: () => call<FuturesPositioningData>("/api/macro/commodity-positioning"),
   currencyPositioning: () => call<FuturesPositioningData>("/api/macro/currency-positioning"),
+  agriPositioning: () => call<FuturesPositioningData>("/api/macro/agriculture-positioning"),
   dealers: () => call<DealersData>("/api/macro/dealers"),
   debtRates: () => call<DebtRatesData>("/api/macro/debtrates"),
   debtMix: () => call<DebtMixData>("/api/macro/debtmix"),
