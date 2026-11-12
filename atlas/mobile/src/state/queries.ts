@@ -267,6 +267,11 @@ export function useBorrowing() {
   return useQuery({ queryKey: keys(baseUrl).borrowing, queryFn: () => need(api).borrowing(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
 }
 
+export function useOutlays() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).outlays, queryFn: () => need(api).outlays(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
 export function useReceipts() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).receipts, queryFn: () => need(api).receipts(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });

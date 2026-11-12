@@ -731,6 +731,20 @@ async function healthy(browser) {
       }
       await page.locator(V("receipts-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07l-receipts");
+
+      await page.waitForSelector(V("outlays-card"));
+      await page.waitForSelector(V("outlays-body") + ", " + V("outlays-unavailable") + ", " + V("outlays-error"), { timeout: 45000 });
+      const oc = await text(page);
+      match(oc, /Where federal money goes/); match(oc, /US Treasury/); noMatch(oc, FORECASTS, "the outlays card makes no forecasts");
+      if (await present(page, "outlays-body")) {
+        const obody = await inner(page, "outlays-body");
+        match(obody, /Fiscal 20\d\d so far \(\d+ months? from October\) · through (January|February|March|April|May|June|July|August|September|October|November|December) 20\d\d/, "the month is written out");
+        match(obody, /Spent, (up|down) [\d.]+% from/); match(obody, /spending ran ahead of income by/); match(obody, /Social Security: \$[\d,.]+B/); match(obody, /Net Interest: /);
+        match(obody, /Checked: the purposes add up/); match(obody, /does not say why any purpose rose or fell/); match(obody, /not a market signal or a forecast/);
+        noMatch(obody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("outlays-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07m-outlays");
       const macroAll = await page.evaluate(() => { const el = document.querySelector('[data-testid="macro-brief"]'); return el ? el.innerText : ""; });          // the Macro screen only: screens stay mounted under the one on top
       assert(macroAll.length > 500, "the Macro screen text should be read in full");
       const rawDates = [...new Set(macroAll.match(/\b20\d\d-\d\d(-\d\d)?\b/g) || [])];

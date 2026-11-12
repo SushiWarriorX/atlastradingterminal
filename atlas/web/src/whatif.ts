@@ -166,3 +166,8 @@ export interface ReceiptCategory { name: string; what: string; month_billions: n
 export interface ReceiptsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; fiscal_year?: number; months_in_year?: number;
   total?: { month_billions: number; year_so_far_billions: number; same_point_last_year_billions: number; change_vs_last_year_pct: number | null }; categories?: ReceiptCategory[];
   checks?: { categories_add_up_to_total: boolean; on_plus_off_budget_equals_total: boolean; problems: string[]; ok: boolean } }
+export interface OutlayFunction { name: string; what: string; month_billions: number; year_so_far_billions: number; share_of_outlays_pct: number | null; same_point_last_year_billions: number; change_vs_last_year_pct: number | null }
+export interface OutlayTotals { month_billions: number; year_so_far_billions: number; same_point_last_year_billions: number; change_vs_last_year_pct: number | null }
+export interface OutlaysData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; fiscal_year?: number; months_in_year?: number;
+  outlays?: OutlayTotals; receipts?: OutlayTotals; deficit?: OutlayTotals; functions?: OutlayFunction[];
+  checks?: { purposes_add_up_to_total_outlays: boolean; receipts_lines_add_up_to_total: boolean; problems: string[]; ok: boolean } }
