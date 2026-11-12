@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-12 18:17 | Claude | improve | README updated for Signal-only (run steps, tests, layout); docs only | Owner: should the cloud Dockerfile be fixed (it still builds the removed terminal) or dropped? |
 | 2026-11-12 17:17 | Claude | data | Shipped Chicago Fed financial conditions (NFCI) from FRED: backend module + route + job, Signal Macro card, 12 tests; backend 1414 / phone 43 / browser healthy 30 pass | Next data job (20:17): PPI and a T10YIE breakeven cross-check from FRED. FRED stalls on a custom User-Agent: send none |
 | 2026-11-12 16:17 | Claude | strategy | No change: nothing cleared to test, no owner reply | Owner call still open (see 07:17 row) |
 | 2026-11-12 15:17 | Claude | skills | No change: catalog search empty (11th time); nothing installed | Owner: OK to write own repo skills from lessons learned on skills hours? Next data job (17:17) builds NFCI from FRED |

@@ -1,6 +1,6 @@
-# ATLAS TERMINAL
+# ATLAS (backend) and Signal (phone app)
 
-Single-user, desktop-first trading research terminal for **BTC** and **US equities/ETFs**: command-driven workspace, deterministic technical analytics, and an AI research desk that is only allowed to use computed data.
+Single-user research backend for **BTC** and **US equities/ETFs**, with **Signal**, a phone app (also runs in a browser) on top: deterministic technical analytics, free public macro data, and an AI research desk that is only allowed to use computed data.
 
 > **Status: Phase 0 + Phase 1 milestone.** See [docs/implementation-status.md](docs/implementation-status.md) for exactly what works and what does not. Trading is **paper only**: there is no live broker connection and the live-order route always refuses.
 
@@ -17,11 +17,15 @@ ATLAS_DEMO=1 python -m atlas_api        # http://127.0.0.1:8000/docs for the Ope
 ```
 
 ```bash
-# 2. frontend (terminal 2)
-cd atlas/web
+# 2. the app (terminal 2): Signal, in your browser at http://localhost:8081
+cd atlas/mobile
 npm install
-npm run dev                             # http://127.0.0.1:5173
+npm run web
 ```
+
+**One click:** `start-signal-windows.bat` (Windows), `start-signal.command` (Mac) or `./start-signal.sh` (Linux) starts both. See [mobile/README.md](mobile/README.md).
+
+> **The desktop web terminal was removed on 2026-11-12** (owner request: only Signal is needed). The backend stays, since Signal gets all its data from it. The terminal is in git history if it is ever wanted back. Parts of this README, `docs/` and the older log entries still describe it.
 
 Telegram alerts (optional): create a bot with @BotFather, message it once, find your chat id (for example via @userinfobot), then start the backend with `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` set. Open Settings and press **Send test message**; choose a minimum severity there. The token never leaves the backend. Alerts based on DEMO data are not sent unless you set `ATLAS_TELEGRAM_ALLOW_DEMO=1`.
 
@@ -47,18 +51,6 @@ Live mode: drop `ATLAS_DEMO=1`. BTC comes from Coinbase's public API, equities/i
 
 ```bash
 cd atlas/backend && pytest                        # indicators, sessions/DST, providers, API, AI guardrails
-cd atlas/web && npm run typecheck && npm test     # types + formatting helpers
-# browser smoke test: demo backend + `npm run dev` running, and `npm i -g playwright` or similar available
-node atlas/web/e2e/smoke.cjs ./e2e-out
-node atlas/web/e2e/scanner.cjs ./e2e-out
-node atlas/web/e2e/analysis.cjs ./e2e-out   # compare overlay + multi-timeframe
-node atlas/web/e2e/hyperliquid.cjs ./e2e-out  # needs e2e/fake_hyperliquid.py; see the header of the script
-# agents e2e: start the backend with `python atlas/web/e2e/serve_fake_llm.py 8000` (scripted LLM) instead of `python -m atlas_api`
-node atlas/web/e2e/agents.cjs ./e2e-out
-node atlas/web/e2e/derivatives.cjs ./e2e-out  # DEMO data
-node atlas/web/e2e/desks.cjs ./e2e-out         # desk rules (BTC only / equities only / per-chart assets), DEMO data
-node atlas/web/e2e/news.cjs ./e2e-out       # needs e2e/fake_rss.py; see the header of the script
-node atlas/web/e2e/backtest.cjs ./e2e-out   # backtester (demo data; saves a run, use a throwaway ATLAS_DB)
 cd atlas/mobile && npm run typecheck && npm test   # Signal Mobile: types + unit tests; browser tests: see mobile/README.md
 ```
 
@@ -73,7 +65,6 @@ atlas/
   backend/atlas_api/   providers/ (coinbase, yahoo, fred, demo), indicators, technical, sessions, status,
                        service, commands, db, ai/ (llm, tools, desk), app (FastAPI)
   backend/migrations/  versioned SQL migrations
-  web/src/             Vite + React + TypeScript; widgets/, workspaces, command bar
   docs/                architecture, data-providers, roadmap, implementation-status, known-limitations
 ```
 
