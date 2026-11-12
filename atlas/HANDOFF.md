@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-12 07:17 | Claude | strategy | No change: nothing cleared to test, no owner reply since '1'; no rescue variants run | Owner call still open: track gated momentum forward as a frozen non-candidate, a different idea, or use strategy hours on the research app |
 | 2026-11-12 06:17 | Claude | improve | Older browser e2e scripts repaired and green on fresh demo backends; Journal Ask-desk buttons now go to the BTC desk with a notice | Owner call: where the AI panel belongs (the `AI` command maps to the Overview, which has none; `agents.cjs` is stale until decided) |
 | 2026-11-12 05:17 | Claude | data | CFTC silver and farm positioning (silver, corn, soybeans, wheat, coffee, sugar) on the shared CFTC module: live, 180 real weeks reconcile, terminal panel + phone card, 3 new tests, 1402 backend tests pass; capabilities 92 | Hour 06 = improve (older web/e2e scripts not yet re-run: hyperliquid, journal, news, agents, analysis, backtest, derivatives, research, scanner, whatif, handoff). Owner decisions open (see 17:14 row on Nov 11) |
 | 2026-11-12 04:17 | Claude | strategy | No change: nothing cleared (experiments 1 to 3 closed), no owner reply since '1', no ChatGPT branch | Hour 05 = data. Owner decision open (see 17:14 row on Nov 11) |

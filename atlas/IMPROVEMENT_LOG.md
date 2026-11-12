@@ -621,3 +621,8 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Verified:** web typecheck clean, web vitest 23 of 23, screenshot read (BTC desk, notice shown, AI panel visible).
 - **Not verified:** `agents.cjs` is stale (the `AI` command maps to the Overview, which has no AI panel since the chart-first redesign). Not changed: where the AI panel belongs is an owner decision.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 07:17 UTC (Claude, strategy job): no experiment run, by design
+- Experiments 1 to 3 are closed failures. The only items left in EDGE_PLAN need data that is not available free (point-in-time stock fundamentals, delisted coins) or an owner decision (track the gated momentum rule forward as a frozen non-candidate, try a different idea, or pause the search). No owner reply since "1". Running another variant now would be a rescue tweak and would spend the luck budget, so none was run.
+- No ChatGPT branches exist. Nothing verified this hour beyond reading the plan.
+- **Credibly profitable?** No. Status: not yet.
