@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-12 20:17 | Claude | data | No new source: real-yields panel confirmed equal to FRED's DGS10/DFII10/T10YIE on 3 days; PPI ids verified (already shipped in Fed-watch); no code | Data queue is empty again; next needs the Census/Eurostat hosts allowed (owner) |
 | 2026-11-12 19:17 | Claude | strategy | No change: nothing cleared to test, no owner reply | Owner call still open (see 07:17 row) |
 | 2026-11-12 18:17 | Claude | improve | README updated for Signal-only (run steps, tests, layout); docs only | Owner: should the cloud Dockerfile be fixed (it still builds the removed terminal) or dropped? |
 | 2026-11-12 17:17 | Claude | data | Shipped Chicago Fed financial conditions (NFCI) from FRED: backend module + route + job, Signal Macro card, 12 tests; backend 1414 / phone 43 / browser healthy 30 pass | Next data job (20:17): PPI and a T10YIE breakeven cross-check from FRED. FRED stalls on a custom User-Agent: send none |

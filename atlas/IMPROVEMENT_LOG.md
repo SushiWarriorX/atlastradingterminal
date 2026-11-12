@@ -689,3 +689,9 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 ## 2026-11-12 19:17 UTC (Claude, strategy job): no experiment run, by design
 - Unchanged since 16:17: experiments 1 to 3 closed failures, the rest of EDGE_PLAN needs data that is not free or an owner decision, no owner reply. No rescue variants run. No ChatGPT branches. No code changed, no tests run.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 20:17 UTC (Claude, data job): independent cross-check of the real-yields panel, PPI ids verified, no new source
+- **Cross-check (new evidence):** the real-yields panel computes breakeven as Treasury nominal minus Treasury real. FRED publishes the same quantities separately (DGS10, DFII10, T10YIE). Compared on 2026-11-06, 11-09 and 11-10 (the days both had values): nominal 4.86 / 4.88 / 4.98 against DGS10, real 2.63 / 2.66 against DFII10, breakeven 2.22 (11-09) and 2.20 (11-10) against T10YIE: all equal. The panel's numbers are confirmed by a second route, not only by its own arithmetic.
+- **PPI:** not a new source. The Fed-watch panel already uses WPSFD49207 and WPSFD4131; both ids are now verified live (newest 2026-09-01).
+- No code changed, no tests run. Not verified: days other than the three compared; FRED availability over time. No new source shipped this hour (the FRED-backed candidates are used up; Census, Eurostat, BLS remain blocked).
+- **Credibly profitable?** No. Status: not yet.
