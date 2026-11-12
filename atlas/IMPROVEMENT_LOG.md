@@ -660,3 +660,8 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 ## 2026-11-12 13:17 UTC (Claude, strategy job): no experiment run, by design
 - Unchanged since 10:17: experiments 1 to 3 are closed failures, the rest of EDGE_PLAN needs data that is not free or an owner decision, no owner reply. A further variant would be a rescue tweak, so none was run. No ChatGPT branches exist. No code changed, no tests run.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 14:17 UTC (Claude, data job): FRED is reachable again, next sources queued with live values
+- Re-probed the blocked hosts: Census, Eurostat, BLS, Deribit and DefiLlama still refuse; **FRED answers (HTTP 200)**. Fetched 12 series live (rates, CPI, PCE, PPI, jobs, GDP, dollar index, Fed balance sheet, breakeven, NFCI), all with plausible, recent last values. Logged in DATA_SOURCES.md QUEUED: NFCI first (the Chicago Fed site is blocked but FRED carries the series), then PPI and a T10YIE cross-check.
+- No code shipped this hour (a source needs its module, checks, tests and phone card; queued for the next data job at 17:17). Verified: live HTTP replies only. Not verified: whether FRED keeps answering.
+- **Credibly profitable?** No. Status: not yet.

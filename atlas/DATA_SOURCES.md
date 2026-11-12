@@ -50,6 +50,7 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 | alternative.me Fear & Greed (cycle 1) | Daily 0-100 crypto mood gauge, 31-day history | Terminal BTC desk, Signal BTC page |
 
 ## QUEUED (candidates, in order; each must be fetched live before it ships)
+- **FRED now answers (checked live 2026-11-12 14:17 UTC, `fred.stlouisfed.org/graph/fredgraph.csv?id=...`, HTTP 200, no key).** Newest points seen: DGS10 2026-11-09 4.88; CPIAUCSL 2026-10-01 337.476; PCEPI 2026-09-01 132.257; PPIACO 2026-09-01 295.708; UNRATE 2026-10-01 4.1; PAYEMS 2026-10-01 159,293; GDPC1 2026-07-01 24,611.077; DFF 2026-11-09 3.88; DTWEXBGS 2026-11-06 121.8803; WALCL 2026-11-04 6,748,145; T10YIE 2026-11-10 2.20; NFCI 2026-11-06 -0.462. Next data job: (1) Chicago Fed National Financial Conditions Index (NFCI, weekly; the chicagofed.org site is blocked, but FRED carries the same series), (2) PPI (PPIACO) which was unverified, (3) 10-year breakeven (T10YIE) as a cross-check on the real-yields panel. Each needs the usual self-checks, dated figures and a staleness label before shipping.
 (otherwise the queue is empty: the next cycle searches for new candidates, e.g. DefiLlama DeFi value once api.llama.fi answers)
 
 ## HELD (reachable, but not shipped, with the reason)
@@ -65,7 +66,7 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 - api.bls.gov (cycles 13 and 14, still no reply): no reply from this machine (the host is not on the allowed list). It would give official CPI and unemployment without FRED, which is also blocked, so the Macro screen's key indicators stay empty. **Needs the user:** add `api.bls.gov` to the environment's allowed hosts if they want this; the free keyless v1 API allows 25 requests a day.
 - api.llama.fi, api.blockchain.info (checked cycle 11): no reply from this machine. DefiLlama stablecoins data shipped earlier; the TVL host is silent now.
 - mempool.space Lightning statistics (cycle 11): reachable but the newest record is dated 2026-08-30 (about 70 days old), so it is not shipped as current data. Recheck if it resumes.
-- fred.stlouisfed.org: added to the allowed hosts but still no reply after the change (checked cycle 1). Retry next cycle; if still silent, the PPI series ids stay unverified.
+- fred.stlouisfed.org: answered on 2026-11-12 (see QUEUED); earlier cycles saw no reply.
 - Earlier (before hosts were allowed) every candidate timed out; after the change NY Fed, CFTC, DefiLlama, mempool.space and alternative.me all answered HTTP 200.
 - Checked 2026-11-12 (data job 08:17): api.census.gov (US trade by product), ec.europa.eu Eurostat, www.bis.org policy rates, www.eia.gov, stats.oecd.org, api.stlouisfed.org: no reply, the egress proxy refused them (not on the allowed list). Reachable ones (data-api.ecb.europa.eu, api.worldbank.org, api.coingecko.com, FiscalData, markets.newyorkfed.org) are already shipped panels (ecb, worldbank, cgglobal, avgrates, auctions, soma). Nothing new to ship; no duplicate built.
 

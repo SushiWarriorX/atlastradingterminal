@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-12 14:17 | Claude | data | FRED reachable again; 12 series verified live; NFCI, PPI, T10YIE queued in DATA_SOURCES; no code this hour | Next data job (17:17): build NFCI end to end on the shared pattern. Census/Eurostat/BLS still blocked |
 | 2026-11-12 13:17 | Claude | strategy | No change: nothing cleared to test, no owner reply; no rescue variants run | Owner call still open (see 07:17 row) |
 | 2026-11-12 12:17 | Claude | improve | Signal browser test: remaining 4 scenarios pass (13 of 13), so all scenarios are green after the terminal removal; no code change | Next improve idea needs an owner steer: what Signal should do next (e.g. surface experiment results, a real-phone check) |
 | 2026-11-12 11:17 | Claude | data | No new source; Signal browser test 35 of 35 after the terminal was removed | Owner: allow api.census.gov and ec.europa.eu to open new sources |
