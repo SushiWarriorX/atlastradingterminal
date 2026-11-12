@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-12 16:17 | Claude | strategy | No change: nothing cleared to test, no owner reply | Owner call still open (see 07:17 row) |
 | 2026-11-12 15:17 | Claude | skills | No change: catalog search empty (11th time); nothing installed | Owner: OK to write own repo skills from lessons learned on skills hours? Next data job (17:17) builds NFCI from FRED |
 | 2026-11-12 14:17 | Claude | data | FRED reachable again; 12 series verified live; NFCI, PPI, T10YIE queued in DATA_SOURCES; no code this hour | Next data job (17:17): build NFCI end to end on the shared pattern. Census/Eurostat/BLS still blocked |
 | 2026-11-12 13:17 | Claude | strategy | No change: nothing cleared to test, no owner reply; no rescue variants run | Owner call still open (see 07:17 row) |
