@@ -60,7 +60,7 @@ function Update-Atlas {
             return @()
         }
         # npm rewrites its lock files by itself. Those are not your changes, so they are reset before updating.
-        & git checkout -- atlas/mobile/package-lock.json atlas/web/package-lock.json 2>$null | Out-Null
+        & git checkout -- atlas/mobile/package-lock.json 2>$null | Out-Null
         $before = ((& git rev-parse HEAD 2>$null) | Select-Object -First 1)
         $remote = ((& git rev-parse "origin/$branch" 2>$null) | Select-Object -First 1)
         if (-not $remote -or $before -eq $remote) {
