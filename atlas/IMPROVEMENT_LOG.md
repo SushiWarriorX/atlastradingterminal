@@ -651,3 +651,8 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Closed the gap from the terminal removal: rebuilt the Signal web export and ran `mobile/e2e/signal.e2e.cjs` (healthy and demo scenarios): 35 of 35 passed.
 - Not verified: the stale, partial, missing and login scenarios this hour; GitHub CI.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 12:17 UTC (Claude, improve job): the rest of the Signal browser scenarios re-run
+- Ran `mobile/e2e/signal.e2e.cjs` for the stale, partial, missing and login scenarios against the current build: 13 of 13 passed. With 11:17's healthy and demo scenarios (35 of 35), every Signal scenario has now passed since the terminal was removed.
+- No code changed, no UI change, so no new screenshots read. Not verified: GitHub CI; Signal on a real phone (only the web export at phone size).
+- **Credibly profitable?** No. Status: not yet.
