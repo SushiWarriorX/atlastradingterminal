@@ -699,3 +699,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 ## 2026-11-12 21:17 UTC (Claude, skills job): catalog empty again, nothing installed
 - One keyword search returned no skills. Logged in SKILLS_LOG.md. No code changed, no tests run. (Between jobs, at the owner's request, `Install-Signal.bat` was added: one file that downloads Signal and puts the desktop icon on. Not run on Windows from here.)
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 22:17 UTC (Claude, strategy job): no experiment run, by design
+- Unchanged since 19:17: experiments 1 to 3 closed failures, the rest of EDGE_PLAN needs data that is not free or an owner decision, no owner reply on the strategy question. No rescue variants run. No ChatGPT branches. No code changed, no tests run.
+- **Credibly profitable?** No. Status: not yet.
