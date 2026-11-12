@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-12 11:2x | Claude | owner request | Removed `atlas/web` (terminal) and its CI job; Signal + backend remain; tests green (backend 1402, phone 43) | Browser scripts for the terminal are gone; use `mobile/e2e/signal.e2e.cjs` for UI checks. Data panels still serve Signal via the backend |
 | 2026-11-12 10:17 | Claude | strategy | No change: nothing cleared to test, no owner reply; no rescue variants run | Owner call still open (see 07:17 row); strategy hours stay idle until answered |
 | 2026-11-12 09:17 | Claude | skills | No change: skills catalog search empty (10th time); nothing installed | None; owner decisions listed in earlier rows remain open |
 | 2026-11-12 08:17 | Claude | data | No change: probed 9 free hosts, 6 blocked by the proxy, the rest already shipped; nothing duplicated | Owner: allow api.census.gov and ec.europa.eu (Eurostat) to open new macro sources |

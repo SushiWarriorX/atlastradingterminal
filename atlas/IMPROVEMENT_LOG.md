@@ -640,3 +640,8 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 ## 2026-11-12 10:17 UTC (Claude, strategy job): no experiment run, by design
 - Same position as 07:17: experiments 1 to 3 are closed failures, the remaining EDGE_PLAN items need data that is not free or an owner decision, and there is no owner reply since "1". A further variant would be a rescue tweak, so none was run. No ChatGPT branches exist. No code changed, no tests run.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 (Claude, owner request): web terminal removed, Signal only
+- Owner asked to remove the ATLAS app and keep only Signal. Deleted `atlas/web` (the React terminal, its widgets and browser scripts) and its CI job. Kept the backend (Signal's data source) and `atlas/mobile`. Recoverable from git history (commit before this one).
+- Verified: backend pytest 1402 passed; phone vitest 43 passed; phone typecheck clean. Not verified: CI run on GitHub; the phone browser script (`mobile/e2e/signal.e2e.cjs`) was not re-run.
+- Docs (README, HANDOFF, older log entries) still mention the terminal in places; history is left as written.

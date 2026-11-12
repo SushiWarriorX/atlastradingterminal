@@ -1,6 +1,6 @@
 """Writes UI test fixtures from the REAL backend code, using SYNTHETIC companies (see research_fixtures.py): five company types for the research page, plus the listings and candidates feeds.
 
-Run from atlas/backend:  python3 tests/make_ui_fixtures.py ../web/e2e/fixtures
+Run from atlas/backend:  python3 tests/make_ui_fixtures.py <output folder>
 Nothing here is real company data; every name says (synthetic). The listings feed uses the real Nasdaq IPO calendar fixtures saved in tests/fixtures.
 """
 import asyncio
