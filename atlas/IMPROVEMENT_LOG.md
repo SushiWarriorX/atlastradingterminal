@@ -626,3 +626,9 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Experiments 1 to 3 are closed failures. The only items left in EDGE_PLAN need data that is not available free (point-in-time stock fundamentals, delisted coins) or an owner decision (track the gated momentum rule forward as a frozen non-candidate, try a different idea, or pause the search). No owner reply since "1". Running another variant now would be a rescue tweak and would spend the luck budget, so none was run.
 - No ChatGPT branches exist. Nothing verified this hour beyond reading the plan.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 08:17 UTC (Claude, data job): no new source reachable, none shipped
+- Probed live: Census trade, Eurostat, BIS, EIA, OECD and FRED are refused by the egress proxy. Hosts that answer already have panels. Re-checked FiscalData average interest rates, note/bond auctions and NY Fed SOMA: already live. Logged in DATA_SOURCES.md (BLOCKED).
+- Verified: HTTP status of each probe. Not verified: anything behind the blocked hosts. No code changed, no tests run.
+- Unblocking api.census.gov or Eurostat would give the next real sources: owner decision.
+- **Credibly profitable?** No. Status: not yet.

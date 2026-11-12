@@ -67,6 +67,7 @@ Status key: LIVE (shipped), QUEUED (next), BLOCKED (not reachable from the build
 - mempool.space Lightning statistics (cycle 11): reachable but the newest record is dated 2026-08-30 (about 70 days old), so it is not shipped as current data. Recheck if it resumes.
 - fred.stlouisfed.org: added to the allowed hosts but still no reply after the change (checked cycle 1). Retry next cycle; if still silent, the PPI series ids stay unverified.
 - Earlier (before hosts were allowed) every candidate timed out; after the change NY Fed, CFTC, DefiLlama, mempool.space and alternative.me all answered HTTP 200.
+- Checked 2026-11-12 (data job 08:17): api.census.gov (US trade by product), ec.europa.eu Eurostat, www.bis.org policy rates, www.eia.gov, stats.oecd.org, api.stlouisfed.org: no reply, the egress proxy refused them (not on the allowed list). Reachable ones (data-api.ecb.europa.eu, api.worldbank.org, api.coingecko.com, FiscalData, markets.newyorkfed.org) are already shipped panels (ecb, worldbank, cgglobal, avgrates, auctions, soma). Nothing new to ship; no duplicate built.
 
 ## REJECTED
 - Hyperliquid open interest and basis (queue item, cycle 9): already shown by the existing BTC derivatives panel (multi-venue funding, open interest and basis, Hyperliquid included). Duplicate; not rebuilt.
