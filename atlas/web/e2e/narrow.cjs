@@ -1,4 +1,5 @@
 // Narrow-window sweep (NON-demo backend on :8000: `python3 mobile/e2e/fake_backend.py --port 8000`, and `npm run dev` on :5173).
+// (The Watchlist is stressed with the longest status badge word and a five-digit price so a real BTC quote cannot overflow it.)
 // Opens every desk at laptop and small-window widths and fails if any panel's content is wider than the panel (horizontal overflow, which cuts text off or forces sideways scrolling).
 // Usage: node e2e/narrow.cjs [screenshot-folder]
 const { chromium } = require('playwright');
@@ -19,6 +20,12 @@ const DESKS = [['Control+1', 'overview'], ['Control+2', 'btc'], ['Control+3', 'e
       await pg.waitForTimeout(2500);
       const found = await pg.evaluate(() => {
         const out = [];
+        // worst case for the Watchlist: the longest status word and a five-digit price on every row
+        document.querySelectorAll('.panel').forEach((p) => {
+          if (!/WATCHLIST/.test((p.querySelector('.panel-t') || {}).innerText || '')) return;
+          p.querySelectorAll('.badge').forEach((e) => { e.textContent = 'UNAVAILABLE'; });
+          p.querySelectorAll('.wl-last').forEach((e) => { if (!e.classList.contains('wl-nodata')) e.textContent = '67,841.94'; });
+        });
         document.querySelectorAll('.panel').forEach((p) => {
           const body = p.querySelector('.panel-b') || p;
           const title = (p.querySelector('.panel-t') || {}).innerText || '';

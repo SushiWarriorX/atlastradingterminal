@@ -228,16 +228,20 @@ body { font: 12.5px/1.4 "Inter", system-ui, -apple-system, "Segoe UI", sans-seri
 :root:not([data-theme="light"]) input, :root:not([data-theme="light"]) select, :root:not([data-theme="light"]) textarea { background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 12px; padding: 4px 10px; }
 :root:not([data-theme="light"]) input:focus, :root:not([data-theme="light"]) select:focus, :root:not([data-theme="light"]) textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(213,217,224,.2); }
 
-/* Watchlist: when the panel is narrow, the data-status badge moves under the symbol instead of sitting in a column that gets cut off. The badge (LIVE / DEMO / UNAVAILABLE) is never dropped. */
+/* Watchlist: when the panel is narrow, each row becomes two lines (symbol and its status badge on top, price and change underneath) instead of a table that gets cut off. The status badge (LIVE / DELAYED / HISTORICAL / UNAVAILABLE) is never dropped. */
 .wl-wrap { container-type: inline-size; }
 .wl-badge-inline { display: none; }
 @container (max-width: 360px) {
-  .wl-data { display: none; }
-  .wl-badge-inline { display: block; margin-top: 2px; }
+  .wl-head, .wl-data { display: none; }
+  .wl-wrap table, .wl-wrap tbody { display: block; width: 100%; }
+  .wl-wrap tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "sym x" "last chg"; align-items: center; column-gap: 6px; padding: 3px 4px; border-bottom: 1px solid var(--border); }
+  .wl-wrap td { display: block; padding: 1px 0; border: 0; min-width: 0; }
+  .wl-wrap td.wl-data, .wl-wrap .wl-head { display: none; }
+  .wl-sym { grid-area: sym; }
+  .wl-x { grid-area: x; }
+  .wl-last { grid-area: last; text-align: left; }
+  .wl-chg { grid-area: chg; text-align: right; }
+  .wl-nodata { grid-column: 1 / span 2; grid-area: last / last / last / chg; }
+  .wl-badge-inline { display: inline-block; margin-left: 6px; vertical-align: middle; }
   .wl-badge-inline .badge { font-size: 8px; letter-spacing: 0; padding: 1px 4px; white-space: nowrap; }
-  .wl-wrap .tbl th, .wl-wrap .tbl td { padding-left: 3px; padding-right: 3px; }
-  .wl-wrap .tbl .mini { padding: 1px 5px; }
-  .wl-wrap .tbl td { font-size: 12px; }
-  .wl-wrap .tbl th { font-size: 9.5px; }
-  .wl-wrap .tbl { margin: 0 -8px; width: calc(100% + 16px); }
 }

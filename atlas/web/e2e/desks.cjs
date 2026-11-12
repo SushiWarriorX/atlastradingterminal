@@ -1,4 +1,4 @@
-// Desk rules e2e (DEMO backend on :8000, `npm run dev` on :5173): BTC desk is BTC only, Equities desk is stocks/ETFs only, Charts lets each chart change asset.
+// Desk rules e2e (DEMO backend on :8000: `ATLAS_DEMO=1 ATLAS_DB=/tmp/x.db python3 -m atlas_api` from atlas/backend, and `npm run dev` on :5173): BTC desk is BTC only, Stocks desk is stocks/ETFs only, the Overview chart can change asset on its own. Nav labels: OVERVIEW | BTC | STOCKS | MACRO | ...
 const { chromium } = require('playwright');
 const fs = require('fs');
 const S = process.argv[2] || './e2e-out';
@@ -20,7 +20,7 @@ fs.mkdirSync(S, { recursive: true });
   console.log('nav:', items.join(' | '));
   if (items.some(x => /MARKETS|FUNDAMENTALS|TRADE IDEAS|PORTFOLIO|RISK|ALERTS|CHARTS|AI DESK/.test(x))) throw new Error('removed sections still in the sidebar');
   if (await pg.locator('.chip.bell').count()) throw new Error('the alerts bell should be gone');
-  if (items[0] !== 'OVERVIEW' || items[1] !== 'BTC INTELLIGENCE' || items[2] !== 'EQUITIES' || items[3] !== 'SCANNER') throw new Error('unexpected nav order');
+  if (items[0] !== 'OVERVIEW' || items[1] !== 'BTC' || items[2] !== 'STOCKS' || items[3] !== 'MACRO') throw new Error('unexpected nav order');
   await pg.keyboard.press('Control+2'); await pg.waitForTimeout(800);
   if (!(await titles()).some(t => /CHART BTC-USD/.test(t))) throw new Error('Ctrl+2 did not open the BTC desk');
 
@@ -31,19 +31,19 @@ fs.mkdirSync(S, { recursive: true });
   for (const p of t.filter(x => /^(CHART|TECHNICAL|MULTI-TIMEFRAME|QUOTE)/.test(x))) if (!/BTC/.test(p)) throw new Error('non-BTC panel on the BTC desk: ' + p);
   await cmd('AAPL');                                         // routes to the Equities desk
   if (!(await titles()).some(x => /CHART AAPL/.test(x))) throw new Error('AAPL should open on the Equities desk');
-  await pg.locator('.side .nav', { hasText: 'BTC INTELLIGENCE' }).click(); await pg.waitForTimeout(800);
+  await pg.locator('.side .nav:has(span:text-is("BTC"))').click(); await pg.waitForTimeout(800);
   t = await titles();
   if (t.some(x => /AAPL/.test(x))) throw new Error('BTC desk changed to AAPL: ' + t.join(' | '));
   if (!t.some(x => /CHART BTC-USD/.test(x))) throw new Error('BTC desk lost its BTC chart');
   console.log('BTC desk stays BTC after selecting AAPL: ok');
 
   // 3. Equities desk: stocks/ETFs only (watchlist filtered, picker refuses BTC), remembers the last stock
-  await pg.locator('.side .nav', { hasText: 'EQUITIES' }).click(); await pg.waitForTimeout(800);
+  await pg.locator('.side .nav:has(span:text-is("STOCKS"))').click(); await pg.waitForTimeout(800);
   const rows = (await pg.locator('.panel:has(.panel-t:text("WATCHLIST")) tbody tr td:first-child b').allInnerTexts());
   console.log('equities watchlist:', rows.join(','));
   if (rows.some(r => /BTC|SPX|NDX|VIX|US10Y/.test(r)) || !rows.length) throw new Error('equities watchlist must hold stocks/ETFs only');
   await cmd('BTC');                                           // BTC desk; then back to equities: must still be AAPL, never BTC
-  await pg.locator('.side .nav', { hasText: 'EQUITIES' }).click(); await pg.waitForTimeout(800);
+  await pg.locator('.side .nav:has(span:text-is("STOCKS"))').click(); await pg.waitForTimeout(800);
   if (!(await titles()).some(x => /CHART AAPL/.test(x))) throw new Error('equities desk should remember AAPL, not follow BTC');
   const box = pg.locator('input[aria-label="Chart symbol"]').first();
   await box.fill('NVDA'); await box.press('Enter'); await pg.waitForTimeout(900);
@@ -68,12 +68,10 @@ fs.mkdirSync(S, { recursive: true });
   await pg.locator('button', { hasText: 'follow selection' }).first().click(); await pg.waitForSelector('.panel-t:text("CHART SPX 1d")', { timeout: 10000 });
   console.log('overview chart: own asset remembered, follow selection returns to SPX');
 
-  // 6. COMPARE and AI commands land on the Overview with their panels working
+  // 6. COMPARE lands on the Overview with its panel working (the AI command and panel were removed from the Overview when it became chart-first, 2026-11-03)
   await cmd('COMPARE BTC QQQ');
   await pg.waitForSelector('.cmpstats table', { timeout: 15000 });
-  await cmd('AI BTC');
-  await pg.waitForSelector('.panel.ai', { timeout: 10000 });
-  if ((await pg.locator('.ws-bar span').first().innerText()) !== 'Global Market Overview') throw new Error('AI BTC should open the Overview');
+  if ((await pg.locator('.ws-bar span').first().innerText()) !== 'Global Market Overview') throw new Error('COMPARE should open the Overview');
 
   console.log('HTTP errors:', JSON.stringify(httpErrors));
   if (httpErrors.length) throw new Error('unexpected HTTP errors');

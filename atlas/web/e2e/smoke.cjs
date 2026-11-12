@@ -43,12 +43,13 @@ fs.mkdirSync(S, { recursive: true });
   await pg.screenshot({ path: S + '/03-btc.png' });
   // interval switch + indicator toggle
   await pg.locator('.toolbar .mini', { hasText: /^4h$/ }).first().click();
+  await pg.locator('.toolbar .mini', { hasText: /^Indicators/ }).first().click();             // indicators now sit behind the Indicators button
   await pg.locator('.toolbar .mini', { hasText: 'BB(20,2)' }).first().click();
   await pg.waitForTimeout(1500);
-  // AI without key (the Macro page, Ctrl+6, carries the AI panel)
-  await pg.keyboard.press('Control+6');
-  await pg.waitForTimeout(1200);
-  console.log('AI warning:', await pg.locator('.note.warn').first().innerText());
+  // AI without key (the Macro desk, Ctrl+4, carries the AI panel near the bottom)
+  await pg.keyboard.press('Control+4');
+  await pg.waitForTimeout(2500);
+  console.log('AI warning:', await pg.locator('.panel.ai .note.warn').first().innerText());
   // watchlist add + persistence across reload
   await pg.keyboard.press('Control+3');
   await pg.waitForTimeout(1500);
