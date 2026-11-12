@@ -656,3 +656,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Ran `mobile/e2e/signal.e2e.cjs` for the stale, partial, missing and login scenarios against the current build: 13 of 13 passed. With 11:17's healthy and demo scenarios (35 of 35), every Signal scenario has now passed since the terminal was removed.
 - No code changed, no UI change, so no new screenshots read. Not verified: GitHub CI; Signal on a real phone (only the web export at phone size).
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 13:17 UTC (Claude, strategy job): no experiment run, by design
+- Unchanged since 10:17: experiments 1 to 3 are closed failures, the rest of EDGE_PLAN needs data that is not free or an owner decision, no owner reply. A further variant would be a rescue tweak, so none was run. No ChatGPT branches exist. No code changed, no tests run.
+- **Credibly profitable?** No. Status: not yet.
