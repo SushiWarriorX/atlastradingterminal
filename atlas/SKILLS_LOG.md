@@ -60,3 +60,5 @@ Newest first. Decision: SUGGESTED (card offered, user decides) / ADOPTED (our ow
 
 ## 2026-11-12 03:18 UTC (Claude, skills job)
 - Skill catalog search (fiscal data, government finance, spreadsheet, report writing, code review): empty for the 9th time. Nothing to install or suggest; no new note. No change.
+
+- 2026-11-12 09:17 UTC (skills job): searched the skills catalog for trading, backtest, test-driven, debugging and code review: no results (empty for the 10th time). Nothing installed.

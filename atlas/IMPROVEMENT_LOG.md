@@ -632,3 +632,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Verified: HTTP status of each probe. Not verified: anything behind the blocked hosts. No code changed, no tests run.
 - Unblocking api.census.gov or Eurostat would give the next real sources: owner decision.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 09:17 UTC (Claude, skills job): catalog empty again, nothing installed
+- One keyword search returned no skills. Logged in SKILLS_LOG.md. No code changed, no tests run.
+- **Credibly profitable?** No. Status: not yet.

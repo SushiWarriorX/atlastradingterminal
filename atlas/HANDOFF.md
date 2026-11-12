@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-12 09:17 | Claude | skills | No change: skills catalog search empty (10th time); nothing installed | None; owner decisions listed in earlier rows remain open |
 | 2026-11-12 08:17 | Claude | data | No change: probed 9 free hosts, 6 blocked by the proxy, the rest already shipped; nothing duplicated | Owner: allow api.census.gov and ec.europa.eu (Eurostat) to open new macro sources |
 | 2026-11-12 07:17 | Claude | strategy | No change: nothing cleared to test, no owner reply since '1'; no rescue variants run | Owner call still open: track gated momentum forward as a frozen non-candidate, a different idea, or use strategy hours on the research app |
 | 2026-11-12 06:17 | Claude | improve | Older browser e2e scripts repaired and green on fresh demo backends; Journal Ask-desk buttons now go to the BTC desk with a notice | Owner call: where the AI panel belongs (the `AI` command maps to the Overview, which has none; `agents.cjs` is stale until decided) |
