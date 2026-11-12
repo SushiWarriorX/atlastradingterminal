@@ -31,6 +31,7 @@ fs.mkdirSync(S, { recursive: true });
   await pg.screenshot({ path: S + '/compare.png' });
 
   // 2. add a third series from the toolbar, then remove one
+  await pg.locator('.toolbar .mini', { hasText: /^Indicators/ }).first().click();             // the compare box sits behind the Indicators button
   await pg.locator('input[aria-label="Compare symbol"]').first().fill('SPY');
   await pg.keyboard.press('Enter');
   await pg.waitForFunction(() => document.querySelectorAll('.legend').length === 3, null, { timeout: 10000 });

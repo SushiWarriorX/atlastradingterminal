@@ -255,7 +255,8 @@ export function PerformanceWidget2() {
     return () => c.remove();
   }, [d, theme]);
   const rows = useMemo<JGroupRow[]>(() => d?.groups[tab] ?? [], [d, tab]);
-  const ask = (t: string) => { setAsk(t); setWorkspace("overview"); };
+  const setNotice = useStore((s) => s.setNotice);
+  const ask = (t: string) => { setAsk(t); setWorkspace("btc"); setNotice("Your question was sent to the AI research desk on the BTC page. It asks about your journal, not about Bitcoin."); };         // the AI panel is not on the Overview any more (chart-first since 2026-11-03), so the question goes where the panel is
   return (
     <Panel title="PERFORMANCE ANALYSIS" right={d?.currency ? <span className="dim">{d.currency}</span> : null}>
       <div className="toolbar">

@@ -16,6 +16,7 @@ const reqs = () => (fs.existsSync(HL_LOG) ? fs.readFileSync(HL_LOG, 'utf8').trim
   pg.on('response', r => { if (r.status() >= 400) httpErrors.push(`${r.status()} ${r.request().method()} ${new URL(r.url()).pathname}`); });
   await pg.goto('http://127.0.0.1:5173'); await pg.waitForSelector('.topbar .cell');
   await pg.keyboard.press('/'); await pg.keyboard.type('JOURNAL'); await pg.keyboard.press('Enter');
+  await pg.locator('button', { hasText: 'imports and detailed analytics' }).first().click();       // the sync box moved to the advanced Journal workspace
   await pg.waitForSelector('#hl-box', { timeout: 15000 });
   const box = pg.locator('#hl-box');
 
@@ -53,6 +54,7 @@ const reqs = () => (fs.existsSync(HL_LOG) ? fs.readFileSync(HL_LOG, 'utf8').trim
   await pg.waitForFunction(() => /0 new fills \(3 already known\)/.test(document.querySelector('#hl-box [role=status]')?.textContent || ''), null, { timeout: 15000 });
   console.log('re-sync adds nothing: ok');
   await pg.reload(); await pg.waitForSelector('.topbar'); await pg.keyboard.press('/'); await pg.keyboard.type('JOURNAL'); await pg.keyboard.press('Enter');
+  await pg.locator('button', { hasText: 'imports and detailed analytics' }).first().click();
   await pg.waitForSelector('#hl-box');
   if ((await pg.locator('#hl-box input[aria-label="Hyperliquid address"]').inputValue()) !== ADDR) throw new Error('address not remembered');
   await pg.screenshot({ path: S + '/hyperliquid.png' });

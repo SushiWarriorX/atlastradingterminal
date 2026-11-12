@@ -42,6 +42,7 @@ function bulk(n) {   // n closed round trips: even index wins +10, odd loses -5
 
   // 1. JOURNAL workspace; the unverified Variational preset is flagged honestly
   await cmd('JOURNAL');
+  await pg.locator('button', { hasText: 'imports and detailed analytics' }).first().click();       // imports and analytics moved to their own workspace
   await pg.waitForSelector('textarea[aria-label="CSV text"]');
   const warn = await panel('IMPORT TRADES').locator('.note.warn').first().innerText();
   console.log('preset warning:', warn.slice(0, 110));
@@ -118,14 +119,15 @@ function bulk(n) {   // n closed round trips: even index wins +10, odd loses -5
   await perf.locator('.note.warn[role="alert"]').waitFor();
   const small = (await perf.innerText()).replace(/\s+/g, ' ');
   console.log('small sample:', small.slice(0, 160));
-  ensure(/only 1 trades/.test(small) && /n<30/.test(small) && /anecdotal/.test(small), 'small-sample warning missing');
+  ensure(/only 1 trade\b/.test(small) && !/only 1 trades/.test(small) && /need 30\+/.test(small) && /anecdotal/.test(small), 'small-sample warning missing');   // singular for one trade; the minimum sample is 30
   ensure(!/95% interval/.test(await perf.innerHTML()) || /n<30/.test(small), 'no interval should be claimed from 1 trade');
 
   // 7. enough trades: the warning clears, intervals and reliable groups appear
   const r = await api('/api/journal/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'bulk', text: bulk(40), preset: 'generic', confirm: true }) });
   ensure(r.data.inserted === 80, 'bulk import failed');
   await pg.reload(); await pg.waitForSelector('.topbar');
-  await cmd('PERF');
+  await cmd('JOURNAL');
+  await pg.locator('button', { hasText: 'imports and detailed analytics' }).first().click();       // the PERF command was removed: analytics live in the advanced workspace
   await perf.locator('.stats').waitFor();
   await pg.waitForFunction(() => !document.querySelector('.note.warn[role="alert"]'), null, { timeout: 15000 });
   const big = (await perf.innerText()).replace(/\s+/g, ' ');
@@ -160,10 +162,13 @@ function bulk(n) {   // n closed round trips: even index wins +10, odd loses -5
   console.log('IBKR settings:', ib.slice(0, 150));
   ensure(/Not configured/.test(ib) && /IBKR_MODE/.test(ib), 'IBKR help missing');
   await cmd('JOURNAL');
+  await pg.locator('button', { hasText: 'imports and detailed analytics' }).first().click();
   await pg.locator('button', { hasText: 'Ask desk: best setups' }).click();
-  await pg.waitForSelector('.nav.on:has-text("OVERVIEW")');
+  await pg.waitForSelector('.nav.on:has(span:text-is("BTC"))');
   await pg.waitForSelector('.panel.ai');
-  console.log('ask-the-desk opened the AI panel on the Overview');
+  const said = await pg.locator('.notice').innerText();
+  ensure(/AI research desk on the BTC page|AI is not configured/.test(said), 'the user is not told what happened to the question');      // without an AI key the AI panel replaces the first notice with its own
+  console.log('ask-the-desk opened the AI panel on the BTC page and said so');
   await pg.screenshot({ path: S + '/journal.png' });
   httpErrors.splice(0, httpErrors.length, ...httpErrors.filter(e => !/PUT \/api\/journal\/notes/.test(e)));
   console.log('HTTP errors (excluding the deliberate bad-screenshot probe):', JSON.stringify(httpErrors));
