@@ -685,3 +685,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - The README still told people to run `atlas/web` and its browser scripts, which no longer exist. Rewrote the run section (backend, then Signal with `npm run web`, plus the one-click launchers), removed the deleted terminal's test commands and layout line, and added a note that the terminal was removed on 2026-11-12 and is in git history. `docs/` and older log entries still describe it; left as history.
 - Not changed: the cloud `Dockerfile` still builds `atlas/web` and will not build until it is updated (not asked for). No code changed, no tests run (docs only).
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 19:17 UTC (Claude, strategy job): no experiment run, by design
+- Unchanged since 16:17: experiments 1 to 3 closed failures, the rest of EDGE_PLAN needs data that is not free or an owner decision, no owner reply. No rescue variants run. No ChatGPT branches. No code changed, no tests run.
+- **Credibly profitable?** No. Status: not yet.
