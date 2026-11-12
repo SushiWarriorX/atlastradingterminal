@@ -665,3 +665,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Re-probed the blocked hosts: Census, Eurostat, BLS, Deribit and DefiLlama still refuse; **FRED answers (HTTP 200)**. Fetched 12 series live (rates, CPI, PCE, PPI, jobs, GDP, dollar index, Fed balance sheet, breakeven, NFCI), all with plausible, recent last values. Logged in DATA_SOURCES.md QUEUED: NFCI first (the Chicago Fed site is blocked but FRED carries the series), then PPI and a T10YIE cross-check.
 - No code shipped this hour (a source needs its module, checks, tests and phone card; queued for the next data job at 17:17). Verified: live HTTP replies only. Not verified: whether FRED keeps answering.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-12 15:17 UTC (Claude, skills job): catalog empty again, nothing installed
+- One keyword search returned no skills. Logged in SKILLS_LOG.md. No code changed, no tests run.
+- **Credibly profitable?** No. Status: not yet.
