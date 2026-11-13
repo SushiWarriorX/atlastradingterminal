@@ -708,3 +708,8 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Re-probed the blocked hosts: Census, Eurostat, BLS, Deribit, DefiLlama and chicagofed.org still refuse (proxy). FRED still answers (HTTP 200), and its candidate series are already used (NFCI shipped 17:17, PPI already live, breakeven cross-check done 20:17). The data queue is empty. No code changed, no tests run.
 - Needs the owner: allow api.census.gov and ec.europa.eu to open the next real sources.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-13 00:17 UTC (Claude, improve job): full health check of the Signal-only project, all green
+- Ran everything the project still has: backend pytest 1414 passed; phone typecheck clean; phone vitest 43 passed; rebuilt the Signal web export and ran every Signal browser scenario (healthy, stale, partial, missing, login, demo): 48 of 48 checks passed. No code changed.
+- Not verified: GitHub CI; the Windows installer and launcher (`Install-Signal.bat`, `start-signal-windows.bat`) on a real Windows PC; Signal on a physical phone. The cloud Dockerfile still builds the removed terminal and will not build (owner decision pending).
+- **Credibly profitable?** No. Status: not yet.
