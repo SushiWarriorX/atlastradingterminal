@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-13 15:45 | Claude | skills | No change: catalog search empty (15th time); nothing installed | Owner: OK to write own repo skills on skills hours? |
 | 2026-11-13 14:17 | Claude | data | No change: blocked hosts still refuse, queue empty | Owner: allow api.census.gov and ec.europa.eu |
 | 2026-11-13 12:17 | Claude | improve | Fixed 2 backend tests that rotted with the calendar (news sample dates vs 14-day retention); phone 43 / Signal browser 48 of 48 green | If a test fails on a date, check for fixed sample dates first. Owner: Windows install result; Dockerfile fix-or-drop |
 | 2026-11-13 11:17 | Claude | data | No change: blocked hosts still refuse, queue empty | Owner: allow api.census.gov and ec.europa.eu |
