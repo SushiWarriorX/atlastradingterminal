@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-13 20:17 | Claude | data | No change: blocked hosts still refuse, queue empty | Owner: allow api.census.gov and ec.europa.eu |
 | 2026-11-13 19:17 | Claude | strategy | No change: nothing cleared to test, no owner reply on the strategy question | Owner call still open (see 07:17 row on 2026-11-12) |
 | 2026-11-13 18:17 | Claude | improve | Date-rot sweep: ran the backend suite with the clock shifted +37 days; no new rot in ~1190 checkable tests (about 220 cannot be checked this way); added `tests/clock_shift_plugin.py` | Re-run monthly. Owner: Windows install result; Dockerfile fix-or-drop |
 | 2026-11-13 17:17 | Claude | data | No change: blocked hosts still refuse, queue empty | Owner: allow api.census.gov and ec.europa.eu |
