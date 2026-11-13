@@ -735,3 +735,8 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Re-probed: Census, Eurostat, BLS and DefiLlama still refuse (proxy). FRED candidates used up. Data queue empty. No code changed, no tests run.
 - Needs the owner: allow api.census.gov and ec.europa.eu.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-13 06:17 UTC (Claude, improve job): live re-check of two shipped data panels and the installer link
+- Ran the two panels built or checked this week against the real sources again: Chicago Fed financial conditions (FRED) answered with week 2026-11-06, NFCI -0.462; US Treasury real yields answered with 2026-11-12. Their 23 tests pass. The `Install-Signal.bat` download link still returns 200. No code changed.
+- Not verified: the Windows installer and launcher on a real PC; GitHub CI. The full test suites were last run at 00:17.
+- **Credibly profitable?** No. Status: not yet.
