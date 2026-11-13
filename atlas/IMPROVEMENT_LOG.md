@@ -740,3 +740,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Ran the two panels built or checked this week against the real sources again: Chicago Fed financial conditions (FRED) answered with week 2026-11-06, NFCI -0.462; US Treasury real yields answered with 2026-11-12. Their 23 tests pass. The `Install-Signal.bat` download link still returns 200. No code changed.
 - Not verified: the Windows installer and launcher on a real PC; GitHub CI. The full test suites were last run at 00:17.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-13 07:17 UTC (Claude, strategy job): no experiment run, by design
+- Unchanged since 04:17: experiments 1 to 3 closed failures, the rest of EDGE_PLAN needs data that is not free or an owner decision, no owner reply on the strategy question. No rescue variants run. No ChatGPT branches. No code changed, no tests run.
+- **Credibly profitable?** No. Status: not yet.
