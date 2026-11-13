@@ -713,3 +713,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Ran everything the project still has: backend pytest 1414 passed; phone typecheck clean; phone vitest 43 passed; rebuilt the Signal web export and ran every Signal browser scenario (healthy, stale, partial, missing, login, demo): 48 of 48 checks passed. No code changed.
 - Not verified: GitHub CI; the Windows installer and launcher (`Install-Signal.bat`, `start-signal-windows.bat`) on a real Windows PC; Signal on a physical phone. The cloud Dockerfile still builds the removed terminal and will not build (owner decision pending).
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-13 01:17 UTC (Claude, strategy job): no experiment run, by design
+- Unchanged since 22:17: experiments 1 to 3 closed failures, the rest of EDGE_PLAN needs data that is not free or an owner decision, no owner reply on the strategy question. No rescue variants run. No ChatGPT branches. No code changed, no tests run.
+- **Credibly profitable?** No. Status: not yet.
