@@ -795,3 +795,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Kept:** `backend/tests/clock_shift_plugin.py` (a small pytest plugin with the how-to in its docstring) so the check can be repeated, for example monthly. Not part of the normal suite.
 - Verified: both runs completed; plugin file added. Not verified: the 220 uncheckable tests; GitHub CI; Windows installer.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-13 19:17 UTC (Claude, strategy job): no experiment run, by design
+- Unchanged since 16:36: experiments 1 to 3 closed failures, the rest of EDGE_PLAN needs data that is not free or an owner decision, no owner reply on the strategy question. No rescue variants run. No ChatGPT branches. No code changed, no tests run.
+- **Credibly profitable?** No. Status: not yet.
