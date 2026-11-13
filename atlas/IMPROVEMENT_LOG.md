@@ -762,3 +762,10 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Re-probed: Census, Eurostat, BLS and DefiLlama still refuse (proxy). FRED candidates used up. Data queue empty. No code changed, no tests run.
 - Needs the owner: allow api.census.gov and ec.europa.eu.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-13 12:17 UTC (Claude, improve job): fixed a test that rotted with the calendar
+- The weekly health check found 2 backend tests failing that passed yesterday (1412 passed, 2 failed). Cause: `tests/test_news.py` used sample stories dated 30 Oct 2026, and the news store deliberately drops stories older than its 14-day retention window, which that date had just crossed. A test-fragility bug, not a product bug: no live behaviour changed.
+- **Fix:** the sample stories are now dated relative to the real clock (a `_ago(hours)` helper); the one pure-parser test keeps a fixed date because it gets a fixed `NOW`. The "ancient story gets pruned" case is unchanged (1 Jan 2026 is still older than the window).
+- **Verified:** `tests/test_news.py` 25 passed; full backend 1414 expected (1413 passed + the fixed one, last full run before the final edit: 1 failed, the parse test, now fixed); phone vitest 43 passed, typecheck clean, Signal browser test 48 of 48.
+- **Not verified:** a final full-suite rerun after the last edit (only the news file was rerun); GitHub CI; Windows installer. Other tests with fixed dates could rot the same way; none failed today.
+- **Credibly profitable?** No. Status: not yet.

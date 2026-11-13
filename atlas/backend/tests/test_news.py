@@ -19,14 +19,20 @@ def rss(items, extra=""):
     return f'<?xml version="1.0"?><rss version="2.0"><channel><title>x</title>{extra}{body}</channel></rss>'.encode()
 
 
-ITEM = ("Fed holds rates steady", "https://ex.com/a", "g1", "Thu, 30 Oct 2026 11:00:00 GMT", "The central bank <b>held</b> rates.")
+def _ago(hours: float) -> str:
+    """An RSS date a little while ago. Sample stories must be recent: the news store drops anything older than its retention window, so fixed dates silently rot (they did on 2026-11-13)."""
+    from email.utils import format_datetime
+    return format_datetime(datetime.now(timezone.utc) - timedelta(hours=hours), usegmt=True)
+
+ITEM = ("Fed holds rates steady", "https://ex.com/a", "g1", _ago(24), "The central bank <b>held</b> rates.")
 ATOM = b"""<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><title>Atom headline</title><link href="https://ex.com/atom"/>
 <id>tag:ex,1</id><updated>2026-10-30T10:00:00Z</updated><summary>sum</summary></entry></feed>"""
 
 
 # --- parsing ------------------------------------------------------------------------------------------------------------------------
 def test_rss_fields_and_time_are_parsed():
-    (it,), dropped = P.parse(rss([ITEM]), NOW)
+    fixed = (ITEM[0], ITEM[1], ITEM[2], "Thu, 30 Oct 2026 11:00:00 GMT", ITEM[4])           # the parser is pure and gets a fixed NOW, so a fixed date is right here
+    (it,), dropped = P.parse(rss([fixed]), NOW)
     assert it.title == "Fed holds rates steady" and it.link == "https://ex.com/a" and it.uid == "g1" and dropped == 0
     assert it.published == datetime(2026, 10, 30, 11, 0, tzinfo=timezone.utc) and it.summary == "The central bank held rates."
 
@@ -147,7 +153,7 @@ def run(c):
 
 
 def test_refresh_stores_dedupes_and_is_idempotent(db):
-    s, _ = svc(db, {A: (200, rss([ITEM, ("Second", "https://ex.com/b", "g2", "Thu, 30 Oct 2026 10:00:00 GMT", "")]), {})})
+    s, _ = svc(db, {A: (200, rss([ITEM, ("Second", "https://ex.com/b", "g2", _ago(25), "")]), {})})
     s.add_feed("A", A)
     r1 = run(s.refresh())
     assert r1[0]["ok"] and r1[0]["new"] == 2
@@ -228,7 +234,7 @@ def test_prune_removes_old_items(db):
 
 def test_symbol_feed_tags_forced_symbol_and_is_cached(db):
     url = "https://feeds.finance.yahoo.com/rss/2.0/headline?s=AAPL&region=US&lang=en-US"
-    s, net = svc(db, {url: (200, rss([("Quarterly results beat estimates", "https://y/1", "y1", "Thu, 30 Oct 2026 11:00:00 GMT", "")]), {})})
+    s, net = svc(db, {url: (200, rss([("Quarterly results beat estimates", "https://y/1", "y1", _ago(24), "")]), {})})
     s._seed()
     r = run(s.refresh_symbol("AAPL", "AAPL"))
     assert r["ok"] and r["new"] == 1 and run(s.refresh_symbol("AAPL", "AAPL")) is None        # second call inside the TTL does not hit the network
@@ -240,7 +246,7 @@ def test_symbol_feed_tags_forced_symbol_and_is_cached(db):
 def test_a_story_carried_by_two_symbol_feeds_is_tagged_for_both_symbols(db):
     def feed(sym):
         return f"https://feeds.finance.yahoo.com/rss/2.0/headline?s={sym}&region=US&lang=en-US"
-    body = rss([("Chipmakers rally as demand grows", "https://y/shared", "shared-1", "Thu, 30 Oct 2026 11:00:00 GMT", "")])
+    body = rss([("Chipmakers rally as demand grows", "https://y/shared", "shared-1", _ago(24), "")])
     s, _ = svc(db, {feed("AAPL"): (200, body, {}), feed("MSFT"): (200, body, {})})
     s._seed()
     run(s.refresh_symbol("AAPL", "AAPL"))
