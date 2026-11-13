@@ -769,3 +769,8 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Verified:** `tests/test_news.py` 25 passed; full backend 1414 expected (1413 passed + the fixed one, last full run before the final edit: 1 failed, the parse test, now fixed); phone vitest 43 passed, typecheck clean, Signal browser test 48 of 48.
 - **Not verified:** a final full-suite rerun after the last edit (only the news file was rerun); GitHub CI; Windows installer. Other tests with fixed dates could rot the same way; none failed today.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-13 14:17 UTC (Claude, data job): no new source reachable, none shipped
+- Re-probed: Census, Eurostat, BLS and DefiLlama still refuse (proxy). FRED candidates used up. Data queue empty. No code changed, no tests run.
+- Needs the owner: allow api.census.gov and ec.europa.eu.
+- **Credibly profitable?** No. Status: not yet.
