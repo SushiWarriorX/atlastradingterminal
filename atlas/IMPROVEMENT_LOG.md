@@ -787,3 +787,11 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Re-probed: Census, Eurostat, BLS and DefiLlama still refuse (proxy). FRED candidates used up. Data queue empty. No code changed, no tests run.
 - Needs the owner: allow api.census.gov and ec.europa.eu.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-13 18:17 UTC (Claude, improve job): date-rot sweep of the backend tests
+- After yesterday's news-test failure, ran the whole backend suite twice with the clock frozen by freezegun: at today (baseline) and 37 days ahead. Anything failing only in the shifted run is date rot.
+- **Result:** no new rot found. About 1190 tests run cleanly under a frozen clock and none of them differ between the two runs, except the two news tests I fixed yesterday, which differ only because their sample dates are computed when the file is imported (before the clock is set); that is a harness artefact, not a real fault.
+- **Limit:** about 220 tests (paper trading, agents, Telegram, auth, IBKR, alerts and others) fail even at baseline under a frozen clock, so this method cannot check them. They are NOT verified for date rot.
+- **Kept:** `backend/tests/clock_shift_plugin.py` (a small pytest plugin with the how-to in its docstring) so the check can be repeated, for example monthly. Not part of the normal suite.
+- Verified: both runs completed; plugin file added. Not verified: the 220 uncheckable tests; GitHub CI; Windows installer.
+- **Credibly profitable?** No. Status: not yet.
