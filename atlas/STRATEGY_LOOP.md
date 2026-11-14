@@ -1,5 +1,7 @@
 # Strategy loop (every 10 minutes)
 
+> **PAUSED 2026-11-14:** seven experiments, seven fails; see `EDGE_PLAN.md` ("Search paused") and `docs/strategy-search-conclusion.md`. Strategy hours check the forward record and otherwise log "no change".
+
 > UPDATE 2026-11-10: the classic families are covered. Strategy hours now follow `EDGE_PLAN.md` (different kinds of ideas, settings fixed first). The queue below is for ChatGPT and the owner.
 
 UPDATE 2026-11-09: the owner wants several rules tested per cycle until one is credibly profitable (see 'Search until profitable' at the end).
