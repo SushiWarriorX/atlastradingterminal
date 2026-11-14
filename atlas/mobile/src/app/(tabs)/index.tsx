@@ -2,9 +2,10 @@ import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { FlatList, RefreshControl, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { EarningsCard } from "../../components/EarningsCard";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { WatchRowItem } from "../../components/WatchRowItem";
-import { Banner, Divider, EmptyState, ErrorState, PrimaryButton, Skeleton, TextButton, Txt } from "../../components/ui";
+import { Banner, Divider, EmptyState, ErrorState, IconButton, PrimaryButton, Skeleton, TextButton, Txt } from "../../components/ui";
 import { localClock, relativeTime } from "../../lib/format";
 import { describeFreshness, summarizeTones } from "../../lib/freshness";
 import { idsOf, moveId, settledRows } from "../../lib/watchlist";
@@ -36,6 +37,7 @@ export default function WatchlistScreen() {
 
   const header = (
     <View style={{ gap: space.sm, paddingHorizontal: space.lg, paddingBottom: space.sm }}>
+      {items.length > 0 && <EarningsCard />}
       {demo && <Banner tone="demo" title="Demo data" testID="demo-banner">Prices and research here are synthetic, for trying the app. They are not real market data.</Banner>}
       {offline && <Banner tone="warn" title="Can't reach the server" testID="offline-banner" action={<TextButton label="Retry" onPress={() => { void wl.refetch(); }} testID="offline-retry" />}>Showing your last list{updated ? ` from ${relativeTime(new Date(updated).toISOString(), now)}` : ""}. Prices may be out of date.</Banner>}
       {!offline && problems ? <Banner tone="warn" title={problems} testID="stale-banner">Some prices are not current. Check the dot next to each price.</Banner> : null}
@@ -54,8 +56,8 @@ export default function WatchlistScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: color.bg, paddingTop: insets.top }}>
-      <ScreenHeader title="Watchlist" subtitle={updated ? `${items.length} asset${items.length === 1 ? "" : "s"} · updated ${localClock(new Date(updated).toISOString())}` : undefined}
-        right={items.length > 0 ? <TextButton label={editing ? "Done" : "Edit"} onPress={() => setEditing((e) => !e)} testID="edit-toggle" /> : undefined} />
+      <ScreenHeader title="Stocks" subtitle={updated ? `Watchlist · ${items.length} asset${items.length === 1 ? "" : "s"} · updated ${localClock(new Date(updated).toISOString())}` : undefined}
+        right={<>{items.length > 0 ? <TextButton label={editing ? "Done" : "Edit"} onPress={() => setEditing((e) => !e)} testID="edit-toggle" /> : null}{wide ? null : <IconButton name="search" size={24} label="Search assets" onPress={goSearch} testID="open-search" />}</>} />
       <FlatList
         data={body ? [] : items}
         keyExtractor={(r) => r.asset.id}

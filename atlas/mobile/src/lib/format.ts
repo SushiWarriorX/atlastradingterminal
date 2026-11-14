@@ -58,6 +58,16 @@ export function localClock(iso: string | null | undefined, tz?: string, seconds 
 }
 
 /** A calendar date like "2026-12-09" shown as "Dec 9" without timezone shifting. */
+/** "2026-10-31" -> "Oct 31, 2026"; "2026-10" -> "October 2026". Anything else is returned as it came, so nothing is hidden. For a person, not for sorting. */
+export function ymdLabel(ymd: string | null | undefined): string {
+  if (!ymd) return "n/a";
+  const full = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
+  if (full) return new Date(Date.UTC(+full[1], +full[2] - 1, +full[3], 12)).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+  const month = /^(\d{4})-(\d{2})$/.exec(ymd);
+  if (month) return new Date(Date.UTC(+month[1], +month[2] - 1, 15, 12)).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+  return ymd;
+}
+
 export function dateOnly(ymd: string | null | undefined): string {
   if (!ymd) return "n/a";
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd);

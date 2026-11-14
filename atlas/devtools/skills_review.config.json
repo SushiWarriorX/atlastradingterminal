@@ -1,0 +1,12 @@
+{
+  "interval_days": 7,
+  "max_stretch": 4.0,
+  "lookback_days": 14,
+  "needs_priority": ["testing", "debugging", "security", "financial-data", "backtesting", "performance", "cloud-deployment", "mobile", "documentation"],
+  "trusted_sources": ["claude-plugin-catalog (searched inside a Claude Code session)", "anthropics/skills", "anthropics/claude-plugins-official"],
+  "authorized_installs": [],
+  "default_install_scope": "project",
+  "respect_shared_budget": true,
+  "use_claude": false,
+  "redundancy_overlap": 0.6
+}

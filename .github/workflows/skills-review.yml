@@ -1,0 +1,57 @@
+name: skills-review
+# Weekly development-skills review. Development tooling only: it reads the repository and public skill sources, writes a report, and opens or updates ONE issue when something is worth
+# your attention. It never installs, updates, or changes anything, has no secrets, and never touches trading or research execution.
+# GitHub only runs scheduled workflows from the DEFAULT branch, so the weekly schedule starts after this file reaches the default branch. "Run workflow" (manual) works from any branch.
+on:
+  schedule:
+    - cron: "23 6 * * 1"        # Mondays 06:23 UTC
+  workflow_dispatch: {}
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: skills-review
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install httpx
+      - name: Run the review (read-only; exit code 10 means "worth reading")
+        id: review
+        run: |
+          set +e
+          python3 atlas/devtools/skills_review.py run --ci --force --trigger ci --github anthropics/skills > review-output.txt 2>review-errors.txt
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          cat review-output.txt
+          cat review-errors.txt
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: skills-review
+          path: |
+            review-output.txt
+            review-errors.txt
+            atlas/devtools/SKILLS_REVIEW.md
+          if-no-files-found: ignore
+      - name: Open or update the single review issue (only when there is something useful)
+        if: steps.review.outputs.code == '10'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Development skills review: recommendations"
+          cp atlas/devtools/SKILLS_REVIEW.md body.md
+          printf '\n\n---\nNothing is installed. To act, run the commands shown above on your machine. This issue is updated in place, not duplicated.\n' >> body.md
+          number=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')
+          if [ -z "$number" ]; then
+            gh issue create --title "$title" --body-file body.md
+          else
+            current=$(gh issue view "$number" --json body --jq .body | sha256sum | cut -d' ' -f1)
+            new=$(sha256sum < body.md | cut -d' ' -f1)
+            if [ "$current" != "$new" ]; then gh issue edit "$number" --body-file body.md; else echo "Issue unchanged; no notification."; fi
+          fi

@@ -1,7 +1,7 @@
 """A scripted Signal backend for the browser tests: the REAL app and agents, with scripted market data, news and directory (no network).
 
   python e2e/fake_backend.py --port 8011                      everything works (macro is still unavailable: no FRED provider is configured, and the app says so)
-  python e2e/fake_backend.py --port 8012 --age 259200         prices and bars are three days old (stale data)
+  python e2e/fake_backend.py --port 8012 --age 604800         prices and bars are a week old (stale data)
   python e2e/fake_backend.py --port 8013 --news fail --fund fail      two research agents fail (partial results)
   python e2e/fake_backend.py --port 8014 --quote fail --bars fail     no prices and no charts (missing data)
   python e2e/fake_backend.py --port 8015 --password 'pw'      a login is required
@@ -109,7 +109,16 @@ def main():
     ap.add_argument("--demo", action="store_true", help="ATLAS demo mode: labelled synthetic data, no providers")
     ap.add_argument("--db", default=None, help="keep the database here (default: a fresh temp folder)")
     ap.add_argument("--password", default=None)
+    ap.add_argument("--research", choices=["none", "software", "mature", "loss_making", "recent_ipo", "bank"], default="none",
+                    help="serve SYNTHETIC filing research for every stock (the real routes and brief builder run; only the data source is patched)")
     a = ap.parse_args()
+    if a.research != "none":
+        import research_fixtures as RX
+        from atlas_api.research.live import FundamentalResearch
+
+        async def synthetic(self, inst, policy=None, now=None):
+            return {**RX.research_payload(inst.symbol, a.research), "instrument_id": inst.id}
+        FundamentalResearch.research = synthetic
     os.environ.setdefault("ATLAS_CORS_ORIGINS", "http://localhost:8081")
     if a.demo:
         app = create_app(db_path=a.db or os.path.join(tempfile.mkdtemp(), "demo.db"), demo=True, alert_loop=False, news_loop=False, auth_password=a.password)
@@ -119,12 +128,30 @@ def main():
     stamp = lambda h: (now - timedelta(hours=h)).strftime("%a, %d %b %Y %H:%M:%S +0000")
     rss = RSS.format(t0=stamp(2), t1=stamp(4), t2=stamp(6), t3=stamp(9), t4=stamp(1), t5=stamp(3)).encode()
     net = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(404) if a.news == "fail" else httpx.Response(200, content=rss)), follow_redirects=True)
+    def cal_handler(req: httpx.Request) -> httpx.Response:
+        """Canned calendar sources with dates relative to today, so the browser tests never touch the real internet."""
+        u = str(req.url)
+        d2 = (now + timedelta(days=2)).strftime("%Y%m%d")
+        if "calendar/earnings" in u:
+            rows = [{"lastYearRptDt": "N/A", "lastYearEPS": "$1.10", "time": "time-after-hours", "symbol": "AAPL", "name": "Apple Inc.", "marketCap": "$3,900,000,000,000", "fiscalQuarterEnding": "Sep/2026", "epsForecast": "$1.25", "noOfEsts": "30"},
+                    {"lastYearRptDt": "N/A", "lastYearEPS": "N/A", "time": "time-pre-market", "symbol": "TINY", "name": "Tiny Co", "marketCap": "N/A", "fiscalQuarterEnding": "Sep/2026", "epsForecast": "", "noOfEsts": ""}]
+            return httpx.Response(200, json={"data": {"rows": rows}})
+        if "calendar/dividends" in u:
+            return httpx.Response(200, json={"data": {"calendar": {"rows": []}}})
+        if "bls.ics" in u:
+            return httpx.Response(200, text=f"BEGIN:VCALENDAR\nBEGIN:VEVENT\nDTSTART;TZID=US-Eastern:{d2}T083000\nSUMMARY:Consumer Price Index\nEND:VEVENT\nEND:VCALENDAR\n")
+        if "bea.gov" in u:
+            return httpx.Response(200, text="")
+        if "fiscaldata" in u:
+            return httpx.Response(200, json={"data": []})
+        return httpx.Response(404)
+    cal_client = httpx.AsyncClient(transport=httpx.MockTransport(cal_handler))
     every = {"1m", "5m", "15m", "1h", "4h", "1d", "1w"}
     p = SwingProvider(age=a.age, fail_quote=a.quote == "fail", fail_intervals=every if a.bars == "fail" else set())
     tmp = tempfile.mkdtemp()
     app = create_app(db_path=a.db or os.path.join(tmp, "e2e.db"), demo=False, providers={"yahoo": p, "coinbase": p}, alert_loop=False, news_loop=True, news_client=net,
                      fundamentals_provider=FundProvider(a.fund == "fail"), auth_password=a.password,
-                     signal_registry=A.AssetRegistry(cache_dir=tmp, client_factory=client_factory()),
+                     signal_registry=A.AssetRegistry(cache_dir=tmp, client_factory=client_factory()), calendar_client=cal_client,
                      signal_parts={"etf": FakeEtf(ETF_RAW), "coingecko": FakeCoinGecko(COIN_CAPPED), "mempool": FakeMempool()})
     uvicorn.run(app, host="127.0.0.1", port=a.port, log_level="warning")
 

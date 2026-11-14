@@ -1,5 +1,7 @@
 # Implementation status
 
+> **Historical, not current (2026-11-14).** Most rows below describe the desktop web terminal, which was removed on 2026-11-12 (owner request), so its desk names and the `web/e2e/*.cjs` scripts no longer exist. The backend rows are still accurate. Signal's features are described in `docs/signal-mobile.md`; the day-by-day record is `IMPROVEMENT_LOG.md`.
+
 Honest ledger. "Verified" means exercised by an automated test or the browser smoke run in this repo's build session, which had **no access to Coinbase, Yahoo or FRED**. Live adapters are therefore tested against mocked HTTP only.
 
 ## Works and verified

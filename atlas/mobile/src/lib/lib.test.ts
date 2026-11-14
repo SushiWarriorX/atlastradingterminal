@@ -1,12 +1,20 @@
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Asset, Briefing, Finding, Prov, WatchlistResponse, WatchRow } from "../api/types";
 import { AGENT_ORDER, briefingSections, coverageNote, lineText, rowKind } from "./briefing";
-import { countdown, dateOnly, directionOf, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime } from "./format";
+import { countdown, dateOnly, directionOf, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime, ymdLabel } from "./format";
 import { describeFreshness, isOutdated, summarizeTones, worstTone } from "./freshness";
 import { keys } from "./keys";
 import { safeUrl } from "./links";
 import { MAX_RECENTS, parseRecents, pushRecent } from "./recents";
 import { applyAdd, applyRemove, applyReorder, idsOf, moveId, settledRows } from "./watchlist";
+import { busyText } from "./lab";
+import { SEC_OFF_POINTER, isSecOff, withoutSecOff } from "./secOff";
+import { dayLabel, detailLine, groupByDay } from "./calendar";
+import { contrast } from "./contrast";
+import { color, grad } from "../theme";
+import { blankForm, fromEntry, missingText, resultText, sideLabel, signed, toBody } from "./journal";
 
 const NOW = Date.parse("2026-12-01T12:00:00Z");
 const asset = (id: string, symbol: string, type: Asset["type"] = "stock", venue = "Nasdaq"): Asset => ({ id, symbol, name: symbol + " Inc", type, venue, support: "supported", note: null });
@@ -53,6 +61,11 @@ describe("formatting", () => {
     expect(localDateTime("nope")).toBe("n/a");
     expect(dateOnly("2026-12-09")).toBe("Dec 9");
     expect(dateOnly(null)).toBe("n/a");
+    expect(ymdLabel("2026-10-31")).toBe("Oct 31, 2026");                                           // a date a person can read
+    expect(ymdLabel("2026-01-05")).toBe("Jan 5, 2026");
+    expect(ymdLabel("2026-10")).toBe("October 2026");
+    expect(ymdLabel("2026-10-31T12:00:00Z")).toBe("2026-10-31T12:00:00Z");                          // other shapes are shown as they came, never hidden or guessed
+    expect(ymdLabel(null)).toBe("n/a");
   });
   it("gives each asset id its own avatar colour and short initials", () => {
     expect(hueFor("EQUITY:NASDAQ:AAPL")).toBe(hueFor("EQUITY:NASDAQ:AAPL"));
@@ -208,5 +221,124 @@ describe("wide layout", () => {
     expect(WIDE_MIN).toBe(1000);
     expect([390, 768, 999].map(isWide)).toEqual([false, false, false]);
     expect([1000, 1440].map(isWide)).toEqual([true, true]);
+  });
+});
+
+describe("journal form helpers", () => {
+  const entry = (o: Partial<import("../api/types").JournalEntry> = {}) => ({ id: "e:1", origin: "manual", editable: true, symbol: "AAPL", direction: "long", status: "closed", size: "10", entry_price: "100", exit_price: "110", entry_at: "2026-01-02T00:00:00Z", exit_at: null, fees: "0", planned_stop: null, note: null, thesis: null, risk_plan: null, outcome: null, screenshot: null, net_pnl_num: 100, return_pct: 10, pnl_missing: [], ...o }) as import("../api/types").JournalEntry;
+  it("a new entry sends only what was filled in", () => {
+    const f = { ...blankForm("2026-03-01"), symbol: " btc ", note: "idea" };
+    expect(toBody(f, false)).toEqual({ symbol: "btc", direction: "long", entry_at: "2026-03-01", note: "idea" });
+  });
+  it("an edit sends emptied optional fields as null so they are cleared, but never clears the symbol or date", () => {
+    const f = { ...fromEntry(entry({ note: "x" })), note: "", symbol: "" };
+    const b = toBody(f, true);
+    expect(b.note).toBeNull();
+    expect(b.exit_price).toBe("110");
+    expect("symbol" in b).toBe(false);
+  });
+  it("round-trips an entry through the form", () => {
+    expect(fromEntry(entry({ fees: "0" })).fees).toBe("");
+    expect(fromEntry(entry()).entry_at).toBe("2026-01-02");
+  });
+  it("signed uses a real minus and shows a dash for missing", () => {
+    expect(signed(5)).toBe("+5.00");
+    expect(signed(-5)).toBe("−5.00");
+    expect(signed(null)).toBe("—");
+  });
+  it("result and missing text", () => {
+    expect(resultText(entry())).toBe("+100.00");
+    expect(resultText(entry({ status: "open", net_pnl_num: null }))).toBe("Open");
+    expect(resultText(entry({ status: "note" }))).toBe("");
+    expect(missingText(entry({ status: "open", pnl_missing: ["exit price"] }))).toBe("P&L needs the exit price.");
+    expect(missingText(entry({ status: "note", pnl_missing: ["size"] }))).toBeNull();
+  });
+  it("a plain note never shows a side, but a trade does", () => {
+    expect(sideLabel(entry({ status: "note", direction: "long" }))).toBe("Note");
+    expect(sideLabel(entry({ status: "open", direction: "long" }))).toBe("Long");
+    expect(sideLabel(entry({ status: "closed", direction: "short" }))).toBe("Short");
+  });
+});
+
+describe("readable text on every card", () => {
+  it("measures contrast correctly", () => {
+    expect(contrast("#000000", "#FFFFFF")).toBeCloseTo(21, 0);
+    expect(contrast("#777777", "#777777")).toBeCloseTo(1, 5);
+  });
+  it("small captions (faint) and body-small text (dim) reach 4.5:1 on every stop of every card gradient and on the screen background", () => {
+    const stops = [color.bg, color.surface, ...grad.card, ...grad.hot];
+    for (const bg of stops) {
+      expect(contrast(color.faint, bg), `faint on ${bg}`).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(color.dim, bg), `dim on ${bg}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});
+
+describe("Strategy Lab waiting message", () => {
+  it("always says it is working and that the first real-data run downloads history", () => {
+    for (const [m, tf] of [["spot", "1d"], ["perp", "1d"], ["spot", "1h"], ["perp", "4h"]]) {
+      const t = busyText(m, tf);
+      expect(t).toMatch(/Running the comparison/);
+      expect(t).toMatch(/first run on real data downloads/);
+      expect(t).toMatch(/later runs are quick/);
+    }
+  });
+  it("mentions funding history only for perpetuals, and hourly prices only for intraday", () => {
+    expect(busyText("spot", "1d")).not.toMatch(/funding/);
+    expect(busyText("perp", "1d")).toMatch(/funding history/);
+    expect(busyText("spot", "1d")).not.toMatch(/hourly/);
+    expect(busyText("spot", "4h")).toMatch(/hourly prices/);
+  });
+});
+
+describe("calendar helpers", () => {
+  const ev = (o: Record<string, unknown>) => ({ kind: "earnings", date: "2026-11-10", at_utc: null, time_label: null, title: "t", symbol: "AAPL", name: "Apple", importance: "high", market_cap: null, details: {}, source: "s", official: false, link: null, watch: false, instrument_id: null, ...o }) as import("../api/types").CalendarEvent;
+  it("groups consecutive events by day and keeps their order", () => {
+    const g = groupByDay([ev({ date: "2026-11-10", symbol: "A" }), ev({ date: "2026-11-10", symbol: "B" }), ev({ date: "2026-11-11", symbol: "C" })]);
+    expect(g.map((x) => [x.day, x.events.map((e) => e.symbol)])).toEqual([["2026-11-10", ["A", "B"]], ["2026-11-11", ["C"]]]);
+    expect(groupByDay([])).toEqual([]);
+  });
+  it("labels today and tomorrow and names other days", () => {
+    expect(dayLabel("2026-11-10", "2026-11-10")).toMatch(/^Today · Tuesday, Nov 10/);
+    expect(dayLabel("2026-11-11", "2026-11-10")).toMatch(/^Tomorrow · Wednesday, Nov 11/);
+    expect(dayLabel("2026-11-13", "2026-11-10")).toMatch(/^Friday, Nov 13/);
+  });
+  it("detail lines use only what the source gave and say n/a otherwise", () => {
+    expect(detailLine(ev({ details: { eps_estimate: 1.25, analysts: 30, last_year_eps: 1.1, quarter_ending: "Sep/2026" } }))).toBe("Estimate $1.25 (30 analysts) · a year ago $1.10 · quarter ending Sep/2026");
+    expect(detailLine(ev({ details: { eps_estimate: null, analysts: null, last_year_eps: null } }))).toBe("Estimate n/a · a year ago n/a");
+    expect(detailLine(ev({ kind: "dividend", details: { amount: 0.97, pay_date: "2026-12-10" } }))).toBe("$0.97 per share · pays 2026-12-10");
+    expect(detailLine(ev({ kind: "economy", details: { release: "Consumer Price Index" } }))).toBe("Consumer Price Index");
+  });
+});
+
+describe("code hygiene for the browser version", () => {
+  const files = (dir: string): string[] => readdirSync(dir).flatMap((f) => { const p = join(dir, f); return statSync(p).isDirectory() ? files(p) : p.endsWith(".tsx") ? [p] : []; });
+  it("never passes React Native accessibility props to an SVG element (the browser warns: 'React does not recognize the accessibilityElementsHidden prop')", () => {
+    const bad = files(join(__dirname, "..")).filter((f) => /<Svg[^>]*accessibility(ElementsHidden|Label|Role)/.test(readFileSync(f, "utf8")));
+    expect(bad).toEqual([]);
+  });
+});
+
+describe("the missing SEC contact setting is explained once", () => {
+  const full = 'SEC filings are off: ATLAS_SEC_CONTACT is not set. Windows: add the line $env:ATLAS_SEC_CONTACT = "you@example.com" to local-settings.ps1 and restart ATLAS. The email is sent only to sec.gov.';
+  const research = "SEC filings are off: ATLAS_SEC_CONTACT is not set. The SEC requires a contact email in the request; set it as an environment setting on the machine that runs ATLAS.";
+  it("recognises the server's message in both of its wordings, and nothing else", () => {
+    expect(isSecOff(full)).toBe(true);
+    expect(isSecOff(research)).toBe(true);
+    expect(isSecOff("SEC returned HTTP 503 for AAPL")).toBe(false);
+    expect(isSecOff("ATLAS_SEC_CONTACT is set but the SEC refused the request")).toBe(false);     // another message that mentions the setting is NOT this one
+    expect(isSecOff("Demo mode: no filings are shown")).toBe(false);
+    expect(isSecOff("")).toBe(false);
+    expect(isSecOff(null)).toBe(false);
+    expect(isSecOff(undefined)).toBe(false);
+  });
+  it("takes it out of an error list and keeps every other error, in order", () => {
+    expect(withoutSecOff([full, "Yahoo did not answer", research, "No earnings date"])).toEqual(["Yahoo did not answer", "No earnings date"]);
+    expect(withoutSecOff([full])).toEqual([]);
+    expect(withoutSecOff([])).toEqual([]);
+  });
+  it("the pointer says where the steps are and does not repeat them", () => {
+    expect(SEC_OFF_POINTER).toMatch(/SEC filings card above/);
+    expect(SEC_OFF_POINTER).not.toMatch(/ATLAS_SEC_CONTACT|\$env|local-settings|example\.com/);
   });
 });

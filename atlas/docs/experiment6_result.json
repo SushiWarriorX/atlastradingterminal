@@ -1,0 +1,65 @@
+{
+ "valid": true,
+ "bars": 4135,
+ "first_bar": "2015-07-20",
+ "last_bar": "2026-11-13",
+ "sealed_from_bar": 2894,
+ "sealed_from": "2023-06-22",
+ "sealed_bars": 1241,
+ "design": {
+  "share_on": 0.851,
+  "state_changes": 24
+ },
+ "sealed": {
+  "strategy": {
+   "net_return_pct": 47.357,
+   "max_drawdown_pct": -55.524,
+   "sharpe": 0.484,
+   "mean_weight": 0.718
+  },
+  "hold": {
+   "net_return_pct": 127.229,
+   "max_drawdown_pct": -53.076,
+   "sharpe": 0.755,
+   "mean_weight": 1.0
+  },
+  "constant_exposure": {
+   "net_return_pct": 92.868,
+   "max_drawdown_pct": -40.996,
+   "sharpe": 0.751,
+   "mean_weight": 0.718
+  },
+  "switches": 40,
+  "share_of_time_on": 0.718
+ },
+ "null": {
+  "runs": 1000,
+  "sharpe_median": 0.56,
+  "sharpe_95th": 1.043,
+  "share_at_or_above_strategy": 0.595,
+  "return_median_pct": 61.918,
+  "switches_min": 39,
+  "switches_max": 40
+ },
+ "whole_history_for_context": {
+  "strategy": {
+   "net_return_pct": 19627.397,
+   "max_drawdown_pct": -70.221,
+   "sharpe": 1.074,
+   "mean_weight": 0.811
+  },
+  "hold": {
+   "net_return_pct": 24249.301,
+   "max_drawdown_pct": -83.802,
+   "sharpe": 1.065,
+   "mean_weight": 1.0
+  }
+ },
+ "conditions": {
+  "a_sharpe_at_least_0.10_above_hold": false,
+  "b_sharpe_above_95th_pct_of_shifted_schedules": false,
+  "c_worst_drop_at_least_10_points_shallower": false,
+  "d_net_return_positive_and_at_least_6_switches": true
+ },
+ "passed": false
+}

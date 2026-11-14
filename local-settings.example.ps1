@@ -10,3 +10,6 @@
 
 # Polite identification for news feeds (the SEC asks for a contact address)
 # $env:ATLAS_NEWS_USER_AGENT = "ATLAS (you@example.com)"
+
+# SEC filings: turns on the Company deep-dive (financials) and Discover. The SEC requires a contact email in each request. It is sent only to sec.gov.
+# $env:ATLAS_SEC_CONTACT = "you@example.com"

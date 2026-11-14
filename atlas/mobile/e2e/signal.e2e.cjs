@@ -111,12 +111,15 @@ async function phone(browser) {
   await ctx.addInitScript(() => { window.__opened = []; window.open = (u) => { window.__opened.push(String(u)); return null; }; });     // record links instead of leaving the app
   const origins = new Set();
   const pageErrors = [];
+  const consoleErrors = [];
   ctx.on("request", (r) => { try { origins.add(new URL(r.url()).origin); } catch { /* ignore */ } });
   const page = await ctx.newPage();
   page.setDefaultTimeout(20000);
   page.on("pageerror", (e) => pageErrors.push(String(e).slice(0, 300)));
+  // React warnings (for example "React does not recognize the ... prop on a DOM element") arrive as console errors, not page errors.
+  page.on("console", (m) => { if (m.type() === "error" && /React does not recognize|Warning:|Invalid DOM property|unique "key"|validateDOMNesting/.test(m.text())) consoleErrors.push(m.text().slice(0, 300)); });
   livePage = page;
-  return { ctx, page, origins, pageErrors };
+  return { ctx, page, origins, pageErrors, consoleErrors };
 }
 const text = (page) => page.evaluate(() => document.body.innerText);
 // Screens stay mounted under the one on top, so an id like "stale-banner" can exist twice: always talk about the one the user can see.
@@ -124,7 +127,7 @@ const V = (id) => `${T(id)}:visible`;
 const inner = (page, testId) => page.locator(V(testId)).first().innerText();
 const present = async (page, testId) => (await page.locator(V(testId)).count()) > 0;
 const rowIds = (page) => page.$$eval('[data-testid^="row-"]', (els) => els.map((e) => e.getAttribute("data-testid").slice(4)));
-const ready = (page) => page.waitForSelector(T("tab-watchlist"), { timeout: 25000 });
+const ready = (page) => page.waitForSelector(T("tab-stocks"), { timeout: 25000 });
 
 async function connectTo(page, url, password) {
   await page.goto(WEB_ORIGIN);
@@ -140,7 +143,7 @@ async function waitRows(page, ids, ms = 25000) {
   eq(got, ids, "watchlist rows");
 }
 async function openFromWatchlist(page, id) {
-  await page.click(T("tab-watchlist"));
+  await toStocks(page);
   await page.waitForSelector(T(`row-${id}`));
   await page.locator(T(`row-${id}`)).locator('[role="button"]').first().click();
   await page.waitForSelector(T("asset-name"));
@@ -151,8 +154,18 @@ async function expand(page, agent) {
   await page.waitForSelector(T(`refresh-${agent}`));
   return inner(page, `agent-${agent}`);
 }
+async function toStocks(page) {            // search is a screen over the tabs on a phone: step back out of it first
+  if (await present(page, "search-back")) await page.click(V("search-back"));
+  await page.click(V("tab-stocks"));
+}
+async function gotoSearch(page) {
+  if (await present(page, "search-input")) return;
+  await toStocks(page);
+  await page.click(V("open-search"));
+  await page.waitForSelector(T("search-input"));
+}
 async function search(page, q) {
-  await page.click(T("tab-search"));
+  await gotoSearch(page);
   const answered = page.waitForResponse((r) => r.url().includes(`/api/signal/search?q=${encodeURIComponent(q)}`), { timeout: 20000 });
   await page.fill(T("search-input"), q);
   await answered;
@@ -180,15 +193,17 @@ async function healthy(browser) {
       await page.click(T("connect-submit"));
       await page.waitForSelector(V("connect-error"));
       match(await inner(page, "connect-error"), /reach|connect|server|address/i);
-      assert(!(await present(page, "tab-watchlist")), "must stay on the connect screen");
+      assert(!(await present(page, "tab-stocks")), "must stay on the connect screen");
     });
 
-    await check("connects and shows an honest empty watchlist with exactly two tabs and a profile icon", async () => {
+    await check("connects and shows an honest empty watchlist under five tabs and a profile icon", async () => {
       await page.fill(T("server-url"), be.url);
       await page.click(T("connect-submit"));
+      await page.waitForSelector(T("tab-stocks"));
+      await toStocks(page);
       await page.waitForSelector(T("watchlist-empty"));
       const tabs = await page.$$eval('[data-testid^="tab-"]', (els) => els.map((e) => e.innerText.replace(/[^A-Za-z]+/g, "")));
-      eq(tabs, ["Watchlist", "Search"], "the only tabs");
+      eq(tabs, ["BTC", "Stocks", "Macro", "Discover", "Journal"], "the only tabs");
       assert(await present(page, "profile-button"), "settings must sit behind the profile icon");
       assert(!(await present(page, "demo-banner")), "no demo label on a live server");
       await shot(page, "01-empty-watchlist");
@@ -231,7 +246,7 @@ async function healthy(browser) {
     });
 
     await check("the watchlist shows each saved asset with name, type, price, change, sparkline and a takeaway", async () => {
-      await page.click(T("tab-watchlist"));
+      await toStocks(page);
       await waitRows(page, [ID.btc, ID.btcEtf, ID.solCoin, ID.aapl]);
       for (const id of [ID.btc, ID.btcEtf, ID.aapl]) {
         await page.waitForSelector(T(`price-${id}`));
@@ -398,7 +413,7 @@ async function healthy(browser) {
       bad.push(...(await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)));          // asset screen, every agent that was opened
       await page.click(T("back"));
       bad.push(...(await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)));          // watchlist
-      await page.click(T("tab-search"));
+      await gotoSearch(page);
       bad.push(...(await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)));          // search
       eq(bad, [], "trading controls");
       const probe = await api(be, "/api/signal/orders", { method: "POST", body: {} });
@@ -414,7 +429,7 @@ async function healthy(browser) {
     });
 
     await check("settings sit behind the profile icon and say what mode the server is in", async () => {
-      await page.click(T("tab-watchlist"));
+      await toStocks(page);
       await page.click(T("profile-button"));
       await page.waitForSelector(T("settings-title"));
       eq(await inner(page, "settings-server"), be.url);
@@ -422,7 +437,26 @@ async function healthy(browser) {
       noMatch(await text(page), /Demo mode/);
       await shot(page, "08-settings");
       await page.click(T("settings-close"));
-      await page.waitForSelector(T("tab-watchlist"));
+      await page.waitForSelector(T("tab-stocks"));
+    });
+
+    await check("Operations in Settings: scheduler status, jobs with freshness and next run, honest Claude usage, budgets, pause and resume, no trading controls", async () => {
+      await toStocks(page);
+      await page.click(T("profile-button"));
+      await page.waitForSelector(T("settings-title"));
+      await page.waitForSelector(T("ops-body") + ", " + T("ops-error"), { timeout: 30000 });
+      const t = await text(page);
+      match(t, /Operations/); match(t, /Health and data-quality checks/); match(t, /Last success/); match(t, /Claude access: not set/);
+      match(t, /not known to this app/, "remaining Claude allowance is never invented"); match(t, /Dollar cost is unknown/, "no price is assumed");
+      match(t, /ai_tokens \(per day\)/); match(t, /Emergency stop/);
+      await page.click(T("ops-pause"));
+      await page.waitForSelector(T("ops-resume"), { timeout: 20000 });
+      match(await text(page), /Paused/);
+      await page.click(T("ops-resume"));
+      await page.waitForSelector(T("ops-pause"), { timeout: 20000 });
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in Operations");
+      await page.click(T("settings-close"));
+      await page.waitForSelector(T("tab-stocks"));
     });
 
     await check("offline: the saved list is shown with a clear notice; the server's return clears it; nothing is lost", async () => {
@@ -450,6 +484,8 @@ async function healthy(browser) {
       try {
         await connectTo(w, be.url);
         await w.waitForSelector(T("ticker"));
+        for (const d of ["btc", "stocks", "macro", "discover", "journal"]) assert(await present(w, `nav-${d}`), `top navigation must offer ${d}`);
+        await w.click(T("nav-stocks"));
         await w.waitForSelector(T("pane-watchlist"));
         await w.waitForSelector(T("news-panel"));
         await waitRows(w, [ID.btc, ID.btcEtf, ID.aapl]);
@@ -471,7 +507,460 @@ async function healthy(browser) {
       } finally { await d.close(); livePage = page; }
     });
 
-    await check("no uncaught errors in the browser during the whole run", async () => { eq(S.pageErrors, [], "uncaught page errors"); });
+    await check("Journal tab: a note, then a trade with exact P&L, filter, edit and delete", async () => {
+      await page.click(T("tab-journal"));
+      await page.waitForSelector(T("journal-empty"));
+      await page.click(T("journal-empty-add"));
+      await page.fill(T("f-symbol"), "btc");
+      await page.fill(T("f-note"), "Watching the 200 day average");
+      await page.click(T("entry-save"));
+      await page.waitForSelector(V("journal-list"));
+      assert(await page.locator('[data-testid^="entry-e:"]').count() === 1, "one entry after saving a bare note");
+      const noteRow = await page.locator('[data-testid^="entry-e:"]').first().innerText();
+      match(noteRow, /Note/, "a plain note is tagged Note");
+      noMatch(noteRow, /Long|Short/, "a plain note must not look like a long or short position");
+      await page.click(T("journal-add"));
+      await page.fill(T("f-symbol"), "aapl");
+      await page.fill(T("f-size"), "10");
+      await page.fill(T("f-entry"), "100");
+      await page.fill(T("f-exit"), "110");
+      await page.click(T("entry-save"));
+      await page.waitForSelector(V("journal-stats"));
+      const st = await inner(page, "journal-stats");
+      match(st, /\+100\.00/, "net P&L is 10 x (110 - 100)");
+      match(await text(page), /\+10\.00%/, "return on cost");
+      await shot(page, "12b-journal-with-trade");
+      await page.click(T("journal-filter-note"));
+      await sleep(400);
+      eq(await page.locator('[data-testid^="entry-e:"]').count(), 1, "notes filter");
+      await page.click(T("journal-filter-all"));
+      await sleep(300);
+      await page.locator('[data-testid^="entry-e:"]').first().click();
+      await page.waitForSelector(T("entry-delete"));
+      await page.click(T("entry-delete"));
+      await sleep(500);
+      eq(await page.locator('[data-testid^="entry-e:"]').count(), 1, "one entry left after a delete");
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the journal");
+      await shot(page, "12-journal");
+    });
+
+    await check("Macro: what matters today, indicators and headlines are labelled, gaps are listed, and a missing FRED key is said plainly", async () => {
+      await page.click(T("tab-macro"));
+      await page.waitForSelector(V("macro-brief"));
+      await page.waitForSelector(V("treasury-card"));
+      await page.waitForSelector(V("treasury-body") + ", " + V("treasury-error"), { timeout: 45000 });
+      const t = await text(page);
+      await page.waitForSelector(V("fx-card"));
+      await page.waitForSelector(V("fx-body") + ", " + V("fx-unavailable") + ", " + V("fx-error"), { timeout: 45000 });
+      const fxText = await text(page);
+      await page.waitForSelector(V("world-card"));
+      await page.waitForSelector(V("world-body") + ", " + V("world-unavailable") + ", " + V("world-error"), { timeout: 60000 });
+      const wt = await text(page);
+      await page.waitForSelector(V("fedops-card"));
+      await page.waitForSelector(V("fedops-body") + ", " + V("fedops-unavailable") + ", " + V("fedops-error"), { timeout: 45000 });
+      const fo = await text(page);
+      match(fo, /Fed liquidity operations/); match(fo, /New York Fed/); noMatch(fo, FORECASTS, "the Fed operations card makes no forecasts");
+      if (await present(page, "fedops-body")) match(fo, /not market signals or forecasts/, "the plumbing caveat is shown");
+      await page.waitForSelector(V("tga-card"));
+      await page.waitForSelector(V("tga-body") + ", " + V("tga-unavailable") + ", " + V("tga-error"), { timeout: 45000 });
+      const tg = await text(page);
+      match(tg, /Treasury cash balance/); match(tg, /US Treasury/); noMatch(tg, FORECASTS, "the Treasury balance card makes no forecasts");
+      if (await present(page, "tga-body")) match(tg, /not a market signal or a forecast/, "the plumbing caveat is shown");
+      await page.waitForSelector(V("auctions-card"));
+      await page.waitForSelector(V("auctions-body") + ", " + V("auctions-unavailable") + ", " + V("auctions-error"), { timeout: 45000 });
+      const au = await text(page);
+      match(au, /Treasury auctions/); match(au, /US Treasury/); noMatch(au, FORECASTS, "the auctions card makes no forecasts");
+      if (await present(page, "auctions-body")) match(au, /not market signals or forecasts/, "the auction caveat is shown");
+      await page.waitForSelector(V("budget-card"));
+      await page.waitForSelector(V("budget-body") + ", " + V("budget-unavailable") + ", " + V("budget-error"), { timeout: 45000 });
+      const bu = await text(page);
+      match(bu, /Federal budget/); match(bu, /US Treasury/); noMatch(bu, FORECASTS, "the budget card makes no forecasts");
+      if (await present(page, "budget-body")) match(bu, /not market signals or forecasts/, "the budget caveat is shown");
+      await page.waitForSelector(V("interest-card"));
+      await page.waitForSelector(V("interest-body") + ", " + V("interest-unavailable") + ", " + V("interest-error"), { timeout: 45000 });
+      const ie = await text(page);
+      match(ie, /Interest on the debt/); match(ie, /US Treasury/); noMatch(ie, FORECASTS, "the interest card makes no forecasts");
+      if (await present(page, "interest-body")) {
+        match(ie, /not a market signal or a forecast/, "the interest caveat is shown");
+        match(await inner(page, "interest-body"), /Treasury bills[\s\S]*Treasury notes[\s\S]*Treasury bonds/, "the breakdown lists the security types");
+        const ib = await inner(page, "interest-body");
+        match(ib, /^(January|February|March|April|May|June|July|August|September|October|November|December) 20\d\d/, "the month is written out, not a raw 2026-10");
+        noMatch(ib, /\b20\d\d-\d\d\b/, "no raw year-month codes on screen");
+        noMatch(ib, /\([+\u2212-]\d/, "the comparison is a sentence, not a bracketed signed number");
+      }
+      await page.locator(V("interest-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07b-interest");
+      await page.waitForSelector(V("buybacks-card"));
+      await page.waitForSelector(V("buybacks-body") + ", " + V("buybacks-unavailable") + ", " + V("buybacks-error"), { timeout: 45000 });
+      const bb = await text(page);
+      match(bb, /Treasury buybacks/); match(bb, /US Treasury/); noMatch(bb, FORECASTS, "the buybacks card makes no forecasts");
+      if (await present(page, "buybacks-body")) {
+        match(bb, /not a market signal or a forecast/, "the buybacks caveat is shown");
+        const bbody = await inner(page, "buybacks-body");
+        match(bbody, /Latest operation · [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(bbody, /Last 90 days[\s\S]*Last 12 months/, "both windows are shown");
+        noMatch(bbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("buybacks-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07c-buybacks");
+      await page.waitForSelector(V("bills-card"));
+      await page.waitForSelector(V("bills-body") + ", " + V("bills-unavailable") + ", " + V("bills-error"), { timeout: 45000 });
+      const bl = await text(page);
+      match(bl, /Treasury bill auctions/); match(bl, /US Treasury/); noMatch(bl, FORECASTS, "the bill auctions card makes no forecasts");
+      if (await present(page, "bills-body")) {
+        match(bl, /not market signals or forecasts/, "the bill auctions caveat is shown");
+        const bbody = await inner(page, "bills-body");
+        match(bbody, /4-week[\s\S]*13-week[\s\S]*26-week/, "the terms are listed");
+        match(bbody, /Newest completed auction · [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        noMatch(bbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("bills-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07d-bills");
+      await page.waitForSelector(V("borrowing-card"));
+      await page.waitForSelector(V("borrowing-body") + ", " + V("borrowing-unavailable") + ", " + V("borrowing-error"), { timeout: 45000 });
+      const bo = await text(page);
+      match(bo, /Treasury borrowing/); match(bo, /US Treasury/); noMatch(bo, FORECASTS, "the borrowing card makes no forecasts");
+      if (await present(page, "borrowing-body")) {
+        match(bo, /not a market signal or a forecast/, "the borrowing caveat is shown");
+        const bbody = await inner(page, "borrowing-body");
+        match(bbody, /^(January|February|March|April|May|June|July|August|September|October|November|December) 20\d\d so far · through [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the month and the date are written out");
+        match(bbody, /Net new borrowing this month[\s\S]*Fiscal 20\d\d so far[\s\S]*Treasury bills[\s\S]*Treasury notes[\s\S]*Treasury bonds/, "month, fiscal year and the types are shown");
+        noMatch(bbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+        noMatch(bbody, /DOES NOT MATCH/, "the self-check against the source must pass");
+      }
+      await page.locator(V("borrowing-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07e-borrowing");
+      await page.waitForSelector(V("dealers-card"));
+      await page.waitForSelector(V("dealers-body") + ", " + V("dealers-unavailable") + ", " + V("dealers-error"), { timeout: 45000 });
+      const dl = await text(page);
+      match(dl, /Dealer Treasury positions/); match(dl, /New York Fed/); noMatch(dl, FORECASTS, "the dealer positions card makes no forecasts");
+      if (await present(page, "dealers-body")) {
+        match(dl, /not a market signal or a forecast/, "the dealer caveat is shown");
+        const dbody = await inner(page, "dealers-body");
+        match(dbody, /Net position in US Treasuries · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(dbody, /Same week a year earlier[\s\S]*Last \d+ weeks/, "year-ago and range are shown");
+        noMatch(dbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+        noMatch(dbody, /DOES NOT MATCH/, "the self-check against the source must pass");
+      }
+      await page.locator(V("dealers-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07f-dealers");
+
+      await page.waitForSelector(V("futurespos-card"));
+      await page.waitForSelector(V("futurespos-body") + ", " + V("futurespos-unavailable") + ", " + V("futurespos-error"), { timeout: 45000 });
+      const fp = await text(page);
+      match(fp, /Futures positioning/); match(fp, /CFTC/); noMatch(fp, FORECASTS, "the futures positioning card makes no forecasts");
+      if (await present(page, "futurespos-body")) {
+        const fbody = await inner(page, "futurespos-body");
+        match(fbody, /S&P 500 futures \(E-mini\) · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(fbody, /Leveraged funds: net/); match(fbody, /Asset managers: net/); match(fbody, /10-year Treasury note futures/);
+        match(fbody, /checked against the report's own totals/, "the self-check is stated");
+        match(fbody, /not a market signal or a forecast/, "the caveat is shown");
+        noMatch(fbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("futurespos-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07g-futurespos");
+
+      await page.waitForSelector(V("commoditypos-card"));
+      await page.waitForSelector(V("commoditypos-body") + ", " + V("commoditypos-unavailable") + ", " + V("commoditypos-error"), { timeout: 45000 });
+      const cp = await text(page);
+      match(cp, /Commodity positioning/); match(cp, /CFTC/); noMatch(cp, FORECASTS, "the commodity positioning card makes no forecasts");
+      if (await present(page, "commoditypos-body")) {
+        const cbody = await inner(page, "commoditypos-body");
+        match(cbody, /Gold futures · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(cbody, /Managed money: net/); match(cbody, /Swap dealers: net/); match(cbody, /Natural gas futures/);
+        match(cbody, /checked against the report's own totals/, "the self-check is stated");
+        match(cbody, /not a market signal or a forecast/, "the caveat is shown");
+        noMatch(cbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("commoditypos-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07h-commoditypos");
+
+      await page.waitForSelector(V("currencypos-card"));
+      await page.waitForSelector(V("currencypos-body") + ", " + V("currencypos-unavailable") + ", " + V("currencypos-error"), { timeout: 45000 });
+      const cu = await text(page);
+      match(cu, /Currency and volatility positioning/); match(cu, /CFTC/); noMatch(cu, FORECASTS, "the currency positioning card makes no forecasts");
+      if (await present(page, "currencypos-body")) {
+        const ubody = await inner(page, "currencypos-body");
+        match(ubody, /Euro futures · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(ubody, /Leveraged funds: net/); match(ubody, /VIX futures/); match(ubody, /Japanese yen futures/);
+        match(ubody, /checked against the report's own totals/); match(ubody, /not a market signal or a forecast/);
+        noMatch(ubody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("currencypos-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07j-currencypos");
+
+      await page.waitForSelector(V("agripos-card"));
+      await page.waitForSelector(V("agripos-body") + ", " + V("agripos-unavailable") + ", " + V("agripos-error"), { timeout: 45000 });
+      const ag = await text(page);
+      match(ag, /Silver and farm positioning/); match(ag, /CFTC/); noMatch(ag, FORECASTS, "the silver and farm positioning card makes no forecasts");
+      if (await present(page, "agripos-body")) {
+        const abody = await inner(page, "agripos-body");
+        match(abody, /Silver futures · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(abody, /Managed money: net/); match(abody, /Corn futures/); match(abody, /Sugar futures/);
+        match(abody, /checked against the report's own totals/); match(abody, /not a market signal or a forecast/);
+        noMatch(abody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("agripos-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07n-agripos");
+
+      await page.waitForSelector(V("realyields-card"));
+      await page.waitForSelector(V("realyields-body") + ", " + V("realyields-unavailable") + ", " + V("realyields-error"), { timeout: 45000 });
+      const ry = await text(page);
+      match(ry, /Real yields and breakeven inflation/); match(ry, /US Treasury/); noMatch(ry, FORECASTS, "the real yields card makes no forecasts");
+      if (await present(page, "realyields-body")) {
+        const rbody = await inner(page, "realyields-body");
+        match(rbody, /As of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(rbody, /10-year: breakeven inflation \d\.\d\d% \(regular yield \d\.\d\d%, real yield -?\d\.\d\d%\)/, "a 10-year line with the three numbers");
+        match(rbody, /Compared with [A-Z][a-z]{2} \d{1,2}, 20\d\d and [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "comparison dates in words");
+        match(rbody, /Checked: both curves are for the same day/); match(rbody, /not a forecast of inflation/); match(rbody, /not a market signal or a forecast/);
+        noMatch(rbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("realyields-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07i-realyields");
+
+      await page.waitForSelector(V("fincond-card"));
+      await page.waitForSelector(V("fincond-body") + ", " + V("fincond-unavailable") + ", " + V("fincond-error"), { timeout: 45000 });
+      const fc = await text(page);
+      match(fc, /Financial conditions/); match(fc, /Chicago Fed/); noMatch(fc, FORECASTS, "the financial conditions card makes no forecasts");
+      if (await present(page, "fincond-body")) {
+        const fbody = await inner(page, "fincond-body");
+        match(fbody, /Week ending [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(fbody, /Index [+-]?\d\.\d{3}: (tighter|looser) than average|Index [+-]?\d\.\d{3}: at the average/, "the index with a plain reading");
+        match(fbody, /Pieces as published: risk [+-]?\d\.\d{3}, credit [+-]?\d\.\d{3}, leverage [+-]?\d\.\d{3}/, "the three pieces");
+        match(fbody, /Checked: every series is for the same week/); match(fbody, /not a market signal or a forecast/);
+        noMatch(fbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("fincond-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07o-fincond");
+
+      await page.waitForSelector(V("claims-card"));
+      await page.waitForSelector(V("claims-body") + ", " + V("claims-unavailable") + ", " + V("claims-error"), { timeout: 45000 });
+      const jc = await text(page);
+      match(jc, /Weekly jobless claims/); match(jc, /US Department of Labor/); noMatch(jc, FORECASTS, "the jobless claims card makes no forecasts");
+      if (await present(page, "claims-body")) {
+        const cbody = await inner(page, "claims-body");
+        match(cbody, /Week ending [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(cbody, /Initial claims \d{2,3},\d{3}: (toward the low end|toward the high end|in the middle) of the past year's range\. Four-week average \d{2,3},\d{3}\./, "the claims with a plain reading");
+        match(cbody, /Continuing claims [\d,]+ for the week ending [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "continuing claims with their own week");
+        match(cbody, /Checked: every date is a Saturday/); match(cbody, /not a market signal or a forecast/);
+        noMatch(cbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("claims-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07p-claims");
+
+      await page.waitForSelector(V("oil-card"));
+      await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
+      const oilTxt = await text(page);
+      match(oilTxt, /Oil prices/); match(oilTxt, /Energy Information Administration/); noMatch(oilTxt, FORECASTS, "the oil prices card makes no forecasts");
+      if (await present(page, "oil-body")) {
+        const oilBody = await inner(page, "oil-body");
+        match(oilBody, /WTI crude \(US\) \$\d{2,3}\.\d{2} a barrel on [A-Z][a-z]{2} \d{1,2}, 20\d\d: (toward the low end|toward the high end|in the middle) of the past year's range\./, "WTI with its own date and a plain reading");
+        match(oilBody, /Brent crude \(Europe\) \$\d{2,3}\.\d{2} a barrel on [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "Brent with its own date");
+        match(oilBody, /Brent is \$\d+\.\d{2} (above|below) WTI on [A-Z][a-z]{2} \d{1,2}, 20\d\d|Brent and WTI cost the same on/, "the spread with its date");
+        match(oilBody, /Checked: every recent price is above zero/); match(oilBody, /not a market signal or a forecast/);
+        noMatch(oilBody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("oil-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07q-oil");
+
+      await page.waitForSelector(V("customs-card"));
+      await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
+      const cd = await text(page);
+      match(cd, /Customs duties/); match(cd, /US Treasury/); noMatch(cd, FORECASTS, "the customs card makes no forecasts");
+      if (await present(page, "customs-body")) {
+        const kbody = await inner(page, "customs-body");
+        match(kbody, /(January|February|March|April|May|June|July|August|September|October|November|December) 20\d\d/, "the month is written out");
+        match(kbody, /Kept after refunds\. Collected/); match(kbody, /Fiscal 20\d\d so far/); match(kbody, /Same point last year/); match(kbody, /Last \d+ months, kept after refunds/);
+        match(kbody, /Checked: each month's collected minus refunded equals what was kept/); match(kbody, /does not say why refunds/); match(kbody, /not a market signal or a forecast/);
+        noMatch(kbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("customs-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07k-customs");
+
+      await page.waitForSelector(V("receipts-card"));
+      await page.waitForSelector(V("receipts-body") + ", " + V("receipts-unavailable") + ", " + V("receipts-error"), { timeout: 45000 });
+      const rc = await text(page);
+      match(rc, /Where federal revenue comes from/); match(rc, /US Treasury/); noMatch(rc, FORECASTS, "the receipts card makes no forecasts");
+      if (await present(page, "receipts-body")) {
+        const gbody = await inner(page, "receipts-body");
+        match(gbody, /Fiscal 20\d\d so far \(\d+ months? from October\) · through (January|February|March|April|May|June|July|August|September|October|November|December) 20\d\d/, "the month is written out");
+        match(gbody, /Individual income taxes: \$[\d,.]+B/); match(gbody, /Corporate income taxes: /); match(gbody, /Customs duties \(tariffs\): /);
+        match(gbody, /Checked: the seven sources add up/); match(gbody, /does not say why any category rose or fell/); match(gbody, /not a market signal or a forecast/);
+        noMatch(gbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("receipts-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07l-receipts");
+
+      await page.waitForSelector(V("outlays-card"));
+      await page.waitForSelector(V("outlays-body") + ", " + V("outlays-unavailable") + ", " + V("outlays-error"), { timeout: 45000 });
+      const oc = await text(page);
+      match(oc, /Where federal money goes/); match(oc, /US Treasury/); noMatch(oc, FORECASTS, "the outlays card makes no forecasts");
+      if (await present(page, "outlays-body")) {
+        const obody = await inner(page, "outlays-body");
+        match(obody, /Fiscal 20\d\d so far \(\d+ months? from October\) · through (January|February|March|April|May|June|July|August|September|October|November|December) 20\d\d/, "the month is written out");
+        match(obody, /Spent, (up|down) [\d.]+% from/); match(obody, /spending ran ahead of income by/); match(obody, /Social Security: \$[\d,.]+B/); match(obody, /Net Interest: /);
+        match(obody, /Checked: the purposes add up/); match(obody, /does not say why any purpose rose or fell/); match(obody, /not a market signal or a forecast/);
+        noMatch(obody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("outlays-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07m-outlays");
+      const macroAll = await page.evaluate(() => { const el = document.querySelector('[data-testid="macro-brief"]'); return el ? el.innerText : ""; });          // the Macro screen only: screens stay mounted under the one on top
+      assert(macroAll.length > 500, "the Macro screen text should be read in full");
+      const rawDates = [...new Set(macroAll.match(/\b20\d\d-\d\d(-\d\d)?\b/g) || [])];
+      const allLines = macroAll.split("\n");
+      const rawLines = allLines.map((l, i) => (/\b20\d\d-\d\d(-\d\d)?\b/.test(l) ? `${(allLines[i - 1] || "").trim().slice(0, 40)} >> ${l.trim().slice(0, 60)}` : "")).filter(Boolean);
+      assert(rawDates.length === 0, `the Macro screen must write dates in words, found raw dates in: ${rawLines.join(" || ")}`);
+      await page.waitForSelector(V("debtrates-card"));
+      await page.waitForSelector(V("debtrates-body") + ", " + V("debtrates-unavailable") + ", " + V("debtrates-error"), { timeout: 45000 });
+      const dr = await text(page);
+      match(dr, /Interest the Treasury pays/); match(dr, /US Treasury/); noMatch(dr, FORECASTS, "the debt-rates card makes no forecasts");
+      if (await present(page, "debtrates-body")) match(dr, /not a market signal or a forecast/, "the debt-rates caveat is shown");
+      await page.locator(V("debtrates-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07a-debtrates");
+      await page.waitForSelector(V("debtmix-card"));
+      await page.waitForSelector(V("debtmix-body") + ", " + V("debtmix-unavailable") + ", " + V("debtmix-error"), { timeout: 45000 });
+      const dm = await text(page);
+      match(dm, /What the US debt is made of/); match(dm, /US Treasury/); noMatch(dm, FORECASTS, "the debt-mix card makes no forecasts");
+      if (await present(page, "debtmix-body")) match(dm, /not a market signal or a forecast/, "the debt-mix caveat is shown");
+      await page.waitForSelector(V("fedholdings-card"));
+      await page.waitForSelector(V("fedholdings-body") + ", " + V("fedholdings-unavailable") + ", " + V("fedholdings-error"), { timeout: 60000 });
+      const fh = await text(page);
+      match(fh, /What the Fed holds/); match(fh, /New York Fed/); noMatch(fh, FORECASTS, "the Fed holdings card makes no forecasts");
+      if (await present(page, "fedholdings-body")) match(fh, /not a market signal or a forecast/, "the Fed holdings caveat is shown");
+      await page.waitForSelector(V("fedrates-card"));
+      await page.waitForSelector(V("fedrates-body") + ", " + V("fedrates-unavailable") + ", " + V("fedrates-error"), { timeout: 45000 });
+      const fr = await text(page);
+      match(fr, /Fed interest rate/); match(fr, /New York Fed/); noMatch(fr, FORECASTS, "the Fed rate card makes no forecasts");
+      if (await present(page, "fedrates-body")) match(fr, /not market signals or forecasts/, "the Fed rate caveat is shown");
+      match(wt, /World economies/); noMatch(wt, FORECASTS, "the World Bank card makes no forecasts");
+      if (await present(page, "world-body")) match(wt, /revised later/, "the annual-data caveat is shown");
+      match(fxText, /US dollar vs major currencies/); match(fxText, /ECB/); noMatch(fxText, FORECASTS, "the exchange-rate card makes no forecasts");
+      match(t, /US Treasury/, "the Treasury card is on the Macro screen"); match(t, /Yield curve|Yield curve unavailable|Demo mode/i);
+      match(t, /Key indicators/); noMatch(t, /What matters today/, "the rule-based notes section was removed on request"); match(t, /Upcoming/); match(t, /Headlines/);
+      match(t, /Official indicators could not be loaded right now/, "missing indicators are said once, in plain words, not invented");
+      assert(!/Unavailable: unavailable/i.test(t), "no 'Unavailable: unavailable (CODE)' wording");
+      eq((t.match(/Unavailable:/g) || []).length, 0, "no wall of 'Unavailable:' rows; the one plain message replaces them");
+      match(t, /Consensus forecasts .* not shown/, "the gaps are listed");
+      noMatch(t, FORECASTS, "no forecasts");
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls on Macro");
+      await page.waitForSelector(V("calendar-body"), { timeout: 20000 });
+      const cal = await inner(page, "calendar-card");
+      match(cal, /CPI \(inflation\)/, "the CPI release is on the calendar");
+      match(cal, /AAPL · Apple Inc\./, "a big company's earnings are listed");
+      match(cal, /Estimate \$1\.25 \(30 analysts\)/, "the estimate and analyst count come from the source");
+      match(cal, /unofficial/, "unofficial sources are labelled");
+      match(cal, /official/);
+      noMatch(cal, /TINY/, "the default Major scope leaves out small unknown companies");
+      await page.click(V("cal-scope-all"));
+      await page.waitForFunction(() => /TINY/.test(document.querySelector('[data-testid="calendar-card"]')?.innerText ?? ""), null, { timeout: 15000 });
+      await page.click(V("cal-kind-economy"));
+      await page.waitForFunction(() => !/AAPL/.test(document.querySelector('[data-testid="calendar-card"]')?.innerText ?? ""), null, { timeout: 15000 });
+      match(await inner(page, "calendar-card"), /CPI \(inflation\)/, "the Economy filter keeps the CPI release");
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls on the calendar");
+      await shot(page, "13-macro");
+    });
+
+    await check("Stock deep-dive: collapsed by default, then filings status, valuation, earnings, rule-based points and the gaps are labelled", async () => {
+      await toStocks(page);
+      await page.waitForSelector(V("earnings-card"));
+      await page.click(V("earnings-toggle"));
+      await page.waitForSelector(V("earnings-empty"), { timeout: 30000 }).catch(() => page.waitForSelector(V("earn-row-AAPL"), { timeout: 5000 }));
+      await openFromWatchlist(page, ID.aapl);
+      await page.waitForSelector(V("stock-card"));
+      assert(!(await present(page, "stock-body")), "the deep-dive must stay collapsed until asked for");
+      await page.click(V("stock-toggle"));
+      await page.waitForSelector(V("stock-body"), { timeout: 45000 });
+      const t = await text(page);
+      match(t, /Company deep-dive/); match(t, /Financials \(annual filings\)/); match(t, /Bull points/); match(t, /Bear points/);
+      match(t, /Interpretation \(rule-based\)/); match(t, /Guidance and analyst consensus .* not available/i, "the gaps are listed");
+      match(t, /SEC filings are off|No filing data loaded|Demo/i, "missing SEC contact is said plainly, not papered over");
+      assert((t.match(/SEC filings are off/g) || []).length <= 1, "the missing SEC contact is explained once on the stock page, not repeated in every card");
+      if (await present(page, "stock-sec-off")) { match(await inner(page, "stock-sec-off"), /steps are in the SEC filings card above/, "the deep-dive points to the one explanation"); noMatch(await inner(page, "stock-body"), /\$env:ATLAS_SEC_CONTACT/, "the setup line is not repeated inside the deep-dive"); }
+      const points = (await page.$$eval("div", (els) => els.map((e) => e.innerText || "").filter((x) => x.startsWith("•")))).join(" ");
+      noMatch(points, FORECASTS, "bull and bear points make no forecasts");       // (headlines are quoted third-party text and are checked separately)
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the deep-dive");
+      await shot(page, "14-stock-deep-dive");
+      await page.getByText("Financials (annual filings)").first().scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "14b-stock-financials");
+      await page.getByText("Interpretation (rule-based)").first().scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "14c-stock-bottom");
+      await page.click(V("back"));
+    });
+
+    await check("What-if simulator: collapsed, then five labelled replays of the past, amount changes the answer, no trading controls", async () => {
+      await openFromWatchlist(page, ID.aapl);
+      await page.waitForSelector(V("whatif-card"));
+      assert(!(await present(page, "whatif-body")), "the simulator must stay collapsed until asked for");
+      await page.click(V("whatif-toggle"));
+      await page.waitForSelector(V("whatif-body"), { timeout: 45000 });
+      const t = await text(page);
+      match(t, /What if I had bought AAPL\?/); match(t, /One purchase, held to today/); match(t, /The same amount every month/); match(t, /Whichever day you bought/);
+      match(t, /With a rule for getting out/); match(t, /shuffled years/); match(t, /Simulation, not a forecast/); match(t, /Past results do not predict future results/);
+      const first = await page.$eval(V("whatif-lump-0"), (e) => e.innerText);
+      await page.click(V("whatif-amt-5000"));
+      await page.waitForFunction(([id, before]) => { const e = document.querySelector(`[data-testid="${id}"]`); return !!e && e.innerText !== before; }, ["whatif-lump-0", first], { timeout: 30000 });
+      match(await text(page), /\$5,000/, "the chosen amount is used");
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the simulator");
+      await shot(page, "15-what-if");
+      await page.click(V("back"));
+    });
+
+    await check("SEC filings card on a stock page: filters, rows link to sec.gov or the missing SEC contact is said plainly, no trading controls", async () => {
+      await openFromWatchlist(page, ID.aapl);
+      await page.waitForSelector(V("filings-card"));
+      await page.waitForSelector(V("filings-body") + ", " + V("filings-error"), { timeout: 45000 });
+      const t = await text(page);
+      match(t, /SEC filings/); match(t, /Reports/); match(t, /Insiders/); match(t, /Big holders/);
+      match(t, /Filings are switched off|ATLAS_SEC_CONTACT|Demo mode|Tap a row to open it on sec\.gov/i, "either filings or the plain reason they are missing");
+      await page.click(V("filings-group-insiders"));
+      await page.waitForSelector(V("filings-body"), { timeout: 30000 });
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the filings card");
+      await page.click(V("back"));
+    });
+
+    await check("Fear & Greed card on the BTC page: shows its source and says it is not a signal, whether the index loads or not", async () => {
+      await openFromWatchlist(page, ID.btc);
+      await page.waitForSelector(V("sentiment-card"));
+      await page.waitForSelector(V("sentiment-body") + ", " + V("sentiment-unavailable") + ", " + V("sentiment-error"), { timeout: 30000 });
+      const t = await text(page);
+      match(t, /Crypto Fear & Greed/); match(t, /not a forecast or a trading signal/i); match(t, /alternative\.me/);
+      await page.waitForSelector(V("positioning-card"));
+      await page.waitForSelector(V("positioning-body") + ", " + V("positioning-unavailable") + ", " + V("positioning-error"), { timeout: 45000 });
+      const pt = await text(page);
+      match(pt, /Bitcoin futures positioning/); match(pt, /CFTC/); noMatch(pt, FORECASTS, "positioning makes no forecasts");
+      await page.waitForSelector(V("stablecoins-card"));
+      await page.waitForSelector(V("stablecoins-body") + ", " + V("stablecoins-unavailable") + ", " + V("stablecoins-error"), { timeout: 60000 });
+      const st = await text(page);
+      await page.waitForSelector(V("market-card"));
+      await page.waitForSelector(V("market-body") + ", " + V("market-unavailable") + ", " + V("market-error"), { timeout: 45000 });
+      const mk = await text(page);
+      match(mk, /Crypto market/); match(mk, /CoinGecko/); noMatch(mk, FORECASTS, "the crypto market card makes no forecasts");
+      match(st, /Stablecoin supply/); noMatch(st, FORECASTS, "stablecoin card makes no forecasts");
+      await page.waitForSelector(V("network-card"));
+      await page.waitForSelector(V("network-body") + ", " + V("network-error"), { timeout: 60000 });
+      const nt2 = await text(page);
+      await page.waitForSelector(V("tracker-card"));
+      await page.waitForSelector(V("tracker-body") + ", " + V("tracker-error"), { timeout: 60000 });
+      const tk = await text(page);
+      match(tk, /Strategy tracker/); match(tk, /Aroon trend/); match(tk, /Backtest \(frozen on/); match(tk, /Forward record/); match(tk, /Weak evidence|No reliable evidence|Moderate evidence/);
+      noMatch(tk, FORECASTS, "the tracker makes no forecasts"); match(tk, /(too little to say anything|just started|Forward tracking needs real prices)/i, "a thin forward record is called thin");
+      match(nt2, /Bitcoin network/); match(nt2, /Not a price signal: fees can be near zero/); noMatch(nt2, FORECASTS, "network card makes no forecasts");
+      if (await present(page, "stablecoins-body")) match(st, /not a price signal/, "the liquidity-gauge caveat is shown");
+      if (await present(page, "positioning-body")) match(pt, /Net short is not the same as bearish/, "the basis-trade caveat is shown");
+      await page.waitForSelector(V("experiments-card"));
+      await page.waitForSelector(V("experiments-body") + ", " + V("experiments-error"), { timeout: 30000 });
+      const ex = await text(page);
+      match(ex, /Experiments record/); match(ex, /7 tested, 0 passed the bar/); match(ex, /Bitcoin funding carry/); match(ex, /Bitcoin only while US net liquidity is rising/); match(ex, /Bitcoin only while miners are not capitulating/); match(ex, /Bitcoin only while US stocks are in an uptrend/); match(ex, /Did not pass/); match(ex, /None has passed yet/);
+      noMatch(ex, /guaranteed|will make money|buy now/i, "the experiments record makes no promises");
+      await page.locator(V("experiments-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "08x-experiments");
+      await page.locator('[data-testid^="experiment-exp"]:visible').last().scrollIntoViewIfNeeded().catch(() => undefined);      // the newest entry, so every new experiment gets looked at too
+      await shot(page, "08y-experiments-newest");
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the sentiment card");
+      await page.click(V("back"));
+    });
+
+    await check("no uncaught errors in the browser during the whole run", async () => { eq(S.pageErrors, [], "uncaught page errors"); eq(S.consoleErrors, [], "React warnings in the browser console"); });
   } finally {
     await S.ctx.close().catch(() => undefined);
     await be.stop();
@@ -480,7 +969,7 @@ async function healthy(browser) {
 
 // ---------------------------------------------------------------------------------------------------------------- scenario 2: old prices
 async function stale(browser) {
-  const be = await startBackend(["--age", String(3 * 86400)]);
+  const be = await startBackend(["--age", String(7 * 86400)]); // 7 days: stale at any time of week (3-day-old daily bars are the latest session on a Monday morning)
   const S = await phone(browser);
   const page = S.page;
   try {
@@ -496,7 +985,7 @@ async function stale(browser) {
     await check("the asset screen says the price is stale, how old it is, and who supplied it", async () => {
       await openFromWatchlist(page, ID.aapl);
       await page.waitForSelector(V("stale-banner"));
-      match(await inner(page, "stale-banner"), /3 days ago|72 hours|3d/i, "how old");
+      match(await inner(page, "stale-banner"), /7 days ago|168 hours|7d/i, "how old");
       const f = await inner(page, "asset-freshness");
       match(f, /Stale/); match(f, /Yahoo Finance/);
       await shot(page, "02-asset-stale");
@@ -601,7 +1090,7 @@ async function login(browser) {
       await connectTo(page, be.url, "wrong password");
       await page.waitForSelector(V("connect-error"));
       match(await inner(page, "connect-error"), /password|incorrect|wrong|invalid/i);
-      assert(!(await present(page, "tab-watchlist")), "must stay on the connect screen");
+      assert(!(await present(page, "tab-stocks")), "must stay on the connect screen");
     });
     await check("the right password logs in, and the login survives a reload", async () => {
       await page.fill(T("server-password"), "correct horse battery");
@@ -628,7 +1117,7 @@ async function login(browser) {
       be = await startBackend(["--db", db, "--password", "a different password"], { port: be.port });
       await page.reload();
       await page.waitForSelector(T("connect-title"), { timeout: 30000 });
-      assert(!(await present(page, "tab-watchlist")), "must not show the app with a rejected login");
+      assert(!(await present(page, "tab-stocks")), "must not show the app with a rejected login");
     });
   } finally { await S.ctx.close().catch(() => undefined); await be.stop(); }
 }
@@ -644,7 +1133,7 @@ async function demo(browser) {
       await connectTo(page, demoBe.url); await ready(page);
       await search(page, "bitcoin"); await addFromSearch(page, ID.btc);
       await search(page, "aapl"); await addFromSearch(page, ID.aapl);
-      await page.click(T("tab-watchlist"));
+      await toStocks(page);
       await waitRows(page, [ID.btc, ID.aapl]);
       await page.waitForSelector(V("demo-banner"));
       await shot(page, "01-demo-watchlist");
@@ -659,6 +1148,65 @@ async function demo(browser) {
       await page.click(T("profile-button")); await page.waitForSelector(T("settings-title"));
       match(await text(page), /Demo mode/);
     });
+    await check("BTC Strategy Lab on a demo server: collapsed, runs five strategies, labels the data as synthetic, says what it is not, never offers a trade", async () => {
+      await page.goto(WEB_ORIGIN); await ready(page);
+      await page.click(V("tab-btc"));
+      await page.waitForSelector(V("lab-card"));
+      assert(!(await present(page, "lab-run")), "the lab stays collapsed until asked for");
+      await page.click(V("lab-toggle"));
+      await page.route("**/api/btclab/run", async (route) => { await sleep(1500); await route.continue(); });      // slow it down so the waiting message can be seen
+      await page.click(V("lab-run"));
+      await page.waitForSelector(V("lab-busy"), { timeout: 5000 });
+      match(await inner(page, "lab-busy"), /Running the comparison.*first run on real data downloads/s, "a waiting message explains the first-run download");
+      await shot(page, "15a-lab-busy");
+      await page.waitForSelector(V("lab-results"), { timeout: 60000 });
+      await page.unroute("**/api/btclab/run");
+      assert(!(await present(page, "lab-busy")), "the waiting message goes away when results arrive");
+      const t = await inner(page, "lab-results");
+      match(t, /synthetic/i, "demo prices are labelled synthetic");
+      eq(await page.locator('[data-testid^="lab-row-"]:visible').count(), 5, "five strategies by default");
+      match(t, /not a forecast|Past results do not predict/i);
+      match(t, /(No reliable|Weak|Moderate) evidence/);
+      await page.locator('[data-testid^="lab-row-"]:visible').first().click();
+      match(await text(page), /Right now \(/, "current rule state is shown");
+      match(await text(page), /Too few out-of-sample trades \(\d+; at least 15 are needed\) to run a luck check/, "a rule with too few trades is not given a misleading luck check");
+      await shot(page, "15b-lab-results-expanded");
+      noMatch(await text(page), FORECASTS, "no forecasts");
+      await page.click(V("lab-perp")); await page.click(V("lab-lev-3")); await page.click(V("lab-run"));
+      await page.waitForFunction(() => /perp/i.test(document.body.innerText) || /funding/i.test(document.body.innerText), null, { timeout: 60000 });
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the lab");
+      await shot(page, "15-strategy-lab");
+      await toStocks(page); await page.click(V("profile-button")); await page.waitForSelector(T("settings-title"));      // leave the app where the next check expects it
+    });
+    await check("Discover on a demo server: five picks with reasons, risks, evidence and dates, a visible method, save to watchlist, no trade buttons", async () => {
+      await page.goto(WEB_ORIGIN); await ready(page);
+      await page.click(V("tab-discover"));
+      await page.waitForSelector(V("discover-body"), { timeout: 90000 });
+      await page.waitForSelector(V("discover-demo"));
+      await page.waitForSelector(V("narrative-card"));
+      await page.waitForSelector(V("narrative-body") + ", " + V("narrative-none") + ", " + V("narrative-error"), { timeout: 90000 });
+      const nt = await text(page);
+      match(nt, /Narrative of the day/);
+      if (await present(page, "narrative-body")) { match(nt, /Why it is in focus/); match(nt, /Risks to weigh/); match(nt, /Demo data/, "demo narrative is labelled"); match(nt, /Not a recommendation, rating or prediction/i); noMatch(nt, FORECASTS, "narrative makes no forecasts"); }
+      const picks = await page.$$eval('[data-testid^="pick-"]:not([data-testid^="pick-more"]):not([data-testid^="pick-save"])', (els) => els.map((e) => e.getAttribute("data-testid")));
+      assert(picks.length >= 1 && picks.length <= 5, `between one and five picks (got ${picks.length})`);
+      const t = await text(page);
+      match(t, /Why it ranks well/); match(t, /Risks to weigh/); match(t, /Not a recommendation, rating or forecast/);
+      match(t, /Not included:/); match(t, /Earnings surprises, IPO calendars/);
+      noMatch(t, FORECASTS, "no forecasts");
+      const sym = picks[0].slice(5);
+      await page.click(V(`pick-more-${sym}`));
+      match(await text(page), /Score breakdown/); match(await text(page), /as of \d{4}-\d{2}-\d{2}/, "evidence carries dates");
+      await page.click(V("discover-how"));
+      await page.waitForSelector(V("discover-method"));
+      match(await inner(page, "discover-method"), /Growth .* 25%/s, "weights are shown");
+      await page.click(V(`pick-save-${sym}`));
+      await page.waitForFunction((s2) => /On your watchlist/.test(document.querySelector(`[data-testid="pick-save-${s2}"]`)?.innerText ?? ""), sym, { timeout: 15000 });
+      eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in Discover");
+      await shot(page, "16-discover");
+      await toStocks(page); await page.click(V("profile-button")); await page.waitForSelector(T("settings-title"));
+    });
+
     await check("switching to a live server drops the demo list and every demo label; nothing carries over", async () => {
       await page.fill(T("server-url"), liveBe.url);
       await page.click(T("connect-submit"));

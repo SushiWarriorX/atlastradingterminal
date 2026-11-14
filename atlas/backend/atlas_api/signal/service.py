@@ -114,6 +114,22 @@ class SignalService:
     async def chart(self, asset_id: str, rng: str) -> dict:
         return await self.summary.chart(await self._asset(asset_id), rng)
 
+    async def whatif(self, asset_id: str, amount: float) -> dict:
+        """Replay buying this asset in the past (about five years of daily closes at most). Every figure comes from the bars; the data source and status are returned with it."""
+        from . import whatif as W
+        a = await self._asset(asset_id)
+        if not 1 <= amount <= 10_000_000:
+            raise SignalError("INVALID_AMOUNT", "amount must be between 1 and 10,000,000", 422)
+        o = await self.summary.svc.ohlcv(a.inst, "1d", 1400)
+        if not o.candles:
+            raise SignalError("NO_DATA", f"No price history could be loaded for {a.symbol}.", 422)
+        try:
+            res = W.simulate([(x.time, x.close) for x in o.candles], amount, a.id)
+        except ValueError as e:
+            raise SignalError("NOT_ENOUGH_HISTORY", str(e), 422) from None
+        res.update({"asset": a.public(), "prov": prov_dict(o.prov), "adjustment": o.adjustment})
+        return res
+
     async def asset_header(self, asset_id: str) -> dict:
         a = await self._asset(asset_id)
         row = await self.summary.row(a)
