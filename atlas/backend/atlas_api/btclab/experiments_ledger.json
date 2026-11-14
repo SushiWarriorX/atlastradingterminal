@@ -1,0 +1,192 @@
+{
+ "entries": [
+  {
+   "id": "exp1_vol_target",
+   "name": "Volatility-targeted Bitcoin",
+   "date": "2026-11-11",
+   "registered": "rule and pass bar written down and pushed before the run (2026-11-11 01:20 UTC)",
+   "idea": "Hold Bitcoin, but hold less of it when it has recently been jumping around, aiming for a smoother ride.",
+   "period": "Last 30% of Bitcoin's history (never used to design the rule)",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule",
+     "v": "+116.8%"
+    },
+    {
+     "k": "Just holding Bitcoin",
+     "v": "+159.3%"
+    },
+    {
+     "k": "Worst drop, rule vs holding",
+     "v": "-52.4% vs -53.1%"
+    },
+    {
+     "k": "Sharpe (return per unit of risk), rule vs holding",
+     "v": "0.775 vs 0.84"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Sharpe at least 0.10 above holding",
+     "met": false
+    },
+    {
+     "rule": "Worst drop at least 10 points shallower",
+     "met": false
+    },
+    {
+     "rule": "Return at least 70% of holding's",
+     "met": true
+    },
+    {
+     "rule": "Beats simply holding less Bitcoin",
+     "met": false
+    }
+   ],
+   "reading": "Reacting to volatility added nothing over just holding a bit less Bitcoin.",
+   "not_verified": "Cash earned nothing in the test. Fees were modelled; real trading would differ."
+  },
+  {
+   "id": "exp2_momentum",
+   "name": "Crypto momentum (top 5 of 28 coins)",
+   "date": "2026-11-11",
+   "registered": "commit 2a93f19, pushed before the run",
+   "idea": "Each week, hold the five coins that rose most over the last 90 days.",
+   "period": "Last 30% of the history of 28 coins",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule",
+     "v": "+206.2%"
+    },
+    {
+     "k": "Just holding Bitcoin",
+     "v": "+174.6%"
+    },
+    {
+     "k": "Worst drop, rule vs holding",
+     "v": "-63.0% vs -53.1%"
+    },
+    {
+     "k": "Sharpe, rule vs holding",
+     "v": "0.81 vs 0.876"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Sharpe at least 0.15 above holding every coin",
+     "met": true
+    },
+    {
+     "rule": "Sharpe above holding Bitcoin",
+     "met": false
+    },
+    {
+     "rule": "Return at least Bitcoin's",
+     "met": true
+    },
+    {
+     "rule": "Beats 95% of random 5-coin picks",
+     "met": true
+    }
+   ],
+   "reading": "It beat random picking and the whole list, but took more risk than Bitcoin for it.",
+   "not_verified": "The coin list is coins that exist today, so dead coins are missing and the result is flattered by an unknown amount."
+  },
+  {
+   "id": "exp3_gated_momentum",
+   "name": "Momentum with a Bitcoin trend filter",
+   "date": "2026-11-11",
+   "registered": "commit 71d9396, pushed before the run",
+   "idea": "The same momentum rule, but only invested while Bitcoin is above its 200-day average; otherwise cash.",
+   "period": "Last 30% of the history of 28 coins",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule",
+     "v": "+345.2%"
+    },
+    {
+     "k": "Just holding Bitcoin",
+     "v": "+174.6%"
+    },
+    {
+     "k": "Worst drop, rule vs holding",
+     "v": "-60.0% vs -53.1%"
+    },
+    {
+     "k": "Sharpe, rule vs holding",
+     "v": "0.989 vs 0.876"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Sharpe at least 0.15 above the gated list",
+     "met": true
+    },
+    {
+     "rule": "Sharpe above holding Bitcoin",
+     "met": true
+    },
+    {
+     "rule": "Worst drop shallower than Bitcoin's",
+     "met": false
+    },
+    {
+     "rule": "Beats 95% of gated random picks",
+     "met": true
+    },
+    {
+     "rule": "Return above zero, at least 30 trades",
+     "met": true
+    }
+   ],
+   "reading": "A near miss: better on most counts, but the worst drop was still deeper than Bitcoin's, which was the reason for the filter. Closed, not retuned.",
+   "not_verified": "Same survivorship flattery as above. This was the second look at one idea, so a pass would have counted for less."
+  },
+  {
+   "id": "exp4_funding_carry",
+   "name": "Bitcoin funding carry (market-neutral)",
+   "date": "2026-11-14",
+   "registered": "commit 539ca0e, simulator committed before the run (4833b9f)",
+   "idea": "Hold Bitcoin and short the matching futures contract to collect its funding payments, switching on only when payments beat Treasury bills.",
+   "period": "Last year (2025-11-06 to 2026-11-13)",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule, per year",
+     "v": "+0.66%"
+    },
+    {
+     "k": "Always holding the carry, per year",
+     "v": "+2.68%"
+    },
+    {
+     "k": "3-month Treasury bills, per year",
+     "v": "+3.78%"
+    },
+    {
+     "k": "Just holding Bitcoin, per year",
+     "v": "-33.7%"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Beats bills by at least 1 point a year",
+     "met": false
+    },
+    {
+     "rule": "Worst drop no deeper than 3%",
+     "met": true
+    },
+    {
+     "rule": "At least as good as always holding the carry",
+     "met": false
+    }
+   ],
+   "reading": "Funding paid well in 2024 but less than bills this past year, and the 11 switches cost more in fees than they earned.",
+   "not_verified": "Exchange, price-mismatch and liquidation risk are not modelled. One market cycle of data."
+  }
+ ]
+}

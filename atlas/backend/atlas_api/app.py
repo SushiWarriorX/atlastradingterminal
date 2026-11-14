@@ -1292,6 +1292,16 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         except LabError as e:
             raise ApiError("LAB_UNAVAILABLE", str(e), 503)
 
+    @app.get("/api/btclab/experiments")
+    async def btclab_experiments():
+        """The pre-registered strategy experiments and how each ended (a frozen ledger, never recomputed). Research only: nothing here is advice and nothing places a trade."""
+        import json as _json
+        from pathlib import Path as _P
+        entries = _json.loads((_P(__file__).parent / "btclab" / "experiments_ledger.json").read_text())["entries"]
+        passed = sum(1 for e in entries if e["verdict"] == "passed")
+        return ok({"entries": entries, "tested": len(entries), "passed": passed,
+                   "note": "Each rule and pass bar was written down before it was run, then run once and never adjusted. A pass would only mean a candidate to follow on new data for 60 days, never 'profitable'. None has passed yet."})
+
     @app.post("/api/btclab/run")
     async def btclab_run(b: LabRunIn):
         try:

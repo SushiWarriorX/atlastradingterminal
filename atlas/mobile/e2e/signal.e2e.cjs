@@ -911,6 +911,13 @@ async function healthy(browser) {
       match(nt2, /Bitcoin network/); match(nt2, /Not a price signal: fees can be near zero/); noMatch(nt2, FORECASTS, "network card makes no forecasts");
       if (await present(page, "stablecoins-body")) match(st, /not a price signal/, "the liquidity-gauge caveat is shown");
       if (await present(page, "positioning-body")) match(pt, /Net short is not the same as bearish/, "the basis-trade caveat is shown");
+      await page.waitForSelector(V("experiments-card"));
+      await page.waitForSelector(V("experiments-body") + ", " + V("experiments-error"), { timeout: 30000 });
+      const ex = await text(page);
+      match(ex, /Experiments record/); match(ex, /4 tested, 0 passed the bar/); match(ex, /Bitcoin funding carry/); match(ex, /Did not pass/); match(ex, /None has passed yet/);
+      noMatch(ex, /guaranteed|will make money|buy now/i, "the experiments record makes no promises");
+      await page.locator(V("experiments-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "08x-experiments");
       eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the sentiment card");
       await page.click(V("back"));
     });

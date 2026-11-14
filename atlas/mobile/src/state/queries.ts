@@ -201,6 +201,11 @@ export function useFx() {
   return useQuery({ queryKey: keys(baseUrl).fx, queryFn: () => need(api).fx(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 60 * 60_000, retry: 0 });
 }
 
+export function useExperiments() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).experiments, queryFn: () => need(api).experiments(), enabled: !!api, staleTime: 60 * 60_000, retry: 0 });
+}
+
 export function useStrategyTracker() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).tracker, queryFn: () => need(api).strategyTracker(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 2 * 60 * 60_000, retry: 0 });

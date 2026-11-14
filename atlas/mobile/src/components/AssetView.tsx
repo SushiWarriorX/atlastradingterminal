@@ -13,6 +13,7 @@ import { PositioningCard } from "./PositioningCard";
 import { StablecoinsCard } from "./StablecoinsCard";
 import { NetworkCard } from "./NetworkCard";
 import { StrategyTrackerCard } from "./StrategyTrackerCard";
+import { ExperimentsCard } from "./ExperimentsCard";
 import { CryptoMarketCard } from "./CryptoMarketCard";
 import { SecFilingsCard } from "./SecFilingsCard";
 import { StrategyLabCard } from "./StrategyLabCard";
@@ -144,6 +145,7 @@ export function AssetView({ id, embedded, hideBack }: { id: string; embedded?: b
           {a?.id === BTC_ID ? <NetworkCard /> : null}
           {a?.id === BTC_ID ? <StrategyLabCard /> : null}
           {a?.id === BTC_ID ? <StrategyTrackerCard /> : null}
+          {a?.id === BTC_ID ? <ExperimentsCard /> : null}
           <View style={{ flexDirection: "row", gap: space.sm, alignItems: "flex-start", marginTop: space.md }}>
             <Ionicons name="information-circle-outline" size={16} color={color.faint} />
             <Txt variant="tiny" style={{ flex: 1 }}>Research only. Signal cannot place trades, and nothing here is financial advice. Figures are calculated by the server from the sources shown; written explanations only describe them.</Txt>

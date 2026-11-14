@@ -1,4 +1,4 @@
-import type { FinConditionsData, Brief, CandidatesFeed, Changes, FundamentalResearch, ListingsFeed, MyState, CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, OpsOverview, FedOpsData, TgaData, AuctionsData, BudgetData, InterestData, BuybacksData, BillAuctionsData, BorrowingData, DealersData, FuturesPositioningData, RealYieldsData, CustomsData, ReceiptsData, OutlaysData, DebtRatesData, DebtMixData, FedHoldingsData, FedRatesData, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
+import type { ExperimentsData, FinConditionsData, Brief, CandidatesFeed, Changes, FundamentalResearch, ListingsFeed, MyState, CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, OpsOverview, FedOpsData, TgaData, AuctionsData, BudgetData, InterestData, BuybacksData, BillAuctionsData, BorrowingData, DealersData, FuturesPositioningData, RealYieldsData, CustomsData, ReceiptsData, OutlaysData, DebtRatesData, DebtMixData, FedHoldingsData, FedRatesData, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
 
 /** A failure with a code the UI can act on. `network` means we never got an answer. */
 export class ApiError extends Error {
@@ -83,6 +83,7 @@ export function createApi(opts: ClientOptions) {
     btcStablecoins: () => call<Stablecoins>("/api/btc/stablecoins", { timeoutMs: 60_000 }),
     btcNetwork: () => call<OnChain>("/api/btc/network", { timeoutMs: 45_000 }),
     fx: () => call<FxData>("/api/macro/fx", { timeoutMs: 45_000 }),
+    experiments: () => call<ExperimentsData>("/api/btclab/experiments", { timeoutMs: 30_000 }),
     strategyTracker: () => call<TrackerData>("/api/btclab/tracker", { timeoutMs: 60_000 }),
     worldBank: () => call<WorldData>("/api/macro/world", { timeoutMs: 60_000 }),
     btcMarket: () => call<CryptoMarket>("/api/btc/market", { timeoutMs: 45_000 }),

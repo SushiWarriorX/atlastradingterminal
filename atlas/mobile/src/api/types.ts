@@ -251,6 +251,8 @@ export interface TrackerEntry {
     luck_check: { lower_bound: { lower: number; confidence_pct: number; n_compared: number } | null; note: string | null }; evidence: { level: "none" | "weak" | "moderate"; reasons: string[] } };
   forward: TrackerForward | null;
 }
+export interface ExperimentEntry { id: string; name: string; date: string; registered: string; idea: string; period: string; verdict: "failed" | "passed"; results: { k: string; v: string }[]; conditions: { rule: string; met: boolean }[]; reading: string; not_verified: string }
+export interface ExperimentsData { entries: ExperimentEntry[]; tested: number; passed: number; note: string; as_of?: string }
 export interface TrackerData { as_of: string; demo: boolean; entries: TrackerEntry[]; library_size: number; min_forward_days: number; notes: string[]; data: { demo: boolean; source: string; last_bar: string | null } }
 
 export interface WorldRow { country: string; iso: string; available: boolean; year?: number; value?: number; previous_year?: number | null; previous_value?: number | null; change?: number | null; years_old?: number; history?: { year: number; value: number }[] }
