@@ -918,6 +918,8 @@ async function healthy(browser) {
       noMatch(ex, /guaranteed|will make money|buy now/i, "the experiments record makes no promises");
       await page.locator(V("experiments-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "08x-experiments");
+      await page.locator('[data-testid^="experiment-exp"]:visible').last().scrollIntoViewIfNeeded().catch(() => undefined);      // the newest entry, so every new experiment gets looked at too
+      await shot(page, "08y-experiments-newest");
       eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the sentiment card");
       await page.click(V("back"));
     });
