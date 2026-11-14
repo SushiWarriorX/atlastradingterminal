@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-14 10:40 | Claude | strategy | OWNER DECISION: keep testing strategies yourself and say if profitable. Experiment 4 (BTC funding carry with a funding-regime switch, market-neutral) pre-registered in EDGE_PLAN.md before any code or result | Run it once (see next row); strategy hours now run pre-registered experiments by themselves |
 | 2026-11-14 10:17 | Claude | strategy | No change: nothing cleared to test, no owner reply on the strategy question | Owner call still open (see 07:17 row on 2026-11-12) |
 | 2026-11-14 09:17 | Claude | skills | No change: catalog search empty (18th time); nothing installed | Owner: OK to write own repo skills on skills hours? |
 | 2026-11-14 08:17 | Claude | data | No change: blocked hosts still refuse, queue empty | Owner: allow api.census.gov and ec.europa.eu |
