@@ -1,3 +1,5 @@
+# NOT CURRENT (2026-11-14): the first stage below builds the desktop web terminal (atlas/web), which was removed on 2026-11-12, so `docker build` fails at its first COPY.
+# What the cloud image should serve now is the owner's decision (see atlas/docs/cloud-deploy.md); this file is left as it was until then.
 # ATLAS Terminal for cloud hosting: builds the web app, then runs the API (which also serves the web app) as a non-root user.
 FROM node:22-slim AS web
 WORKDIR /w

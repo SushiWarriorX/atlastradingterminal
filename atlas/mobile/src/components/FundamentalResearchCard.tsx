@@ -7,6 +7,7 @@ import { moneyShort as money } from "../lib/money";
 import { useConnection } from "../state/connection";
 import { useFundamentalResearch, useResearchChanges } from "../state/queries";
 import { color, radius, space } from "../theme";
+import { SEC_OFF_POINTER, isSecOff } from "../lib/secOff";
 import { Banner, Divider, GCard, Pill, Skeleton, TextButton, Txt } from "./ui";
 import { AskChatGpt } from "./AskChatGpt";
 
@@ -81,7 +82,7 @@ export function FundamentalResearchCard({ symbol, startOpen = false }: { symbol:
       </Pressable>
       {shown && (q.isLoading ? <View style={{ gap: space.md }}>{[0, 1, 2].map((i) => <Skeleton key={i} h={36} />)}</View>
         : q.isError || !d ? <Banner tone="warn" title="Couldn't load the research" testID="fr-error">{q.error instanceof Error ? q.error.message : "Something went wrong."}</Banner>
-        : !d.available ? <Banner tone={d.demo ? "demo" : "warn"} title={d.demo ? "Demo mode" : "Research unavailable"} testID="fr-unavailable">{d.reason}</Banner>
+        : !d.available ? <Banner tone={d.demo ? "demo" : "warn"} title={d.demo ? "Demo mode" : "Research unavailable"} testID="fr-unavailable">{isSecOff(d.reason) ? SEC_OFF_POINTER : d.reason}</Banner>
         : (
           <View style={{ gap: space.lg }} testID="fr-body">
             <AskChatGpt symbol={symbol} where="research" />

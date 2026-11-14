@@ -1,6 +1,6 @@
 # Development tooling
 
-This folder is for developing the project. Nothing in the app, the web terminal or the phone app imports it, and it never touches trading or research execution.
+This folder is for developing the project. Nothing in the app or the phone app imports it, and it never touches trading or research execution.
 
 ## Development-skills review (`skills_review.py`)
 

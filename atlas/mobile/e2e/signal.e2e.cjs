@@ -859,10 +859,16 @@ async function healthy(browser) {
       match(t, /Company deep-dive/); match(t, /Financials \(annual filings\)/); match(t, /Bull points/); match(t, /Bear points/);
       match(t, /Interpretation \(rule-based\)/); match(t, /Guidance and analyst consensus .* not available/i, "the gaps are listed");
       match(t, /SEC filings are off|No filing data loaded|Demo/i, "missing SEC contact is said plainly, not papered over");
+      assert((t.match(/SEC filings are off/g) || []).length <= 1, "the missing SEC contact is explained once on the stock page, not repeated in every card");
+      if (await present(page, "stock-sec-off")) { match(await inner(page, "stock-sec-off"), /steps are in the SEC filings card above/, "the deep-dive points to the one explanation"); noMatch(await inner(page, "stock-body"), /\$env:ATLAS_SEC_CONTACT/, "the setup line is not repeated inside the deep-dive"); }
       const points = (await page.$$eval("div", (els) => els.map((e) => e.innerText || "").filter((x) => x.startsWith("•")))).join(" ");
       noMatch(points, FORECASTS, "bull and bear points make no forecasts");       // (headlines are quoted third-party text and are checked separately)
       eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the deep-dive");
       await shot(page, "14-stock-deep-dive");
+      await page.getByText("Financials (annual filings)").first().scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "14b-stock-financials");
+      await page.getByText("Interpretation (rule-based)").first().scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "14c-stock-bottom");
       await page.click(V("back"));
     });
 

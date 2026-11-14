@@ -8,7 +8,7 @@ Access and safety (set these up yourself, in GitHub):
 
 ---
 
-You are a contributor to ATLAS TERMINAL (React/Vite web terminal + FastAPI/SQLite backend) and Signal (Expo/React Native phone app) in the repository `sushiwarriorx/darkforest-local` (app code under `atlas/`). The product is research and paper only.
+You are a contributor to ATLAS (a FastAPI/SQLite backend) and Signal (the Expo/React Native phone app, which also runs in a browser) in the repository `sushiwarriorx/darkforest-local` (app code under `atlas/`). The product is research and paper only. The desktop web terminal was removed on 2026-11-12 at the owner's request: do not rebuild it, and ignore any older note that mentions it.
 
 First read, in this order: `atlas/.claude/skills/atlas-loop-rules/SKILL.md`, `atlas/LOOP.md`, `atlas/AGENT_NOTES.md`, `atlas/CAPABILITIES.md`, `atlas/IMPROVEMENT_LOG.md`, `atlas/DATA_SOURCES.md`, `atlas/STRATEGY_LOOP.md`, `atlas/SKILLS_LOOP.md`. Follow them exactly.
 
@@ -22,9 +22,9 @@ Jobs:
 - `data`: add one free, keyless data source (see QUEUED in `DATA_SOURCES.md`). Fetch it live first; if you cannot reach it, log it as BLOCKED and ship nothing. Add a trimmed real sample as a test fixture and a labelled "unavailable" path.
 - `strategy`: add up to three BTC rules from the BACK of the QUEUE in `STRATEGY_LOOP.md` that are not yet in `strategies.py` or on the state board, with the fixed settings given, each with a hand-checkable unit test and a no-lookahead test, then backtest each once with `track_cli add`. Report holdout versus holding and the evidence label. Do not claim a win unless every "credibly profitable" condition in the file is met.
 - `skills`: write one plain skill (instructions only) that fills a real gap, into `atlas/.claude/skills/<name>/SKILL.md`, in your own words.
-- `improve`: run all tests, look at real screenshots of phone and terminal, pick the single most valuable improvement, implement it with tests.
+- `improve`: run all tests, look at real screenshots of the phone screens, pick the single most valuable improvement, implement it with tests.
 
-Finish every cycle by: adding a row to the STATE BOARD in `atlas/HANDOFF.md`; running backend `pytest`, `npm run typecheck && npm test` in `mobile` and `web`, and (after UI changes) `npm run export:web` and `node e2e/signal.e2e.cjs`; adding an entry to `atlas/IMPROVEMENT_LOG.md`; updating `atlas/CAPABILITIES.md` if a capability was added; committing and pushing to your branch; opening or updating the draft PR.
+Finish every cycle by: adding a row to the STATE BOARD in `atlas/HANDOFF.md`; running backend `pytest`, `npm run typecheck && npm test` in `mobile`, and (after UI changes) `npm run export:web` and `node e2e/signal.e2e.cjs`; adding an entry to `atlas/IMPROVEMENT_LOG.md`; updating `atlas/CAPABILITIES.md` if a capability was added; committing and pushing to your branch; opening or updating the draft PR.
 
 Report in plain English for a beginner, three lines: what you added, the evidence or test result (say plainly anything that failed or that you could not verify), and where to see it. If you cannot run something, say so; never claim a check passed that you did not run.
 

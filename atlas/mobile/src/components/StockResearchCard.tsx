@@ -3,6 +3,7 @@ import { Linking, Pressable, View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useStockResearch } from "../state/queries";
 import { color, radius, space } from "../theme";
+import { SEC_OFF_POINTER, isSecOff, withoutSecOff } from "../lib/secOff";
 import { Banner, Divider, Skeleton, Tag, Txt, GCard, Pill } from "./ui";
 
 const money = (x: number | null) => (x === null ? "n/a" : `${x < 0 ? "−" : ""}$${(Math.abs(x) / 1e9).toFixed(2)}B`);
@@ -29,10 +30,10 @@ export function StockResearchCard({ symbol }: { symbol: string }) {
         : q.isError || !d ? <Banner tone="warn" title="Couldn't load the deep-dive" testID="stock-error">{q.error instanceof Error ? q.error.message : "Something went wrong."}</Banner>
         : (
           <View style={{ gap: space.lg }} testID="stock-body">
-            {d.errors.some((e) => /SEC filings are off/.test(e)) ? <Banner tone="warn" title="Company filings are switched off" testID="stock-sec-off">{d.errors.find((e) => /SEC filings are off/.test(e))}</Banner> : null}
+            {d.errors.some(isSecOff) ? <Banner tone="warn" title="Company filings are switched off" testID="stock-sec-off">{SEC_OFF_POINTER}</Banner> : null}
             {d.company.sic_description || d.company.sector ? <Txt variant="small">{[d.company.sector, d.company.industry, d.company.sic_description && `SEC industry: ${d.company.sic_description}`].filter(Boolean).join(" · ")}</Txt> : null}
             <Block title="Financials (annual filings)">
-              {!d.financials.available || !last ? <Txt variant="small">No filing data loaded. {d.errors.filter((e) => /SEC|Demo/.test(e)).join(" ")}</Txt> : (
+              {!d.financials.available || !last ? <Txt variant="small">No filing data loaded. {withoutSecOff(d.errors).filter((e) => /SEC|Demo/.test(e)).join(" ")}</Txt> : (
                 <View>
                   <Txt variant="tiny">Fiscal year ended {last.end}. Facts from SEC filings; ratios calculated here.</Txt>
                   {([["Revenue", money(last.revenue)], ["Revenue growth", pc(last.revenue_growth_pct)], ["Operating margin", pc(last.operating_margin_pct)], ["Net margin", pc(last.net_margin_pct)], ["Free cash flow", money(last.free_cash_flow)], ["Net cash (cash − LT debt)", money(last.net_cash)], ["Debt / equity", last.debt_to_equity === null ? "n/a" : `${last.debt_to_equity.toFixed(2)}x`]] as const).map(([k, v], i) => (
@@ -63,7 +64,7 @@ export function StockResearchCard({ symbol }: { symbol: string }) {
               {d.news.length === 0 ? <Txt variant="small">No recent headlines.</Txt> : d.news.slice(0, 5).map((n, i) => (
                 <Pressable key={i} onPress={() => open(n.link)} disabled={!safeUrl(n.link)} accessibilityRole="link"><Txt variant="small">{n.title}</Txt><Txt variant="tiny">{n.feed}</Txt></Pressable>))}
             </Block>
-            {d.errors.length > 0 && <Banner tone="warn" title="Some sources failed">{d.errors.join(" ")}</Banner>}
+            {withoutSecOff(d.errors).length > 0 && <Banner tone="warn" title="Some sources failed">{withoutSecOff(d.errors).join(" ")}</Banner>}
             <Txt variant="tiny">Not shown: {d.gaps.join(" ")}</Txt>
           </View>))}
     </GCard>

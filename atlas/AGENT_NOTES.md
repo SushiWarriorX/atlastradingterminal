@@ -24,7 +24,7 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 - Browser tests: Playwright selectors from the helper `V()` contain `:visible`, which is not valid inside `page.waitForFunction`; use a plain attribute selector there.
 - A long heredoc mixed with shell edits can be blocked by the safety check; write files with the file tools and run small scripts from files.
 - The cloud machine only reaches hosts on the environment's allowed list; a timeout (no HTTP code) usually means "host not allowed", not "site down".
-- Before finishing: backend `pytest`, `npm run typecheck && npm test` in `mobile` and `web`, then `npm run export:web` and `node e2e/signal.e2e.cjs` after UI changes.
+- Before finishing: backend `pytest`, `npm run typecheck && npm test` in `mobile`, then `npm run export:web` and `node e2e/signal.e2e.cjs` after UI changes.
 
 ## When code fetches something from the internet
 - Timeout on every request, a short cache, and a labelled "unavailable" result on failure; one failing half must not hide the other.
@@ -67,8 +67,7 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 ## Tooling traps found 2026-11-11
 - Inside a Python script written through a shell heredoc, "\\n" puts a literal backslash-n into the target file (and `rstrip("\\n")` strips backslashes and the letter n). Use real "\n", or the Edit tool, and grep the diff for `\\n` before committing.
 - A `sed` line holding `$` and `${` (template strings) made the sandbox refuse the WHOLE command, including later steps, as an unverifiable removal. Make such edits with the Edit tool and run build and test commands as separate calls.
-- The terminal saves panel sizes on the server the first time a layout renders. A new default height is ignored by a profile that already saved the layout: `DELETE /api/layouts/<workspace>` on the test backend before taking the screenshot, or the panel looks cut off.
 - When a fix is for a whole class of bug (raw dates, missing caveat), put the check for the class into the browser script; the raw-date check found five spots a manual pass missed.
 - A source whose unit is not stated anywhere reachable (per day or per week) is HELD, not shipped, even when its numbers are internally consistent; a self-check proves consistency, not meaning.
-- Browser scripts go stale silently when the UI is restyled (desks.cjs and smoke.cjs expected old nav labels, an AI panel on the Overview and a toolbar button, and had not been run for days). Run all of `web/e2e/*.cjs` that apply after any UI change. The demo backend for them: `ATLAS_DEMO=1 ATLAS_DB=/tmp/fresh.db python3 -m atlas_api` from atlas/backend, on a FRESH db each run (smoke.cjs mutates it and a reused db makes it fail at step one).
-- Test layouts with the worst real content, not the sample content: a five-digit price and the longest status word ("UNAVAILABLE") broke a Watchlist that passed with "169.78" and "DELAYED". `web/e2e/narrow.cjs` now injects both.
+- Browser scripts go stale silently when the UI is restyled (the old terminal scripts expected old nav labels, an AI panel and a toolbar button, and had not been run for days). Run the Signal browser script (`node e2e/signal.e2e.cjs` in `mobile`, all scenarios) after any UI change; it starts its own backend and database for each scenario.
+- Test layouts with the worst real content, not the sample content: a five-digit price and the longest status word ("UNAVAILABLE") broke a Watchlist that passed with "169.78" and "DELAYED". When a layout depends on text length, add worst-case text to the Signal browser script.

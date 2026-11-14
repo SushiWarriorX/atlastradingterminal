@@ -10,6 +10,7 @@ import { safeUrl } from "./links";
 import { MAX_RECENTS, parseRecents, pushRecent } from "./recents";
 import { applyAdd, applyRemove, applyReorder, idsOf, moveId, settledRows } from "./watchlist";
 import { busyText } from "./lab";
+import { SEC_OFF_POINTER, isSecOff, withoutSecOff } from "./secOff";
 import { dayLabel, detailLine, groupByDay } from "./calendar";
 import { contrast } from "./contrast";
 import { color, grad } from "../theme";
@@ -315,5 +316,29 @@ describe("code hygiene for the browser version", () => {
   it("never passes React Native accessibility props to an SVG element (the browser warns: 'React does not recognize the accessibilityElementsHidden prop')", () => {
     const bad = files(join(__dirname, "..")).filter((f) => /<Svg[^>]*accessibility(ElementsHidden|Label|Role)/.test(readFileSync(f, "utf8")));
     expect(bad).toEqual([]);
+  });
+});
+
+describe("the missing SEC contact setting is explained once", () => {
+  const full = 'SEC filings are off: ATLAS_SEC_CONTACT is not set. Windows: add the line $env:ATLAS_SEC_CONTACT = "you@example.com" to local-settings.ps1 and restart ATLAS. The email is sent only to sec.gov.';
+  const research = "SEC filings are off: ATLAS_SEC_CONTACT is not set. The SEC requires a contact email in the request; set it as an environment setting on the machine that runs ATLAS.";
+  it("recognises the server's message in both of its wordings, and nothing else", () => {
+    expect(isSecOff(full)).toBe(true);
+    expect(isSecOff(research)).toBe(true);
+    expect(isSecOff("SEC returned HTTP 503 for AAPL")).toBe(false);
+    expect(isSecOff("ATLAS_SEC_CONTACT is set but the SEC refused the request")).toBe(false);     // another message that mentions the setting is NOT this one
+    expect(isSecOff("Demo mode: no filings are shown")).toBe(false);
+    expect(isSecOff("")).toBe(false);
+    expect(isSecOff(null)).toBe(false);
+    expect(isSecOff(undefined)).toBe(false);
+  });
+  it("takes it out of an error list and keeps every other error, in order", () => {
+    expect(withoutSecOff([full, "Yahoo did not answer", research, "No earnings date"])).toEqual(["Yahoo did not answer", "No earnings date"]);
+    expect(withoutSecOff([full])).toEqual([]);
+    expect(withoutSecOff([])).toEqual([]);
+  });
+  it("the pointer says where the steps are and does not repeat them", () => {
+    expect(SEC_OFF_POINTER).toMatch(/SEC filings card above/);
+    expect(SEC_OFF_POINTER).not.toMatch(/ATLAS_SEC_CONTACT|\$env|local-settings|example\.com/);
   });
 });

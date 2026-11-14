@@ -11,9 +11,9 @@ Goal: add one new BTC trading RULE per cycle to the Strategy Lab, backtest it on
 2. Implement it in `atlas/backend/atlas_api/btclab/strategies.py` with the FIXED settings written in the queue. Use `hold(enter, leave)`. The position on bar i may only use bars up to i.
    Add a unit test with hand-checkable numbers for any new indicator and the no-look-ahead check (see `tests/test_tracker.py` for the pattern).
 3. Backtest once, on all history, with the tracker: `cd atlas/backend && python3 -m atlas_api.btclab.track_cli add <id> --idea "..." --why "..."`. This freezes the result in the ledger. It refuses to rerun an id, on purpose.
-4. Run `python3 -m pytest -q` (backend). If the UI changed, run the mobile and web checks as in `atlas/AGENT_NOTES.md`.
+4. Run `python3 -m pytest -q` (backend). If the UI changed, run the mobile checks as in `atlas/AGENT_NOTES.md`.
 5. Update `atlas/IMPROVEMENT_LOG.md` (one short entry), commit the strategy, tests and ledger, push to `feature/research-modules`. Never merge.
-6. Reply with a 3-line update: **strategy added** (name and one-line rule), **backtest** (whole history and last 30% versus holding BTC, worst drop, evidence label and the main reason), **where** (Strategy tracker: terminal BTC desk, Signal BTC page).
+6. Reply with a 3-line update: **strategy added** (name and one-line rule), **backtest** (whole history and last 30% versus holding BTC, worst drop, evidence label and the main reason), **where** (Strategy tracker: Signal BTC page).
 
 ## Rules that keep this honest
 - Settings come from the queue (the published or conventional values) and are never chosen by looking at BTC results. No trying variants of the same idea in one cycle, and no retuning a rule after seeing its result.
