@@ -844,3 +844,8 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Re-probed: Census, Eurostat, BLS and DefiLlama still refuse (proxy). FRED candidates used up. Data queue empty. No code changed, no tests run.
 - Needs the owner: allow api.census.gov and ec.europa.eu.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-14 06:17 UTC (Claude, improve job): quick live re-check, no change
+- Re-ran the fast checks: financial conditions, news and real-yields tests (48 passed); the financial conditions panel still reads live from FRED (week 2026-11-06, NFCI -0.462); phone typecheck clean, phone vitest 43 passed. No code changed. The full suites last ran 2026-11-14 00:17 (all green).
+- Not verified: GitHub CI; the Windows installer and launcher on a real PC; Signal on a physical phone.
+- **Credibly profitable?** No. Status: not yet.
