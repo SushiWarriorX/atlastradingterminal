@@ -4,7 +4,7 @@ What the source gives (checked live 2026-11-14): daily open/high/low/close/volum
 (for example TLT, IEF, SHY back to 2002, BND 2007, QQQ 2012, ACWI 2013, VXUS 2013; NYSE Arca funds such as SPY, VNQ, GLD, EFA, VTI answer 'not available'). The close is NOT adjusted for dividends, so a total-return
 series is rebuilt here: on each ex-dividend day the dividend is reinvested, factor = (close + dividend) / previous close. A fund that pays no dividends (physical gold) needs none.
 Every step is checked: the row count must equal the feed's own totalRecords, dates must be strictly increasing, closes positive, dividend types known, and a dividend that falls on a non-trading day is rolled to the next trading day and counted.
-Run the live validation: python -m atlas_api.btclab.etf_history
+No live fetching (see the note at the bottom): it parses and checks supplied data.
 """
 from __future__ import annotations
 
@@ -118,44 +118,6 @@ def correlation(a: dict[date, float], b: dict[date, float]) -> tuple[float, int]
     return sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / (sx * sy), n
 
 
-# ---- live fetching and the validation run (command line only) ----------------------------------------------------------------------------------------------------------------------------
-def _get(url: str, ua: bool) -> str:
-    import time
-    import urllib.request
-    req = urllib.request.Request(url, headers=({"User-Agent": "Mozilla/5.0", "Accept": "application/json"} if ua else {}))      # FRED stalls on an unfamiliar User-Agent, Nasdaq wants a browser-like one
-    for wait in (0, 3, 10):
-        time.sleep(wait)
-        try:
-            return urllib.request.urlopen(req, timeout=40).read().decode()
-        except Exception as e:                                                                                                      # noqa: BLE001
-            last = e
-    raise RuntimeError(f"could not fetch {url[:60]}: {last}")
-
-
-def fetch(sym: str, today: date | None = None):
-    today = today or date.today()
-    prices = parse_history(json.loads(_get(HIST_URL.format(sym=sym, a="2000-01-01", b=today.isoformat()), True)))
-    divs = parse_dividends(json.loads(_get(DIV_URL.format(sym=sym), True)))
-    return prices, divs
-
-
-def fred(series: str, start: str = "2016-10-01") -> list[tuple[date, float]]:
-    txt = _get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}&cosd={start}", False).strip().split("\n")[1:]
-    return [(date.fromisoformat(a), float(b)) for a, b in (ln.split(",") for ln in txt) if b not in ("", ".")]
-
-
-if __name__ == "__main__":
-    out = {}
-    spy, _ = fetch("SPY")
-    r, n = correlation(daily_changes(spy), daily_changes(fred("SP500")))
-    out["SPY_vs_FRED_SP500"] = {"corr_daily_returns": round(r, 5), "shared_days": n, **checks(spy)}
-    for sym, ser in (("TLT", "DGS20"), ("IEF", "DGS10")):
-        px, dv = fetch(sym)
-        tri, st = total_return_index(px, dv)
-        r2, n2 = correlation(daily_changes(px), daily_changes(fred(ser), relative=False))
-        out[f"{sym}_vs_FRED_{ser}"] = {"corr_with_yield_change": round(r2, 4), "shared_days": n2, "price_return": round(px[-1][1] / px[0][1] - 1, 4), "total_return": round(tri[-1][1] - 1, 4), "dividends": st, **checks(px)}
-    for sym in ("ACWI", "GLD", "QQQ", "BND"):
-        px, dv = fetch(sym)
-        tri, st = total_return_index(px, dv)
-        out[sym] = {"price_return": round(px[-1][1] / px[0][1] - 1, 4), "total_return": round(tri[-1][1] - 1, 4), "dividends_available": dv is not None, "dividends": st, **checks(px)}
-    print(json.dumps(out, indent=1))
+# There is deliberately NO live fetching here. On 2026-11-14 the Nasdaq feed answered this kind of Python request with HTTP 403 while a plain curl call had worked a few minutes earlier. A host that refuses a client has said no to that client; routing the same
+# requests through another client, or giving the request a browser's headers, would be getting around that refusal, and the permission check refused both attempts. So this module only parses and checks data that someone legitimately supplies (a saved response, an export
+# the owner downloads themselves). If the feed is ever to be used by automation, the owner has to say so explicitly, ideally after checking Nasdaq's terms.
