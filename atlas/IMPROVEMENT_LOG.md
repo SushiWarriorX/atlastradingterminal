@@ -822,3 +822,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Backend pytest 1414 passed (including the news tests fixed on 2026-11-13); phone typecheck clean; phone vitest 43 passed; Signal web export rebuilt and every browser scenario run: 48 of 48 checks passed. No code changed.
 - Not verified: GitHub CI; the Windows installer and launcher on a real PC; Signal on a physical phone; the ~220 backend tests that cannot be checked for date rot with the clock-shift tool. The cloud Dockerfile still builds the removed terminal and will not build (owner decision pending).
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-14 01:17 UTC (Claude, strategy job): no experiment run, by design
+- Unchanged since 22:17: experiments 1 to 3 closed failures, the rest of EDGE_PLAN needs data that is not free or an owner decision, no owner reply on the strategy question. No rescue variants run. No ChatGPT branches. No code changed, no tests run.
+- **Credibly profitable?** No. Status: not yet.
