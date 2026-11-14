@@ -187,6 +187,53 @@
    ],
    "reading": "Funding paid well in 2024 but less than bills this past year, and the 11 switches cost more in fees than they earned.",
    "not_verified": "Exchange, price-mismatch and liquidation risk are not modelled. One market cycle of data."
+  },
+  {
+   "id": "exp5_net_liquidity",
+   "name": "Bitcoin only while US net liquidity is rising",
+   "date": "2026-11-14",
+   "registered": "commit 76c2805; runner and tests committed before the run (f5fafec)",
+   "idea": "Hold Bitcoin only in weeks when the Federal Reserve's balance sheet, less the Treasury's cash account and the overnight reverse repo, is higher than 13 weeks earlier; otherwise sit in cash.",
+   "period": "Last 30% of Bitcoin's history (2023-06-22 to 2026-11-13, never used to design the rule)",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule",
+     "v": "+25.4%"
+    },
+    {
+     "k": "Just holding Bitcoin",
+     "v": "+127.2%"
+    },
+    {
+     "k": "Worst drop, rule vs holding",
+     "v": "-53.2% vs -53.1%"
+    },
+    {
+     "k": "Random timing with the same exposure that did as well or better",
+     "v": "62% of 1,000"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Sharpe at least 0.10 above holding",
+     "met": false
+    },
+    {
+     "rule": "Beats 95% of randomly shifted copies of its own timing",
+     "met": false
+    },
+    {
+     "rule": "Worst drop at least 10 points shallower than holding",
+     "met": false
+    },
+    {
+     "rule": "Return above zero and at least 10 switches",
+     "met": true
+    }
+   ],
+   "reading": "Whether liquidity was rising did not time Bitcoin. The rule sat in cash 57% of the time, earned about a fifth of what holding earned, avoided none of the worst drop, and random timing with the same exposure did as well or better 62% of the time.",
+   "not_verified": "One of several popular ways to define net liquidity, one lookback, today's version of the Fed's data, and about three years of Bitcoin with only a few liquidity swings. Cash earned nothing in the test."
   }
  ]
 }
