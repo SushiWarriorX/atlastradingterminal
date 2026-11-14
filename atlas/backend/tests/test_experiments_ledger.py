@@ -10,7 +10,7 @@ LEDGER = json.loads((Path(__file__).parent.parent / "atlas_api" / "btclab" / "ex
 
 
 def test_every_entry_is_complete_and_states_what_was_not_verified():
-    assert [e["id"] for e in LEDGER] == ["exp1_vol_target", "exp2_momentum", "exp3_gated_momentum", "exp4_funding_carry", "exp5_net_liquidity"]
+    assert [e["id"] for e in LEDGER] == ["exp1_vol_target", "exp2_momentum", "exp3_gated_momentum", "exp4_funding_carry", "exp5_net_liquidity", "exp6_hash_rate"]
     for e in LEDGER:
         for k in ("name", "date", "registered", "idea", "period", "verdict", "results", "conditions", "reading", "not_verified"):
             assert e.get(k), (e["id"], k)
@@ -29,5 +29,5 @@ def test_route_serves_the_ledger_with_the_counts_and_no_profit_claim(tmp_path):
         r = c.get("/api/btclab/experiments")
         assert r.status_code == 200
         d = r.json()["data"]
-        assert d["tested"] == 5 and d["passed"] == 0 and len(d["entries"]) == 5
+        assert d["tested"] == 6 and d["passed"] == 0 and len(d["entries"]) == 6
         assert "None has passed yet" in d["note"] and "profitable" in d["note"]

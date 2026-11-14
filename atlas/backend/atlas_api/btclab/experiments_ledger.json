@@ -234,6 +234,53 @@
    ],
    "reading": "Whether liquidity was rising did not time Bitcoin. The rule sat in cash 57% of the time, earned about a fifth of what holding earned, avoided none of the worst drop, and random timing with the same exposure did as well or better 62% of the time.",
    "not_verified": "One of several popular ways to define net liquidity, one lookback, today's version of the Fed's data, and about three years of Bitcoin with only a few liquidity swings. Cash earned nothing in the test."
+  },
+  {
+   "id": "exp6_hash_rate",
+   "name": "Bitcoin only while miners are not capitulating",
+   "date": "2026-11-14",
+   "registered": "commit 9567b02; runner and tests committed before the run (7b2d904)",
+   "idea": "Hold Bitcoin only on days when the 30-day average of the network's mining power (hash rate) is at or above its 60-day average; otherwise sit in cash.",
+   "period": "Last 30% of Bitcoin's history (2023-06-22 to 2026-11-13, never used to design the rule)",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule",
+     "v": "+47.4%"
+    },
+    {
+     "k": "Just holding Bitcoin",
+     "v": "+127.2%"
+    },
+    {
+     "k": "Worst drop, rule vs holding",
+     "v": "-55.5% vs -53.1%"
+    },
+    {
+     "k": "Random timing with the same exposure that did as well or better",
+     "v": "60% of 1,000"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Sharpe at least 0.10 above holding",
+     "met": false
+    },
+    {
+     "rule": "Beats 95% of randomly shifted copies of its own timing",
+     "met": false
+    },
+    {
+     "rule": "Worst drop at least 10 points shallower than holding",
+     "met": false
+    },
+    {
+     "rule": "Return above zero and at least 6 switches",
+     "met": true
+    }
+   ],
+   "reading": "Mining power did not time Bitcoin. In these years it hovered and jittered, so the rule flipped 40 times (about 3 a year in the earlier years); its five longest sit-outs included two rallies of about 25% and one 28% fall; and random timing with the same exposure did as well or better 60% of the time.",
+   "not_verified": "One popular reading of one indicator (30 against 60 days, no price confirmation), mining power is an estimate and its day stamp is undocumented, and the sample holds only a few mining-stress episodes. Cash earned nothing in the test."
   }
  ]
 }
