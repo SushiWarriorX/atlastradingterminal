@@ -297,6 +297,11 @@ export function useJoblessClaims() {
   return useQuery({ queryKey: keys(baseUrl).joblessClaims, queryFn: () => need(api).joblessClaims(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
 }
 
+export function useOilPrices() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).oilPrices, queryFn: () => need(api).oilPrices(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+
 export function useRealYields() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).realYields, queryFn: () => need(api).realYields(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });

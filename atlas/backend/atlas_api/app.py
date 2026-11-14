@@ -49,6 +49,7 @@ from .outlays import Outlays
 from .realyields import RealYields
 from .fincond import FinConditions
 from .claims import JoblessClaims
+from .oil import OilPrices
 from .receipts import Receipts
 from .avgrates import AvgRates
 from .mspd import Mspd
@@ -395,6 +396,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     real_yields = RealYields(demo=demo)
     fin_conditions = FinConditions(demo=demo)
     jobless_claims = JoblessClaims(demo=demo)
+    oil_prices = OilPrices(demo=demo)
     commodity_positioning = CftcCommodities(demo=demo)
     currency_positioning = CftcCurrencies(demo=demo)
     agri_positioning = CftcAgriculture(demo=demo)
@@ -467,6 +469,11 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     async def macro_financial_conditions():
         """Chicago Fed National Financial Conditions Index (weekly, via FRED): zero is the average since 1971, positive tighter, negative looser. Describes what already happened; not a signal or a forecast."""
         return ok(await fin_conditions.overview())
+
+    @app.get("/api/macro/oil-prices")
+    async def macro_oil_prices():
+        """WTI and Brent crude, spot, daily (US Energy Information Administration via FRED): checked for range, spacing, one-day moves and the Brent minus WTI spread. Describes what already happened; not a signal or a forecast."""
+        return ok(await oil_prices.overview())
 
     @app.get("/api/macro/jobless-claims")
     async def macro_jobless_claims():
@@ -1852,7 +1859,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
                                       "listings": listings_service, "new_to_me": new_to_me,
-                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

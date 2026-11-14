@@ -748,6 +748,21 @@ async function healthy(browser) {
       await page.locator(V("claims-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07p-claims");
 
+      await page.waitForSelector(V("oil-card"));
+      await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
+      const oilTxt = await text(page);
+      match(oilTxt, /Oil prices/); match(oilTxt, /Energy Information Administration/); noMatch(oilTxt, FORECASTS, "the oil prices card makes no forecasts");
+      if (await present(page, "oil-body")) {
+        const oilBody = await inner(page, "oil-body");
+        match(oilBody, /WTI crude \(US\) \$\d{2,3}\.\d{2} a barrel on [A-Z][a-z]{2} \d{1,2}, 20\d\d: (toward the low end|toward the high end|in the middle) of the past year's range\./, "WTI with its own date and a plain reading");
+        match(oilBody, /Brent crude \(Europe\) \$\d{2,3}\.\d{2} a barrel on [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "Brent with its own date");
+        match(oilBody, /Brent is \$\d+\.\d{2} (above|below) WTI on [A-Z][a-z]{2} \d{1,2}, 20\d\d|Brent and WTI cost the same on/, "the spread with its date");
+        match(oilBody, /Checked: every recent price is above zero/); match(oilBody, /not a market signal or a forecast/);
+        noMatch(oilBody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("oil-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07q-oil");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);
