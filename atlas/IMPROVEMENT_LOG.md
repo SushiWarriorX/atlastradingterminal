@@ -826,3 +826,8 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 ## 2026-11-14 01:17 UTC (Claude, strategy job): no experiment run, by design
 - Unchanged since 22:17: experiments 1 to 3 closed failures, the rest of EDGE_PLAN needs data that is not free or an owner decision, no owner reply on the strategy question. No rescue variants run. No ChatGPT branches. No code changed, no tests run.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-14 02:17 UTC (Claude, data job): no new source reachable, none shipped
+- Re-probed: Census, Eurostat, BLS and DefiLlama still refuse (proxy). FRED candidates used up. Data queue empty. No code changed, no tests run.
+- Needs the owner: allow api.census.gov and ec.europa.eu.
+- **Credibly profitable?** No. Status: not yet.
