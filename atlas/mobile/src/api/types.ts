@@ -428,6 +428,9 @@ export interface FuturesPositioningData { available: boolean; reason?: string; d
 export interface FinConditionsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   nfci?: number; adjusted?: number; reading?: string; pieces?: { risk: number; credit: number; leverage: number }; change_1w?: number | null; change_4w?: number | null; change_1y?: number | null;
   year_low?: number; year_high?: number; weeks_in_year?: number; history?: { date: string; nfci: number }[] }
+export interface JoblessClaimsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; reading?: string;
+  initial?: { value: number; avg4: number; avg4_official: number; change_1w: number | null; change_1y_pct: number | null; year_low: number; year_high: number; weeks_in_year: number; rank_in_year: number };
+  continuing?: { value: number; date: string; change_1w: number | null; change_1y_pct: number | null }; history?: { date: string; initial: number }[] }
 export interface RealYieldRow { tenor: string; nominal_pct: number | null; real_pct: number | null; breakeven_pct: number; breakeven_change_1m_bp: number | null; breakeven_change_1y_bp: number | null; real_change_1y_bp: number | null }
 export interface RealYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   month_ago_date?: string | null; year_ago_date?: string | null; rows?: RealYieldRow[]; history?: { date: string; breakeven_10y_pct: number }[];

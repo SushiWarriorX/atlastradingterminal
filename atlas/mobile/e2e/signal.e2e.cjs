@@ -733,6 +733,21 @@ async function healthy(browser) {
       await page.locator(V("fincond-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07o-fincond");
 
+      await page.waitForSelector(V("claims-card"));
+      await page.waitForSelector(V("claims-body") + ", " + V("claims-unavailable") + ", " + V("claims-error"), { timeout: 45000 });
+      const jc = await text(page);
+      match(jc, /Weekly jobless claims/); match(jc, /US Department of Labor/); noMatch(jc, FORECASTS, "the jobless claims card makes no forecasts");
+      if (await present(page, "claims-body")) {
+        const cbody = await inner(page, "claims-body");
+        match(cbody, /Week ending [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(cbody, /Initial claims \d{2,3},\d{3}: (toward the low end|toward the high end|in the middle) of the past year's range\. Four-week average \d{2,3},\d{3}\./, "the claims with a plain reading");
+        match(cbody, /Continuing claims [\d,]+ for the week ending [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "continuing claims with their own week");
+        match(cbody, /Checked: every date is a Saturday/); match(cbody, /not a market signal or a forecast/);
+        noMatch(cbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("claims-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07p-claims");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);

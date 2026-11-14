@@ -20,6 +20,7 @@ import { BorrowingCard } from "./BorrowingCard";
 import { DealersCard } from "./DealersCard";
 import { RealYieldsCard } from "./RealYieldsCard";
 import { FinConditionsCard } from "./FinConditionsCard";
+import { JoblessClaimsCard } from "./JoblessClaimsCard";
 import { CustomsCard } from "./CustomsCard";
 import { ReceiptsCard } from "./ReceiptsCard";
 import { OutlaysCard } from "./OutlaysCard";
@@ -88,6 +89,7 @@ export function MacroView() {
             <CustomsCard />
             <RealYieldsCard />
             <FinConditionsCard />
+            <JoblessClaimsCard />
             <FuturesPositioningCard />
             <CommodityPositioningCard />
             <CurrencyPositioningCard />
