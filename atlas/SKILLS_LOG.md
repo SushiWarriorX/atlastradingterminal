@@ -74,3 +74,5 @@ Newest first. Decision: SUGGESTED (card offered, user decides) / ADOPTED (our ow
 - 2026-11-13 15:45 UTC (skills job): catalog search (windows, batch script, installer, react native, expo web): empty for the 15th time. Nothing installed. Still waiting on the owner about writing our own repo skills.
 
 - 2026-11-13 21:17 UTC (skills job): catalog search (date testing, flaky tests, finance data, quant, research workflow): empty for the 16th time. Nothing installed. Still waiting on the owner about writing our own repo skills.
+
+- 2026-11-14 03:17 UTC (skills job): catalog search (trading research, backtesting, market data, test automation, documentation writing): empty for the 17th time. Nothing installed. Still waiting on the owner about writing our own repo skills.
