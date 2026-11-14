@@ -33,4 +33,5 @@ If a cycle finds nothing worth changing, log "no change" with what was checked. 
 - Journal: CSV export; per-tag stats; make sure the 30-trade reliability note is shown on phone too.
 - Phone: pull-to-refresh and offline notices on the new tabs; accessibility labels and larger tap targets; skeletons for slow loads.
 - Docs: a short beginner "first ten minutes" guide with screenshots; keep the README run steps current for Windows and Mac.
+- Dependencies (found 2026-11-14, skills hour): `npm audit --omit=dev` in `mobile` reports 8 moderate advisories, all indirect and all in Expo's build tooling (`glob`, `minimatch`, `node-forge` through `@expo/cli` and its config packages), none high or critical, all fixable with a semver-compatible `npm audit fix`. Apply it, then run every suite (typecheck, tests, web export, the browser script) and say that a Windows install was not tested. The backend's fresh install (61 packages) has no known vulnerabilities.
 - Tests: raise coverage on `btclab` edge cases (zero-trade strategies, gaps in bars) and on `discover` (missing filings).
