@@ -12,6 +12,7 @@ from atlas_api.btclab import research_data as R
 FX = Path(__file__).parent / "fixtures"
 FNG = json.loads((FX / "fng_slice.json").read_text())
 HASH = json.loads((FX / "hashrate_slice.json").read_text())
+NAS = json.loads((FX / "fred_nasdaq.json").read_text())
 TODAY = date(2026, 11, 14)
 
 
@@ -166,3 +167,58 @@ def test_fetch_hashrate_good_and_failing_paths():
     assert bad["ok"] is False and bad["daily"] is None and any("a day is missing" in p for p in bad["problems"])
     down = R.fetch_hashrate(client(lambda r: httpx.Response(503, text="down")), date(2024, 5, 1))
     assert down["ok"] is False and down["problems"][0].startswith("unavailable") and down["daily"] is None
+
+
+# ---- equity index closes (the equity-trend experiment) --------------------------------------------------------------------------------------------------------------------------
+def test_index_real_slices_parse_skip_closed_days_and_keep_the_real_gap():
+    s = R.parse_index(NAS["sept2001"], "NASDAQCOM")
+    assert len(s) == 10 and s[0] == (date(2001, 9, 5), 1759.01) and s[-1] == (date(2001, 9, 24), 1499.4)
+    days = {d for d, _ in s}
+    assert date(2001, 9, 11) not in days and date(2001, 9, 14) not in days                              # the market was closed: left out, never filled
+    assert (date(2001, 9, 17) - date(2001, 9, 10)).days == 7                                              # the real closure is a 7-day gap between closes
+    r = R.parse_index(NAS["recent"], "NASDAQCOM")
+    assert len(r) == 58 and r[0] == (date(2026, 8, 25), 26151.3) and r[-1] == (date(2026, 11, 13), 25136.27)
+    with pytest.raises(ValueError):
+        R.parse_index("observation_date,OTHER\n2026-11-13,1\n", "NASDAQCOM")
+    with pytest.raises(ValueError):
+        R.parse_index("observation_date,NASDAQCOM\n2026-11-13,abc\n", "NASDAQCOM")
+
+
+def test_index_checks_pass_real_data_and_name_each_failure():
+    sept = R.parse_index(NAS["sept2001"], "NASDAQCOM")
+    assert R.check_index(sept, None, min_rows=5) == []                                                    # the real 7-day closure is exactly inside the limit
+    widened = [(d + timedelta(days=1) if d >= date(2001, 9, 17) else d, v) for d, v in sept]
+    assert any("a gap of 8 days after 2001-09-10" in p for p in R.check_index(widened, None, min_rows=5))
+    assert any("only 10 closes (need 250)" in p for p in R.check_index(sept, None))
+    d0 = date(2026, 1, 5)
+    pair = lambda a, b: [(d0, a), (d0 + timedelta(days=1), b)]                                            # noqa: E731
+    assert R.check_index(pair(100.0, 125.0), None, min_rows=2) == [] and R.check_index(pair(100.0, 75.0), None, min_rows=2) == []     # exactly 25% either way is allowed
+    assert any("more than 25%" in p for p in R.check_index(pair(100.0, 126.0), None, min_rows=2))
+    assert any("more than 25%" in p for p in R.check_index(pair(100.0, 74.0), None, min_rows=2))
+    assert any("outside 10 to 1e+06" in p for p in R.check_index(pair(5.0, 5.1), None, min_rows=2))
+    assert any("outside 10 to 1e+06" in p for p in R.check_index(pair(100.0, 2_000_000.0), None, min_rows=2))
+    last = date(2026, 11, 13)
+    recent = R.parse_index(NAS["recent"], "NASDAQCOM")
+    assert R.check_index(recent, last + timedelta(days=7), min_rows=5) == []                              # 7 days old is allowed (a long weekend plus a holiday) ...
+    assert any("8 days old" in p for p in R.check_index(recent, last + timedelta(days=8), min_rows=5))    # ... 8 is not
+
+
+def test_fetch_index_good_and_failing_paths():
+    seen = []
+
+    def ok(request):
+        seen.append(request)
+        plain(request)
+        return httpx.Response(200, text=NAS["recent"])
+    res = R.fetch_index("NASDAQCOM", client(ok), date(2026, 11, 14), min_rows=5)
+    assert res["ok"] and res["problems"] == [] and len(res["rows"]) == 58 and res["first"] == "2026-08-25" and res["last"] == "2026-11-13"
+    assert seen[0].url.params["id"] == "NASDAQCOM" and "cosd" in seen[0].url.params                      # the download is limited to what is needed
+    stale = R.fetch_index("NASDAQCOM", client(ok), date(2026, 12, 15), min_rows=5)
+    assert stale["ok"] is False and stale["rows"] is None and any("days old" in p for p in stale["problems"])                    # a failing check shows nothing
+    short = R.fetch_index("NASDAQCOM", client(ok), date(2026, 11, 14))
+    assert short["ok"] is False and short["rows"] is None and any("only 58 closes" in p for p in short["problems"])
+    for handler in (lambda r: httpx.Response(500, text="boom"), lambda r: httpx.Response(403, text="no"), lambda r: httpx.Response(200, text="<html>not a csv</html>"),
+                    lambda r: httpx.Response(200, text="observation_date,NASDAQCOM\n")):
+        bad = R.fetch_index("NASDAQCOM", client(handler), date(2026, 11, 14), min_rows=5)
+        assert bad["ok"] is False and bad["rows"] is None and bad["problems"][0].startswith("unavailable")
+

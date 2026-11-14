@@ -13,6 +13,8 @@ from datetime import date, datetime, timezone
 
 import httpx
 
+from ..fincond import parse as _parse_fred
+
 FNG_URL = "https://api.alternative.me/fng/?limit=0&format=json"
 HASHRATE_URL = "https://mempool.space/api/v1/mining/hashrate/all"
 TIMEOUT = 40.0
@@ -22,6 +24,14 @@ MAX_STALE_DAYS = 3
 HASH_POSITIVE_FROM, HASH_STEP_FROM = date(2010, 1, 1), date(2012, 1, 1)      # the first six days after the genesis block really have no blocks; early years are sparse
 HASH_STEP_LIMITS = (0.4, 2.5)                        # day-over-day ratio; the real series stays within 0.61 to 1.82 from 2012
 HASH_RATIO_LIMITS = (0.8, 1.3)                       # yearly median of hash rate / (difficulty x 2^32 / 600); the real yearly medians are 1.0 to 1.1
+
+
+FRED_CSV = "https://fred.stlouisfed.org/graph/fredgraph.csv"
+INDEX_MIN_ROWS = 250
+INDEX_LIMITS = (10.0, 1_000_000.0)                   # an equity index level; the Nasdaq Composite has been 54.9 to 27,600 since 1971
+INDEX_MAX_GAP_DAYS = 7                               # the longest real gap in the Nasdaq Composite is the September 2001 closure: exactly 7 days
+INDEX_MAX_MOVE = 0.25                                # the largest real one-day move in the Nasdaq Composite is 14.2%
+INDEX_MAX_STALE_DAYS = 7                             # a close is published the next morning; a long weekend plus a holiday is still under 7 days
 
 
 def _day(ts: float) -> date:
@@ -130,6 +140,50 @@ def check_hashrate(daily, diff, today: date | None = None) -> list[str]:
     if today is not None and daily and (today - days[-1]).days > MAX_STALE_DAYS:
         problems.append(f"the newest day is {(today - days[-1]).days} days old")
     return problems
+
+
+# ---- equity index closes (the equity-trend experiment) -------------------------------------------------------------------------------------------------------------------------
+def parse_index(text: str, sid: str) -> list[tuple[date, float]]:
+    """[(day, close)] oldest first from a FRED CSV. A closed market is an empty or '.' value and is left out, never filled in. Raises ValueError on anything unreadable."""
+    return sorted(_parse_fred(text, sid).items())
+
+
+def check_index(rows, today: date | None = None, min_rows: int = INDEX_MIN_ROWS, limits: tuple[float, float] = INDEX_LIMITS) -> list[str]:
+    """Problems found; an empty list means the series passes."""
+    problems = []
+    if len(rows) < min_rows:
+        problems.append(f"only {len(rows)} closes (need {min_rows})")
+    bad = [d for d, v in rows if not limits[0] <= v <= limits[1]]
+    if bad:
+        problems.append(f"a close outside {limits[0]:g} to {limits[1]:g} on {bad[0]}")
+    gaps = [(a[0], b[0]) for a, b in zip(rows, rows[1:]) if (b[0] - a[0]).days > INDEX_MAX_GAP_DAYS]
+    if gaps:
+        problems.append(f"a gap of {(gaps[0][1] - gaps[0][0]).days} days after {gaps[0][0]}")
+    jumps = [b[0] for a, b in zip(rows, rows[1:]) if a[1] > 0 and abs(b[1] / a[1] - 1) > INDEX_MAX_MOVE]
+    if jumps:
+        problems.append(f"a one-day move of more than {INDEX_MAX_MOVE:.0%} on {jumps[0]}")
+    if today is not None and rows and (today - rows[-1][0]).days > INDEX_MAX_STALE_DAYS:
+        problems.append(f"the newest close is {(today - rows[-1][0]).days} days old")
+    return problems
+
+
+def fetch_index(series_id: str, client: httpx.Client | None = None, today: date | None = None, since: str = "2013-01-01", min_rows: int = INDEX_MIN_ROWS) -> dict:
+    """Daily closes of a FRED index series from `since`. `rows` is None unless every check passed (a failing check shows nothing). Plain client: FRED stalls on an unfamiliar User-Agent."""
+    today = today or datetime.now(timezone.utc).date()
+    source = f"{FRED_CSV}?id={series_id}"
+    own = client is None
+    client = client or httpx.Client()
+    try:
+        r = client.get(FRED_CSV, params={"id": series_id, "cosd": since}, timeout=TIMEOUT)
+        r.raise_for_status()
+        rows = parse_index(r.text, series_id)
+    except (httpx.HTTPError, ValueError) as e:
+        return _result(source, False, [f"unavailable: {type(e).__name__}: {str(e)[:120]}"], rows=None)
+    finally:
+        if own:
+            client.close()
+    problems = check_index(rows, today, min_rows)
+    return _result(source, not problems, problems, rows=None if problems else rows, first=rows[0][0].isoformat(), last=rows[-1][0].isoformat())
 
 
 # ---- live (plain client, timeout, labelled unavailable) ------------------------------------------------------------------------------------------------------------------------
