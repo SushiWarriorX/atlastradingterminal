@@ -281,6 +281,53 @@
    ],
    "reading": "Mining power did not time Bitcoin. In these years it hovered and jittered, so the rule flipped 40 times (about 3 a year in the earlier years); its five longest sit-outs included two rallies of about 25% and one 28% fall; and random timing with the same exposure did as well or better 60% of the time.",
    "not_verified": "One popular reading of one indicator (30 against 60 days, no price confirmation), mining power is an estimate and its day stamp is undocumented, and the sample holds only a few mining-stress episodes. Cash earned nothing in the test."
+  },
+  {
+   "id": "exp7_equity_trend",
+   "name": "Bitcoin only while US stocks are in an uptrend",
+   "date": "2026-11-14",
+   "registered": "commit edf2c7c; loader, runner and tests committed before the run (05ae19c)",
+   "idea": "Hold Bitcoin only on days when the Nasdaq Composite closed above its 200-day average (using the previous day's close); otherwise sit in cash.",
+   "period": "Last 30% of Bitcoin's history (2023-06-22 to 2026-11-13, never used to design the rule)",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule",
+     "v": "+73.1%"
+    },
+    {
+     "k": "Just holding Bitcoin",
+     "v": "+127.2%"
+    },
+    {
+     "k": "Worst drop, rule vs holding",
+     "v": "-58.5% vs -53.1%"
+    },
+    {
+     "k": "Random timing with the same exposure that did as well or better",
+     "v": "73% of 1,000"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Sharpe at least 0.10 above holding",
+     "met": false
+    },
+    {
+     "rule": "Beats 95% of randomly shifted copies of its own timing",
+     "met": false
+    },
+    {
+     "rule": "Worst drop at least 10 points shallower than holding",
+     "met": false
+    },
+    {
+     "rule": "Return above zero and at least 12 switches",
+     "met": true
+    }
+   ],
+   "reading": "In the earlier years (not judged) the filter sat out two big falls, late 2018 and 2022. In these years the Nasdaq stayed above its 200-day average 92% of the time, so the rule was nearly always in Bitcoin, sat out one 18% rally, and held through Bitcoin's worst fall because stocks kept rising; random timing with the same exposure did as well or better 73% of the time.",
+   "not_verified": "One popular rule (200 days, the Nasdaq, no confirmation); Bitcoin's link to stocks was weak before 2020; the earlier good years rest on two bear markets. Cash earned nothing in the test."
   }
  ]
 }

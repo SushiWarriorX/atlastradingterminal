@@ -935,7 +935,7 @@ async function healthy(browser) {
       await page.waitForSelector(V("experiments-card"));
       await page.waitForSelector(V("experiments-body") + ", " + V("experiments-error"), { timeout: 30000 });
       const ex = await text(page);
-      match(ex, /Experiments record/); match(ex, /6 tested, 0 passed the bar/); match(ex, /Bitcoin funding carry/); match(ex, /Bitcoin only while US net liquidity is rising/); match(ex, /Bitcoin only while miners are not capitulating/); match(ex, /Did not pass/); match(ex, /None has passed yet/);
+      match(ex, /Experiments record/); match(ex, /7 tested, 0 passed the bar/); match(ex, /Bitcoin funding carry/); match(ex, /Bitcoin only while US net liquidity is rising/); match(ex, /Bitcoin only while miners are not capitulating/); match(ex, /Bitcoin only while US stocks are in an uptrend/); match(ex, /Did not pass/); match(ex, /None has passed yet/);
       noMatch(ex, /guaranteed|will make money|buy now/i, "the experiments record makes no promises");
       await page.locator(V("experiments-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "08x-experiments");
