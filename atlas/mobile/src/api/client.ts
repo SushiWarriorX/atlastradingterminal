@@ -1,4 +1,4 @@
-import type { ExperimentsData, FinConditionsData, JoblessClaimsData, OilPricesData, Brief, CandidatesFeed, Changes, FundamentalResearch, ListingsFeed, MyState, CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, OpsOverview, FedOpsData, TgaData, AuctionsData, BudgetData, InterestData, BuybacksData, BillAuctionsData, BorrowingData, DealersData, FuturesPositioningData, RealYieldsData, CustomsData, ReceiptsData, OutlaysData, DebtRatesData, DebtMixData, FedHoldingsData, FedRatesData, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
+import type { ExperimentsData, FinConditionsData, JoblessClaimsData, OilPricesData, GasolinePricesData, Brief, CandidatesFeed, Changes, FundamentalResearch, ListingsFeed, MyState, CalendarData, DiscoverData, LabRunBody, LabRunData, EarningsData, StockResearchData, WhatIfData, Positioning, Stablecoins, OnChain, FxData, TrackerData, WorldData, CryptoMarket, OpsOverview, FedOpsData, TgaData, AuctionsData, BudgetData, InterestData, BuybacksData, BillAuctionsData, BorrowingData, DealersData, FuturesPositioningData, RealYieldsData, CustomsData, ReceiptsData, OutlaysData, DebtRatesData, DebtMixData, FedHoldingsData, FedRatesData, TreasuryData, NarrativeData, SecFilingsData, Sentiment, JournalEntry, JournalFilters, JournalLog, MacroBriefData, AgentName, AssetHeader, AuthStatus, ChartRange, ChartResponse, LoginResult, Meta, ResearchResponse, SearchResponse, WatchlistResponse } from "./types";
 
 /** A failure with a code the UI can act on. `network` means we never got an answer. */
 export class ApiError extends Error {
@@ -103,6 +103,7 @@ export function createApi(opts: ClientOptions) {
     finConditions: () => call<FinConditionsData>("/api/macro/financial-conditions", { timeoutMs: 45_000 }),
     joblessClaims: () => call<JoblessClaimsData>("/api/macro/jobless-claims", { timeoutMs: 45_000 }),
     oilPrices: () => call<OilPricesData>("/api/macro/oil-prices", { timeoutMs: 45_000 }),
+    gasolinePrices: () => call<GasolinePricesData>("/api/macro/gasoline-prices", { timeoutMs: 45_000 }),
     realYields: () => call<RealYieldsData>("/api/macro/real-yields", { timeoutMs: 45_000 }),
     futuresPositioning: () => call<FuturesPositioningData>("/api/macro/futures-positioning", { timeoutMs: 45_000 }),
     commodityPositioning: () => call<FuturesPositioningData>("/api/macro/commodity-positioning", { timeoutMs: 45_000 }),

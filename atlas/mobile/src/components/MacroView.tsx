@@ -22,6 +22,7 @@ import { RealYieldsCard } from "./RealYieldsCard";
 import { FinConditionsCard } from "./FinConditionsCard";
 import { JoblessClaimsCard } from "./JoblessClaimsCard";
 import { OilPricesCard } from "./OilPricesCard";
+import { GasolinePricesCard } from "./GasolinePricesCard";
 import { CustomsCard } from "./CustomsCard";
 import { ReceiptsCard } from "./ReceiptsCard";
 import { OutlaysCard } from "./OutlaysCard";
@@ -93,6 +94,7 @@ export function MacroView() {
             <JoblessClaimsCard />
             <FuturesPositioningCard />
             <OilPricesCard />
+            <GasolinePricesCard />
             <CommodityPositioningCard />
             <CurrencyPositioningCard />
             <AgriPositioningCard />

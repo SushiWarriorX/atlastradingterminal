@@ -763,6 +763,21 @@ async function healthy(browser) {
       await page.locator(V("oil-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07q-oil");
 
+      await page.waitForSelector(V("gasoline-card"));
+      await page.waitForSelector(V("gasoline-body") + ", " + V("gasoline-unavailable") + ", " + V("gasoline-error"), { timeout: 45000 });
+      const gasTxt = await text(page);
+      match(gasTxt, /Gasoline prices/); match(gasTxt, /Energy Information Administration/); noMatch(gasTxt, FORECASTS, "the gasoline prices card makes no forecasts");
+      if (await present(page, "gasoline-body")) {
+        const gasBody = await inner(page, "gasoline-body");
+        match(gasBody, /Week starting [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        match(gasBody, /Regular gasoline \$\d\.\d{3} a gallon: (toward the low end|toward the high end|in the middle) of the past year's range\./, "the price with a plain reading");
+        match(gasBody, /That is \$\d{2,3}\.\d{2} a barrel-equivalent .* against WTI crude at \$\d{2,3}\.\d{2} a barrel: a gap of \$\d{2,3}\.\d{2}/, "the gap to crude");
+        match(gasBody, /Checked: every date is a Monday/); match(gasBody, /not a market signal or a forecast/);
+        noMatch(gasBody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("gasoline-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07r-gasoline");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);
