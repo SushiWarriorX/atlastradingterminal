@@ -22,6 +22,7 @@ Source, as-of date, and freshness (live, delayed, stale, historical, demo). Demo
 2. If it cannot be reached, log it as blocked in `DATA_SOURCES.md`; do not ship it.
 3. Timeout on every request, short cache, and a labelled "unavailable" result when it fails.
 4. Test the failure, stale and demo paths as well as the good path.
+5. A host that refuses the plain client (an HTTP 403, or a refusal from the network proxy) is BLOCKED for automation. Never change the client's identity, add browser-style headers, or fetch through another tool to get around a refusal: log it in `DATA_SOURCES.md` and let the owner decide. (FRED is the opposite case: send it no custom User-Agent, it stalls on one.)
 
 ## Adding a BTC strategy
 1. Write the fixed settings before looking at any result. Never retune after seeing one.
