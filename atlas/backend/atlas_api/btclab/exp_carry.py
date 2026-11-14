@@ -169,11 +169,20 @@ def run(records: list[tuple[float, float]], dtb3: list[tuple[date, float]], btc_
 
 # ---- live data (only used by the command line) -------------------------------------------------------------------------------------------------------------------------------------
 def _fetch(first_ms: int = int(datetime(2023, 5, 1, tzinfo=timezone.utc).timestamp() * 1000)):
+    import time
+    import urllib.error
     import urllib.request
 
     def post(start):
         r = urllib.request.Request("https://api.hyperliquid.xyz/info", data=json.dumps({"type": "fundingHistory", "coin": "BTC", "startTime": start}).encode(), headers={"Content-Type": "application/json"})
-        return json.load(urllib.request.urlopen(r, timeout=40))
+        for wait in (0, 5, 15, 40, 90):                                                           # Hyperliquid answers 429 when asked quickly: wait and retry (data fetching only, not the rule)
+            time.sleep(wait)
+            try:
+                return json.load(urllib.request.urlopen(r, timeout=40))
+            except urllib.error.HTTPError as e:
+                if e.code != 429:
+                    raise
+        raise RuntimeError("Hyperliquid kept answering 429")
     recs, s = [], first_ms
     while True:
         d = post(s)
@@ -183,6 +192,7 @@ def _fetch(first_ms: int = int(datetime(2023, 5, 1, tzinfo=timezone.utc).timesta
         if len(d) < 500:
             break
         s = d[-1]["time"] + 1
+        time.sleep(1.0)
     txt = urllib.request.urlopen("https://fred.stlouisfed.org/graph/fredgraph.csv?id=DTB3&cosd=2023-01-01", timeout=40).read().decode().strip().split("\n")[1:]
     dtb3 = [(date.fromisoformat(a), float(b)) for a, b in (ln.split(",") for ln in txt) if b not in ("", ".")]
     close, t = {}, datetime(2023, 5, 1, tzinfo=timezone.utc)

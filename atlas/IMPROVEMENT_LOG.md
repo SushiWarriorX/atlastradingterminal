@@ -866,3 +866,11 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 ## 2026-11-14 10:17 UTC (Claude, strategy job): no experiment run, by design
 - Unchanged since 07:17: experiments 1 to 3 closed failures, the rest of EDGE_PLAN needs data that is not free or an owner decision, no owner reply on the strategy question. No rescue variants run. No ChatGPT branches. No code changed, no tests run.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-14 10:40 UTC (Claude, strategy job, owner-authorised): experiment 4, BTC funding carry with a regime switch: FAILED
+- **Owner decision:** "you can keep on test the strategy yourself and tell me if it's profitable." Recorded in EDGE_PLAN.md; strategy hours now run pre-registered experiments by themselves.
+- **Pre-registered first** (commit 539ca0e), simulator and 10 tests committed before the run (4833b9f), then run once. A first attempt hit a Hyperliquid rate limit before any result existed; a pause-and-retry was added to the data download only.
+- **Result (sealed last 30%, 2025-11-06 to 2026-11-13):** strategy +0.66% a year, always-ON carry +2.68%, always in 3-month bills +3.78%, BTC hold -33.7%. Failed (a) beat bills by 1 point and (c) beat always-ON; passed (b) worst drop within 3%. The last year's funding paid less than Treasury bills.
+- **Honest reading:** the carry idea paid well in 2024 and does not now. Not a candidate. Nothing adjusted.
+- **Verified:** 10 new tests with hand-worked numbers (no look-ahead, switching costs, the sealed split, the data check); the real run used live Hyperliquid, FRED and Coinbase data with a 1-hour longest gap in the sealed period. **Not verified:** exchange, basis and liquidation risk (not modelled); how the rule did in 2024 (design period, not judged); full backend suite after adding the module (only the new tests were run).
+- **Credibly profitable?** No. Four experiments, four fails. Status: not yet.

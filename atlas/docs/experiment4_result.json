@@ -1,0 +1,37 @@
+{
+ "panel_days": 1241,
+ "design_days": 868,
+ "sealed_days": 373,
+ "sealed_from": "2025-11-06",
+ "sealed_to": "2026-11-13",
+ "max_gap_hours_in_sealed": 1.0,
+ "funding_from": "2023-06-08",
+ "funding_to": "2026-11-13",
+ "valid": true,
+ "switches_in_sealed": 11,
+ "days_on_in_sealed": 78,
+ "strategy": {
+  "ann_return": 0.006629069149580724,
+  "worst_drop": -0.009842133225275052,
+  "excess_sharpe_vs_bills": -3.1484100496629077
+ },
+ "always_on": {
+  "ann_return": 0.02678398422528061,
+  "worst_drop": -0.0028637312499999457,
+  "excess_sharpe_vs_bills": -3.277456600227179
+ },
+ "always_bills": {
+  "ann_return": 0.03783823515349516,
+  "worst_drop": 0.0
+ },
+ "btc_hold": {
+  "ann_return": -0.33710523373437706,
+  "worst_drop": -0.44778003041723746
+ },
+ "conditions": {
+  "a_beats_bills_by_1pp": false,
+  "b_worst_drop_within_3pct": true,
+  "c_at_least_always_on": false
+ },
+ "passed": false
+}
