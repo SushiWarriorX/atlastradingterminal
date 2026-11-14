@@ -53,6 +53,12 @@ def test_latest_week_changes_rank_and_the_gap_to_crude_by_hand():
     assert all(s["checks"].values())
 
 
+def test_the_note_describes_the_monday_figure_not_a_week_starting_on_it():
+    # FRED lists GASREGW as "Weekly, Ending Monday" and its notes say the average is of about 900 retail outlets sampled at 8:00AM Monday: the figure belongs to the Monday itself.
+    n = G.summarize(_data(), TODAY)["note"]
+    assert "on the Monday shown" in n and "8:00AM" in n and "week starting" not in n.lower()
+
+
 def test_a_missing_earlier_week_is_not_available_never_guessed():
     d = _data()
     del d["GASREGW"][LAST - timedelta(days=52 * 7)]

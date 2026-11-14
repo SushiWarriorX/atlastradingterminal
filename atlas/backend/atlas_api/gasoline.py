@@ -1,6 +1,6 @@
 """US retail gasoline price: the weekly national average for regular grade, in dollars a gallon, from the US Energy Information Administration (public-domain US government data) via FRED, the St. Louis Fed. Free, no key.
 
-How to read it: it is what drivers paid at the pump on average in the week starting on the Monday shown. It follows crude oil with a delay and adds refining, distribution, marketing and taxes. EIA data reach FRED within a day or two, so the newest figure is normally 1 to 8 days old and carries its own date.
+How to read it: it is the national average pump price on the Monday shown (the EIA samples about 900 retail outlets at 8:00AM that Monday; FRED lists the series as weekly, ending Monday). It follows crude oil with a delay and adds refining, distribution, marketing and taxes. EIA data reach FRED within a day or two, so the newest figure is normally 1 to 8 days old and carries its own date.
 Checks: every date is a Monday, the last 12 weeks are exactly one week apart, the last 60 prices are between $0.50 and $10 a gallon, no weekly move over 25% in the last 60 weeks, and the price is consistent with crude oil: gasoline per barrel (price x 42 gallons) minus the WTI crude price of the same week is between $10 and $130 a barrel (it has been $40 to $113 since 2018; a unit slip in either series would break it). A missing value ('.') is left out, never filled in.
 It describes what already happened: it is not a market signal or a forecast. A failure says so and shows nothing.
 """
@@ -73,7 +73,7 @@ def summarize(data: dict[str, dict[date, float]], today: date) -> dict:
             "crude": {"wti": round(wti_last, 2), "per_barrel": round(v * GALLONS_PER_BARREL, 2), "gap": round(margins[last], 2)},
             "history": [{"date": d.isoformat(), "price": round(g[d], 3)} for d in weeks[-52:]],
             "checks": {"mondays_ok": True, "weekly_spacing_ok": True, "range_ok": True, "weekly_move_ok": True, "consistent_with_crude": True},
-            "note": ("This is the national average price of regular gasoline at the pump in dollars a gallon, for the week starting on the Monday shown, from the US Energy Information Administration. It follows crude oil with a delay and adds refining, distribution, marketing and taxes. "
+            "note": ("This is the national average price of regular gasoline at the pump in dollars a gallon, on the Monday shown (a sample of about 900 retail outlets at 8:00AM that Monday), from the US Energy Information Administration. It follows crude oil with a delay and adds refining, distribution, marketing and taxes. "
                      "Checked: every date is a Monday, the last 12 weeks are one week apart, recent prices are between $0.50 and $10, no weekly move is over 25%, and gasoline per barrel minus WTI crude is inside the range it has really had. "
                      "This describes what already happened: it is not a market signal or a forecast.")}
 

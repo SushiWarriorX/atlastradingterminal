@@ -48,7 +48,7 @@ The judged windows ended on different days, so the "holding" figure differs betw
 3. What should the cloud image serve now? The Docker files still try to build the removed terminal.
 4. ETF price histories (send CSV exports, or allow automated pulls), only if the ETF idea is wanted.
 5. Set the SEC contact setting on your PC to switch on SEC filings in Signal.
-6. Whether Signal may show the ICE credit spreads and CBOE VIX from FRED (third-party licences).
+6. Whether Signal may show the Cboe VIX, the Freddie Mac mortgage rate and the University of Michigan consumer sentiment from FRED: each is third-party copyrighted data that FRED reprints with permission (licence line "Copyrighted: Citation Required", read on 14 November). The ICE credit spreads are different: their licence line is "Pre-Approval Required" (reproduction needs ICE's own written permission), so they stay off unless ICE gives it.
 7. Run `pip install --upgrade` inside your `.signal-venv` to bring an older install level.
 
 Full numbers for each experiment are in `EDGE_PLAN.md` (findings log); the raw output of experiments 4 to 7 is in `docs/experiment4_result.json` to `docs/experiment7_result.json`; and the app shows the record under Bitcoin, "Experiments record".

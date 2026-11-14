@@ -24,7 +24,7 @@ export function GasolinePricesCard() {
         : !d.available || d.price == null || !d.crude ? <Banner tone={d.demo ? "demo" : "warn"} title={d.demo ? "Demo mode" : "Gasoline prices unavailable"} testID="gasoline-unavailable">{d.reason}</Banner>
         : (
           <View style={{ gap: space.sm }} testID="gasoline-body">
-            <Txt variant="label">Week starting {ymdLabel(d.date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
+            <Txt variant="label">Monday {ymdLabel(d.date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
             <Txt variant="small">Regular gasoline {usd3(d.price)} a gallon: {d.reading}.</Txt>
             <Txt variant="tiny">{cents(d.change_1w)}, {vs(d.change_4w_pct, "four weeks ago")}, {vs(d.change_1y_pct, "a year ago")}. Past year: low {usd3(d.year_low)}, high {usd3(d.year_high)}.</Txt>
             <Divider />
