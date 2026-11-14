@@ -849,3 +849,7 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - Re-ran the fast checks: financial conditions, news and real-yields tests (48 passed); the financial conditions panel still reads live from FRED (week 2026-11-06, NFCI -0.462); phone typecheck clean, phone vitest 43 passed. No code changed. The full suites last ran 2026-11-14 00:17 (all green).
 - Not verified: GitHub CI; the Windows installer and launcher on a real PC; Signal on a physical phone.
 - **Credibly profitable?** No. Status: not yet.
+
+## 2026-11-14 07:17 UTC (Claude, strategy job): no experiment run, by design
+- Unchanged since 04:17: experiments 1 to 3 closed failures, the rest of EDGE_PLAN needs data that is not free or an owner decision, no owner reply on the strategy question. No rescue variants run. No ChatGPT branches. No code changed, no tests run.
+- **Credibly profitable?** No. Status: not yet.

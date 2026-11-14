@@ -32,6 +32,7 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 ## STATE BOARD (update at the end of every cycle: newest first, keep the last 20 lines)
 | When (UTC) | Who | Job | What changed | Next suggestion |
 | --- | --- | --- | --- | --- |
+| 2026-11-14 07:17 | Claude | strategy | No change: nothing cleared to test, no owner reply on the strategy question | Owner call still open (see 07:17 row on 2026-11-12) |
 | 2026-11-14 06:17 | Claude | improve | No code change: fast checks green, FRED panel still live | Owner: Windows install result; Dockerfile fix-or-drop |
 | 2026-11-14 05:17 | Claude | data | No change: blocked hosts still refuse, queue empty | Owner: allow api.census.gov and ec.europa.eu |
 | 2026-11-14 04:17 | Claude | strategy | No change: nothing cleared to test, no owner reply on the strategy question | Owner call still open (see 07:17 row on 2026-11-12) |
