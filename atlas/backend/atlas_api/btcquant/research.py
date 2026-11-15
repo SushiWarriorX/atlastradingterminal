@@ -147,3 +147,27 @@ def research_report(result: dict, ev: dict) -> str:
     L.append("## Credibly profitable?\n")
     L.append("No. Nothing here is evidence that a rule makes money. The forward paper record, accumulated day by day from now on, is the only clean evidence there will be.\n")
     return "\n".join(L)
+
+
+def main(argv: list) -> int:
+    """`python -m atlas_api.btcquant.research`: the one-off research run on the stored daily candles. It refuses to repeat itself on the same protocol and data."""
+    candles = D.load(D.daily_path())
+    rep = D.validate(candles, C.DAY)
+    if rep.fatal or len(candles) < 300:
+        print("research run stopped: the stored candles are missing or failed validation: " + "; ".join(rep.fatal[:3]))
+        return 1
+    prep = B.Prepared(candles)
+    try:
+        out = run_research(prep, R.Registry(), P.PaperBook(), C.REPORT_DIR)
+    except ResearchAlreadyRun as e:
+        print(f"research run refused: {e}")
+        return 1
+    print(f"research run done: protocol {out['protocol']}, data to {out['data']['last'][:10]}, {len(out['admitted'])} of 12 families admitted: {[a['family'] for a in out['admitted']]}")
+    for fid, outcome in out["outcomes"].items():
+        print(f"  {fid:14s} {outcome}")
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main(sys.argv))

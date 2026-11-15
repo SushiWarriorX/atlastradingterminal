@@ -136,3 +136,23 @@ def test_without_a_report_directory_or_a_book_only_the_registry_is_written(edge,
     reg = R.Registry(tmp_path / "registry")
     out = RS.run_research(edge["prep"], reg, None, None)
     assert len(out["admitted"]) == 7 and len(reg.challengers()) == 7 and not (tmp_path / "reports").exists() and not (tmp_path / "state").exists()
+
+
+def test_the_command_line_runs_once_and_refuses_a_repeat(tmp_path, monkeypatch, capsys):
+    cs = K.synthetic_candles("null_mild", 2)
+    (tmp_path / "data").mkdir()
+    D.save(tmp_path / "data" / "btcusd_1d.csv", cs)
+    monkeypatch.setattr(D, "daily_path", lambda: tmp_path / "data" / "btcusd_1d.csv")
+    monkeypatch.setattr(C, "REPORT_DIR", tmp_path / "reports")
+    monkeypatch.setattr(R.Registry, "__init__", lambda self, root=None, now=R._now: (setattr(self, "root", tmp_path / "registry"), setattr(self, "_now", now))[0])
+    monkeypatch.setattr(P.PaperBook, "__init__", lambda self, root=None, now=P._now: (setattr(self, "root", tmp_path / "state"), setattr(self, "_now", now))[0])
+    real = RS.V.evaluate_all
+    monkeypatch.setattr(RS.V, "evaluate_all", lambda prep, **k: real(prep, n_shifts=20))
+    assert RS.main(["research"]) == 0
+    out = capsys.readouterr().out
+    assert "research run done: protocol 1.2, data to 2026-11-14" in out and "of 12 families admitted" in out and out.count("\n") == 13
+    assert (tmp_path / "reports" / "research_1.2.md").exists() and len((tmp_path / "registry" / "research_runs.jsonl").read_text().splitlines()) == 1
+    assert RS.main(["research"]) == 1 and "research run refused" in capsys.readouterr().out
+    (tmp_path / "data" / "btcusd_1d.csv").write_bytes(b"")
+    D.save(tmp_path / "data" / "btcusd_1d.csv", cs[:100])
+    assert RS.main(["research"]) == 1 and "stopped" in capsys.readouterr().out
