@@ -12,6 +12,7 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 - Fetch it live in the same session; keep one real sample as the test fixture. If it cannot be reached, log it as blocked, do not ship it.
 - Free and keyless only. Check terms. The SEC contact and any keys live in environment variables or the untracked `local-settings.ps1`, never in the repo or a request header from the user's account.
 - Show what it is and what it is not (a mood gauge is not a signal). Say "unavailable" with a reason when the source fails.
+- A refused host fails at once (`curl: (56) CONNECT tunnel failed, response 403`); a flaky one gives empty replies or hangs (FRED on 2026-11-15: fine at 08:30, silent at 14:20). Log them differently, ship another source the same cycle, and tell the owner if the same host fails twice running.
 
 ## Numbers that went wrong once
 - Bars per year: about 252 for stocks, 365 for crypto. Derive it from the dates, never hard-code.
@@ -25,6 +26,10 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 - A long heredoc mixed with shell edits can be blocked by the safety check; write files with the file tools and run small scripts from files.
 - The cloud machine only reaches hosts on the environment's allowed list; a timeout (no HTTP code) usually means "host not allowed", not "site down".
 - Before finishing: backend `pytest`, `npm run typecheck && npm test` in `mobile`, then `npm run export:web` and `node e2e/signal.e2e.cjs` after UI changes.
+- A browser script that scrolls a React Native Web ScrollView must set `el.scrollTop = n`: RN Web puts its own `scrollTo(options)` on the node, so `el.scrollTo(0, n)` silently does nothing.
+- This sandbox blocks `sleep`. Wait for a background job with a Monitor until-loop, or block on its process with `tail --pid=<pid> -f /dev/null`; a foreground call is cut off after 10 minutes, so start long suites in the background.
+- All phone colours are tokens in `src/theme.ts` (the app is light since 2026-11-15; `onAccent` is the text on blue). The contrast test must list every gradient that hosts text: a red tint added without it sat at 4.41:1 against the 4.5 bar.
+- Anything that puts the protocol version into an identifier (here the specification hash, and from it every paper account's id) breaks when the version is bumped. Pin the version per family before an amendment adds a family, and test that every old hash is unchanged.
 
 ## When code fetches something from the internet
 - Timeout on every request, a short cache, and a labelled "unavailable" result on failure; one failing half must not hide the other.
