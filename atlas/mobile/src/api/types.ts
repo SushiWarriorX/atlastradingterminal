@@ -238,7 +238,10 @@ export interface OnChainDifficulty { available: boolean; reason?: string; progre
 export interface OnChainHashrate { available: boolean; reason?: string; date?: string; seven_day_average_eh?: number; latest_day_eh?: number; current_eh?: number | null; changes?: { label: string; change_pct: number }[]; history?: { date: string; eh: number }[]; highest_day?: { date: string; eh: number }; note?: string }
 export interface PoolWindow { label: string; days: number; blocks: number; pools_seen: number; top_pool: string; top_pool_pct: number; top3_pct: number; nakamoto: number | null; hhi: number; unidentified_pct: number }
 export interface OnChainPools { available: boolean; reason?: string; headline_window?: string; windows?: PoolWindow[]; top_pools?: { name: string; blocks: number; share_pct: number }[]; others_pct?: number; unidentified_pct?: number; note?: string }
-export interface OnChain { as_of: string; demo: boolean; source: string; url: string; fees: OnChainFees; difficulty: OnChainDifficulty; hashrate: OnChainHashrate; pools: OnChainPools }
+export interface OnChainRevenue { available: boolean; reason?: string; blocks?: number; first_block?: number; last_block?: number; reward_btc?: number; subsidy_btc?: number; fees_btc?: number; fee_share_pct?: number; subsidy_per_block_btc?: number;
+  avg_reward_per_block_btc?: number; avg_fee_per_block_btc?: number; transactions?: number; tx_per_block?: number; avg_fee_per_tx_sats?: number;
+  halving?: { height: number; blocks_left: number; days_left: number; estimated_date: string; subsidy_after_btc: number }; note?: string }
+export interface OnChain { as_of: string; demo: boolean; source: string; url: string; fees: OnChainFees; difficulty: OnChainDifficulty; hashrate: OnChainHashrate; pools: OnChainPools; revenue: OnChainRevenue }
 
 export interface FxPair { pair: string; currency: string; rate: number; date: string; dollar_vs_1d_pct: number; dollar_vs_30d_pct: number | null; compared_with_30d: string | null }
 export interface FxData { available: boolean; reason?: string; demo: boolean; as_of: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; pairs?: FxPair[]; breadth?: { stronger_30d: number; of: number }; source?: string; url?: string; note?: string }

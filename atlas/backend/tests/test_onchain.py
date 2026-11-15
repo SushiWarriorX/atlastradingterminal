@@ -2,7 +2,7 @@
 import asyncio
 import json
 import types
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import httpx
@@ -16,6 +16,7 @@ FX = Path(__file__).parent / "fixtures"
 FEES, DIFF, MEMPOOL, HASH = (json.loads((FX / f).read_text()) for f in ("mp_fees.json", "mp_diff.json", "mp_mempool.json", "mp_hash.json"))
 TIP = (FX / "mp_tip.txt").read_text().strip()
 POOLS = {c: json.loads((FX / f"mp_pools_{c}.json").read_text()) for c in ("1w", "1m", "3m")}          # real responses, fetched 2026-11-15
+REWARD = json.loads((FX / "mp_reward_stats.json").read_text())                                           # the real answer, fetched 2026-11-15 20:18 UTC: the 144 blocks 975,868 to 976,011
 NOW = datetime(2026, 11, 8, 12, tzinfo=timezone.utc)
 
 
@@ -51,23 +52,23 @@ def routes(req):
     path = req.url.path.replace("/api/", "")
     return {"v1/fees/recommended": httpx.Response(200, json=FEES), "mempool": httpx.Response(200, json=MEMPOOL), "v1/difficulty-adjustment": httpx.Response(200, json=DIFF),
             "blocks/tip/height": httpx.Response(200, text=TIP), "v1/mining/hashrate/3m": httpx.Response(200, json=HASH),
-            **{f"v1/mining/pools/{c}": httpx.Response(200, json=POOLS[c]) for c in POOLS}}.get(path, httpx.Response(404))
+            **{f"v1/mining/pools/{c}": httpx.Response(200, json=POOLS[c]) for c in POOLS}, "v1/mining/reward-stats/144": httpx.Response(200, json=REWARD)}.get(path, httpx.Response(404))
 
 
 def go(handler, demo=False):
     return asyncio.run(O.OnChain(httpx.AsyncClient(transport=httpx.MockTransport(handler)), demo).overview(NOW))
 
 
-def test_service_returns_all_four_sections_with_a_source():
+def test_service_returns_all_five_sections_with_a_source():
     r = go(routes)
-    assert all(r[k]["available"] for k in ("fees", "difficulty", "hashrate", "pools")) and "mempool.space" in r["source"]
+    assert all(r[k]["available"] for k in ("fees", "difficulty", "hashrate", "pools", "revenue")) and "mempool.space" in r["source"]
 
 
 def test_one_failing_section_does_not_hide_the_others():
     def h(req):
         return httpx.Response(503) if "hashrate" in req.url.path else routes(req)
     r = go(h)
-    assert r["fees"]["available"] and r["difficulty"]["available"] and r["pools"]["available"] and r["hashrate"]["available"] is False and "hashrate" in r["hashrate"]["reason"] and "history" not in r["hashrate"]
+    assert r["fees"]["available"] and r["difficulty"]["available"] and r["pools"]["available"] and r["revenue"]["available"] and r["hashrate"]["available"] is False and "hashrate" in r["hashrate"]["reason"] and "history" not in r["hashrate"]
 
 
 def test_a_missing_mempool_or_height_only_drops_the_extra():
@@ -77,14 +78,14 @@ def test_a_missing_mempool_or_height_only_drops_the_extra():
     assert r["fees"]["available"] and "mempool" not in r["fees"] and r["difficulty"]["available"] and r["difficulty"]["block_height"] is None
 
 
-def test_everything_failing_says_so_four_times_and_shows_no_numbers():
+def test_everything_failing_says_so_five_times_and_shows_no_numbers():
     r = go(lambda req: (_ for _ in ()).throw(httpx.ConnectError("down")))
-    assert not any(r[k]["available"] for k in ("fees", "difficulty", "hashrate", "pools"))
+    assert not any(r[k]["available"] for k in ("fees", "difficulty", "hashrate", "pools", "revenue"))
 
 
 def test_demo_mode_invents_nothing(tmp_path):
     r = go(routes, demo=True)
-    assert not any(r[k]["available"] for k in ("fees", "difficulty", "hashrate", "pools"))
+    assert not any(r[k]["available"] for k in ("fees", "difficulty", "hashrate", "pools", "revenue"))
     with TestClient(create_app(db_path=str(tmp_path / "o.db"), demo=True, alert_loop=False, news_loop=False)) as c:
         assert c.get("/api/btc/network").json()["data"]["demo"] is True
 
@@ -229,7 +230,148 @@ def test_a_good_answer_is_kept_for_five_minutes_and_one_with_a_failed_section_fo
             counts.append(len(calls) - first)
         return first, counts
     first, counts = asyncio.run(seen(routes, [299, 2]))
-    assert first >= 7 and counts[0] == 0 and counts[1] >= 7                                              # still kept at 299 s, fetched again after 301 s
+    assert first >= 9 and counts[0] == 0 and counts[1] >= 9                                              # still kept at 299 s, fetched again after 301 s
     failing_pools = lambda req: httpx.Response(503) if "/pools/" in req.url.path else routes(req)
     first, counts = asyncio.run(seen(failing_pools, [59, 2]))
-    assert counts[0] == 0 and counts[1] >= 7                                                             # a failed section is kept for only a minute, so it is retried soon
+    assert counts[0] == 0 and counts[1] >= 9                                                             # a failed section is kept for only a minute, so it is retried soon
+    failing_revenue = lambda req: httpx.Response(503) if "/reward-stats/" in req.url.path else routes(req)
+    first, counts = asyncio.run(seen(failing_revenue, [59, 2]))
+    assert counts[0] == 0 and counts[1] >= 9                                                             # the miner revenue section counts too: a failure there is retried after a minute, not five
+
+
+# ---------------------------------------------------------------------------------------------------------- what the miners earned
+def answer(start=975868, end=976011, reward=45_173_127_020, fee=173_127_020, tx=821_183):
+    return {"startBlock": start, "endBlock": end, "totalReward": str(reward), "totalFee": str(fee), "totalTx": str(tx)}
+
+
+def test_the_subsidy_follows_the_halving_schedule_at_every_boundary():
+    sats = {0: 5_000_000_000, 209_999: 5_000_000_000, 210_000: 2_500_000_000, 419_999: 2_500_000_000, 420_000: 1_250_000_000, 630_000: 625_000_000, 839_999: 625_000_000, 840_000: 312_500_000,
+            975_868: 312_500_000, 1_049_999: 312_500_000, 1_050_000: 156_250_000}
+    for h, v in sats.items():
+        assert O.subsidy_sats(h) == v, h
+    assert O.subsidy_sats(33 * 210_000 - 1) == 1 and O.subsidy_sats(33 * 210_000) == 0 and O.subsidy_sats(10_000_000_000) == 0          # 50 BTC shifted right 32 times is one satoshi; the 33rd halving leaves nothing
+    assert sum(210_000 * O.subsidy_sats(e * 210_000) for e in range(0, 40)) == 2_099_999_997_690_000                                       # Bitcoin's total supply, 20,999,999.9769 BTC: the rule, summed over every era
+    for bad in (-1, -210_000):
+        with pytest.raises(ValueError, match="cannot be negative"):
+            O.subsidy_sats(bad)
+
+
+def test_a_window_adds_the_right_subsidy_to_each_block_even_across_halvings():
+    assert O.subsidy_total(975_868, 976_011) == 144 * 312_500_000 == 45_000_000_000 and O.subsidy_total(5, 5) == 5_000_000_000
+    assert O.subsidy_total(839_990, 840_009) == 10 * 625_000_000 + 10 * 312_500_000                                                    # ten blocks of 6.25 BTC, then ten of 3.125
+    assert O.subsidy_total(209_999, 420_000) == 5_000_000_000 + 210_000 * 2_500_000_000 + 1_250_000_000                              # across two halvings
+    assert O.subsidy_total(10, 9) == 0
+
+
+def test_the_real_answer_is_worked_out_by_hand():
+    r = O.parse_revenue(REWARD, date(2026, 11, 15))
+    assert r["available"] and r["blocks"] == 144 and (r["first_block"], r["last_block"]) == (975_868, 976_011)
+    assert (r["reward_btc"], r["subsidy_btc"], r["fees_btc"]) == (451.7313, 450.0, 1.7313)                              # 45,173,127,020 = 45,000,000,000 + 173,127,020 satoshis
+    assert r["fee_share_pct"] == 0.38 and r["subsidy_per_block_btc"] == 3.125                                          # 173,127,020 / 45,173,127,020 = 0.3833%
+    assert (r["avg_reward_per_block_btc"], r["avg_fee_per_block_btc"]) == (3.137, 0.012)                                 # 313,702,271 and 1,202,271 satoshis
+    assert (r["transactions"], r["tx_per_block"], r["avg_fee_per_tx_sats"]) == (821_183, 5703, 211)                    # 821,183 / 144 = 5,702.7 and 173,127,020 / 821,183 = 210.8
+    h = r["halving"]
+    assert (h["height"], h["blocks_left"], h["days_left"], h["subsidy_after_btc"]) == (1_050_000, 73_989, 514, 1.5625)  # 73,989 blocks at ten minutes each is 513.8 days
+    assert h["estimated_date"] == (date(2026, 11, 15) + timedelta(days=514)).isoformat()
+    assert "not a price signal" in r["note"].lower() and "estimate" in r["note"].lower()
+
+
+def test_the_next_halving_is_the_next_multiple_of_210000_after_the_newest_block():
+    for end, nxt, left in ((1_049_999, 1_050_000, 1), (1_050_000, 1_260_000, 210_000), (840_000, 1_050_000, 210_000), (976_011, 1_050_000, 73_989)):
+        r = O.parse_revenue(answer(start=end - 143, end=end, reward=O.subsidy_total(end - 143, end) + 1_000, fee=1_000, tx=144), date(2026, 11, 15))
+        assert (r["halving"]["height"], r["halving"]["blocks_left"]) == (nxt, left), end
+
+
+def test_a_window_across_a_halving_passes_with_each_block_at_its_own_subsidy():
+    start, end = 839_930, 840_073                                                                                         # 70 blocks of 6.25 BTC and 74 of 3.125
+    total = 70 * 625_000_000 + 74 * 312_500_000
+    r = O.parse_revenue(answer(start, end, reward=total + 5_000_000, fee=5_000_000, tx=700_000), date(2026, 11, 15))
+    assert r["subsidy_btc"] == total / 1e8 and r["subsidy_per_block_btc"] == 3.125 and r["halving"]["height"] == 1_050_000
+
+
+def test_the_reward_minus_the_fees_must_equal_the_subsidy_of_the_window_within_a_thousand_satoshis():
+    sub = 45_000_000_000
+    for gap in (-1000, 0, 1000):
+        assert O.parse_revenue(answer(reward=sub + 173_127_020 + gap), date(2026, 11, 15))["available"]
+    for gap in (-1001, 1001, 312_500_000, -312_500_000):                                                               # one whole block's subsidy missing or extra is a real refusal
+        with pytest.raises(ValueError, match="sats away from the subsidy of 144 blocks"):
+            O.parse_revenue(answer(reward=sub + 173_127_020 + gap), date(2026, 11, 15))
+    with pytest.raises(ValueError, match="sats away from the subsidy"):                                                 # a fee total off by a factor of ten (a unit slip)
+        O.parse_revenue(answer(fee=1_731_270_200), date(2026, 11, 15))
+
+
+def test_the_window_must_be_exactly_144_blocks():
+    sub, fee = 45_000_000_000, 173_127_020
+    for start, end in ((975_868, 976_012), (975_868, 976_010), (976_011, 975_868), (975_868, 975_868)):
+        with pytest.raises(ValueError, match="blocks, not 144"):
+            O.parse_revenue(answer(start, end, reward=sub + fee), date(2026, 11, 15))
+
+
+def test_totals_must_be_in_range():
+    today = date(2026, 11, 15)
+    with pytest.raises(ValueError, match="out of range"):
+        O.parse_revenue(answer(reward=45_000_000_000, fee=45_000_000_001), today)                                      # fees above the whole reward
+    with pytest.raises(ValueError, match="out of range"):
+        O.parse_revenue(answer(reward=45_000_000_000 - 100, fee=-100), today)                                          # a negative fee total
+    with pytest.raises(ValueError, match="out of range"):
+        O.parse_revenue(answer(reward=0, fee=0), today)
+    assert O.parse_revenue(answer(reward=45_000_000_000, fee=0, tx=144), today)["fee_share_pct"] == 0.0              # no fees at all is a real answer; one transaction a block (the coinbase) is the least possible
+    with pytest.raises(ValueError, match="out of range"):
+        O.parse_revenue(answer(tx=143), today)
+    assert O.parse_revenue(answer(reward=O.subsidy_total(975_868, 976_011), fee=0, tx=144), today)["avg_fee_per_tx_sats"] == 0
+
+
+def test_a_missing_or_unreadable_field_is_an_error_not_a_guess():
+    today = date(2026, 11, 15)
+    for k in ("startBlock", "endBlock", "totalReward", "totalFee", "totalTx"):
+        bad = dict(answer())
+        del bad[k]
+        with pytest.raises(KeyError):
+            O.parse_revenue(bad, today)
+    with pytest.raises(ValueError):
+        O.parse_revenue({**answer(), "totalFee": "a lot"}, today)
+
+
+def test_the_service_asks_for_the_144_block_statistics_and_reports_them_with_the_rest():
+    asked = []
+
+    def h(req):
+        asked.append(req.url.path)
+        return routes(req)
+    r = go(h)
+    assert "/api/v1/mining/reward-stats/144" in asked and r["revenue"]["available"] and r["revenue"]["fees_btc"] == 1.7313 and r["fees"]["available"] and r["pools"]["available"]
+    assert r["revenue"]["halving"]["estimated_date"] == (NOW.date() + timedelta(days=514)).isoformat()                  # the estimate counts from the day of the request
+
+
+def test_a_failing_or_corrupt_revenue_answer_only_loses_the_revenue_section_and_says_why_in_words():
+    def down(req):
+        return httpx.Response(503) if "/reward-stats/" in req.url.path else routes(req)
+    r = go(down)
+    assert r["fees"]["available"] and r["difficulty"]["available"] and r["hashrate"]["available"] and r["pools"]["available"] and r["revenue"]["available"] is False
+    assert r["revenue"]["reason"] == "mempool.space miner revenue could not be read right now (the server had an error, HTTP 503)"
+    def wrong(req):
+        return httpx.Response(200, json=answer(fee=1_731_270_200)) if "/reward-stats/" in req.url.path else routes(req)
+    w = go(wrong)
+    assert w["revenue"]["available"] is False and "failed a check" in w["revenue"]["reason"] and "sats away from the subsidy" in w["revenue"]["reason"] and w["pools"]["available"]
+    assert "revenue_btc" not in w["revenue"] and "fee_share_pct" not in w["revenue"]
+
+
+def test_the_revenue_section_is_in_the_route_for_the_phone(tmp_path):
+    with TestClient(create_app(db_path=str(tmp_path / "r.db"), demo=True, alert_loop=False, news_loop=False)) as c:
+        d = c.get("/api/btc/network").json()["data"]
+        assert d["revenue"]["available"] is False and "Demo mode" in d["revenue"]["reason"]
+
+
+def test_the_fee_share_is_of_the_whole_reward_worked_by_hand_on_a_busy_day():
+    r = O.parse_revenue(answer(reward=55_000_000_000, fee=10_000_000_000, tx=1_000_000), date(2026, 11, 15))                # 100 BTC of fees on top of 450 BTC of subsidy: 100 / 550
+    assert (r["fees_btc"], r["subsidy_btc"], r["reward_btc"], r["fee_share_pct"]) == (100.0, 450.0, 550.0, 18.18)
+    assert (r["avg_fee_per_tx_sats"], r["tx_per_block"], r["avg_fee_per_block_btc"], r["avg_reward_per_block_btc"]) == (10_000, 6944, 0.694, 3.819)           # 10e9 / 1e6, 1e6 / 144, 100 / 144 and 550 / 144
+
+
+def test_after_the_last_halving_the_whole_reward_is_fees_and_that_is_not_out_of_range():
+    start = 33 * HALVING_FOR_TEST + 10                                                                                      # from the 33rd halving the subsidy is zero
+    r = O.parse_revenue(answer(start, start + 143, reward=900_000, fee=900_000, tx=500), date(2026, 11, 15))
+    assert r["subsidy_btc"] == 0.0 and r["fee_share_pct"] == 100.0 and r["subsidy_per_block_btc"] == 0.0 and r["halving"]["subsidy_after_btc"] == 0.0
+
+
+HALVING_FOR_TEST = 210_000

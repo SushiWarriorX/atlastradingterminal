@@ -1078,6 +1078,17 @@ async function healthy(browser) {
         match(pools, /Who found the blocks \(last 1 month\)/); match(pools, /Miners the source could not name/); match(pools, /pools for a majority|no majority among named pools/); match(pools, /not who owns the machines/);
         match(pools, /1 week: largest/); match(pools, /1 month: largest/); match(pools, /3 months: largest/); noMatch(pools, FORECASTS, "the pool shares make no forecasts");
       }
+      if (await liveCard(page, "network-revenue")) {
+        const rev = await inner(page, "network-revenue");
+        match(rev, /What miners were paid \(last 144 blocks, about a day\)/, "the window is named");
+        match(rev, /In all\s+\d{3}\.\d{2} BTC/, "the total reward of about 144 blocks of 3.125 BTC"); match(rev, /Block subsidy \(3\.125 a block\)\s+450\.00 BTC/, "the subsidy is the checked schedule figure");
+        match(rev, /Transaction fees\s+\d{1,3}\.\d{4} BTC/); match(rev, /Fees were \d{1,2}\.\d{2}% of what miners were paid\. [\d,]+ transactions were confirmed \(about [\d,]+ a block\), [\d,]+ sats on average in fees each\./, "the fee share and the size of an average fee");
+        match(rev, /Next halving at block 1,050,000: [\d,]+ blocks away, about [\d,]+ days \([A-Z][a-z]{2} \d{1,2}, 20\d\d, an estimate\)\. The subsidy then falls to 1\.5625 BTC a block\./, "the halving is dated as an estimate");
+        match(rev, /Blocks [\d,]+ to [\d,]+, as of this request\./); match(rev, /the reward minus the fees must equal the subsidy/); match(rev, /not a price signal/i); noMatch(rev, FORECASTS, "the miner revenue makes no forecasts");
+        noMatch(rev, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+        await page.locator(V("network-revenue")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);
+        await shot(page, "09p-network-revenue");
+      }
       if (await liveCard(page, "stablecoins-body")) match(st, /not a price signal/, "the liquidity-gauge caveat is shown");
       if (await liveCard(page, "positioning-body")) match(pt, /Net short is not the same as bearish/, "the basis-trade caveat is shown");
       await page.waitForSelector(V("experiments-card"));
