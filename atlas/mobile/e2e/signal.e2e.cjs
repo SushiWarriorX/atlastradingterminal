@@ -1048,6 +1048,11 @@ async function healthy(browser) {
       match(tk, /Strategy tracker/); match(tk, /Aroon trend/); match(tk, /Backtest \(frozen on/); match(tk, /Forward record/); match(tk, /Weak evidence|No reliable evidence|Moderate evidence/);
       noMatch(tk, FORECASTS, "the tracker makes no forecasts"); match(tk, /(too little to say anything|just started|Forward tracking needs real prices)/i, "a thin forward record is called thin");
       match(nt2, /Bitcoin network/); match(nt2, /Not a price signal: fees can be near zero/); noMatch(nt2, FORECASTS, "network card makes no forecasts");
+      if (await liveCard(page, "network-pools")) {
+        const pools = await inner(page, "network-pools");
+        match(pools, /Who found the blocks \(last 1 month\)/); match(pools, /Miners the source could not name/); match(pools, /pools for a majority|no majority among named pools/); match(pools, /not who owns the machines/);
+        match(pools, /1 week: largest/); match(pools, /1 month: largest/); match(pools, /3 months: largest/); noMatch(pools, FORECASTS, "the pool shares make no forecasts");
+      }
       if (await liveCard(page, "stablecoins-body")) match(st, /not a price signal/, "the liquidity-gauge caveat is shown");
       if (await liveCard(page, "positioning-body")) match(pt, /Net short is not the same as bearish/, "the basis-trade caveat is shown");
       await page.waitForSelector(V("experiments-card"));

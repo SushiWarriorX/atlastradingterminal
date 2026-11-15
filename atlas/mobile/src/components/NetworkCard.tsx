@@ -13,14 +13,14 @@ function Row({ k, v, c }: { k: string; v: string; c?: string }) {
   return <View style={{ flexDirection: "row", justifyContent: "space-between", gap: space.md, paddingVertical: 3 }}><Txt variant="small" style={{ flex: 1 }}>{k}</Txt><Txt variant="body" c={c}>{v}</Txt></View>;
 }
 
-/** Bitcoin network health from mempool.space: fees, the mempool queue, the difficulty cycle and hashrate. Each part fails on its own. Not a price signal. */
+/** Bitcoin network health from mempool.space: fees, the mempool queue, the difficulty cycle, hashrate and who found the blocks. Each part fails on its own. Not a price signal. */
 export function NetworkCard() {
   const q = useNetwork();
   const d = q.data;
   const link = safeUrl(d?.url ?? null);
   return (
     <GCard style={{ padding: space.lg, gap: space.md }} testID="network-card">
-      <View><Txt variant="h2">Bitcoin network</Txt><Txt variant="tiny">Fees, the queue of waiting transactions, mining difficulty and hashrate</Txt></View>
+      <View><Txt variant="h2">Bitcoin network</Txt><Txt variant="tiny">Fees, the queue of waiting transactions, mining difficulty, hashrate and which pools found the blocks</Txt></View>
       {q.isLoading ? <Skeleton h={80} />
         : q.isError || !d ? <Banner tone="warn" title="Couldn't load network data" testID="network-error">{q.error instanceof Error ? q.error.message : "Something went wrong."}</Banner>
         : (
@@ -55,6 +55,18 @@ export function NetworkCard() {
                 <Txt variant="h2">{n(d.hashrate.seven_day_average_eh!)} EH/s</Txt>
                 <Txt variant="tiny">7-day average to {d.hashrate.date}{d.hashrate.changes!.length ? " · " + d.hashrate.changes!.map((c) => `${c.label} ${pc(c.change_pct)}`).join(" · ") : ""}</Txt>
                 <Txt variant="tiny">{d.hashrate.note}</Txt>
+              </View>) : null}
+            {!d.demo && !d.pools.available ? <Banner tone="warn" title="Mining pools unavailable" testID="network-pools-unavailable">{d.pools.reason}</Banner> : null}
+            {d.pools.available ? (
+              <View testID="network-pools">
+                <Divider />
+                <Txt variant="label" style={{ marginTop: space.sm }}>Who found the blocks (last {d.pools.headline_window})</Txt>
+                {d.pools.top_pools!.map((p) => <Row key={p.name} k={p.name} v={`${p.share_pct.toFixed(1)}% · ${n(p.blocks)} blocks`} />)}
+                <Row k="All other named pools" v={`${d.pools.others_pct!.toFixed(1)}%`} />
+                <Row k="Miners the source could not name" v={`${d.pools.unidentified_pct!.toFixed(1)}%`} />
+                {d.pools.windows!.map((w) => <Txt key={w.label} variant="small" style={{ marginTop: 2 }}>{w.label}: largest {w.top_pool_pct.toFixed(1)}% · top 3 {w.top3_pct.toFixed(1)}% · {w.nakamoto === null ? "no majority among named pools" : `${w.nakamoto} pools for a majority`} · HHI {n(w.hhi)}</Txt>)}
+                <Txt variant="tiny" style={{ marginTop: 2 }}>Shares of all blocks in rolling windows that end at the newest block, as of this request.</Txt>
+                <Txt variant="tiny">{d.pools.note}</Txt>
               </View>) : null}
             <Txt variant="tiny">Not a price signal: fees can be near zero while price moves a lot.</Txt>
             {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: mempool.space</Txt></Pressable> : null}
