@@ -1,0 +1,1 @@
+{"account": "tsmom-39fed1cb", "after_candle": "2026-11-14T00:00:00Z", "event": "account_opened", "family": "tsmom", "params": {"L": 30}, "recorded_at": "2026-11-15T10:36:08Z", "seq": 1, "spec_hash": "39fed1cb9821e5e3", "stage": "monitor", "start_equity": 10000.0}

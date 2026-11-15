@@ -250,3 +250,19 @@ def test_the_drawdown_and_the_day_result_of_an_account_are_worked_out_from_its_c
     assert s["equity"] == eq[-1] and s["day_pnl"] == pytest.approx(eq[-1] - eq[-2]) and s["drawdown"] == pytest.approx(1 - eq[-1] / peak) and s["pnl"] == pytest.approx(eq[-1] - 10_000.0)
     worst = max(1 - e / max([10_000.0] + eq[:i + 1]) for i, e in enumerate(eq))
     assert s["max_drawdown"] == pytest.approx(worst) and s["days"] == 5
+
+
+def test_families_that_were_not_admitted_are_paper_traded_as_monitors_and_challengers_are_not_doubled(tmp_path):
+    cs = history(400)
+    reg = R.Registry(tmp_path / "registry")
+    for fam, params, dec in (("tsmom", {"L": 30}, "admitted"), ("donchian", {"N": 20}, "rejected"), ("rsi_oversold", {"n": 7, "enter": 20, "exit": 50}, "too_thin")):
+        reg.log_candidate({"family": fam, "params": params, "decision": dec, "run": "research"})
+    reg.admit({"family": "tsmom", "params": {"L": 30}})
+    dash = DY.run_daily(root=tmp_path, now=after(cs), candles=cs)
+    stages = {a["id"]: a["stage"] for a in dash["accounts"]}
+    don, osold, tsm = (f"donchian-{S.spec_hash('donchian', {'N': 20})[:8]}", f"rsi_oversold-{S.spec_hash('rsi_oversold', {'n': 7, 'enter': 20, 'exit': 50})[:8]}", f"tsmom-{S.spec_hash('tsmom', {'L': 30})[:8]}")
+    assert stages[don] == "monitor" and stages[osold] == "monitor" and stages[tsm] == "challenger" and len(stages) == 6                              # 3 benchmarks/portfolio + 1 challenger + 2 monitors
+    assert sorted(dash["monitors"]) == sorted([don, osold]) and don in dash["opened_today"]
+    text = (tmp_path / "reports/latest.md").read_text()
+    assert "Monitored strategies (not admitted)" in text and don in text and "cannot be promoted without first passing the admission gates" in text and "twelve accounts watched at once will always have a lucky one" in text
+    assert dash["status"] == "no champions: the main portfolio is in cash" and DY.run_daily(root=tmp_path, now=after(cs), candles=cs)["opened_today"] == []

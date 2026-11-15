@@ -17,7 +17,7 @@ Code lives in `atlas/backend/atlas_api/btcquant/`, tests in `atlas/backend/tests
 - [x] 8. Registry (`btcquant/registry.py`, 17 tests; 29 breakages caught): candidate log with specification hash and renamed-copy check at 0.90, challengers and champions with frozen specifications, a once-only look at TEST.
 - [x] 9. Paper engine (`btcquant/paper.py`, 19 tests; 20 breakages caught): persistent accounts, ledger written on signal, idempotent catch-up, refuses to step across a missing candle, exact parity with the backtest candle by candle.
 - [x] 10. Daily runner (`btcquant/daily.py`, 16 tests; with the research run in `btcquant/research.py`, 11 tests; 42 breakages caught): data update, accounts, catch-up, report, `dashboard.json`.
-- [ ] 11. First full research run, once, under the protocol; results and honest conclusion in the report; challengers admitted by the gates start their paper accounts.
+- [x] 11. First full research run, once, on the real data (2026-11-15 10:34 UTC, protocol 1.2, 2,875 daily candles to 2026-11-14, hash c9cb205d...): **0 of 12 families admitted** (11 rejected, 1 too thin). Record: `reports/research_1.2.md` and `.json`, `registry/`. The twelve chosen configurations are paper-traded as monitors; the benchmarks and the empty $100,000 portfolio are open. Nothing was run on the TEST period.
 - [ ] 12. Schedule (00:15 UTC), loop documents, a Signal card for the paper accounts.
 - [ ] 13. Research queue: new hypotheses found online, each checked for being genuinely new (position-series correlation under 0.90) and pre-registered before running.
 

@@ -90,6 +90,14 @@ class Registry:
     def candidates(self) -> list:
         return _read_jsonl(self.candidates_path)
 
+    def chosen(self, run: str = "research") -> list:
+        """The configuration chosen on TRAIN for each family in the latest logged run of that kind (its outcome in `decision`): every logged record of the run that is not marked as merely tested."""
+        latest = {}
+        for c in self.candidates():
+            if c.get("run") == run and c["decision"] != "tested, not selected on TRAIN":
+                latest[c["family"]] = c
+        return [latest[f] for f in sorted(latest)]
+
     def is_known(self, spec_hash: str) -> bool:
         return any(c["spec_hash"] == spec_hash for c in self.candidates())
 

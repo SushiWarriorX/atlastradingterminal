@@ -216,3 +216,15 @@ def test_the_test_period_can_be_looked_at_once_per_specification(tmp_path):
         r.holdout_look(h, {"test_sharpe": 0.9})
     r.holdout_look(S.spec_hash("donchian", {"N": 40}), {"test_sharpe": 0.1})            # another specification has its own single look
     assert len(r.holdout_path.read_text().splitlines()) == 2 and json.loads(r.holdout_path.read_text().splitlines()[0])["test_sharpe"] == 0.4
+
+
+def test_the_chosen_configuration_of_each_family_comes_from_the_latest_run_of_that_kind(tmp_path):
+    r = reg(tmp_path)
+    r.log_candidate(entry(family="sma_cross", params={"fast": 10, "slow": 50}, decision="rejected", run="research"))
+    r.log_candidate(entry(family="sma_cross", params={"fast": 20, "slow": 50}, decision="tested, not selected on TRAIN", run="research"))
+    r.log_candidate(entry(family="tsmom", params={"L": 30}, decision="admitted", run="research"))
+    r.log_candidate(entry(family="tsmom", params={"L": 60}, decision="rejected", run="research"))                       # a later run chose another configuration
+    r.log_candidate(entry(family="donchian", params={"N": 20}, decision="rejected", run="other"))
+    got = r.chosen()
+    assert [(c["family"], c["params"], c["decision"]) for c in got] == [("sma_cross", {"fast": 10, "slow": 50}, "rejected"), ("tsmom", {"L": 60}, "rejected")]
+    assert [c["family"] for c in r.chosen("other")] == ["donchian"] and r.chosen("none") == []

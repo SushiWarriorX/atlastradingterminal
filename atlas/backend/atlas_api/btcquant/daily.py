@@ -52,6 +52,11 @@ def ensure_accounts(book: P.PaperBook, reg: R.Registry, prep: B.Prepared) -> lis
         if not book.exists(aid):
             book.open(aid, ch["family"], ch["params"], prep, stage="challenger", version=ch.get("version", 1))
             opened.append(aid)
+    for rec in reg.chosen():                                                                 # the other families' chosen configurations: paper-traded for information only, never promoted
+        aid = RS.account_id(rec["family"], rec["params"])
+        if not book.exists(aid):                                                            # a challenger's account was opened just above, so this only adds the not-admitted ones
+            book.open(aid, rec["family"], rec["params"], prep, stage="monitor", version=rec["spec"].get("version", 1))
+            opened.append(aid)
     return opened
 
 
@@ -80,7 +85,7 @@ def build_dashboard(book: P.PaperBook, reg: R.Registry, prep: B.Prepared, now: i
     accounts = [account_summary(book, prep, aid) for aid in book.ids()]
     runs = RS.previous_runs(reg)
     return {"generated_at": _iso(now), "protocol": C.PROTOCOL_VERSION, "real_trading": "DISABLED: nothing in this system can place an order", "data": data_status, "accounts": accounts,
-            "champions": sorted(reg.champions()), "challengers": sorted(reg.challengers()),
+            "champions": sorted(reg.champions()), "challengers": sorted(reg.challengers()), "monitors": [a["id"] for a in accounts if a["stage"] == "monitor"],
             "portfolio": next((a for a in accounts if a["id"] == PORTFOLIO), None), "frozen_check": reg.check_frozen(), "drift": reg.drift(),
             "research": runs[-1] if runs else None, "steps": steps, "opened_today": opened,
             "status": "no champions: the main portfolio is in cash" if not reg.champions() else f"{len(reg.champions())} champion(s)"}
@@ -122,6 +127,17 @@ def build_report(dash: dict, prep: B.Prepared, book: P.PaperBook) -> str:
         for a in ch:
             verdict = "too early to say anything (under 60 days)" if a["days"] < 60 else "not enough days for promotion (needs 90)" if a["days"] < 90 else "see the promotion gates"
             L.append(f"| `{a['id']}` | {a['days']} | {_pct(a['return'])} | {_pct(a.get('hold_return'))} | {_pct(a.get('matched_hold_return'))} | {verdict} |")
+        L.append("")
+    mon = [a for a in dash["accounts"] if a["stage"] == "monitor"]
+    if mon:
+        L.append("## Monitored strategies (not admitted)\n")
+        L.append("These strategies did not pass the admission gates in the research run. Each still has a paper account so that every strategy's trades are recorded on signal and so that the forward record can show whether rejecting it was right. "
+                 "They cannot be promoted without first passing the admission gates, and a good forward week proves nothing: twelve accounts watched at once will always have a lucky one.\n")
+        L.append("| strategy | days | return | buy and hold | exposure-matched hold | in Bitcoin | trades | pending order |")
+        L.append("| --- | --- | --- | --- | --- | --- | --- | --- |")
+        for a in mon:
+            pend = "none" if a["pending"] is None else f"{a['pending']['kind']} ({a['pending']['reason']})"
+            L.append(f"| `{a['id']}` | {a['days']} | {_pct(a['return'])} | {_pct(a.get('hold_return'))} | {_pct(a.get('matched_hold_return'))} | {_pct(a['exposure'], 0)} | {a['trades']} | {pend} |")
         L.append("")
     L.append("## Champions and the main portfolio\n")
     L.append(f"{dash['status'].capitalize()}. " + (f"The $100,000 portfolio holds {_money(dash['portfolio']['equity'])}, all in cash." if dash["portfolio"] and not dash["champions"] else ""))

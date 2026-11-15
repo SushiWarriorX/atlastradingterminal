@@ -1,0 +1,2 @@
+{"account": "buy_hold", "after_candle": "2026-11-14T00:00:00Z", "event": "account_opened", "family": "buy_hold", "params": {}, "recorded_at": "2026-11-15T10:36:08Z", "seq": 1, "spec_hash": "f47fc86f454d2ac6", "stage": "benchmark", "start_equity": 10000.0}
+{"account": "buy_hold", "event": "order", "kind": "rebalance", "order_id": 1, "reason": "benchmark", "recorded_at": "2026-11-15T10:36:08Z", "ref_close": 64118.79, "seq": 2, "signal_bar": 1794614400, "signal_time": 1794700800, "weight": 1.0}
