@@ -13,7 +13,9 @@ Kinds of account:
   "hold"   buy-and-hold benchmark: all cash into Bitcoin at the first open, one entry.
   "cash"   cash-only benchmark.
 Armed rule: an account is armed at the start and whenever the strategy's state is OFF; it may enter only when armed, flat and ON; entering disarms it. So after a stop-out it waits for OFF then ON again.
-Circuit breaker (except for the two benchmarks): equity at a close 15% below the running peak closes everything at the next open and halts the account until `reset_breaker` (a human) is called.
+Circuit breaker (except for the two benchmarks): equity at a close 15% below the running peak closes everything at the next open and halts the account. The main portfolio stays halted until a human calls
+`reset_breaker`. A research account (a backtest, or a shadow account of a challenger) is given `cool_off_days`: it resumes by itself at the close that many days after the trip, flat, armed, with the peak re-based to the
+then-current equity (protocol v1.1, section 4). Without that, a full-exposure Bitcoin account would trip within months and sit in cash for the rest of the period, which measures nothing. Every trip is kept in `breaker_trips`.
 Records: every order is written to the log when the signal is created ("on signal"), then a fill (or a reject, a stop, a breaker action) when it happens, with the numbers behind it. Accounting identity checked by a test:
 equity = start + realised + unrealised, and cash never goes negative.
 """
@@ -52,6 +54,7 @@ class Account:
     trail: bool = False
     breaker: bool = True
     band: float = C.REBALANCE_BAND
+    cool_off_days: int | None = None                 # None: only a human resumes a halted account (main portfolio). A number of days: research accounts resume by themselves
     verbose: bool = False                            # keep the full event log (paper accounts); backtests keep only trades and the curve
     cash: float = field(default=-1.0)
     qty: float = 0.0
@@ -69,6 +72,7 @@ class Account:
     last_bar: int | None = None
     order_seq: int = 0
     breaker_at: int | None = None
+    breaker_trips: list = field(default_factory=list)        # every trip: {"t": candle open time, "equity": ..., "peak": ...}
     open_trade: dict | None = None
     trades: list = field(default_factory=list)
     curve: list = field(default_factory=list)        # (t_open, equity, exposure, cash, qty, close)
@@ -220,8 +224,11 @@ class Account:
             self.open_trade["bars"] += 1
         self.last_bar = t
         # (4) circuit breaker
+        if self.halted and self.cool_off_days is not None and self.breaker_at is not None and t - self.breaker_at >= self.cool_off_days * C.DAY:
+            self._resume("cool_off", eq)
         if self.breaker and not self.halted and eq <= self.peak * (1.0 - C.CIRCUIT_BREAKER):
             self.halted, self.breaker_at = True, t
+            self.breaker_trips.append({"t": t, "equity": eq, "peak": self.peak})
             self._log("breaker", signal_bar=t, equity=eq, peak=self.peak, drawdown=eq / self.peak - 1.0)
             if self.qty > TINY:
                 self._order("exit", t, interval, c, "circuit_breaker")
@@ -237,11 +244,14 @@ class Account:
         elif prev_bar is not None and sig is not None:
             self.decide(prev_bar[0], prev_bar[4], sig, interval)
 
+    def _resume(self, how: str, eq: float) -> None:
+        """Start trading again as a fresh account would: armed, no remembered target weight (the position was closed), peak re-based to the current equity."""
+        self.halted, self.armed, self.last_target, self.peak = False, True, None, eq
+        self._log("breaker_reset", how=how, equity=eq)
+
     def reset_breaker(self) -> None:
-        """A human re-enables an account whose circuit breaker tripped. The peak restarts from the current equity."""
-        self.halted = False
-        self.peak = self.equity(self.curve[-1][5]) if self.curve else self.start_equity
-        self._log("breaker_reset", equity=self.peak)
+        """A human re-enables an account whose circuit breaker tripped."""
+        self._resume("human", self.equity(self.curve[-1][5]) if self.curve else self.start_equity)
 
     # ---- persistence ----
     def to_dict(self) -> dict:

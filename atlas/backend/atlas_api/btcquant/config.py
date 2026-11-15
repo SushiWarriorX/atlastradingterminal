@@ -32,6 +32,7 @@ MAX_EXPOSURE = 1.0                            # unleveraged spot: at most 100% o
 ATR_N = 14
 STOP_ATR_MULT = 3.0                           # default protective stop: entry-decision close minus 3 x ATR(14)
 CIRCUIT_BREAKER = 0.15                        # equity 15% below its running peak: close everything at the next open and halt
+BREAKER_COOL_OFF_DAYS = 30                    # research accounts (backtests, shadow accounts of challengers) resume this many days after a trip; the main portfolio waits for a human (protocol v1.1)
 REBALANCE_BAND = 0.10                         # weight-mode strategies rebalance only when the target moves by more than this
 
 # --- periods (section 2): (name, first day, last day or None for "latest complete candle") ---

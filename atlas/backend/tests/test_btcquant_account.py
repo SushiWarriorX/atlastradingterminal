@@ -356,3 +356,99 @@ def test_a_target_weight_above_one_is_recorded_as_one():
     a = acct(kind="weight")
     a.begin(bar(0, 100, 100, 100, 100), Sig(weight=3.0))
     assert a.pending["weight"] == 1.0 and a.last_target == 1.0
+
+
+# ---- circuit breaker: the research-account cool-off and the trip record (protocol v1.1) ----
+
+def tripped(**kw):
+    """A full-size account that trips its breaker at the close of candle 4 (equity 8,300 against a 10,000 peak). Candle 5 closes the position at its open."""
+    a = acct(sizing="full", fee=0.0, slip=0.0, **kw)
+    enter_at(a, 100.0, 40.0, l=100.0)
+    a.step(bar(2, 100, 101, 99, 100), Sig(state=True, stop=40.0))
+    a.step(bar(3, 100, 100, 85, 90), Sig(state=True, stop=40.0))
+    a.step(bar(4, 90, 90, 80, 83), Sig(state=True, stop=40.0))
+    assert a.halted and a.breaker_at == T0 + 4 * DAY
+    a.step(bar(5, 83, 84, 82, 83), Sig(state=True, stop=40.0))                       # the exit order fills at 83: flat with 8,300 in cash
+    assert a.qty == 0 and a.cash == pytest.approx(8_300.0)
+    return a
+
+
+def test_a_research_account_resumes_by_itself_exactly_cool_off_days_after_the_trip():
+    a = tripped(cool_off_days=3)
+    a.step(bar(6, 83, 84, 82, 83), Sig(state=True, stop=40.0))                       # 2 days after the trip: still halted
+    assert a.halted and a.pending is None
+    a.step(bar(7, 83, 84, 82, 83), Sig(state=True, stop=40.0))                       # exactly 3 days after the trip: resumes at this close and may order for the next open
+    assert not a.halted and a.pending is not None and a.pending["kind"] == "enter"
+    resets = [e for e in a.events if e["event"] == "breaker_reset"]
+    assert len(resets) == 1 and resets[0]["how"] == "cool_off" and resets[0]["equity"] == pytest.approx(8_300.0)
+
+
+def test_cool_off_is_counted_in_days_not_in_seconds():
+    a = tripped(cool_off_days=1)
+    assert not a.halted                                                                # one day (86,400 seconds) after the trip is the very next close, which `tripped` has already stepped
+    b = tripped(cool_off_days=40)
+    for i in range(6, 40):
+        b.step(bar(i, 83, 84, 82, 83), Sig(state=False))
+    assert b.halted                                                                    # 35 days after the trip is still inside a 40-day cool-off
+    b.step(bar(44, 83, 84, 82, 83), Sig(state=False))
+    assert not b.halted
+
+
+def test_without_a_cool_off_only_a_human_resumes_the_account():
+    a = tripped()
+    assert a.cool_off_days is None
+    for i in range(6, 300):
+        a.step(bar(i, 83, 84, 82, 83), Sig(state=True, stop=40.0))
+    assert a.halted and a.qty == 0 and a.pending is None
+
+
+def test_after_the_cool_off_the_peak_is_re_based_and_the_account_is_armed_again():
+    a = tripped(cool_off_days=3)
+    a.step(bar(6, 83, 84, 82, 83), Sig(state=True, stop=40.0))
+    a.step(bar(7, 83, 84, 82, 83), Sig(state=True, stop=40.0))                       # resumed; the state has been ON all the time, yet the account enters because it is armed again
+    assert a.peak == pytest.approx(8_300.0) and a.armed is True and a.pending["kind"] == "enter"
+    a.step(bar(8, 83, 84, 82, 83), Sig(state=True, stop=40.0))
+    assert a.qty > 0
+    a.step(bar(9, 83, 83, 72, 72.5), Sig(state=True, stop=40.0))                     # 12.7% below the NEW peak (but 27% below the old one): no second trip
+    assert not a.halted and len(a.breaker_trips) == 1
+    a.step(bar(10, 72.5, 72.5, 70, 70.5), Sig(state=True, stop=40.0))                # 15.1% below the new peak: second trip
+    assert a.halted and len(a.breaker_trips) == 2
+
+
+def test_every_trip_is_recorded_even_when_the_event_log_is_off():
+    a = tripped(cool_off_days=2, verbose=False)
+    assert a.events == []
+    assert a.breaker_trips == [{"t": T0 + 4 * DAY, "equity": pytest.approx(8_300.0), "peak": pytest.approx(10_000.0)}]
+
+
+def test_a_weight_account_rebuilds_its_position_after_the_cool_off_and_after_a_human_reset():
+    def run(resume):
+        a = acct(kind="weight", fee=0.0, slip=0.0, **({"cool_off_days": 2} if resume == "cool_off" else {}))
+        a.begin(bar(0, 100, 100, 100, 100), Sig(weight=1.0))
+        a.step(bar(1, 100, 100, 100, 100), Sig(weight=1.0))                          # fully invested
+        a.step(bar(2, 100, 100, 80, 80), Sig(weight=1.0))                            # 20% down: trips at this close
+        assert a.halted
+        a.step(bar(3, 80, 80, 80, 80), Sig(weight=1.0))                              # exit fills at 80
+        assert a.qty == 0
+        if resume == "human":
+            a.reset_breaker()
+        a.step(bar(4, 80, 80, 80, 80), Sig(weight=1.0))                              # cool-off: 2 days after the trip, resumes at this close. Human: the reset came just before. Either way an order is made at this close
+        a.step(bar(5, 80, 80, 80, 80), Sig(weight=1.0))                              # and fills at this open: the same target weight as before the trip must buy again
+        return a
+    for how in ("cool_off", "human"):
+        a = run(how)
+        assert not a.halted and a.qty == pytest.approx(8_000.0 / 80.0), how
+
+
+def test_a_human_reset_also_makes_a_stop_account_armed_and_rebases_the_peak():
+    a = tripped()
+    a.reset_breaker()
+    assert not a.halted and a.armed and a.peak == pytest.approx(8_300.0)
+    resets = [e for e in a.events if e["event"] == "breaker_reset"]
+    assert resets[-1]["how"] == "human"
+
+
+def test_the_cool_off_and_the_trip_record_survive_a_save_and_a_load():
+    a = tripped(cool_off_days=7)
+    b = Account.from_dict(a.to_dict())
+    assert b.cool_off_days == 7 and b.breaker_trips == a.breaker_trips and b.halted and b.breaker_at == a.breaker_at

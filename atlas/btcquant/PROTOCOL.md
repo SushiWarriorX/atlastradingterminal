@@ -1,6 +1,6 @@
-# BTC quantitative research and paper trading system: PROTOCOL v1
+# BTC quantitative research and paper trading system: PROTOCOL v1.1
 
-Pre-registered 2026-11-15 (UTC), BEFORE any strategy was run under this system. Research and paper only: nothing here places a real order, holds a key, uses leverage or sells short. Everything below is fixed in advance; changing any of it is an amendment (section 11), never a quiet edit.
+Pre-registered 2026-11-15 (UTC), BEFORE any strategy was run under this system. Version 1.1 (same day, still before any run or any result; see the amendments log) fixes three gates and one risk rule that no strategy could have satisfied as first written. Research and paper only: nothing here places a real order, holds a key, uses leverage or sells short. Everything below is fixed in advance; changing any of it is an amendment (section 11), never a quiet edit.
 
 The point of this document is to decide, before looking at results, what counts as evidence. A backtest with a high return is not evidence of an edge.
 
@@ -39,7 +39,7 @@ Each period is simulated from a flat start with the full starting equity. Indica
 - Strategy comparison accounts start at $10,000 each. The main portfolio starts at $100,000 and holds **only champions**; with no champion it stays in cash and the report says so.
 - **Stop-based strategies** (families 1 to 10): size = the smaller of (equity x 1% divided by the distance between the entry fill and the protective stop) and (equity x 100% divided by the entry fill, with the fee reserved). The 1% is the planned loss at the stop, before gaps, slippage and fees. Default protective stop: the entry-decision close minus 3 x ATR(14) (families that have their own stop rule say so below).
 - **Weight-mode strategies** (families 11 and 12, simple risk-managed exposure) are exempt from the 1% rule because their risk control is the exposure itself; capped at 100%, no leverage.
-- **Circuit breaker:** when an account's equity, marked at a close, is 15% below its running peak, all positions are closed at the next open and the account halts (no new entries) until a human resets it. It applies to every strategy and portfolio account except the buy-and-hold and cash benchmarks.
+- **Circuit breaker:** when an account's equity, marked at a close, is 15% below its running peak, all positions are closed at the next open and the account halts (no new entries). It applies to every strategy and portfolio account except the buy-and-hold and cash benchmarks. The **main portfolio** stays halted until a human resets it (it is the owner's portfolio control). A **research account** (a backtest, or the shadow account of a challenger) resumes by itself at the close 30 days after the trip: flat, armed again, with the peak re-based to the then-current equity. Without that, a full-exposure Bitcoin account trips within months and sits in cash for the rest of the period, which measures nothing. Every trip is recorded and shown in the report. (v1.1)
 - **Re-entry rule** (stop-based families): a strategy is "armed" at the start and whenever its state is OFF. It may enter only when armed and flat and its state is ON; entering disarms it. So after a stop-out it waits for the state to go OFF and ON again; it does not re-enter the next day.
 - **Disclosure about sizing.** With 1% risk and a 3 x ATR stop, typical Bitcoin exposure is roughly 10 to 15% of equity, so raw returns are small compared with buy-and-hold by construction. Every report therefore also shows (a) the same signals at full exposure (100% when long, no per-trade risk cap), labelled as a sensitivity, and (b) an **exposure-matched hold** (the same average exposure held constantly), because a strategy that is merely invested less is not better.
 
@@ -81,29 +81,32 @@ Total return; CAGR; maximum drawdown; Sharpe (daily returns, 365 days a year, ri
 
 No family's rules or grid may change after its VALIDATION or TEST result is seen. A change is a new candidate version: it counts toward N, and its VALIDATION and TEST results are flagged "reused" and cannot support promotion.
 
-## 8. Gates
+## 8. Gates (v1.1; the gate numbers of v1 are mapped in the amendments log)
 
 **Challenger admission** (the strategy gets its own paper account, a shadow forward test; it is NOT a champion). All must hold:
-1. At least 30 completed trades (weight mode: at least 30 position changes) on TRAIN plus VALIDATION.
-2. VALIDATION net return above zero after costs, and no circuit-breaker trip on TRAIN or VALIDATION.
-3. VALIDATION net Sharpe above zero and at least half of the TRAIN net Sharpe (no collapse).
-4. Parameter stability on TRAIN: at least 60% of the neighbours reach at least 70% of the chosen configuration's Sharpe.
-5. Net Sharpe above zero on TRAIN plus VALIDATION with doubled costs (0.20% plus 0.10%).
-6. Deflated Sharpe ratio on TRAIN plus VALIDATION of at least 0.50.
+- **A1.** At least 10 completed trades (weight mode: at least 10 position changes) on TRAIN plus VALIDATION, so that there is something to watch. (The sample-size requirement proper is P1.)
+- **A2.** TRAIN net Sharpe above zero, and VALIDATION net return above zero after costs.
+- **A3.** VALIDATION net Sharpe above zero and at least half of the TRAIN net Sharpe (no collapse).
+- **A4.** Parameter stability on TRAIN: at least 60% of the neighbours reach at least 70% of the chosen configuration's Sharpe. (Computed only when the chosen configuration's TRAIN Sharpe is above zero; otherwise A2 has already failed.)
+- **A5.** Net Sharpe above zero on TRAIN plus VALIDATION with doubled costs (0.20% plus 0.10%).
+- **A6.** Deflated Sharpe ratio on TRAIN plus VALIDATION of at least 0.50.
 
-**Champion promotion** (eligible for the main portfolio). All of the admission gates, and:
-7. TEST (one look, contaminated, a necessary condition only): net Sharpe at least the buy-and-hold Sharpe plus 0.10, and maximum drawdown at least 10 percentage points shallower than the exposure-matched hold.
-8. Deflated Sharpe ratio at least 0.95 on TRAIN plus VALIDATION plus TEST, and random-timing null p at most 0.05.
-9. Walk-forward: stitched out-of-sample Sharpe at least the buy-and-hold Sharpe over the same windows, and positive in at least 60% of the windows.
-10. **Forward paper record:** at least 90 days and at least 5 closed trades since admission, no circuit-breaker trip, forward net return not worse than the exposure-matched hold by more than 5 percentage points. Under 60 days of forward record nothing is said about a strategy beyond "too early".
-11. A written promotion record (date, evidence, spec hash). A champion's rules and parameters are then frozen (hash-checked at every run). Replacement needs a new promotion.
+**Champion promotion** (eligible for the main portfolio). All of A1 to A6, and:
+- **P1. Sample size.** At least 30 completed trades (weight mode: 30 position changes) over TRAIN plus VALIDATION plus TEST, and total net profit still positive after removing the single best trade. Slow rules make only a few trades a year and will often stay challengers for years; the report then says "too few trades to judge", never "no edge".
+- **P2.** TEST (one look, contaminated, a necessary condition only): net Sharpe at least the buy-and-hold Sharpe plus 0.10, and maximum drawdown at most 75% of the exposure-matched hold's maximum drawdown.
+- **P3.** Deflated Sharpe ratio at least 0.95 on TRAIN plus VALIDATION plus TEST, and random-timing null p at most 0.05.
+- **P4.** Walk-forward: stitched out-of-sample Sharpe at least the buy-and-hold Sharpe over the same windows, and positive in at least 60% of the windows.
+- **P5. Forward paper record:** at least 90 days and at least 5 closed trades since admission, no circuit-breaker trip, forward net return not worse than the exposure-matched hold by more than 5 percentage points. Under 60 days of forward record nothing is said about a strategy beyond "too early".
+- **P6.** A written promotion record (date, evidence, spec hash). A champion's rules and parameters are then frozen (hash-checked at every run). Replacement needs a new promotion.
+
+Three outcomes are reported, not two: **rejected** (the evidence says no), **admitted** (worth watching in paper), and **too thin to judge** (not enough trades or too short a record to say anything). Only the first is a statement about edge.
 
 Stated expectation, before any run: most families will not beat buy-and-hold on risk-adjusted terms over 2020 to 2024 (a window with a very high buy-and-hold Sharpe); trend and filter families will probably cut drawdown at the price of return; mean-reversion families will probably lose after 0.30% round-trip costs; **zero champions is the most likely outcome**, and the system is built to say so plainly rather than to find something.
 
 ## 9. Forward paper trading
 
 - Starts with the first daily run after this protocol is committed. The daily run is scheduled for 00:15 UTC.
-- One persistent account per challenger and per benchmark ($10,000 each), plus the main portfolio ($100,000, champions only).
+- One persistent account per challenger and per benchmark ($10,000 each), plus the main portfolio ($100,000, champions only). Challenger accounts are research accounts (30-day breaker cool-off, section 4); the main portfolio waits for a human.
 - **A trade is recorded on signal.** When a strategy's state changes on a completed candle, an order is written to the ledger immediately (signal time, rule state and the numbers behind it, intended side and size, the stop), then updated with the fill (execution time, price, quantity, fee, slippage cost, equity before and after) at the next open, or marked rejected with the reason. Every fill, stop-out and circuit-breaker action is a ledger row. Per account the state keeps starting balance, cash, BTC quantity, equity, realised and unrealised profit and loss, fees and slippage paid, exposure, running peak, drawdown, circuit-breaker state and the pending order.
 - The paper engine and the backtester are the same code stepping through candles; a test checks that stepping one candle at a time gives exactly the backtest ledger.
 - Challengers are never promoted because they recently did well; champions are never tuned on their own paper results.
@@ -123,3 +126,9 @@ Trend and moving averages: Brock, Lakonishok and LeBaron (1992), *Simple technic
 ## Amendments log
 
 - v1, 2026-11-15: first version.
+- v1.1, 2026-11-15, **before any family was run and before any result was seen** (found while writing the strategy notes, by asking of each gate whether the strategies it is meant to judge could ever pass it):
+  - (a) Section 4, circuit breaker: as written, an account halted for good after its first trip. A full-exposure Bitcoin account trips within months, so the weight-mode families and every full-exposure sensitivity would have measured the first trip and then a flat line. Research accounts now resume after a 30-day cool-off with the peak re-based; the main portfolio still waits for a human. Trips are counted and reported.
+  - (b) Gate 1 (at least 30 trades) was an admission gate. Slow rules (a 50/200 crossover, a 365-day momentum rule) make a handful of trades in five years, so no slow rule could ever have been admitted, and "cannot be judged" would have been reported as "no edge". Admission now needs 10 trades (A1); 30 trades is a promotion condition (P1) with a best-trade check. The outcome "too thin to judge" is reported separately.
+  - (c) Gate 2 (no circuit-breaker trip on TRAIN or VALIDATION) is dropped because of (a); A2 now asks for a positive TRAIN Sharpe and a positive VALIDATION return. A4 is computed only when the chosen configuration's TRAIN Sharpe is positive.
+  - (d) Gate 7 (maximum drawdown "10 percentage points shallower than the exposure-matched hold") cannot be met by a risk-sized strategy, whose exposure-matched hold has a drawdown of under 10 points itself. P2 now asks for at most 75% of the matched hold's maximum drawdown.
+  - Gate map v1 to v1.1: 1 to A1 and P1; 2 to A2; 3 to A3; 4 to A4; 5 to A5; 6 to A6; 7 to P2; 8 to P3; 9 to P4; 10 to P5; 11 to P6.
