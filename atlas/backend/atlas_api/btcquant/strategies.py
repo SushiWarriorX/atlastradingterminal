@@ -331,12 +331,20 @@ def n_configurations() -> int:
     return sum(len(configs(f)) for f in RESEARCH)
 
 
-def spec_hash(fam_id: str, params: dict, version: int = 1) -> str:
-    """Canonical hash of a candidate specification: family, version, sorted parameters, and the protocol constants that change its behaviour."""
-    spec = {"family": fam_id, "version": version, "params": {k: params[k] for k in sorted(params)}, "protocol": C.PROTOCOL_VERSION,
+def spec(fam_id: str, params: dict, version: int = 1) -> dict:
+    """The canonical specification of a candidate: family, version, sorted parameters, and the protocol constants that change its behaviour. This is what is hashed and what a registry stores."""
+    return {"family": fam_id, "version": version, "params": {k: params[k] for k in sorted(params)}, "protocol": C.PROTOCOL_VERSION,
             "fee": C.FEE, "slippage": C.SLIPPAGE, "risk": C.RISK_PER_TRADE, "stop_k": C.STOP_ATR_MULT, "atr_n": C.ATR_N, "breaker": C.CIRCUIT_BREAKER, "cool_off": C.BREAKER_COOL_OFF_DAYS,
             "band": C.REBALANCE_BAND}
-    return hashlib.sha256(json.dumps(spec, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def hash_spec(spec_dict: dict) -> str:
+    """The short hash of a stored specification (no reading of today's constants, so an old specification keeps its hash)."""
+    return hashlib.sha256(json.dumps(spec_dict, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def spec_hash(fam_id: str, params: dict, version: int = 1) -> str:
+    return hash_spec(spec(fam_id, params, version))
 
 
 def signals(fam_id: str, candles, params: dict) -> Signals:

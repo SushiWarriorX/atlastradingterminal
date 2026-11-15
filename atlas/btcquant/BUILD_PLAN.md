@@ -13,10 +13,10 @@ Code lives in `atlas/backend/atlas_api/btcquant/`, tests in `atlas/backend/tests
 - [x] 4. Strategy families 1 to 12 plus benchmarks as code (`btcquant/strategies.py`, 54 tests; 47 deliberate breakages each caught), with `strategies/<family>.md` notes and `SOURCES.md` pushed first (commit 420babb, protocol v1.1) and a future-perturbation test over all 100 configurations. Nothing has been run on real data.
 - [x] 5. Metrics (`btcquant/metrics.py`, 20 tests with hand-worked numbers; 48 deliberate breakages each caught): every number of protocol section 6, regimes with their equality boundaries, the exposure-matched hold with costs.
 - [x] 6. Backtest runner (`btcquant/backtest.py`, 19 tests; 32 deliberate breakages each caught): periods on the calendar, benchmarks, exposure-matched hold, full-exposure and cost sensitivities, regimes, circuit-breaker cool-off; no look-ahead from the runner's point of view.
-- [ ] 7. Validation: selection with neighbour smoothing, parameter stability, walk-forward, cost sensitivity, deflated Sharpe, random-timing null, gates; tests including boundaries.
-- [ ] 8. Registry: candidate log with spec hash and duplicate check, champions and challengers, freeze guard, holdout log.
-- [ ] 9. Paper engine with persistent state, ledger on signal, idempotent daily processing, catch-up after missed days; parity test with the backtest.
-- [ ] 10. Daily runner (`python -m atlas_api.btcquant.daily`), markdown report, `dashboard.json`.
+- [x] 7. Validation (`btcquant/validation.py`, 38 tests; 79 deliberate breakages each caught; `btcquant/calibration.py` and `CALIBRATION.md`): neighbour-smoothed selection, stability, walk-forward, cost and full-exposure sensitivity, deflated Sharpe (reported), random-timing null, gates A1 to A5 and P1 to P5. The v1.1 gates failed a calibration on synthetic data and became v1.2 before the real data was touched.
+- [x] 8. Registry (`btcquant/registry.py`, 17 tests; 29 breakages caught): candidate log with specification hash and renamed-copy check at 0.90, challengers and champions with frozen specifications, a once-only look at TEST.
+- [x] 9. Paper engine (`btcquant/paper.py`, 19 tests; 20 breakages caught): persistent accounts, ledger written on signal, idempotent catch-up, refuses to step across a missing candle, exact parity with the backtest candle by candle.
+- [x] 10. Daily runner (`btcquant/daily.py`, 16 tests; with the research run in `btcquant/research.py`, 11 tests; 42 breakages caught): data update, accounts, catch-up, report, `dashboard.json`.
 - [ ] 11. First full research run, once, under the protocol; results and honest conclusion in the report; challengers admitted by the gates start their paper accounts.
 - [ ] 12. Schedule (00:15 UTC), loop documents, a Signal card for the paper accounts.
 - [ ] 13. Research queue: new hypotheses found online, each checked for being genuinely new (position-series correlation under 0.90) and pre-registered before running.

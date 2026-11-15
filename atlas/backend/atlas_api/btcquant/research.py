@@ -1,0 +1,149 @@
+"""btcquant research run (protocol section 7 applied to all twelve families, ONCE per protocol version and data version).
+
+`run_research` evaluates every family with the pre-registered procedure (validation.evaluate_all), logs all 100 configurations in the candidate registry, admits the families that pass gates A1 to A5 as challengers
+with their own paper accounts, and writes the full record (JSON) and a plain-language report (markdown). A second run on the same protocol and the same data is refused: the protocol says "once", and a result is
+never improved by running it again. A new protocol version or new data is a new run, reported next to the old one.
+
+The report says what was tested, what was admitted and why, what was not, and what none of it proves. It never says that anything makes money.
+"""
+from __future__ import annotations
+
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+
+import numpy as np
+
+from . import backtest as B
+from . import config as C
+from . import data as D
+from . import paper as P
+from . import registry as R
+from . import strategies as S
+from . import validation as V
+
+
+class ResearchAlreadyRun(Exception):
+    """This protocol version has already been run on exactly this data."""
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def data_version(prep: B.Prepared) -> dict:
+    """What the run is computed from: the hash of the candle file's contents (as in the data manifest), the number of candles and the last one."""
+    m = D.manifest(prep.candles, C.DAY)
+    return {"sha256": m["sha256"], "candles": m["count"], "first": m["first"], "last": m["last"]}
+
+
+def runs_path(reg: R.Registry) -> Path:
+    return reg.root / "research_runs.jsonl"
+
+
+def previous_runs(reg: R.Registry) -> list:
+    p = runs_path(reg)
+    return [json.loads(line) for line in p.read_text(encoding="utf-8").splitlines() if line.strip()] if p.exists() else []
+
+
+def account_id(family: str, params: dict) -> str:
+    return f"{family}-{S.spec_hash(family, params)[:8]}"
+
+
+def _chosen_exposure(prep: B.Prepared, family: str, params: dict) -> np.ndarray:
+    tr, va = prep.period("TRAIN"), prep.period("VALIDATION")
+    return np.concatenate([B.run(prep, family, params, *tr).exposure, B.run(prep, family, params, *va).exposure])
+
+
+def _short(ev: dict) -> dict:
+    """The few numbers that go in a candidate's record (the full evaluation is kept in the research file)."""
+    return {"train_sharpe": ev["train"]["sharpe"], "validation_sharpe": ev["validation"]["sharpe"], "train_return": ev["train"]["total_return"], "validation_return": ev["validation"]["total_return"],
+            "information_ratio_train": ev["excess"]["train"], "information_ratio_validation": ev["excess"]["validation"], "validation_timing_p": ev["validation_timing"]["p"],
+            "stability": ev["stability"]["passes"], "doubled_cost_sharpe": ev["costs"][V.A5_COST_INDEX]["sharpe"], "dsr": ev["deflated_sharpe"]["dsr"], "dsr_excess": (ev["excess"]["deflated"] or {}).get("dsr"),
+            "gates_failed": ev["admission"]["failed"]}
+
+
+def run_research(prep: B.Prepared, reg: R.Registry, book: P.PaperBook | None, report_dir: Path | None = None, *, force: bool = False, n_shifts: int = V.NULL_SHIFTS, now=_now) -> dict:
+    version = data_version(prep)
+    if not force and any(r["protocol"] == C.PROTOCOL_VERSION and r["data"]["sha256"] == version["sha256"] for r in previous_runs(reg)):
+        raise ResearchAlreadyRun(f"protocol {C.PROTOCOL_VERSION} was already run on these data ({version['last']}); a result is never improved by running it again")
+    ev = V.evaluate_all(prep, n_shifts=n_shifts)
+    admitted, counted = [], {}
+    for fid, e in ev["families"].items():
+        chosen = B.param_key(e["chosen"])
+        for row in e["table"]:
+            params = row["params"]
+            is_chosen = B.param_key(params) == chosen
+            entry = {"family": fid, "params": params, "decision": e["outcome"] if is_chosen else "tested, not selected on TRAIN", "data": version, "run": "research",
+                     "results": _short(e) if is_chosen else {k: row[k] for k in ("train_sharpe", "score", "trades", "turnover", "train_return", "validation_sharpe", "validation_return")}}
+            rec = reg.log_candidate(entry, exposure=_chosen_exposure(prep, fid, params) if is_chosen else None)
+            if is_chosen:
+                counted[fid] = rec.get("counted_with")
+        if e["outcome"] == "admitted":
+            h = S.spec_hash(fid, e["chosen"])
+            ch = reg.challengers().get(h) or reg.admit({"family": fid, "params": e["chosen"], "evidence": _short(e), "data": version, "counted_with": counted.get(fid)})
+            if book is not None:
+                aid = account_id(fid, e["chosen"])
+                if not book.exists(aid):
+                    book.open(aid, fid, e["chosen"], prep, stage="challenger")
+            admitted.append({"family": fid, "params": e["chosen"], "spec_hash": ch["spec_hash"], "counted_with": counted.get(fid)})
+    result = {"protocol": C.PROTOCOL_VERSION, "ran_at": now(), "data": version, "n_trials": ev["n_trials"], "admitted": admitted, "outcomes": {f: e["outcome"] for f, e in ev["families"].items()}}
+    with runs_path(reg).open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(result, sort_keys=True) + "\n")
+    if report_dir is not None:
+        report_dir.mkdir(parents=True, exist_ok=True)
+        (report_dir / f"research_{C.PROTOCOL_VERSION}.json").write_text(json.dumps({**result, "evaluation": ev}, sort_keys=True, indent=1, default=float) + "\n", encoding="utf-8")
+        (report_dir / f"research_{C.PROTOCOL_VERSION}.md").write_text(research_report(result, ev), encoding="utf-8")
+    return {**result, "evaluation": ev}
+
+
+def _f(x, k=2, pct=False) -> str:
+    if x is None:
+        return "n/a"
+    return f"{100 * x:.{k}f}%" if pct else f"{x:.{k}f}"
+
+
+def research_report(result: dict, ev: dict) -> str:
+    L = []
+    d = result["data"]
+    L.append(f"# Research run, protocol {result['protocol']}, data to {d['last'][:10]}\n")
+    L.append(f"Run once on {result['ran_at']} UTC on {d['candles']:,} daily BTC-USD candles ({d['first'][:10]} to {d['last'][:10]}, Coinbase; hash `{d['sha256'][:16]}`). Everything below is a simulation on past prices. "
+             "It is not a recommendation and nothing in it shows that any rule will make money.\n")
+    adm = result["admitted"]
+    L.append("## Headline\n")
+    if adm:
+        names = ", ".join(f"`{a['family']}`" for a in adm)
+        indep = len({a['counted_with'] or a['spec_hash'] for a in adm})
+        L.append(f"**{len(adm)} of 12 families were admitted as challengers** ({names}; about {indep} independent idea{'s' if indep != 1 else ''} once renamed copies are counted together). Admitted means: they passed the five "
+                 "admission gates and now have a shadow paper account. It is a reason to watch, not evidence of an edge. `CALIBRATION.md` shows how often the same gates admit something on data where no rule has any skill; "
+                 "read this result against that rate. No family can be promoted to the main portfolio until it has a forward record of at least 90 days and passes the promotion gates.\n")
+    else:
+        L.append("**No family was admitted.** Every family either had too few trades to judge or failed at least one admission gate. The main portfolio stays in cash, and no challenger account was opened.\n")
+    L.append("## Families\n")
+    L.append("| family | chosen on TRAIN | outcome | trades | TRAIN Sharpe | VALIDATION Sharpe | info ratio TRAIN / VALIDATION | VALIDATION timing p | stable | failed gates |")
+    L.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+    for fid, e in ev["families"].items():
+        g = e["admission"]["gates"]
+        L.append(f"| `{fid}` | {json.dumps(e['chosen'])} | **{e['outcome'].replace('_', ' ')}** | {g['A1']['value']} | {_f(e['train']['sharpe'])} | {_f(e['validation']['sharpe'])} | "
+                 f"{_f(e['excess']['train'])} / {_f(e['excess']['validation'])} | {_f(e['validation_timing']['p'])} | {'yes' if e['stability']['passes'] else 'no'} | {', '.join(e['admission']['failed']) or 'none'} |")
+    L.append("\nSharpe ratios are annualised, after costs, from a flat start with $10,000. The information ratio is the Sharpe ratio of the returns in excess of holding the same average share of Bitcoin all the time "
+             "(it removes the drift of simply being invested). The timing p is the share of 612 shifted copies of the strategy's own schedule that did at least as well on the 2023-2024 VALIDATION days "
+             "(small means the timing matters).\n")
+    L.append("## What each family did against holding\n")
+    L.append("| family | VALIDATION return | hold | exposure-matched hold | max drawdown | exposure | costs doubled: Sharpe | walk-forward Sharpe / hold | positive windows | trips |")
+    L.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+    for fid, e in ev["families"].items():
+        v, w = e["validation"], e["walk_forward"] or {}
+        trips = len(e["trips"]["TRAIN"]) + len(e["trips"]["VALIDATION"])
+        L.append(f"| `{fid}` | {_f(v['total_return'], 1, True)} | {_f(v['hold_return'], 1, True)} | {_f(v['matched_hold_return'], 1, True)} | {_f(v['max_drawdown'], 1, True)} | {_f(v['exposure'], 0, True)} | "
+                 f"{_f(e['costs'][V.A5_COST_INDEX]['sharpe'])} | {_f(w.get('stitched_sharpe'))} / {_f(w.get('hold_sharpe'))} | {w.get('positive_windows', 0)} of {w.get('windows', 0)} | {trips} |")
+    L.append("\nThe walk-forward re-chooses each family's settings every six months from 2022 and scores them on the following six months; its later windows overlap the TEST period, as pre-registered.\n")
+    L.append("## What was not tested or not shown\n")
+    L.append("- The TEST period (2025 onward) has not been used to choose or admit anything. It overlaps data that earlier experiments in this repository already scored, so it can never be a clean test; only the forward paper record is clean.\n"
+             "- Deflated Sharpe ratios are reported in the JSON file but are not gates: on raw returns they reward the market's drift, and on excess returns they cannot be passed with this much history (`CALIBRATION.md`).\n"
+             "- Five families (RSI momentum, Bollinger bands, RSI oversold, volatility breakout, regime switch) have no peer-reviewed test on Bitcoin behind them (`strategies/SOURCES.md`).\n"
+             "- Prices are Coinbase BTC-USD, not Binance BTC/USDT (that host is blocked from this environment).\n"
+             "- Nothing is traded: no order was placed anywhere, and exchange minimum sizes, outages, taxes and market impact are not modelled.\n")
+    L.append("## Credibly profitable?\n")
+    L.append("No. Nothing here is evidence that a rule makes money. The forward paper record, accumulated day by day from now on, is the only clean evidence there will be.\n")
+    return "\n".join(L)

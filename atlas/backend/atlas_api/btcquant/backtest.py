@@ -83,6 +83,7 @@ class Run:
     metrics: dict
     returns: np.ndarray                                   # daily return of each candle of the period
     exposure: np.ndarray                                  # share of equity in Bitcoin held through each day (at the open, after the day's order)
+    matched_returns: np.ndarray = field(default_factory=lambda: np.zeros(0))     # daily returns of the exposure-matched hold over the same days
     trips: list = field(default_factory=list)             # circuit-breaker trips: {"t", "equity", "peak"}
     account: Account | None = None
 
@@ -126,7 +127,7 @@ def run(prep: Prepared, fam_id: str, params: dict, i0: int, i1: int, *, fee: flo
                   labels=prep.regimes[i0 - 1:i1], btc_returns=prep.btc_returns[i0:i1 + 1])
     equity = [row[1] for row in a.curve]
     return Run(family=fam_id, params=dict(params), i0=i0, i1=i1, fee=fee, slip=slip, sizing=sizing, metrics=m, returns=M.daily_returns(equity, start_equity),
-               exposure=np.array([row[6] for row in a.curve]), trips=list(a.breaker_trips), account=a if keep_account else None)
+               exposure=np.array([row[6] for row in a.curve]), matched_returns=M.daily_returns(marks, start_equity), trips=list(a.breaker_trips), account=a if keep_account else None)
 
 
 def run_all(prep: Prepared, fam_id: str, i0: int, i1: int, **kw) -> dict:
