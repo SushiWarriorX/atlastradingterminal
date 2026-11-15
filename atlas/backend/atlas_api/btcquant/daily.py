@@ -87,7 +87,7 @@ def build_dashboard(book: P.PaperBook, reg: R.Registry, prep: B.Prepared, now: i
     return {"generated_at": _iso(now), "protocol": C.PROTOCOL_VERSION, "real_trading": "DISABLED: nothing in this system can place an order", "data": data_status, "accounts": accounts,
             "champions": sorted(reg.champions()), "challengers": sorted(reg.challengers()), "monitors": [a["id"] for a in accounts if a["stage"] == "monitor"],
             "portfolio": next((a for a in accounts if a["id"] == PORTFOLIO), None), "frozen_check": reg.check_frozen(), "drift": reg.drift(),
-            "research": runs[-1] if runs else None, "steps": steps, "opened_today": opened,
+            "research": RS.merged(runs), "steps": steps, "opened_today": opened,
             "status": "no champions: the main portfolio is in cash" if not reg.champions() else f"{len(reg.champions())} champion(s)"}
 
 
@@ -131,8 +131,8 @@ def build_report(dash: dict, prep: B.Prepared, book: P.PaperBook) -> str:
     mon = [a for a in dash["accounts"] if a["stage"] == "monitor"]
     if mon:
         L.append("## Monitored strategies (not admitted)\n")
-        L.append("These strategies did not pass the admission gates in the research run. Each still has a paper account so that every strategy's trades are recorded on signal and so that the forward record can show whether rejecting it was right. "
-                 "They cannot be promoted without first passing the admission gates, and a good forward week proves nothing: twelve accounts watched at once will always have a lucky one.\n")
+        L.append(f"These strategies did not pass the admission gates in the research run. Each still has a paper account so that every strategy's trades are recorded on signal and so that the forward record can show whether rejecting it was right. "
+                 f"They cannot be promoted without first passing the admission gates, and a good forward week proves nothing: {len(mon)} accounts watched at once will always have a lucky one.\n")
         L.append("| strategy | days | return | buy and hold | exposure-matched hold | in Bitcoin | trades | pending order |")
         L.append("| --- | --- | --- | --- | --- | --- | --- | --- |")
         for a in mon:
@@ -145,8 +145,14 @@ def build_report(dash: dict, prep: B.Prepared, book: P.PaperBook) -> str:
     if dash["research"]:
         r = dash["research"]
         L.append("## Research\n")
-        L.append(f"The one-off research run of protocol {r['protocol']} (data to {r['data']['last'][:10]}) admitted {len(r['admitted'])} of 12 families as challengers; see `reports/research_{r['protocol']}.md` for what was tested, "
-                 "what was admitted and why, and what was not shown.\n")
+        n_fam = len(r.get("outcomes") or {}) or 12
+        protocols = list(dict.fromkeys(x["protocol"] for x in r.get("runs") or []))
+        if len(protocols) > 1:
+            L.append(f"The research runs so far (protocols {' and '.join(protocols)}; the latest used data to {r['data']['last'][:10]}) admitted {len(r['admitted'])} of {n_fam} families as challengers; see "
+                     f"{' and '.join(f'`reports/research_{v}.md`' for v in protocols)} for what was tested, what was admitted and why, and what was not shown.\n")
+        else:
+            L.append(f"The one-off research run of protocol {r['protocol']} (data to {r['data']['last'][:10]}) admitted {len(r['admitted'])} of {n_fam} families as challengers; see `reports/research_{r['protocol']}.md` for what was tested, "
+                     "what was admitted and why, and what was not shown.\n")
     if dash["frozen_check"]:
         L.append("## Problems found\n")
         L += [f"- {p}" for p in dash["frozen_check"]]

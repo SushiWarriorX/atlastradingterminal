@@ -63,6 +63,7 @@ class Family:
     build: Callable[[Bars, dict], Signals]
     explain: Callable[[Bars, dict, int], dict]
     valid: Callable[[dict], bool] = lambda p: True
+    since: str = "1.2"                          # the protocol version the family was pre-registered under; it goes into the specification hash, so a later version number never changes the hash (and the paper account id) of an older family
 
 
 def _fixed_stop(b: Bars) -> np.ndarray:
@@ -332,8 +333,8 @@ def n_configurations() -> int:
 
 
 def spec(fam_id: str, params: dict, version: int = 1) -> dict:
-    """The canonical specification of a candidate: family, version, sorted parameters, and the protocol constants that change its behaviour. This is what is hashed and what a registry stores."""
-    return {"family": fam_id, "version": version, "params": {k: params[k] for k in sorted(params)}, "protocol": C.PROTOCOL_VERSION,
+    """The canonical specification of a candidate: family, version, sorted parameters, the protocol version the family was pre-registered under, and the protocol constants that change its behaviour. This is what is hashed and what a registry stores."""
+    return {"family": fam_id, "version": version, "params": {k: params[k] for k in sorted(params)}, "protocol": FAMILIES[fam_id].since if fam_id in FAMILIES else C.PROTOCOL_VERSION,
             "fee": C.FEE, "slippage": C.SLIPPAGE, "risk": C.RISK_PER_TRADE, "stop_k": C.STOP_ATR_MULT, "atr_n": C.ATR_N, "breaker": C.CIRCUIT_BREAKER, "cool_off": C.BREAKER_COOL_OFF_DAYS,
             "band": C.REBALANCE_BAND}
 

@@ -119,10 +119,13 @@ def test_the_specification_hash_is_stable_independent_of_key_order_and_sensitive
     assert h == S.spec_hash("sma_cross", {"slow": 100, "fast": 20}) and re.fullmatch(r"[0-9a-f]{16}", h)
     assert h != S.spec_hash("sma_cross", {"fast": 20, "slow": 150}) and h != S.spec_hash("sma_cross", {"fast": 30, "slow": 100})
     assert h != S.spec_hash("sma_cross", {"fast": 20, "slow": 100}, version=2) and h != S.spec_hash("tsmom", {"fast": 20, "slow": 100})
-    for name, value in (("FEE", 0.002), ("SLIPPAGE", 0.001), ("RISK_PER_TRADE", 0.02), ("STOP_ATR_MULT", 2.0), ("ATR_N", 10), ("CIRCUIT_BREAKER", 0.2), ("BREAKER_COOL_OFF_DAYS", 10), ("REBALANCE_BAND", 0.2), ("PROTOCOL_VERSION", 2)):
+    for name, value in (("FEE", 0.002), ("SLIPPAGE", 0.001), ("RISK_PER_TRADE", 0.02), ("STOP_ATR_MULT", 2.0), ("ATR_N", 10), ("CIRCUIT_BREAKER", 0.2), ("BREAKER_COOL_OFF_DAYS", 10), ("REBALANCE_BAND", 0.2)):
         with monkeypatch.context() as m:
             m.setattr(C, name, value)
             assert S.spec_hash("sma_cross", {"fast": 20, "slow": 100}) != h, name
+    with monkeypatch.context() as m:                                                          # the protocol version a family was pre-registered under is in the hash; the number the protocol is at now is not
+        m.setattr(C, "PROTOCOL_VERSION", "9.9")
+        assert S.spec_hash("sma_cross", {"fast": 20, "slow": 100}) == h
 
 
 # ---- family 1: sma_cross ----

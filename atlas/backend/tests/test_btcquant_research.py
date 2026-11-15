@@ -1,5 +1,6 @@
 """btcquant research run: all 100 configurations are logged, the families that pass the admission gates become challengers with their own paper accounts, the run happens once per protocol version and data version,
 and the report says what it must and never claims an edge. Two synthetic datasets: a planted strong trend edge (seed 6, where seven trend-like families are admitted) and pure noise (seed 1, where none is)."""
+import dataclasses
 import json
 
 import numpy as np
@@ -101,8 +102,16 @@ def test_new_data_or_a_new_protocol_version_is_a_new_run(edge, tmp_path, monkeyp
     with pytest.raises(RuntimeError, match="reached the evaluation"):
         RS.run_research(prep2, reg2, None, None)                                      # different data: not refused
     monkeypatch.setattr(C, "PROTOCOL_VERSION", "1.3")
+    with pytest.raises(RS.NothingToRun, match="no family was pre-registered under protocol 1.3"):
+        RS.run_research(edge["prep"], reg2, None, None)                                # same data, other protocol: not refused as a repeat, but a version that added no family has nothing to run
+    toy = dataclasses.replace(S.FAMILIES["tsmom"], id="toy", grid={"L": [20, 45]}, since="1.3")
+    monkeypatch.setitem(S.FAMILIES, "toy", toy)
+    monkeypatch.setattr(S, "RESEARCH", [*S.RESEARCH, toy])
+    seen = {}
+    monkeypatch.setattr(RS.V, "evaluate_all", lambda prep, **k: seen.update(k) or (_ for _ in ()).throw(RuntimeError("reached the evaluation: not refused")))
     with pytest.raises(RuntimeError, match="reached the evaluation"):
-        RS.run_research(edge["prep"], reg2, None, None)                                # same data, other protocol: not refused
+        RS.run_research(edge["prep"], reg2, None, None)                                # a family registered under 1.3: not refused
+    assert seen["families"] == ["toy"]                                                  # and only that family is evaluated: the twelve earlier results stand
 
 
 def test_with_no_admissions_nothing_is_opened_and_the_report_says_so(noise):

@@ -89,7 +89,8 @@ def headline(dash: dict) -> str:
     if n_ch:
         return f"{n_ch} strategy(ies) passed the admission bar and are being watched in paper trading. None has earned a place in the main portfolio, which stays in cash."
     if r:
-        return (f"None of the {len(r.get('outcomes', {})) or 12} strategies passed the admission bar in the research run of {r['ran_at'][:10]}, so no strategy has earned a place in the main portfolio, which stays in cash. "
+        when = f"the research run of {r['ran_at'][:10]}" if len(r.get("runs") or []) <= 1 else f"the research runs up to {r['ran_at'][:10]}"
+        return (f"None of the {len(r.get('outcomes', {})) or 12} strategies passed the admission bar in {when}, so no strategy has earned a place in the main portfolio, which stays in cash. "
                 f"All {n_mon} are paper-traded anyway so their trades are recorded and the forward record can show whether rejecting them was right.")
     return "The research run has not been made yet; only the benchmarks are being paper-traded."
 
@@ -109,17 +110,17 @@ def _period(m: dict | None) -> dict | None:
 def verdicts(root: Path, dash: dict) -> dict:
     """What the one-off research run decided about each family, in plain words: {family: {outcome, outcome_text, why, train, validation, timing_p}}. The outcome comes from the dashboard; the reasons and the period figures come
     from the research report when it is there. A missing or damaged report loses only the details."""
-    out = {fam: {"outcome": o, "outcome_text": OUTCOME_WORDS.get(o, o), "why": [], "train": None, "validation": None, "timing_p": None} for fam, o in ((dash.get("research") or {}).get("outcomes") or {}).items()}
-    path = root / "reports" / f"research_{dash.get('protocol', C.PROTOCOL_VERSION)}.json"
-    try:
-        fams = json.loads(path.read_text(encoding="utf-8"))["evaluation"]["families"]
-    except (OSError, ValueError, KeyError, TypeError):
-        return out
-    for fam, ev in fams.items():
-        if fam not in out:
+    research = dash.get("research") or {}
+    out = {fam: {"outcome": o, "outcome_text": OUTCOME_WORDS.get(o, o), "why": [], "train": None, "validation": None, "timing_p": None} for fam, o in (research.get("outcomes") or {}).items()}
+    for protocol in dict.fromkeys([r["protocol"] for r in research.get("runs") or []] or [dash.get("protocol", C.PROTOCOL_VERSION)]):       # one report file per protocol version that was run, oldest first; a later run's entry for a family wins
+        try:
+            fams = json.loads((root / "reports" / f"research_{protocol}.json").read_text(encoding="utf-8"))["evaluation"]["families"]
+        except (OSError, ValueError, KeyError, TypeError):
             continue
-        out[fam].update({"why": [GATE_WORDS.get(g, g) for g in ev["admission"]["failed"]], "train": _period(ev.get("train")), "validation": _period(ev.get("validation")),
-                         "timing_p": (ev.get("validation_timing") or {}).get("p")})
+        for fam, ev in fams.items():
+            if fam in out:
+                out[fam].update({"why": [GATE_WORDS.get(g, g) for g in ev["admission"]["failed"]], "train": _period(ev.get("train")), "validation": _period(ev.get("validation")),
+                                 "timing_p": (ev.get("validation_timing") or {}).get("p")})
     return out
 
 

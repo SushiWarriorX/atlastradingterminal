@@ -198,10 +198,11 @@ def test_an_amendment_to_a_protocol_constant_is_not_tampering(tmp_path, monkeypa
     r = reg(tmp_path)
     ch = r.admit({"family": "sma_cross", "params": {"fast": 20, "slow": 100}})
     assert r.drift() == []
-    monkeypatch.setattr(C, "FEE", 0.002)
     monkeypatch.setattr(C, "PROTOCOL_VERSION", "1.3")
+    assert r.drift() == [] and r.check_frozen() == []                              # a version bump alone changes nothing about an older family's specification
+    monkeypatch.setattr(C, "FEE", 0.002)
     assert r.check_frozen() == []                                                  # the record still hashes to itself
-    assert r.drift() == [{"kind": "challenger", "spec_hash": ch["spec_hash"], "changed": ["fee", "protocol"]}]
+    assert r.drift() == [{"kind": "challenger", "spec_hash": ch["spec_hash"], "changed": ["fee"]}]
 
 
 # ---- the TEST period ----

@@ -264,5 +264,5 @@ def test_families_that_were_not_admitted_are_paper_traded_as_monitors_and_challe
     assert stages[don] == "monitor" and stages[osold] == "monitor" and stages[tsm] == "challenger" and len(stages) == 6                              # 3 benchmarks/portfolio + 1 challenger + 2 monitors
     assert sorted(dash["monitors"]) == sorted([don, osold]) and don in dash["opened_today"]
     text = (tmp_path / "reports/latest.md").read_text()
-    assert "Monitored strategies (not admitted)" in text and don in text and "cannot be promoted without first passing the admission gates" in text and "twelve accounts watched at once will always have a lucky one" in text
+    assert "Monitored strategies (not admitted)" in text and don in text and "cannot be promoted without first passing the admission gates" in text and "2 accounts watched at once will always have a lucky one" in text
     assert dash["status"] == "no champions: the main portfolio is in cash" and DY.run_daily(root=tmp_path, now=after(cs), candles=cs)["opened_today"] == []
