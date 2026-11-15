@@ -51,6 +51,7 @@ from .fincond import FinConditions
 from .claims import JoblessClaims
 from .oil import OilPrices
 from .gasoline import GasolinePrices
+from .naturalgas import NaturalGas
 from .receipts import Receipts
 from .avgrates import AvgRates
 from .mspd import Mspd
@@ -399,6 +400,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     jobless_claims = JoblessClaims(demo=demo)
     oil_prices = OilPrices(demo=demo)
     gasoline_prices = GasolinePrices(demo=demo)
+    natural_gas = NaturalGas(demo=demo)
     commodity_positioning = CftcCommodities(demo=demo)
     currency_positioning = CftcCurrencies(demo=demo)
     agri_positioning = CftcAgriculture(demo=demo)
@@ -481,6 +483,11 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     async def macro_gasoline_prices():
         """US regular gasoline, weekly national average (US Energy Information Administration via FRED): checked for spacing, range, weekly moves and consistency with WTI crude. Describes what already happened; not a signal or a forecast."""
         return ok(await gasoline_prices.overview())
+
+    @app.get("/api/macro/natural-gas")
+    async def macro_natural_gas():
+        """Henry Hub natural gas spot price, daily (US Energy Information Administration via FRED): checked for range, spacing, one-day moves (a real cold-snap spike is allowed) and against EIA's own monthly average. Describes what already happened; not a signal or a forecast."""
+        return ok(await natural_gas.overview())
 
     @app.get("/api/macro/jobless-claims")
     async def macro_jobless_claims():
@@ -1866,7 +1873,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
                                       "listings": listings_service, "new_to_me": new_to_me,
-                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

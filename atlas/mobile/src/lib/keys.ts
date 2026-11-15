@@ -45,6 +45,7 @@ export const keys = (base: string | null) => ({
   joblessClaims: ["joblessclaims", base] as const,
   oilPrices: ["oilprices", base] as const,
   gasolinePrices: ["gasolineprices", base] as const,
+  naturalGas: ["naturalgas", base] as const,
   futuresPositioning: ["futurespos", base] as const,
   commodityPositioning: ["commoditypos", base] as const,
   currencyPositioning: ["currencypos", base] as const,

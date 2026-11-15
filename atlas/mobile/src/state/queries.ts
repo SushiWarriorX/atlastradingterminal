@@ -306,6 +306,10 @@ export function useGasolinePrices() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).gasolinePrices, queryFn: () => need(api).gasolinePrices(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
 }
+export function useNaturalGas() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).naturalGas, queryFn: () => need(api).naturalGas(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
 
 export function useRealYields() {
   const { api, baseUrl } = useConnection();

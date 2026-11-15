@@ -786,6 +786,21 @@ async function healthy(browser) {
       await page.locator(V("gasoline-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07r-gasoline");
 
+      await page.waitForSelector(V("natgas-card"));
+      await page.waitForSelector(V("natgas-body") + ", " + V("natgas-unavailable") + ", " + V("natgas-error"), { timeout: 45000 });
+      const ngTxt = await text(page);
+      match(ngTxt, /Natural gas prices/); match(ngTxt, /Energy Information Administration/); noMatch(ngTxt, FORECASTS, "the natural gas card makes no forecasts");
+      if (await liveCard(page, "natgas-body")) {
+        const ngBody = await inner(page, "natgas-body");
+        match(ngBody, /Natural gas \$\d{1,2}\.\d{2} per million BTU on [A-Z][a-z]{2} \d{1,2}, 20\d\d: (toward the low end|toward the high end|in the middle) of the past year's range\./, "the price with its own date and a plain reading");
+        match(ngBody, /(unchanged|up \$\d{1,2}\.\d{2}|down \$\d{1,2}\.\d{2}) since the previous trading day/, "the move since the previous trading day"); match(ngBody, /Past year: low \$\d{1,2}\.\d{2}, high \$\d{1,2}\.\d{2}; \d{1,3}% of its \d{2,3} days were at or below this price\./, "the reading is explained in days, so one winter spike cannot be misread as a range");
+        match(ngBody, /Cross-check: the daily prices for (January|February|March|April|May|June|July|August|September|October|November|December) 20\d\d average \$\d{1,2}\.\d{2}; the EIA publishes \$\d{1,2}\.\d{2} for the month\./, "the monthly cross-check is shown with its month");
+        match(ngBody, /Checked: every recent price is between \$0\.50 and \$60/); match(ngBody, /not a market signal or a forecast/);
+        noMatch(ngBody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("natgas-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07s-natgas");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);
