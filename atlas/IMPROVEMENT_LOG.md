@@ -1031,3 +1031,6 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Not verified:** a Windows install of the new lockfile (cannot be tested here); the Expo dev server and a native build (only the web export and the browser suite ran); behaviour on a real phone; whether the remaining advisory matters in practice (it is a build-time helper; I did not assess it beyond the advisory text).
 - **Also written down:** the order of the dependency check (dry run, fix, lockfile read, `npm ci`, suites, screenshot comparison, and why `--force` is declined) in `atlas-loop-rules`.
 - **Credibly profitable?** Not applicable to an improvement hour. Overall: seven experiments, seven fails; the search is paused; status: not yet.
+
+## 2026-11-15 07:18 UTC (Claude, strategy job): no experiment run (search paused); forward record checked
+- Unchanged since the 22:19 UTC pause: no owner reply, no host newly allowed, no ChatGPT branches, no commits from anyone else, the pause section of `EDGE_PLAN.md` intact. Forward record (`track_cli show`): 19 frozen rules, 14 rated "weak" and 5 "none", 5 to 7 days of new bars; the first 60-day mark is 2027-01-07. No code changed, so no test suites were run (last full runs at 06:2x: backend 1644, phone 46, browser 48 of 48). **Credibly profitable?** No. Status: not yet.
