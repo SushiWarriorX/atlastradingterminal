@@ -1344,6 +1344,12 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
         return ok({"entries": entries, "tested": len(entries), "passed": passed,
                    "note": "Each rule and pass bar was written down before it was run, then run once and never adjusted. A pass would only mean a candidate to follow on new data for 60 days, never 'profitable'. None has passed yet."})
 
+    @app.get("/api/btcquant/paper")
+    async def btcquant_paper():
+        """The paper-trading lab: the latest daily dashboard in plain words and the last trades as the ledger recorded them on signal. Simulated accounts only; nothing here can place an order."""
+        from .btcquant import view as _view
+        return ok(_view.paper_view())
+
     @app.post("/api/btclab/run")
     async def btclab_run(b: LabRunIn):
         try:
