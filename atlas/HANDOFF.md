@@ -22,7 +22,7 @@ ChatGPT works only 12:00 to 24:00 UTC on its own `chatgpt/...` branches; Claude 
 
 A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DATA_LOOP.md`, `SKILLS_LOOP.md`. If a job has nothing worth doing, log "no change" and stop; never pad.
 
-**Strategy hours are PAUSED (2026-11-14, see `EDGE_PLAN.md` "Search paused").** Do not run an experiment. Check the forward record once (`python -m atlas_api.btclab.track_cli show`), report only a 60-day mark (the first is 2027-01-07), otherwise log "no change" in one line and stop.
+**Strategy hours now build and run the `btcquant` system (owner mission of 2026-11-15; the 2026-11-14 pause is lifted for it).** Read `btcquant/BUILD_PLAN.md`, take the first unchecked step, write its tests first, follow `btcquant/PROTOCOL.md` (pre-registered; never run or change a family outside it), mark the step done with the commit. Once the system is operating (step 11 done), a strategy hour is a research cycle: look for a genuinely new hypothesis, check it is not a renamed version of an existing one, write its note and protocol amendment, push, then run it once. The old lab stays closed except for reporting its 60-day marks (the first is 2027-01-07).
 
 ## Avoiding collisions
 - Strategy queue: Claude takes ideas from the FRONT of the queue, ChatGPT from the BACK. Never take an id the other side has on the state board.

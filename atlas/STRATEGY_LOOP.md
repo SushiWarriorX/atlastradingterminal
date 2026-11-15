@@ -1,6 +1,6 @@
 # Strategy loop (every 10 minutes)
 
-> **PAUSED 2026-11-14:** seven experiments, seven fails; see `EDGE_PLAN.md` ("Search paused") and `docs/strategy-search-conclusion.md`. Strategy hours check the forward record and otherwise log "no change".
+> **2026-11-15: the owner's new mission replaces the old search.** Strategy hours build and run `btcquant` (see `btcquant/BUILD_PLAN.md` and `btcquant/PROTOCOL.md`). The old library and its seven experiments are closed history (`EDGE_PLAN.md`, `docs/strategy-search-conclusion.md`); the text below describes that old loop and is not the current job.
 
 > UPDATE 2026-11-10: the classic families are covered. Strategy hours now follow `EDGE_PLAN.md` (different kinds of ideas, settings fixed first). The queue below is for ChatGPT and the owner.
 
