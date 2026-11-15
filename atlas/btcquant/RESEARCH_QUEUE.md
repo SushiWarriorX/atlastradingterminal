@@ -82,3 +82,29 @@ What the screen says and does not say. The calendar rule and the reversal rule a
 2. ~~**A research run must be able to evaluate only the families pre-registered under the new version.**~~ **Done.** `run_research` covers the families of its own version (refuses with `NothingToRun` when a version added none), the trial count N includes every configuration of every family, and the dashboard, the daily report and the phone view read the runs of all versions as one record (tested end to end on a toy family under version 1.3: the first report file is byte for byte unchanged, one new account is opened and no duplicates).
 3. ~~**The calibration** (`CALIBRATION.md`: about one noise dataset in six admits something among twelve families) must be restated for thirteen families.~~ **Done 2026-11-15 (19:xx UTC).** The new family alone was run on 1,000 further datasets of each no-skill world and of three worlds with a planted Monday premium: false admission 0.1% to 0.2%, power 6% / 29% / 71% at a premium of 0.3% / 0.6% / 1.0% a day; the thirteen-family share is still about one dataset in six (`CALIBRATION.md`).
 4. **The entry itself:** `strategies/<id>.md`, the protocol amendment (v1.3: the family, its grid, N), the family as code with its tests first (including the no-look-ahead test), a short code for its logo in the phone view (`view.SHORT`; a test fails until it has one), pushed before the run; then one run, and a monitor account for it (the existing code opens one for a non-admitted chosen configuration). **Pre-registered and pushed 2026-11-15 (19:xx UTC) for `monday`; the one run follows and is logged below when it has been made.**
+
+## Run results
+
+### `monday` (protocol 1.3), run once on 2026-11-15 at 19:45 UTC, after the pre-registration was pushed (commit 779d9b8, 19:45)
+
+Data: 2,875 daily Coinbase BTC-USD candles to 2026-11-14 (hash `c9cb205d1d501e6a`). Record: `reports/research_1.3.md` and `.json`, `registry/`.
+
+**Rejected** by gates A2, A3 and A5. A1 passed (482 position changes), A4 was "not applicable (one setting)" and passed on the configuration's own TRAIN Sharpe ratio (0.31). The pre-registered expectation ("rejected, most likely by A2 and A5; it will mean no premium large enough to see and keep after costs, not that there is no Monday effect") held.
+
+| after costs, $10,000 start | TRAIN 2020-2022 | VALIDATION 2023-2024 |
+| --- | --- | --- |
+| return | +16.1% | +17.5% |
+| buy-and-hold | +1,303% | +464% |
+| the same average exposure (13% to 14%) held every day | +21.8% | +30.3% |
+| Sharpe ratio | 0.31 | 0.45 |
+| information ratio against that matched hold (A2 needs above 0 in both) | +0.09 | -0.12 |
+| maximum drawdown | 40.3% | 26.7% |
+| round trips | 140 | 101 |
+| fees paid | $3,932 | $2,123 |
+| circuit-breaker trips | 4 | 1 |
+
+Random-timing p on VALIDATION: 0.284 (174 of 612 shifted copies of the schedule did at least as well; A3 needs 0.05 or less). Doubled costs: Sharpe -0.08 (A5 needs above 0). Across the cost settings of the sensitivity table, TRAIN / VALIDATION return: +50.8% / +38.1% at 0.07% a side, +16.1% / +17.5% at the default 0.15%, -20.6% / -8.5% at 0.30%, -67.7% / -37.9% at 0.45%. Walk-forward (reported, not a gate here): stitched Sharpe 0.10 against 0.39 for holding, positive in 3 of 10 windows. Deflated Sharpe ratio with N = 101: 0.04 on raw returns, 0.006 on the excess returns (reported, not gates).
+
+**Exploratory context, computed after the result, on the TRAIN and VALIDATION days only, and not a test (nothing was decided or changed from it):** the average daily return of a Monday candle was +0.46% in 2020-2022 and +0.52% in 2023-2024, against +0.10% and +0.23% on the other days: a difference of +0.36 and +0.30 percentage points a Monday, with standard errors of 0.39 and 0.34 (t about 0.9 each; 1.2 pooled over 261 Mondays). The Monday medians are +0.14% and +0.04%, so a few large up-Mondays carry the average, and Wednesday was as high as Monday (+0.50% and +0.49%). A pooled difference of about +0.33 points is, by coincidence, about the 0.30% a weekly round trip costs: even taken at face value it would be a wash after costs, and it cannot be told from chance.
+
+**What this means.** In 2020 to 2024 on Coinbase prices, holding Bitcoin only through Mondays earned a positive return after costs, but no more than holding the same average amount of Bitcoin on all days would have, its timing was not distinguishable from random weekday timing, and it stopped working when costs were doubled. It does not show that Bitcoin has no Monday effect: the procedure sees a premium of 0.6% a day only about three times in ten (`CALIBRATION.md`), and a sample average of +0.33 points a Monday is below that. It does not show that anything makes money. The `monday` account is paper-traded as a monitor from the next daily run, and the queue goes on with `three_down` (the lowest highest-correlation after `monday`), which needs its own pass through the list above (calibration for fourteen families, note, amendment v1.4, the family with tests, push, one run).

@@ -1,0 +1,484 @@
+{
+ "admitted": [],
+ "data": {
+  "candles": 2875,
+  "first": "2019-01-01T00:00:00Z",
+  "last": "2026-11-14T00:00:00Z",
+  "sha256": "c9cb205d1d501e6af73a4299a67fe15ca1faa68e03c223f63e4733a71e2ea740"
+ },
+ "evaluation": {
+  "families": {
+   "monday": {
+    "admission": {
+     "failed": [
+      "A2",
+      "A3",
+      "A5"
+     ],
+     "gates": {
+      "A1": {
+       "need": ">= 10 position changes on TRAIN + VALIDATION",
+       "passed": true,
+       "value": 482
+      },
+      "A2": {
+       "need": "information ratio against the exposure-matched hold > 0 on TRAIN and on VALIDATION",
+       "passed": false,
+       "value": {
+        "train_ir": 0.094580166525908,
+        "validation_ir": -0.12281964738714005
+       }
+      },
+      "A3": {
+       "need": "random-timing p-value on VALIDATION <= 0.05",
+       "passed": false,
+       "value": 0.28431372549019607
+      },
+      "A4": {
+       "need": "at least 60% of the neighbours reach 70% of the chosen Sharpe",
+       "passed": true,
+       "value": {
+        "applicable": false,
+        "neighbours": 0,
+        "passes": true,
+        "reaching": 0,
+        "share": null,
+        "single": true,
+        "threshold": null
+       }
+      },
+      "A5": {
+       "need": "Sharpe > 0 on TRAIN + VALIDATION at doubled costs",
+       "passed": false,
+       "value": -0.078017133594402
+      }
+     },
+     "outcome": "rejected"
+    },
+    "chosen": {
+     "day": 0
+    },
+    "configurations": 1,
+    "costs": [
+     {
+      "fee": 0.0005,
+      "fees_paid": 3438.2103251791646,
+      "returns": [
+       0.5080146954012275,
+       0.38070697672826825
+      ],
+      "sharpe": 0.6508528291805384,
+      "slippage": 0.0002
+     },
+     {
+      "fee": 0.001,
+      "fees_paid": 6054.280096669906,
+      "returns": [
+       0.1605022197006718,
+       0.17467980393460003
+      ],
+      "sharpe": 0.35625864601826185,
+      "slippage": 0.0005
+     },
+     {
+      "fee": 0.002,
+      "fees_paid": 10095.991635526912,
+      "returns": [
+       -0.20613460215919288,
+       -0.08480360738232595
+      ],
+      "sharpe": -0.078017133594402,
+      "slippage": 0.001
+     },
+     {
+      "fee": 0.003,
+      "fees_paid": 9346.49170485519,
+      "returns": [
+       -0.6768277742936186,
+       -0.3789121221492049
+      ],
+      "sharpe": -1.1328734749335856,
+      "slippage": 0.0015
+     }
+    ],
+    "deflated_sharpe": {
+     "dsr": 0.03698714524462715,
+     "n_trials": 101,
+     "sr0": 0.05943711386603758,
+     "z": -1.7867723470220485
+    },
+    "excess": {
+     "deflated": {
+      "dsr": 0.005886822145163284,
+      "n_trials": 101,
+      "sr0": 0.06000727803783156,
+      "z": -2.5188570573457594
+     },
+     "pooled": {
+      "T": 1827,
+      "kurt": 36.503269,
+      "sharpe": 0.021862,
+      "skew": 2.465535,
+      "sr_daily": 0.001144
+     },
+     "train": 0.094580166525908,
+     "validation": -0.12281964738714005
+    },
+    "family": "monday",
+    "full_exposure": null,
+    "neighbours": [],
+    "outcome": "rejected",
+    "pooled": {
+     "T": 1827,
+     "kurt": 43.256488,
+     "sharpe": 0.356259,
+     "skew": 2.791518,
+     "sr_daily": 0.018647
+    },
+    "protocol": "1.3",
+    "random_timing": {
+     "at_least_as_good": 118,
+     "median_shifted": -0.344177138863883,
+     "p": 0.118,
+     "real": 0.3560123311472932,
+     "shifts": 1000
+    },
+    "spec_hash": "9db66957812ea645",
+    "stability": {
+     "applicable": false,
+     "neighbours": 0,
+     "passes": true,
+     "reaching": 0,
+     "share": null,
+     "single": true,
+     "threshold": null
+    },
+    "table": [
+     {
+      "params": {
+       "day": 0
+      },
+      "score": 0.310829,
+      "trades": 140,
+      "train_return": 0.160502,
+      "train_sharpe": 0.3108294491921262,
+      "turnover": 280.401638,
+      "validation_return": 0.17468,
+      "validation_sharpe": 0.4534759366354291
+     }
+    ],
+    "train": {
+     "avg_holding_days": 1.0,
+     "avg_loss": 428.01425437312946,
+     "avg_loss_pct": 0.028750336054136183,
+     "avg_win": 490.2994442723158,
+     "avg_win_pct": 0.0356645508661268,
+     "best_trade": 2902.365689569704,
+     "breaker_trips": 4,
+     "by_regime": {
+      "BEAR": {
+       "btc_return": -0.33766925185077645,
+       "days": 402,
+       "exposure": 0.12935323383084577,
+       "sharpe": 0.24735886656630496,
+       "strategy_return": 0.03412831080851908
+      },
+      "BULL": {
+       "btc_return": 1.061864332768673,
+       "days": 469,
+       "exposure": 0.14285714285714285,
+       "sharpe": 0.8219123917098682,
+       "strategy_return": 0.32167718019904723
+      },
+      "RANGE": {
+       "btc_return": 0.6892238774527657,
+       "days": 225,
+       "exposure": 0.09333333333333334,
+       "sharpe": -0.6092072378039034,
+       "strategy_return": -0.1509247999816533
+      },
+      "unknown": 0
+     },
+     "cagr": 0.05082161458306467,
+     "calmar": 0.12597706630122718,
+     "days": 1096,
+     "expectancy": 11.464444264333672,
+     "expectancy_pct": 0.0020767884005610995,
+     "exposure": 0.12773722627737227,
+     "fees_paid": 3931.596664048704,
+     "fills": 280,
+     "final_equity": 11605.022197006718,
+     "hold_return": 1.3034089208272284,
+     "matched_hold_return": 0.2175282657556712,
+     "max_drawdown": 0.40341957528637573,
+     "open_position_at_end": false,
+     "profit_factor": 1.0513688626343758,
+     "profit_without_best": -1297.34349256299,
+     "sharpe": 0.3108294491921262,
+     "slippage_paid": 1965.8002076289251,
+     "sortino": 0.523452968277789,
+     "start_equity": 10000.0,
+     "total_return": 0.1605022197006718,
+     "trades": 140,
+     "turnover": 280.40163847652843,
+     "turnover_per_year": 93.38193252183656,
+     "vs_hold": -1.1429067011265566,
+     "vs_matched_hold": -0.05702604605499939,
+     "win_rate": 0.4785714285714286
+    },
+    "trips": {
+     "TRAIN": [
+      {
+       "equity": 16492.18861434923,
+       "peak": 19410.13040438595,
+       "t": 1624838400
+      },
+      {
+       "equity": 14266.713859812917,
+       "peak": 17004.078739462144,
+       "t": 1632096000
+      },
+      {
+       "equity": 13021.182255428028,
+       "peak": 15539.732815149056,
+       "t": 1642377600
+      },
+      {
+       "equity": 12014.029862070223,
+       "peak": 14749.987134021769,
+       "t": 1652659200
+      }
+     ],
+     "VALIDATION": [
+      {
+       "equity": 8715.000864969807,
+       "peak": 10593.826671691984,
+       "t": 1685923200
+      }
+     ]
+    },
+    "validation": {
+     "avg_holding_days": 1.0,
+     "avg_loss": 219.6685818064802,
+     "avg_loss_pct": 0.020178224497713174,
+     "avg_win": 312.18308045575316,
+     "avg_win_pct": 0.029918410482147464,
+     "best_trade": 1205.757188975118,
+     "breaker_trips": 1,
+     "by_regime": {
+      "BEAR": {
+       "btc_return": 0.258621084660148,
+       "days": 27,
+       "exposure": 0.14814814814814817,
+       "sharpe": null,
+       "strategy_return": 0.035273915023043445
+      },
+      "BULL": {
+       "btc_return": 1.5452102960502558,
+       "days": 543,
+       "exposure": 0.13627992633517497,
+       "sharpe": 0.3979201889318907,
+       "strategy_return": 0.1065496947732203
+      },
+      "RANGE": {
+       "btc_return": 0.7629225433087421,
+       "days": 161,
+       "exposure": 0.14285714285714288,
+       "sharpe": 0.3609542057838091,
+       "strategy_return": 0.02539998741113081
+      },
+      "unknown": 0
+     },
+     "cagr": 0.08370711941910347,
+     "calmar": 0.31329561905957876,
+     "days": 731,
+     "expectancy": 17.295030092534656,
+     "expectancy_pct": 0.0021420584141059224,
+     "exposure": 0.1381668946648427,
+     "fees_paid": 2122.683432621202,
+     "fills": 202,
+     "final_equity": 11746.798039346,
+     "hold_return": 4.638477522756193,
+     "matched_hold_return": 0.30349842447345776,
+     "max_drawdown": 0.26718254047205514,
+     "open_position_at_end": false,
+     "profit_factor": 1.1419994697223397,
+     "profit_without_best": 541.0408503708823,
+     "sharpe": 0.4534759366354291,
+     "slippage_paid": 1061.3429490165852,
+     "sortino": 0.7975072510216086,
+     "start_equity": 10000.0,
+     "total_return": 0.17467980393460003,
+     "trades": 101,
+     "turnover": 203.3121293319384,
+     "turnover_per_year": 101.51700028202121,
+     "vs_hold": -4.463797718821593,
+     "vs_matched_hold": -0.12881862053885773,
+     "win_rate": 0.44554455445544555
+    },
+    "validation_timing": {
+     "at_least_as_good": 174,
+     "median_shifted": -0.13215072753090912,
+     "p": 0.28431372549019607,
+     "real": 0.4543831738937344,
+     "shifts": 612
+    },
+    "walk_forward": {
+     "hold_return": 0.3854361818203511,
+     "hold_sharpe": 0.3851241666188113,
+     "passes": false,
+     "positive_share": 0.3,
+     "positive_windows": 3,
+     "segments": [
+      {
+       "chosen": {
+        "day": 0
+       },
+       "days": 181,
+       "exposure": 0.12154696132596685,
+       "fit_end": "2021-12-31",
+       "oos_end": "2022-06-30",
+       "oos_start": "2022-01-01",
+       "return": -0.0865763073211685,
+       "sharpe": -0.42719649228657675,
+       "trades": 22
+      },
+      {
+       "chosen": {
+        "day": 0
+       },
+       "days": 184,
+       "exposure": 0.14130434782608695,
+       "fit_end": "2022-06-30",
+       "oos_end": "2022-12-31",
+       "oos_start": "2022-07-01",
+       "return": -0.012366949238185265,
+       "sharpe": -0.021556510660349998,
+       "trades": 26
+      },
+      {
+       "chosen": {
+        "day": 0
+       },
+       "days": 181,
+       "exposure": 0.1270718232044199,
+       "fit_end": "2022-12-31",
+       "oos_end": "2023-06-30",
+       "oos_start": "2023-01-01",
+       "return": -0.1298067278827213,
+       "sharpe": -1.2935834637748904,
+       "trades": 23
+      },
+      {
+       "chosen": {
+        "day": 0
+       },
+       "days": 184,
+       "exposure": 0.14130434782608695,
+       "fit_end": "2023-06-30",
+       "oos_end": "2023-12-31",
+       "oos_start": "2023-07-01",
+       "return": 0.0251634476645477,
+       "sharpe": 0.3347025694910016,
+       "trades": 26
+      },
+      {
+       "chosen": {
+        "day": 0
+       },
+       "days": 182,
+       "exposure": 0.14285714285714288,
+       "fit_end": "2023-12-31",
+       "oos_end": "2024-06-30",
+       "oos_start": "2024-01-01",
+       "return": 0.4047379835125138,
+       "sharpe": 2.651649938831349,
+       "trades": 26
+      },
+      {
+       "chosen": {
+        "day": 0
+       },
+       "days": 184,
+       "exposure": 0.14673913043478262,
+       "fit_end": "2024-06-30",
+       "oos_end": "2024-12-31",
+       "oos_start": "2024-07-01",
+       "return": -0.04866450964843716,
+       "sharpe": -0.24756471699223367,
+       "trades": 27
+      },
+      {
+       "chosen": {
+        "day": 0
+       },
+       "days": 181,
+       "exposure": 0.12154696132596685,
+       "fit_end": "2024-12-31",
+       "oos_end": "2025-06-30",
+       "oos_start": "2025-01-01",
+       "return": -0.018768610297750232,
+       "sharpe": -0.09444705029540061,
+       "trades": 21
+      },
+      {
+       "chosen": {
+        "day": 0
+       },
+       "days": 184,
+       "exposure": 0.13043478260869565,
+       "fit_end": "2025-06-30",
+       "oos_end": "2025-12-31",
+       "oos_start": "2025-07-01",
+       "return": -0.16260971486604214,
+       "sharpe": -2.790100851603665,
+       "trades": 24
+      },
+      {
+       "chosen": {
+        "day": 0
+       },
+       "days": 181,
+       "exposure": 0.143646408839779,
+       "fit_end": "2025-12-31",
+       "oos_end": "2026-06-30",
+       "oos_start": "2026-01-01",
+       "return": 0.1782244810450777,
+       "sharpe": 1.9977826504380856,
+       "trades": 26
+      },
+      {
+       "chosen": {
+        "day": 0
+       },
+       "days": 137,
+       "exposure": 0.13868613138686134,
+       "fit_end": "2026-06-30",
+       "oos_end": "2026-11-14",
+       "oos_start": "2026-07-01",
+       "return": -0.0453913852077219,
+       "sharpe": -0.7293849619020881,
+       "trades": 19
+      }
+     ],
+     "stitched_return": -0.00606384510478275,
+     "stitched_sharpe": 0.10268036769630673,
+     "windows": 10
+    }
+   }
+  },
+  "n_trials": 101,
+  "protocol": "1.3",
+  "trial_variance": 0.0005501325169762755,
+  "trial_variance_excess": 0.0005607376855752245
+ },
+ "families": [
+  "monday"
+ ],
+ "n_trials": 101,
+ "outcomes": {
+  "monday": "rejected"
+ },
+ "protocol": "1.3",
+ "ran_at": "2026-11-15T19:45:29Z"
+}
