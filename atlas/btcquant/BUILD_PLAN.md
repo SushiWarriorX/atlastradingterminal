@@ -7,9 +7,9 @@ Code lives in `atlas/backend/atlas_api/btcquant/`, tests in `atlas/backend/tests
 ## Steps
 
 - [x] 0. Protocol written and pushed before any code (`PROTOCOL.md`).
-- [ ] 1. Data layer: Coinbase BTC-USD daily and hourly download with paging, validation, complete-versus-incomplete candle flag, manifest, CSV storage; 4-hour candles built from complete hours; tests; first download committed.
-- [ ] 2. Indicators (SMA, Wilder ATR and RSI, ADX, Bollinger, realised volatility) with hand-checked tests.
-- [ ] 3. Account and execution engine (next-open fills, fee and slippage, 1% risk sizing, stops, armed re-entry, circuit breaker, weight mode) as one step function; tests including the accounting identity and gap and same-candle cases.
+- [x] 1. Data layer (`btcquant/data.py`, 24 tests): Coinbase BTC-USD daily and hourly download with paging, validation, complete-versus-incomplete candle flag, manifest (`btcquant/data/manifest.json`), CSV storage; 4-hour candles built from complete hours; first download committed 2026-11-15: 2,875 daily candles 2019-01-01 to 2026-11-14 with no gaps, 68,990 hourly candles with 9 reported gaps (1 to 5 missing hours each, never filled).
+- [x] 2. Indicators (`btcquant/indicators.py`, 10 tests with hand-worked numbers).
+- [x] 3. Account and execution engine (`btcquant/account.py`, 30 tests; 41 deliberate breakages each caught by a failing test, run clean): next-open fills, fee and slippage, 1% risk sizing, stops, armed re-entry, circuit breaker, weight mode, as one step function with a signal-time order ledger.
 - [ ] 4. Strategy families 1 to 12 plus benchmarks, with `strategies/<family>.md` notes written first; tests including a future-perturbation test (signals never change when later candles change).
 - [ ] 5. Metrics (all of section 6 of the protocol) with hand-worked tests.
 - [ ] 6. Backtest runner by period, benchmarks, exposure-matched hold, full-exposure sensitivity, regimes; tests (buy-and-hold equals the price ratio less costs; cash is flat).
