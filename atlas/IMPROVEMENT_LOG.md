@@ -995,3 +995,6 @@ Newest entry first. Written by the scheduled improvement loop (see `LOOP.md`) an
 - **Left alone on purpose:** the ops-side messages (`jobs.py`, `health_check.py`, `fedwatch.py`, `macro.py`, `macro_brief.py`) name only the class or say "feed unreachable" and are read by the developer, not shown as "(Class: )" on a card. The CFTC futures card says "no contract could be read and verified" and so hides the root cause (a connection failure in the cut-network run): a candidate for later.
 - **Next candidates:** `npm audit fix` in `mobile` at 06:17; one quick retry for connection errors only (a dropped connection hides a card for 120 seconds today); the CFTC futures message.
 - **Credibly profitable?** Not applicable to an improvement hour. Overall: seven experiments, seven fails; the search is paused; status: not yet.
+
+## 2026-11-15 01:17 UTC (Claude, strategy job): no experiment run (search paused); forward record checked
+- Unchanged since the 22:19 UTC pause: no owner reply, no host newly allowed, no ChatGPT branches, no new data for a different idea. Forward record (`track_cli show`): 19 frozen rules, 14 rated "weak" and 5 "none", 5 to 7 days of new bars; the first 60-day mark is 2027-01-07. No code changed, so no test suites were run (last full runs at 00:3x: backend 1595, phone 46, browser 48 of 48). **Credibly profitable?** No. Status: not yet.
