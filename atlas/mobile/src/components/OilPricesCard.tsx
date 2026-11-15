@@ -1,7 +1,7 @@
 import React from "react";
 import { Linking, Pressable, View } from "react-native";
 import type { OilSeries } from "../api/types";
-import { ymdLabel } from "../lib/format";
+import { atOrBelow, ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useOilPrices } from "../state/queries";
 import { color, space } from "../theme";
@@ -12,10 +12,11 @@ const dayMove = (x: number | null | undefined) => (x == null ? "not available on
 const vs = (x: number | null | undefined, when: string) => (x == null ? `not available against ${when}` : x === 0 ? `the same as ${when}` : `${x > 0 ? "up" : "down"} ${Math.abs(x).toFixed(1)}% on ${when}`);
 
 function Line({ name, s }: { name: string; s: OilSeries }) {
+  const where = atOrBelow(s.rank_in_year, s.days_in_year, "days", "price");
   return (
     <View style={{ gap: space.sm }}>
       <Txt variant="small">{name} {usd(s.value)} a barrel on {ymdLabel(s.date)}: {s.reading}.{s.freshness === "OVERDUE" ? " (overdue)" : ""}</Txt>
-      <Txt variant="tiny">{dayMove(s.change_1d)}, {vs(s.change_1m_pct, "a month ago")}, {vs(s.change_1y_pct, "a year ago")}. Past year: low {usd(s.year_low)}, high {usd(s.year_high)}.</Txt>
+      <Txt variant="tiny">{dayMove(s.change_1d)}, {vs(s.change_1m_pct, "a month ago")}, {vs(s.change_1y_pct, "a year ago")}. Past year: low {usd(s.year_low)}, high {usd(s.year_high)}{where ? `; ${where}` : "."}</Txt>
     </View>
   );
 }

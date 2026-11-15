@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Asset, Briefing, Finding, Prov, WatchlistResponse, WatchRow } from "../api/types";
 import { AGENT_ORDER, briefingSections, coverageNote, lineText, rowKind } from "./briefing";
-import { countdown, dateOnly, directionOf, formatChange, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime, ymdLabel } from "./format";
+import { atOrBelow, countdown, dateOnly, directionOf, formatChange, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime, ymdLabel } from "./format";
 import { describeFreshness, isOutdated, summarizeTones, worstTone } from "./freshness";
 import { keys } from "./keys";
 import { safeUrl } from "./links";
@@ -73,6 +73,36 @@ describe("formatting", () => {
     expect(initials("AAPL")).toBe("AA");
     expect(initials("BTC")).toBe("BTC");
     expect(initials("")).toBe("?");
+  });
+});
+
+describe("where a figure sits among the past year's days or weeks", () => {
+  it("says what share of them were at or below it, in the same words on every card", () => {
+    expect(atOrBelow(62, 255, "days", "price")).toBe("62% of its 255 days were at or below this price.");
+    expect(atOrBelow(25, 53, "weeks", "level")).toBe("25% of its 53 weeks were at or below this level.");
+    expect(atOrBelow(100, 53, "weeks", "price")).toBe("100% of its 53 weeks were at or below this price.");
+    expect(atOrBelow(0, 53, "weeks", "level")).toBe("0% of its 53 weeks were at or below this level.");                      // a share of zero is a real answer, not a missing one
+  });
+  it("rounds to a whole percent and agrees with a single day", () => {
+    expect(atOrBelow(61.6, 255, "days", "price")).toBe("62% of its 255 days were at or below this price.");
+    expect(atOrBelow(61.4, 255, "days", "price")).toBe("61% of its 255 days were at or below this price.");
+    expect(atOrBelow(100, 1, "days", "price")).toBe("100% of its 1 day was at or below this price.");
+  });
+  it("leaves the sentence out when a number is missing, instead of printing n/a", () => {
+    expect(atOrBelow(null, 255, "days", "price")).toBeNull();
+    expect(atOrBelow(62, undefined, "days", "price")).toBeNull();
+    expect(atOrBelow(Number.NaN, 255, "days", "price")).toBeNull();
+    expect(atOrBelow(62, Number.POSITIVE_INFINITY, "days", "price")).toBeNull();
+    expect(atOrBelow(62, 0, "days", "price")).toBeNull();
+    expect(atOrBelow(62, 12.5, "days", "price")).toBeNull();                                                                // a count is a whole number
+    expect(atOrBelow(-1, 255, "days", "price")).toBeNull();
+    expect(atOrBelow(101, 255, "days", "price")).toBeNull();                                                                // a share cannot be over 100
+  });
+  it("is used by the cards that show a past-year range, and none prints a missing figure as n/a", () => {
+    const dir = join(__dirname, "..", "components");
+    for (const f of ["NaturalGasCard.tsx", "OilPricesCard.tsx", "GasolinePricesCard.tsx", "JoblessClaimsCard.tsx"]) expect(readFileSync(join(dir, f), "utf8"), f).toMatch(/atOrBelow\(/);
+    const bad = readdirSync(dir).filter((f) => f.endsWith(".tsx") && /\?\? "n\/a"\}% of/.test(readFileSync(join(dir, f), "utf8")));
+    expect(bad).toEqual([]);
   });
 });
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { Linking, Pressable, View } from "react-native";
-import { ymdLabel } from "../lib/format";
+import { atOrBelow, ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useJoblessClaims } from "../state/queries";
 import { color, space } from "../theme";
@@ -15,6 +15,7 @@ export function JoblessClaimsCard() {
   const q = useJoblessClaims();
   const d = q.data;
   const link = safeUrl(d?.url ?? null);
+  const where = atOrBelow(d?.initial?.rank_in_year, d?.initial?.weeks_in_year, "weeks", "level");
   return (
     <GCard style={{ padding: space.lg, gap: space.md }} testID="claims-card">
       <View><Txt variant="h2">Weekly jobless claims</Txt><Txt variant="tiny">People filing for unemployment insurance, from the US Department of Labor</Txt></View>
@@ -25,7 +26,7 @@ export function JoblessClaimsCard() {
           <View style={{ gap: space.sm }} testID="claims-body">
             <Txt variant="label">Week ending {ymdLabel(d.date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
             <Txt variant="small">Initial claims {n0(d.initial.value)}: {d.reading}. Four-week average {n0(d.initial.avg4)}.</Txt>
-            <Txt variant="tiny">{moved(d.initial.change_1w)} on the week, {vsYear(d.initial.change_1y_pct)}. Past year: low {n0(d.initial.year_low)}, high {n0(d.initial.year_high)}.</Txt>
+            <Txt variant="tiny">{moved(d.initial.change_1w)} on the week, {vsYear(d.initial.change_1y_pct)}. Past year: low {n0(d.initial.year_low)}, high {n0(d.initial.year_high)}{where ? `; ${where}` : "."}</Txt>
             <Divider />
             <Txt variant="small">Continuing claims {n0(d.continuing.value)} for the week ending {ymdLabel(d.continuing.date)}: {moved(d.continuing.change_1w)} on the week, {vsYear(d.continuing.change_1y_pct)}.</Txt>
             <Txt variant="tiny">{d.note}</Txt>

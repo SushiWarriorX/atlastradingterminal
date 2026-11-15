@@ -778,6 +778,7 @@ async function healthy(browser) {
         const cbody = await inner(page, "claims-body");
         match(cbody, /Week ending [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
         match(cbody, /Initial claims \d{2,3},\d{3}: (toward the low end|toward the high end|in the middle) of the past year's range\. Four-week average \d{2,3},\d{3}\./, "the claims with a plain reading");
+        match(cbody, /Past year: low [\d,]+, high [\d,]+; \d{1,3}% of its \d{2} weeks were at or below this level\./, "the reading is explained in weeks, so a spike-stretched range cannot be misread");
         match(cbody, /Continuing claims [\d,]+ for the week ending [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "continuing claims with their own week");
         match(cbody, /Checked: every date is a Saturday/); match(cbody, /not a market signal or a forecast/);
         noMatch(cbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
@@ -793,6 +794,7 @@ async function healthy(browser) {
         const oilBody = await inner(page, "oil-body");
         match(oilBody, /WTI crude \(US\) \$\d{2,3}\.\d{2} a barrel on [A-Z][a-z]{2} \d{1,2}, 20\d\d: (toward the low end|toward the high end|in the middle) of the past year's range\./, "WTI with its own date and a plain reading");
         match(oilBody, /Brent crude \(Europe\) \$\d{2,3}\.\d{2} a barrel on [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "Brent with its own date");
+        eq((oilBody.match(/Past year: low \$\d{2,3}\.\d{2}, high \$\d{2,3}\.\d{2}; \d{1,3}% of its \d{3} days were at or below this price\./g) || []).length, 2, "each crude price says what share of the past year's days were at or below it");
         match(oilBody, /Brent is \$\d+\.\d{2} (above|below) WTI on [A-Z][a-z]{2} \d{1,2}, 20\d\d|Brent and WTI cost the same on/, "the spread with its date");
         match(oilBody, /Checked: every recent price is above zero/); match(oilBody, /not a market signal or a forecast/);
         noMatch(oilBody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
@@ -809,6 +811,7 @@ async function healthy(browser) {
         match(gasBody, /Monday [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the Monday is written out");
         noMatch(gasBody, /Week starting/i, "it is the Monday price, not a week starting on it");
         match(gasBody, /Regular gasoline \$\d\.\d{3} a gallon: (toward the low end|toward the high end|in the middle) of the past year's range\./, "the price with a plain reading");
+        match(gasBody, /Past year: low \$\d\.\d{3}, high \$\d\.\d{3}; \d{1,3}% of its \d{2} weeks were at or below this price\./, "the reading is explained in weeks, so a spike-stretched range cannot be misread");
         match(gasBody, /That is \$\d{2,3}\.\d{2} a barrel-equivalent .* against WTI crude at \$\d{2,3}\.\d{2} a barrel: a gap of \$\d{2,3}\.\d{2}/, "the gap to crude");
         match(gasBody, /Checked: every date is a Monday/); match(gasBody, /not a market signal or a forecast/);
         noMatch(gasBody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");

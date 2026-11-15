@@ -24,6 +24,14 @@ export function formatChange(v: number | null | undefined): string {
   return `${v < 0 ? "−" : "+"}${s}`;
 }
 
+/** "62% of its 255 days were at or below this price.": where a figure sits among the past year's days or weeks, in the same words on every card. Takes the server's share (`rank_in_year`, 0 to 100) and its count;
+ *  null when either is missing or cannot be right, so a card leaves the sentence out instead of printing "n/a". It describes what already happened: it is not a signal. */
+export function atOrBelow(rank: number | null | undefined, count: number | null | undefined, unit: "days" | "weeks", what: "price" | "level"): string | null {
+  if (rank == null || count == null || !Number.isFinite(rank) || rank < 0 || rank > 100 || !Number.isInteger(count) || count < 1) return null;
+  const one = count === 1;
+  return `${Math.round(rank)}% of its ${count} ${one ? unit.slice(0, -1) : unit} ${one ? "was" : "were"} at or below this ${what}.`;
+}
+
 export function directionOf(v: number | null | undefined): "up" | "down" | "flat" {
   if (v === null || v === undefined || !Number.isFinite(v) || v === 0) return "flat";
   return v > 0 ? "up" : "down";

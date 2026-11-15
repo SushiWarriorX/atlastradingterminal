@@ -1,6 +1,6 @@
 import React from "react";
 import { Linking, Pressable, View } from "react-native";
-import { ymdLabel } from "../lib/format";
+import { atOrBelow, ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useGasolinePrices } from "../state/queries";
 import { color, space } from "../theme";
@@ -16,6 +16,7 @@ export function GasolinePricesCard() {
   const q = useGasolinePrices();
   const d = q.data;
   const link = safeUrl(d?.url ?? null);
+  const where = atOrBelow(d?.rank_in_year, d?.weeks_in_year, "weeks", "price");
   return (
     <GCard style={{ padding: space.lg, gap: space.md }} testID="gasoline-card">
       <View><Txt variant="h2">Gasoline prices</Txt><Txt variant="tiny">Regular gasoline at the pump, weekly US average, from the US Energy Information Administration</Txt></View>
@@ -26,7 +27,7 @@ export function GasolinePricesCard() {
           <View style={{ gap: space.sm }} testID="gasoline-body">
             <Txt variant="label">Monday {ymdLabel(d.date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
             <Txt variant="small">Regular gasoline {usd3(d.price)} a gallon: {d.reading}.</Txt>
-            <Txt variant="tiny">{cents(d.change_1w)}, {vs(d.change_4w_pct, "four weeks ago")}, {vs(d.change_1y_pct, "a year ago")}. Past year: low {usd3(d.year_low)}, high {usd3(d.year_high)}.</Txt>
+            <Txt variant="tiny">{cents(d.change_1w)}, {vs(d.change_4w_pct, "four weeks ago")}, {vs(d.change_1y_pct, "a year ago")}. Past year: low {usd3(d.year_low)}, high {usd3(d.year_high)}{where ? `; ${where}` : "."}</Txt>
             <Divider />
             <Txt variant="small">That is {usd2(d.crude.per_barrel)} a barrel-equivalent (the price times 42 gallons) against WTI crude at {usd2(d.crude.wti)} a barrel: a gap of {usd2(d.crude.gap)} for refining, distribution, marketing and taxes.</Txt>
             <Txt variant="tiny">{d.note}</Txt>

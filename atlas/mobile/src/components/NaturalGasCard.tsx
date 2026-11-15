@@ -1,6 +1,6 @@
 import React from "react";
 import { Linking, Pressable, View } from "react-native";
-import { ymdLabel } from "../lib/format";
+import { atOrBelow, ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useNaturalGas } from "../state/queries";
 import { color, space } from "../theme";
@@ -15,6 +15,7 @@ export function NaturalGasCard() {
   const q = useNaturalGas();
   const d = q.data;
   const link = safeUrl(d?.url ?? null);
+  const where = atOrBelow(d?.rank_in_year, d?.days_in_year, "days", "price");
   return (
     <GCard style={{ padding: space.lg, gap: space.md }} testID="natgas-card">
       <View><Txt variant="h2">Natural gas prices</Txt><Txt variant="tiny">Henry Hub spot price, daily, from the US Energy Information Administration</Txt></View>
@@ -25,7 +26,7 @@ export function NaturalGasCard() {
           <View style={{ gap: space.sm }} testID="natgas-body">
             <Txt variant="label">Latest daily price, in dollars per million BTU</Txt>
             <Txt variant="small">Natural gas {usd(d.price)} per million BTU on {ymdLabel(d.date)}: {d.reading}.{d.freshness === "OVERDUE" ? " (overdue)" : ""}</Txt>
-            <Txt variant="tiny">{dayMove(d.change_1d)}, {vs(d.change_1m_pct, "a month ago")}, {vs(d.change_1y_pct, "a year ago")}. Past year: low {usd(d.year_low)}, high {usd(d.year_high)}; {d.rank_in_year ?? "n/a"}% of its {d.days_in_year ?? "n/a"} days were at or below this price.</Txt>
+            <Txt variant="tiny">{dayMove(d.change_1d)}, {vs(d.change_1m_pct, "a month ago")}, {vs(d.change_1y_pct, "a year ago")}. Past year: low {usd(d.year_low)}, high {usd(d.year_high)}{where ? `; ${where}` : "."}</Txt>
             <Divider />
             <Txt variant="small">Cross-check: the daily prices for {ymdLabel(d.monthly.month)} average {usd(d.monthly.average_of_daily)}; the EIA publishes {usd(d.monthly.published)} for the month.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
