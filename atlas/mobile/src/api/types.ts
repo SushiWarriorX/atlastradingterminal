@@ -439,6 +439,12 @@ export interface GasolinePricesData { available: boolean; reason?: string; demo:
 export interface NaturalGasData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; price?: number;
   change_1d?: number | null; change_1m_pct?: number | null; change_1y_pct?: number | null; year_low?: number; year_high?: number; days_in_year?: number; rank_in_year?: number; reading?: string;
   monthly?: { month: string; average_of_daily: number; published: number; days: number }; months_checked?: { month: string; average_of_daily: number; published: number; days: number }[]; history?: { date: string; price: number }[] }
+export interface MoneySupplyData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; level_billions?: number;
+  change_1m_pct?: number | null; change_3m_pct?: number | null; change_1y_pct?: number | null;
+  growth?: { months: number; slowest: { pct: number; month: string }; fastest: { pct: number; month: string }; share_slower_pct: number } | null;
+  seasonal?: { month: string; adjusted: number; unadjusted: number; pct: number | null };
+  weekly?: { newest: { month: string; weeks: number; average: number; unadjusted: number; diff_pct: number }; months_compared: number };
+  history?: { date: string; level: number }[] }
 export interface RealYieldRow { tenor: string; nominal_pct: number | null; real_pct: number | null; breakeven_pct: number; breakeven_change_1m_bp: number | null; breakeven_change_1y_bp: number | null; real_change_1y_bp: number | null }
 export interface RealYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   month_ago_date?: string | null; year_ago_date?: string | null; rows?: RealYieldRow[]; history?: { date: string; breakeven_10y_pct: number }[];

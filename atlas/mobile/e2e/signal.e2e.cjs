@@ -801,6 +801,23 @@ async function healthy(browser) {
       await page.locator(V("natgas-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07s-natgas");
 
+      await page.waitForSelector(V("m2-card"));
+      await page.waitForSelector(V("m2-body") + ", " + V("m2-unavailable") + ", " + V("m2-error"), { timeout: 45000 });
+      const m2Txt = await text(page);
+      match(m2Txt, /M2 money supply/); match(m2Txt, /Federal Reserve Board/); noMatch(m2Txt, FORECASTS, "the money supply card makes no forecasts");
+      if (await liveCard(page, "m2-body")) {
+        const m2Body = await inner(page, "m2-body");
+        const MONTH = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        match(m2Body, new RegExp(`M2 was \\$\\d{1,2}\\.\\d{2} trillion in ${MONTH}, (up \\d{1,2}\\.\\d% on a year ago|down \\d{1,2}\\.\\d% on a year ago|the same as a year ago)\\.`), "the level with its month and the yearly change");
+        match(m2Body, /(up \d{1,2}\.\d% on a month ago|down \d{1,2}\.\d% on a month ago|the same as a month ago), (up \d{1,2}\.\d% on three months ago|down \d{1,2}\.\d% on three months ago|the same as three months ago)\./, "the one- and three-month changes");
+        match(m2Body, new RegExp(`growth over a year ran from [-+]?\\d{1,2}\\.\\d% \\(${MONTH}\\) to [-+]?\\d{1,2}\\.\\d% \\(${MONTH}\\); \\d{1,3}% of those months grew slower than now\\.`), "the ten-year growth range is explained in months");
+        match(m2Body, new RegExp(`Cross-checks: seasonal adjustment moved ${MONTH}'s figure by [+-]?\\d\\.\\d% \\(\\$[\\d,]+\\.\\d billion adjusted against \\$[\\d,]+\\.\\d billion unadjusted\\), and its \\d weekly figures average \\$[\\d,]+\\.\\d billion`), "both cross-checks are shown");
+        match(m2Body, /Checked: every recent monthly value is between \$5 trillion and \$60 trillion/); match(m2Body, /not a market signal or a forecast/);
+        noMatch(m2Body, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("m2-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07t-m2");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);
