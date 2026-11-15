@@ -1,4 +1,5 @@
-"""btcquant research run: all 100 configurations are logged, the families that pass the admission gates become challengers with their own paper accounts, the run happens once per protocol version and data version,
+"""btcquant research run (as it was for protocol 1.2, the twelve families: every test pins the protocol version to 1.2, because a run covers only the families pre-registered under the version it runs under, and the version is 1.3 now; the
+last test runs the real 1.3 procedure on synthetic data): all 100 configurations are logged, the families that pass the admission gates become challengers with their own paper accounts, the run happens once per protocol version and data version,
 and the report says what it must and never claims an edge. Two synthetic datasets: a planted strong trend edge (seed 6, where seven trend-like families are admitted) and pure noise (seed 1, where none is)."""
 import dataclasses
 import json
@@ -16,12 +17,19 @@ from atlas_api.btcquant import research as RS
 from atlas_api.btcquant import strategies as S
 
 
+@pytest.fixture(autouse=True)
+def protocol_12(monkeypatch):
+    monkeypatch.setattr(C, "PROTOCOL_VERSION", "1.2")                                     # the version these tests describe
+
+
 @pytest.fixture(scope="module")
 def edge(tmp_path_factory):
     root = tmp_path_factory.mktemp("edge")
     prep = B.Prepared(K.synthetic_candles("planted_strong", 6))
     reg, book = R.Registry(root / "registry"), P.PaperBook(root / "state")
-    res = RS.run_research(prep, reg, book, root / "reports", n_shifts=40, now=lambda: "2026-11-15T12:00:00Z")
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(C, "PROTOCOL_VERSION", "1.2")
+        res = RS.run_research(prep, reg, book, root / "reports", n_shifts=40, now=lambda: "2026-11-15T12:00:00Z")
     return {"root": root, "prep": prep, "reg": reg, "book": book, "res": res}
 
 
@@ -30,7 +38,9 @@ def noise(tmp_path_factory):
     root = tmp_path_factory.mktemp("noise")
     prep = B.Prepared(K.synthetic_candles("null_mild", 1))
     reg, book = R.Registry(root / "registry"), P.PaperBook(root / "state")
-    res = RS.run_research(prep, reg, book, root / "reports", n_shifts=40)
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(C, "PROTOCOL_VERSION", "1.2")
+        res = RS.run_research(prep, reg, book, root / "reports", n_shifts=40)
     return {"root": root, "prep": prep, "reg": reg, "book": book, "res": res}
 
 
@@ -38,7 +48,7 @@ def test_every_configuration_is_logged_and_exactly_one_per_family_carries_the_ou
     cands = edge["reg"].candidates()
     assert len(cands) == 100 and len({c["spec_hash"] for c in cands}) == 100 and all(c["protocol"] == "1.2" and c["run"] == "research" and c["data"]["candles"] == 2875 for c in cands)
     decided = [c for c in cands if c["decision"] != "tested, not selected on TRAIN"]
-    assert len(decided) == 12 and {c["family"] for c in decided} == {f.id for f in S.RESEARCH} and all(c["decision"] in ("admitted", "rejected", "too_thin") for c in decided)
+    assert len(decided) == 12 and {c["family"] for c in decided} == set(RS.families_of("1.2")) and all(c["decision"] in ("admitted", "rejected", "too_thin") for c in decided)
     assert {c["family"]: c["decision"] for c in decided} == edge["res"]["outcomes"]
     assert all("information_ratio_validation" in c["results"] and "gates_failed" in c["results"] for c in decided)
     other = next(c for c in cands if c["decision"] == "tested, not selected on TRAIN")
@@ -70,9 +80,9 @@ def test_renamed_copies_among_the_admitted_are_counted_together(edge):
 
 def test_the_run_is_recorded_and_the_files_are_written(edge):
     runs = RS.previous_runs(edge["reg"])
-    assert len(runs) == 1 and runs[0]["protocol"] == "1.2" and runs[0]["ran_at"] == "2026-11-15T12:00:00Z" and runs[0]["data"]["sha256"] == RS.data_version(edge["prep"])["sha256"] and runs[0]["n_trials"] == 100
+    assert len(runs) == 1 and runs[0]["protocol"] == "1.2" and runs[0]["ran_at"] == "2026-11-15T12:00:00Z" and runs[0]["data"]["sha256"] == RS.data_version(edge["prep"])["sha256"] and runs[0]["n_trials"] == 101
     full = json.loads((edge["root"] / "reports" / "research_1.2.json").read_text())
-    assert full["evaluation"]["n_trials"] == 100 and set(full["evaluation"]["families"]) == {f.id for f in S.RESEARCH} and full["admitted"] == edge["res"]["admitted"] == runs[0]["admitted"]
+    assert full["evaluation"]["n_trials"] == 101 and set(full["evaluation"]["families"]) == set(RS.families_of("1.2")) and full["admitted"] == edge["res"]["admitted"] == runs[0]["admitted"]
     assert (edge["root"] / "reports" / "research_1.2.md").read_text() == RS.research_report({k: v for k, v in edge["res"].items() if k != "evaluation"}, edge["res"]["evaluation"])
 
 
@@ -80,7 +90,7 @@ def test_the_report_with_admissions_says_what_admission_means_and_claims_no_edge
     text = (edge["root"] / "reports" / "research_1.2.md").read_text()
     assert "**7 of 12 families were admitted as challengers**" in text and "not evidence of an edge" in text and "CALIBRATION.md" in text and "forward record of at least 90 days" in text
     assert "## Credibly profitable?\n\nNo." in text and "makes money" in text and text.count("Nothing here is evidence") == 1 and "not a recommendation" in text
-    for fid in (f.id for f in S.RESEARCH):
+    for fid in RS.families_of("1.2"):
         assert f"`{fid}`" in text
     assert "TEST period" in text and "Coinbase BTC-USD, not Binance" in text and "no order was placed anywhere" in text
     assert "independent idea" in text
@@ -101,17 +111,17 @@ def test_new_data_or_a_new_protocol_version_is_a_new_run(edge, tmp_path, monkeyp
     monkeypatch.setattr(RS.V, "evaluate_all", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("reached the evaluation: not refused")))
     with pytest.raises(RuntimeError, match="reached the evaluation"):
         RS.run_research(prep2, reg2, None, None)                                      # different data: not refused
-    monkeypatch.setattr(C, "PROTOCOL_VERSION", "1.3")
-    with pytest.raises(RS.NothingToRun, match="no family was pre-registered under protocol 1.3"):
+    monkeypatch.setattr(C, "PROTOCOL_VERSION", "1.4")
+    with pytest.raises(RS.NothingToRun, match="no family was pre-registered under protocol 1.4"):
         RS.run_research(edge["prep"], reg2, None, None)                                # same data, other protocol: not refused as a repeat, but a version that added no family has nothing to run
-    toy = dataclasses.replace(S.FAMILIES["tsmom"], id="toy", grid={"L": [20, 45]}, since="1.3")
+    toy = dataclasses.replace(S.FAMILIES["tsmom"], id="toy", grid={"L": [20, 45]}, since="1.4")
     monkeypatch.setitem(S.FAMILIES, "toy", toy)
     monkeypatch.setattr(S, "RESEARCH", [*S.RESEARCH, toy])
     seen = {}
     monkeypatch.setattr(RS.V, "evaluate_all", lambda prep, **k: seen.update(k) or (_ for _ in ()).throw(RuntimeError("reached the evaluation: not refused")))
     with pytest.raises(RuntimeError, match="reached the evaluation"):
-        RS.run_research(edge["prep"], reg2, None, None)                                # a family registered under 1.3: not refused
-    assert seen["families"] == ["toy"]                                                  # and only that family is evaluated: the twelve earlier results stand
+        RS.run_research(edge["prep"], reg2, None, None)                                # a family registered under 1.4: not refused
+    assert seen["families"] == ["toy"]                                                  # and only that family is evaluated: the earlier results stand
 
 
 def test_with_no_admissions_nothing_is_opened_and_the_report_says_so(noise):
@@ -156,7 +166,7 @@ def test_the_command_line_runs_once_and_refuses_a_repeat(tmp_path, monkeypatch, 
     monkeypatch.setattr(R.Registry, "__init__", lambda self, root=None, now=R._now: (setattr(self, "root", tmp_path / "registry"), setattr(self, "_now", now))[0])
     monkeypatch.setattr(P.PaperBook, "__init__", lambda self, root=None, now=P._now: (setattr(self, "root", tmp_path / "state"), setattr(self, "_now", now))[0])
     real = RS.V.evaluate_all
-    monkeypatch.setattr(RS.V, "evaluate_all", lambda prep, **k: real(prep, n_shifts=20))
+    monkeypatch.setattr(RS.V, "evaluate_all", lambda prep, **k: real(prep, n_shifts=20, families=k.get("families")))
     assert RS.main(["research"]) == 0
     out = capsys.readouterr().out
     assert "research run done: protocol 1.2, data to 2026-11-14" in out and "of 12 families admitted" in out and out.count("\n") == 13
@@ -165,3 +175,24 @@ def test_the_command_line_runs_once_and_refuses_a_repeat(tmp_path, monkeypatch, 
     (tmp_path / "data" / "btcusd_1d.csv").write_bytes(b"")
     D.save(tmp_path / "data" / "btcusd_1d.csv", cs[:100])
     assert RS.main(["research"]) == 1 and "stopped" in capsys.readouterr().out
+
+
+def test_protocol_1_3_runs_the_monday_family_alone_end_to_end(tmp_path, monkeypatch):
+    monkeypatch.setattr(C, "PROTOCOL_VERSION", "1.3")                                                  # the real current version: only the family pre-registered under it is evaluated
+    prep = B.Prepared(K.synthetic_candles("null_mild", 3))
+    reg, book = R.Registry(tmp_path / "registry"), P.PaperBook(tmp_path / "state")
+    res = RS.run_research(prep, reg, book, tmp_path / "reports", n_shifts=40, now=lambda: "2026-11-15T21:00:00Z")
+    assert res["protocol"] == "1.3" and res["families"] == ["monday"] and list(res["outcomes"]) == ["monday"] and res["n_trials"] == 101 == S.n_configurations()
+    cands = reg.candidates()
+    assert len(cands) == 1 and cands[0]["family"] == "monday" and cands[0]["params"] == {"day": 0} and cands[0]["protocol"] == "1.3" and cands[0]["decision"] == res["outcomes"]["monday"]
+    ev = res["evaluation"]["families"]["monday"]
+    assert ev["chosen"] == {"day": 0} and ev["configurations"] == 1 and ev["neighbours"] == [] and ev["stability"]["single"] is True and ev["spec_hash"] == S.spec_hash("monday", {"day": 0})
+    assert ev["admission"]["gates"]["A1"]["value"] > 200 and "position changes" in ev["admission"]["gates"]["A1"]["need"]            # weight mode: about two fills a week
+    text = (tmp_path / "reports" / "research_1.3.md").read_text()
+    assert text.startswith("# Research run, protocol 1.3,") and "covers the 1 family pre-registered under protocol 1.3 (`monday`)" in text and "n/a (one setting)" in text
+    assert "The number of trials behind the deflated Sharpe ratio is 101" in text and "| `monday` |" in text and "| `tsmom` |" not in text
+    assert (tmp_path / "reports" / "research_1.3.json").exists() and len(RS.previous_runs(reg)) == 1
+    if res["admitted"]:
+        assert book.exists(RS.account_id("monday", {"day": 0})) and "1 of 1 family was admitted as a challenger" in text
+    else:
+        assert book.ids() == [] and "**No family was admitted.**" in text

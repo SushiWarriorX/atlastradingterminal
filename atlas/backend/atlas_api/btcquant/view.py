@@ -15,13 +15,15 @@ SHOWN_EVENTS = ("order", "fill", "reject", "stop_hit", "breaker", "breaker_reset
 PORTFOLIO_LABEL = "Main portfolio ($100,000, champions only)"
 BENCHMARK_LABELS = {"buy_hold": "Buy and hold Bitcoin", "cash": "Cash only"}
 SHORT = {"sma_cross": "SMA", "donchian": "DON", "ma_atr_trend": "ATR", "tsmom": "TSM", "rsi_momentum": "RSM", "mom_vol": "MOM", "bollinger_mr": "BOL", "rsi_oversold": "RSO", "vol_breakout": "VBO",
-         "regime_switch": "REG", "vol_target": "VTG", "sma_filter": "FLT", "buy_hold": "BTC", "cash": "USD", "portfolio": "MP"}      # the letters on a strategy's round logo
+         "regime_switch": "REG", "vol_target": "VTG", "sma_filter": "FLT", "monday": "MON", "buy_hold": "BTC", "cash": "USD", "portfolio": "MP"}      # the letters on a strategy's round logo
 OUTCOME_WORDS = {"admitted": "Admitted", "rejected": "Rejected", "too_thin": "Too few trades to judge"}
 GATE_WORDS = {"A1": "it made too few trades to judge (at least 10 are needed)",
               "A2": "it did not beat holding the same average amount of Bitcoin, in both 2020-2022 and 2023-2024",
               "A3": "its timing was no better than random timing",
               "A4": "its result was not stable when its settings were nudged",
               "A5": "it stopped working when the costs were doubled"}
+GATE_WORDS_ONE_SETTING = {"A4": "its 2020-2022 Sharpe ratio was not above zero (it has one setting, so there was nothing to nudge)"}      # gate A4 for a rule with a single configuration (protocol v1.3)
+WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 CURVE_STEP_DAYS = 7
 CURVE_NOTE = ("Each line replays one rule on past prices as one continuous run from 2020-01-01 with $10,000, with the same fees and slippage as the paper accounts. The settings were chosen on this same history, "
               "so a backtest looks better than anything that can be expected from now on. 2025 onward is not a clean test either: earlier experiments in this project already looked at it.")
@@ -46,7 +48,7 @@ def family_name(account: dict) -> str:
 
 
 def params_text(account: dict) -> str:
-    return ", ".join(f"{PARAM_WORDS.get(k, k)} {v}" for k, v in account["params"].items())
+    return ", ".join(WEEKDAYS[v] if k == "day" and isinstance(v, int) and 0 <= v <= 6 else f"{PARAM_WORDS.get(k, k)} {v}" for k, v in account["params"].items())
 
 
 def money(x) -> str:
@@ -119,7 +121,8 @@ def verdicts(root: Path, dash: dict) -> dict:
             continue
         for fam, ev in fams.items():
             if fam in out:
-                out[fam].update({"why": [GATE_WORDS.get(g, g) for g in ev["admission"]["failed"]], "train": _period(ev.get("train")), "validation": _period(ev.get("validation")),
+                words = {**GATE_WORDS, **(GATE_WORDS_ONE_SETTING if (ev.get("stability") or {}).get("single") else {})}
+                out[fam].update({"why": [words.get(g, g) for g in ev["admission"]["failed"]], "train": _period(ev.get("train")), "validation": _period(ev.get("validation")),
                                  "timing_p": (ev.get("validation_timing") or {}).get("p")})
     return out
 

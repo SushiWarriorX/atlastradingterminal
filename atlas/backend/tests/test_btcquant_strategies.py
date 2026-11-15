@@ -5,10 +5,12 @@ Logic tests use a stand-in for the candle container that hands over only the ind
 """
 import json
 import re
+from datetime import datetime, timezone
 
 import numpy as np
 import pytest
 
+from atlas_api.btcquant import backtest as B
 from atlas_api.btcquant import config as C
 from atlas_api.btcquant import strategies as S
 from atlas_api.btcquant.account import Sig, make_account
@@ -61,13 +63,13 @@ def walk(n, seed, start=20_000.0, vol=0.03):
 # ---- the grid ----
 
 PROTOCOL_COUNTS = {"sma_cross": 15, "donchian": 4, "ma_atr_trend": 9, "tsmom": 5, "rsi_momentum": 18, "mom_vol": 9, "bollinger_mr": 6,
-                   "rsi_oversold": 12, "vol_breakout": 9, "regime_switch": 3, "vol_target": 6, "sma_filter": 4}
+                   "rsi_oversold": 12, "vol_breakout": 9, "regime_switch": 3, "vol_target": 6, "sma_filter": 4, "monday": 1}
 
 
-def test_the_grids_hold_exactly_the_protocol_counts_and_one_hundred_in_all():
+def test_the_grids_hold_exactly_the_protocol_counts_and_one_hundred_and_one_in_all():
     assert {f.id: len(S.configs(f)) for f in S.RESEARCH} == PROTOCOL_COUNTS
-    assert S.n_configurations() == 100 == sum(PROTOCOL_COUNTS.values())
-    assert [f.id for f in S.RESEARCH] == list(PROTOCOL_COUNTS)                                  # twelve families in protocol order
+    assert S.n_configurations() == 101 == sum(PROTOCOL_COUNTS.values()) == 100 + len(S.configs(S.FAMILIES["monday"]))          # the twelve families of 1.2 hold 100 of them, the one family of 1.3 holds one
+    assert [f.id for f in S.RESEARCH] == list(PROTOCOL_COUNTS)                                  # thirteen families in protocol order
     assert [len(S.configs(S.FAMILIES[b])) for b in ("buy_hold", "cash")] == [1, 1]
 
 
@@ -367,6 +369,83 @@ def test_sma_filter_is_fully_invested_only_while_the_close_is_strictly_above_its
     assert list(S.signals("sma_filter", candles([10, 10, 10, 10]), {"L": 3}).weight) == [0.0] * 4          # equal is not above
 
 
+# ---- family 13: monday (a calendar rule, weight mode; pre-registered under protocol 1.3) ----
+
+def utc(y, m, d, h=0, mi=0, sec=0):
+    return int(datetime(y, m, d, h, mi, sec, tzinfo=timezone.utc).timestamp())
+
+
+def flat_days(first=(2026, 11, 9), n=14, price=100.0):
+    """n flat daily candles opening at 00:00 UTC, starting on `first` (a Monday): 2026-11-09 is a Monday and 2026-11-15 a Sunday."""
+    t0 = utc(*first)
+    return [(t0 + i * DAY, price, price, price, price, 1.0) for i in range(n)]
+
+
+def true_weekday(t):
+    return datetime.fromtimestamp(t, timezone.utc).weekday()                         # the calendar's own answer: Monday is 0
+
+
+def test_the_weekday_number_is_monday_zero_counted_from_the_utc_open_time_of_the_candle():
+    ts = [utc(1970, 1, 1), utc(2026, 11, 9), utc(2026, 11, 10), utc(2026, 11, 14), utc(2026, 11, 15), utc(2000, 2, 29), utc(2024, 2, 29)]
+    assert S.weekday(ts).tolist() == [3, 0, 1, 5, 6, 1, 3] == [true_weekday(t) for t in ts]                        # 1970-01-01 was a Thursday; 2000-02-29 a Tuesday; 2024-02-29 a Thursday
+    assert S.weekday([utc(2026, 11, 9) - 1]).tolist() == [6] and S.weekday([utc(2026, 11, 9, 23, 59, 59)]).tolist() == [0]      # the day changes at 00:00:00 UTC, not a second earlier
+
+
+def test_monday_wants_all_of_the_equity_from_the_open_after_each_sunday_close_and_none_of_it_otherwise():
+    cs = flat_days()
+    sig = S.signals("monday", cs, {"day": 0})
+    assert list(sig.weight) == [0.0] * 6 + [1.0] + [0.0] * 6 + [1.0] and sig.state is None and sig.stop is None
+    for i in (6, 13):
+        assert true_weekday(cs[i][0]) == 6                                                                             # the close of a Sunday candle ...
+    n_held = [i + 1 for i in range(len(cs) - 1) if sig.weight[i] == 1.0]
+    assert n_held == [7] and true_weekday(cs[7][0]) == 0                                                              # ... is when it buys, so the position is held through the Monday candle
+
+
+def test_the_held_weekday_is_a_setting_and_the_day_before_it_wraps_around_the_week():
+    cs = flat_days(n=21)
+    for day in range(7):
+        w = S.signals("monday", cs, {"day": day}).weight
+        want = [1.0 if (true_weekday(t) + 1) % 7 == day else 0.0 for t, *_ in cs]                                     # on the close of the day before the held one
+        assert list(w) == want, day
+        assert sum(want) == 3                                                                                          # once a week
+    assert S.signals("monday", cs, {"day": 6}).weight[5] == 1.0 and S.signals("monday", cs, {"day": 0}).weight[6] == 1.0     # holding Sunday: buy at the close of Saturday (index 5); holding Monday: close of Sunday (index 6)
+
+
+def test_monday_needs_no_warm_up_and_reads_only_the_open_time_of_the_candle():
+    assert list(S.signals("monday", flat_days(first=(2026, 11, 15), n=2), {"day": 0}).weight) == [1.0, 0.0]            # the first candle may already be a Sunday
+    assert list(S.signals("monday", flat_days(n=1), {"day": 0}).weight) == [0.0]
+    cs = flat_days(n=30)
+    wild = [(t, o * 7, h * 9, l * 0.1, c * 3, v) for t, o, h, l, c, v in cs]
+    assert list(S.signals("monday", wild, {"day": 0}).weight) == list(S.signals("monday", cs, {"day": 0}).weight)       # prices play no part in it
+
+
+def test_monday_is_registered_as_family_13_in_weight_mode_with_one_configuration_and_no_neighbours():
+    fam = S.FAMILIES["monday"]
+    assert (fam.kind, fam.since, fam.trail, fam.category) == ("weight", "1.3", False, "calendar")
+    assert S.configs(fam) == [{"day": 0}] and S.neighbours(fam, {"day": 0}) == []
+    assert [f.id for f in S.RESEARCH][-1] == "monday" and S.spec("monday", {"day": 0})["protocol"] == "1.3" and S.spec("tsmom", {"L": 30})["protocol"] == "1.2"
+    assert S.spec_hash("monday", {"day": 0}) != S.spec_hash("monday", {"day": 1})
+
+
+def test_monday_explains_a_signal_with_the_weekday_of_the_candle_and_the_held_day():
+    cs = flat_days()
+    b = S.Bars(cs)
+    assert S.FAMILIES["monday"].explain(b, {"day": 0}, 6) == {"close": 100.0, "candle_weekday": 6, "held_weekday": 0}
+    assert S.FAMILIES["monday"].explain(b, {"day": 0}, 2) == {"close": 100.0, "candle_weekday": 2, "held_weekday": 0}
+
+
+def test_monday_through_the_account_engine_a_flat_price_loses_exactly_the_round_trip_costs_each_week():
+    cs = flat_days(n=35)                                                                          # Sundays at indices 6, 13, 20, 27 and 34
+    prep = B.Prepared(cs)
+    r = B.run(prep, "monday", {"day": 0}, 1, 34, keep_account=True)
+    q = (1 - C.SLIPPAGE) * (1 - C.FEE) / ((1 + C.SLIPPAGE) * (1 + C.FEE))                       # one buy and one sell of the whole account at a flat price: the fee and the slippage on each side
+    assert r.metrics["fills"] == 8                                                                  # four round trips; the fifth Sunday's order is still pending when the data end
+    assert r.metrics["breaker_trips"] == 0 and r.account.curve[-1][1] == pytest.approx(C.START_EQUITY_STRATEGY * q ** 4, rel=1e-9)
+    held = [j + 1 for j, e in enumerate(r.exposure) if e > 0.5]                                     # the candle index of each day the account is invested through (run index j is candle j + 1)
+    assert held == [7, 14, 21, 28] and all(true_weekday(cs[i][0]) == 0 for i in held)               # fully invested through each Monday and through no other day
+    assert r.exposure[6] == pytest.approx(1.0, rel=1e-6)
+
+
 # ---- benchmarks ----
 
 def test_the_benchmarks_carry_no_signal():
@@ -393,7 +472,7 @@ def test_every_configuration_returns_signals_of_the_right_kind_and_length():
 
 def test_stop_based_families_declare_trailing_stops_only_where_the_note_says_so():
     assert sorted(f.id for f in S.RESEARCH if f.trail) == ["donchian", "ma_atr_trend"]
-    assert {f.id for f in S.RESEARCH if f.kind == "weight"} == {"vol_target", "sma_filter"}
+    assert {f.id for f in S.RESEARCH if f.kind == "weight"} == {"vol_target", "sma_filter", "monday"}
 
 
 def test_each_family_explains_a_signal_in_numbers_that_can_be_written_to_the_ledger():

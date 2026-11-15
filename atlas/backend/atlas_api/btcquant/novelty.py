@@ -29,9 +29,7 @@ from . import strategies as S
 DUP_CORRELATION = R.DUP_CORRELATION
 
 
-def weekday(t) -> np.ndarray:
-    """0 = Monday ... 6 = Sunday, from the candle's UTC open time (1970-01-01 was a Thursday)."""
-    return ((np.asarray(t, dtype=np.int64) // C.DAY) + 3) % 7
+weekday = S.weekday                                     # 0 = Monday ... 6 = Sunday from the candle's UTC open time (the one definition lives with the family that uses it)
 
 
 def _last_any(x: np.ndarray, k: int) -> np.ndarray:
@@ -141,11 +139,15 @@ def days(prep: B.Prepared) -> np.ndarray:
     return np.concatenate([np.arange(a0, a1 + 1), np.arange(b0, b1 + 1)])
 
 
+SCREENED_AGAINST = "1.2"                               # the screen compares with the twelve families (100 configurations) of protocol 1.2 that every queued candidate was written against; a family added later is not in the comparison,
+                                                       # so the recorded screen can be reproduced (and a candidate that has become a family is not compared with itself)
+
+
 def existing(prep: B.Prepared) -> dict:
-    """The series of every configuration of every stop or weight family: {(family id, param key): float array over all candles}. Stop families give their ON/OFF state, weight families their target weight."""
+    """The series of every configuration of every stop or weight family pre-registered under protocol 1.2: {(family id, param key): float array over all candles}. Stop families give their ON/OFF state, weight families their target weight."""
     out = {}
     for fam in S.FAMILIES.values():
-        if fam.kind not in ("stop", "weight"):
+        if fam.kind not in ("stop", "weight") or fam.since != SCREENED_AGAINST:
             continue
         for p in S.configs(fam):
             sig = prep.signals(fam, p)

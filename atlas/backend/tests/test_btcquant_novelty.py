@@ -204,10 +204,10 @@ def test_the_days_are_the_train_days_followed_by_the_validation_days(prep):
 
 def test_existing_series_are_all_hundred_configurations_of_the_protocol(prep):
     ex = N.existing(prep)
-    assert len(ex) == 100 == sum(len(S.configs(f)) for f in S.FAMILIES.values() if f.kind in ("stop", "weight"))
+    assert len(ex) == 100 == sum(len(S.configs(f)) for f in S.FAMILIES.values() if f.kind in ("stop", "weight") and f.since == "1.2")
     assert all(len(s) == prep.bars.n for s in ex.values())
     fams = {k[0] for k in ex}
-    assert fams == {f.id for f in S.FAMILIES.values() if f.kind in ("stop", "weight")} and len(fams) == 12
+    assert fams == {f.id for f in S.FAMILIES.values() if f.kind in ("stop", "weight") and f.since == "1.2"} and len(fams) == 12 and "monday" not in fams       # the twelve it was written against, not the candidate that has since become a family
     for (fid, _), s in ex.items():
         assert s.min() >= 0.0 and s.max() <= 1.0 and (S.FAMILIES[fid].kind == "weight" or set(np.unique(s)) <= {0.0, 1.0})
     assert ex[("sma_cross", B.param_key({"fast": 10, "slow": 50}))].astype(bool).tolist() == S.FAMILIES["sma_cross"].build(prep.bars, {"fast": 10, "slow": 50}).state.tolist()

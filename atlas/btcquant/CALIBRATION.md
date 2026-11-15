@@ -94,6 +94,55 @@ Share of (dataset, family) pairs that pass each gate, for the version at the tim
 - The power for realistic effect sizes. A trend edge that is real but small (an information ratio of 0.3 to 0.5 a year) is far below what 5 to 7 years of daily data can establish; the weak world is the closest to that.
 - The behaviour on data with other features (a bear market without drift, volatility regimes, gaps). More worlds can be added; every change to the gates would be a new protocol version.
 
+## Thirteen families (added 2026-11-15 under protocol 1.3, before the thirteenth family was run on the real data)
+
+The protocol's first lesson is to test every gate for feasibility before a run. For a calendar rule, `monday` (family 13, `strategies/monday.md`), two gates were doubtful on paper: the stability gate A4 needs neighbours (a weekday has none; see amendment v1.3) and the random-timing test of A3 shifts the rule's schedule by whole days (for a weekly schedule, one shift in seven puts the rule back on the same weekday). Both were checked on synthetic data, before the real data was touched, by running the new family alone through selection and the admission gates (`calibration.run_family_world`; about 0.1 s a dataset). Nothing here reads the real candles.
+
+Two new kinds of world: the no-skill worlds above (no weekday effect at all), and three worlds with **a planted Monday premium** (independent daily returns, drift 0.04%, volatility 3.5%, plus 0.3%, 0.6% or 1.0% on every Monday candle). A Monday-only holder pays about 0.30% of the account in fees and slippage every week (0.60% at the doubled costs of gate A5), so 0.3% is exactly the cost of a round trip and 0.6% the level of A5.
+
+Share of datasets in which `monday` alone was admitted (95% interval): the first 100 seeds and the 25 fresh seeds are the ones used for the twelve-family table above; the 1,000 are seeds 1001 to 2000.
+
+| world | first 100 seeds | fresh 25 seeds | 1,000 further datasets |
+| --- | --- | --- | --- |
+| no skill, mild drift | 1 of 100 = 1.0% | 0 of 25 | **1 of 1,000 = 0.1% (0.0% to 0.6%)** |
+| no skill, strong drift | 1 of 100 = 1.0% | 0 of 25 | **2 of 1,000 = 0.2% (0.1% to 0.7%)** |
+| Monday premium 0.3% | 10 of 100 = 10.0% | 1 of 25 | **57 of 1,000 = 5.7% (4.4% to 7.3%)** |
+| Monday premium 0.6% | 36 of 100 = 36.0% | 9 of 25 | **294 of 1,000 = 29.4% (26.7% to 32.3%)** |
+| Monday premium 1.0% | 68 of 100 = 68.0% | 17 of 25 | **708 of 1,000 = 70.8% (67.9% to 73.5%)** |
+
+What the gates did on the 1,000 datasets of each world (share of datasets in which the gate failed; A1 never failed, about 450 to 500 position changes on TRAIN plus VALIDATION):
+
+| world | A2 (information ratio, both periods) | A3 (timing p at most 0.05) | A4 (own TRAIN Sharpe above zero) | A5 (doubled costs) | share with timing p at most 0.05 |
+| --- | --- | --- | --- | --- | --- |
+| no skill, mild drift | 97% | 95% | 76% | 98% | 4.9% |
+| no skill, strong drift | 98% | 95% | 64% | 95% | 4.6% |
+| Monday premium 0.3% | 80% | 83% | 37% | 82% | 17.2% |
+| Monday premium 0.6% | 42% | 61% | 8% | 33% | 39.3% |
+| Monday premium 1.0% | 5% | 29% | 0% | 1% | 71.4% |
+
+What this says.
+- **The timing test is not broken by the weekly schedule.** On pure noise its p-value was at most 0.05 in 4.9% and 4.6% of datasets, as it should be, even though its null contains near-copies of the rule. The near-copies make it harder to pass for a real effect, not easier for a false one.
+- **A2 and A5 are mostly cost hurdles for this rule.** With no weekday effect the rule loses its weekly costs against a hold that pays almost none, so A2 and A5 fail in 95% to 98% of datasets; with a premium of 0.3% (equal to the cost of a round trip) they still fail in about 80%.
+- **The false-admission rate of the new family is very low (0.1% to 0.2%) and its power is limited.** A premium of 0.6% a day was found in about three datasets in ten and one of 1.0% in about seven in ten; one of 0.3% almost never. The procedure cannot see a Monday premium much below 0.6% a day, and it could not be kept after costs anyway. So **a rejection of `monday` will mean that no premium of about 0.6% a day or more was present, not that there is no Monday effect**, and an admission would be an unusual event by luck on this kind of data (about 1 in 700), though real prices have fat tails and volatility clusters that these worlds do not.
+
+The twelve-family table above is unchanged by the thirteenth family, which is evaluated on its own. The share of no-skill datasets in which at least one of the thirteen families is admitted is at most the old share plus the new family's admissions on the same seeds (an upper bound, because the per-dataset records of the twelve were not kept):
+
+| world | twelve families, first 100 seeds | thirteen, at most | twelve, pooled 125 | thirteen, at most |
+| --- | --- | --- | --- | --- |
+| no skill, mild drift | 12 of 100 | 13 of 100 | 17 of 125 = 13.6% | 18 of 125 = 14.4% |
+| no skill, strong drift | 16 of 100 | 17 of 100 | 23 of 125 = 18.4% | 24 of 125 = 19.2% |
+
+Still about one no-skill dataset in six. These are independent normal returns with a premium on one weekday: real Bitcoin has fat tails, volatility clusters and structural breaks, so the real false-admission rate of any family is unknown.
+
+Reproduce (about 2 minutes a world on one core):
+
+```bash
+cd atlas/backend
+PYTHONDONTWRITEBYTECODE=1 python -m atlas_api.btcquant.calibration planted_monday_mid 1001 2001 /tmp/monday_mid.json monday
+```
+
+The worlds are `null_mild`, `null_drift`, `planted_monday_small`, `planted_monday_mid` and `planted_monday_big`; the records are not committed.
+
 ## Reproduce
 
 ```bash

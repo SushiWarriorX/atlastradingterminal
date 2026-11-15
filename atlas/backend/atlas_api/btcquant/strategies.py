@@ -1,4 +1,4 @@
-"""The twelve strategy families of the protocol (section 5) plus the two benchmarks, as pure functions of completed daily candles.
+"""The thirteen strategy families of the protocol (section 5: twelve pre-registered under 1.2, one under 1.3) plus the two benchmarks, as pure functions of completed daily candles.
 
 A family turns candles and one parameter set into SIGNALS for every candle: at the close of candle i it says
   - state[i]  (stop kinds): True if the strategy wants to be long from the next open;
@@ -6,7 +6,7 @@ A family turns candles and one parameter set into SIGNALS for every candle: at t
   - stop[i]   (stop kinds): the protective stop level to use if it enters now (and, for trailing stops, the candidate level to ratchet up to).
 Every value at index i uses candles 0..i only; a test changes later candles and checks that nothing at or before i moves. Warm-up values are False / 0 / NaN.
 Families that "stay ON until stopped" (Donchian and the ATR trend filter) replay their own trailing stop on the candles to know when they were stopped, so the state they report matches what the account engine does with the same stop.
-Grids are fixed by the protocol: 100 configurations in all, which is the N used for multiple testing.
+Grids are fixed by the protocol: 101 configurations in all (100 under 1.2, one under 1.3), which is the N used for multiple testing.
 """
 from __future__ import annotations
 
@@ -281,6 +281,22 @@ def _sma_filter_x(b, p, i):
     return {"close": _f(b.c[i]), "sma": _f(b.ind("sma", int(p["L"]))[i])}
 
 
+# ---- 13. monday (weight mode; a calendar rule, pre-registered under protocol 1.3) ----
+def weekday(t) -> np.ndarray:
+    """0 = Monday ... 6 = Sunday, from the candle's UTC open time (the epoch day 0, 1970-01-01, was a Thursday). Used by the calendar rule and by the novelty screen."""
+    return ((np.asarray(t, dtype=np.int64) // C.DAY) + 3) % 7
+
+
+def _monday(b, p):
+    """Fully invested through the candle of one weekday (`day`, 0 = Monday) and in cash otherwise. The rule says so at the close of the candle BEFORE that day, so the order fills at the open of the held day and the
+    opposite order, given at the close of the held day, fills at the open after it. It reads nothing but the candle's own open time."""
+    return Signals(weight=np.where(weekday(b.t) == (int(p["day"]) - 1) % 7, 1.0, 0.0))
+
+
+def _monday_x(b, p, i):
+    return {"close": _f(b.c[i]), "candle_weekday": float(weekday(b.t[i:i + 1])[0]), "held_weekday": float(p["day"])}           # numbers only (floats), as the ledger holds them; 0 = Monday
+
+
 # ---- benchmarks ----
 def _none(b, p):
     return Signals()
@@ -299,6 +315,7 @@ FAMILIES: dict[str, Family] = {f.id: f for f in [
     Family("regime_switch", "Trend versus ranging regime switch", "regime", "stop", False, {"adx": [20, 25, 30]}, _regime, _regime_x),
     Family("vol_target", "Volatility-targeted exposure", "risk_managed", "weight", False, {"target": [0.30, 0.40, 0.50], "window": [20, 40]}, _vol_target, _vol_target_x),
     Family("sma_filter", "Simple trend filter exposure", "risk_managed", "weight", False, {"L": [100, 150, 200, 250]}, _sma_filter, _sma_filter_x),
+    Family("monday", "Day-of-week holding", "calendar", "weight", False, {"day": [0]}, _monday, _monday_x, since="1.3"),
     Family("buy_hold", "Buy and hold (benchmark)", "benchmark", "hold", False, {}, _none, lambda b, p, i: {}),
     Family("cash", "Cash only (benchmark)", "benchmark", "cash", False, {}, _none, lambda b, p, i: {}),
 ]}

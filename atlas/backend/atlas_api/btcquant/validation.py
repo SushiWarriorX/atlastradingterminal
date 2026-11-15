@@ -63,10 +63,14 @@ def select(runs: dict, fam: S.Family) -> dict:
 
 
 def stability(sharpe: dict, fam: S.Family, params: dict) -> dict:
-    """Gate A4. Applies only when the chosen configuration's Sharpe is positive; otherwise gate A2 has already failed."""
+    """Gate A4. Applies only when the chosen configuration's Sharpe is positive; otherwise gate A2 has already failed. A family with a single configuration has no neighbours (v1.3): see below."""
     own = sharpe[B.param_key(params)]
     nbs = [B.param_key(q) for q in S.neighbours(fam, params)]
-    if own <= 0 or not nbs:
+    if not nbs:
+        # v1.3: a family with a single configuration has no neighbourhood to be stable in and nothing was chosen on TRAIN, so there is no isolated peak to guard against. The gate keeps the part it can ask of
+        # one number: the configuration's own TRAIN Sharpe must be above zero. (No family before 1.3 was in this position: every one has neighbours.)
+        return {"applicable": False, "passes": bool(own > 0), "neighbours": 0, "reaching": 0, "share": None, "threshold": None, "single": True}
+    if own <= 0:
         return {"applicable": False, "passes": False, "neighbours": len(nbs), "reaching": 0, "share": None, "threshold": None}
     thr = A4_NEIGHBOUR_KEEP * own
     reaching = sum(1 for k in nbs if sharpe[k] >= thr)

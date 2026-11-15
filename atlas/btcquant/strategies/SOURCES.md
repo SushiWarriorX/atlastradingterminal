@@ -42,6 +42,17 @@ Written 2026-11-15, before any family was run.
 | Connors and Alvarez (2009), *Short Term Trading Strategies That Work*, TradingMarkets Publishing Group | title and publisher seen; year given as 2008 or 2009 in different places; rules as given in secondary summaries, book not read | Context for rsi_oversold only (this family is NOT their system) |
 | Williams (1999), *Long-term secrets to short-term trading*; Crabel (1990), *Day trading with short term price patterns and opening range breakout* | titles seen; **Crabel's exact title varies between sources; publishers NOT checked**; books not read | Context for vol_breakout only |
 
+## Calendar effects (family 13, `monday`; added 2026-11-15 under protocol 1.3, before that family was run)
+
+Status of every row: abstracts and summaries returned by a web search on 2026-11-15; **none of these was read in full, the journal volumes and pages are NOT confirmed, and the size of the Monday premium each reports is not known to the builder.**
+
+| Source | Record | What the authors report | Market and period | Used for | What it does NOT show |
+| --- | --- | --- | --- | --- | --- |
+| Caporale and Plastun (2017), CESifo Working Paper 6716 (title not confirmed) | working paper number seen in a search result; a working paper, not peer reviewed as far as seen | Monday returns higher in Bitcoin; a trading simulation reported to show profit opportunities | Bitcoin, sample not recorded (before 2018, as the paper is from 2017) | monday: the hypothesis | anything after 2017; costs as high as ours; that the simulation's profit survives fees and slippage |
+| Aharon and Qadan (2019), "Bitcoin and the day-of-the-week effect", Finance Research Letters (volume and pages NOT confirmed) | title and journal seen in a search summary | Day-of-the-week effects in Bitcoin returns and volatility | daily data, 2010 to 2017 | monday: the hypothesis | anything after 2017; a tradable net profit |
+| Kahraman and Kök (2024) (journal and title NOT confirmed) | seen only as a summary | A Monday effect in Bitcoin and Ether, and a rule that beat random investment | not recorded | monday: the hypothesis | that the rule beat holding or survives costs; the sample |
+| **Against:** Baur et al. (title, journal and year NOT confirmed) | seen only as a summary | Day-of-week effects on seven exchanges that varied over time with no persistent pattern; Bitcoin judged weak-form efficient | seven exchanges, sample not recorded | monday: the reason the effect may not persist | that no Monday effect exists in 2020 to 2024 |
+
 ## What is not relied on
 
 Blogs, trading-platform script pages, newsletters and forum posts that appeared in searches were not used for any rule, number or claim. Where a secondary summary is mentioned above it is named as one.
@@ -52,4 +63,4 @@ Blogs, trading-platform script pages, newsletters and forum posts that appeared 
 
 ## Still to check (open items)
 
-Faber (2007) volume, issue and pages; Faith (2007) publisher; Williams (1999) and Crabel (1990) publishers and titles; Connors and Alvarez year; Kim, Tse and Wald journal details; the deflated Sharpe formula against the paper's text; the sample periods of Hudson and Urquhart (2021) and Liu and Tsyvinski (2021).
+Faber (2007) volume, issue and pages; Faith (2007) publisher; Williams (1999) and Crabel (1990) publishers and titles; Connors and Alvarez year; Kim, Tse and Wald journal details; the deflated Sharpe formula against the paper's text; the sample periods of Hudson and Urquhart (2021) and Liu and Tsyvinski (2021). The four weekday studies above: titles, journals, volumes, sample periods and the size of the Monday premium each reports (only abstracts and summaries were seen).

@@ -139,13 +139,14 @@ def research_report(result: dict, ev: dict) -> str:
     adm = result["admitted"]
     shifts = next(iter(ev["families"].values()))["validation_timing"]["shifts"]
     if len(ev["families"]) < len(S.RESEARCH):
-        L.append(f"This run covers the {len(ev['families'])} families pre-registered under protocol {result['protocol']} ({', '.join(f'`{f}`' for f in ev['families'])}). The results of the earlier families stand as they were reported; they were not run again. "
+        n_fam = len(ev["families"])
+        L.append(f"This run covers the {n_fam} {'family' if n_fam == 1 else 'families'} pre-registered under protocol {result['protocol']} ({', '.join(f'`{f}`' for f in ev['families'])}). The families pre-registered under other protocol versions are not part of this run: their results stand as they were reported in their own run files and are not repeated here. "
                  f"The number of trials behind the deflated Sharpe ratio is {result['n_trials']}, every configuration of every family.\n")
     L.append("## Headline\n")
     if adm:
         names = ", ".join(f"`{a['family']}`" for a in adm)
         indep = len({a['counted_with'] or a['spec_hash'] for a in adm})
-        L.append(f"**{len(adm)} of {len(ev['families'])} families were admitted as challengers** ({names}; about {indep} independent idea{'s' if indep != 1 else ''} once renamed copies are counted together). Admitted means: they passed the five "
+        L.append(f"**{len(adm)} of {len(ev['families'])} {'family was' if len(ev['families']) == 1 else 'families were'} admitted as {'a challenger' if len(adm) == 1 else 'challengers'}** ({names}; about {indep} independent idea{'s' if indep != 1 else ''} once renamed copies are counted together). Admitted means: they passed the five "
                  "admission gates and now have a shadow paper account. It is a reason to watch, not evidence of an edge. `CALIBRATION.md` shows how often the same gates admit something on data where no rule has any skill; "
                  "read this result against that rate. No family can be promoted to the main portfolio until it has a forward record of at least 90 days and passes the promotion gates.\n")
     else:
@@ -156,7 +157,7 @@ def research_report(result: dict, ev: dict) -> str:
     for fid, e in ev["families"].items():
         g = e["admission"]["gates"]
         L.append(f"| `{fid}` | {json.dumps(e['chosen'])} | **{e['outcome'].replace('_', ' ')}** | {g['A1']['value']} | {_f(e['train']['sharpe'])} | {_f(e['validation']['sharpe'])} | "
-                 f"{_f(e['excess']['train'])} / {_f(e['excess']['validation'])} | {_f(e['validation_timing']['p'])} | {'yes' if e['stability']['passes'] else 'no'} | {', '.join(e['admission']['failed']) or 'none'} |")
+                 f"{_f(e['excess']['train'])} / {_f(e['excess']['validation'])} | {_f(e['validation_timing']['p'])} | {'n/a (one setting)' if e['stability'].get('single') else 'yes' if e['stability']['passes'] else 'no'} | {', '.join(e['admission']['failed']) or 'none'} |")
     L.append("\nSharpe ratios are annualised, after costs, from a flat start with $10,000. The information ratio is the Sharpe ratio of the returns in excess of holding the same average share of Bitcoin all the time "
              f"(it removes the drift of simply being invested). The timing p is the share of {shifts} shifted copies of the strategy's own schedule that did at least as well on the 2023-2024 VALIDATION days "
              "(small means the timing matters).\n")

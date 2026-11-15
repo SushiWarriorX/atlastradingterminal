@@ -42,7 +42,7 @@ def root(tmp_path):
 def test_the_view_has_the_headline_the_accounts_and_the_trades_in_plain_words(root):
     v = V.paper_view(root)
     json.dumps(v)
-    assert v["available"] is True and v["protocol"] == "1.2" and v["real_trading"].startswith("DISABLED") and v["status"] == "no champions: the main portfolio is in cash"
+    assert v["available"] is True and v["protocol"] == C.PROTOCOL_VERSION == "1.3" and v["real_trading"].startswith("DISABLED") and v["status"] == "no champions: the main portfolio is in cash"
     assert v["headline"].startswith("None of the 2 strategies passed the admission bar in the research run of 2026-11-15") and "stays in cash" in v["headline"] and "All 2 are paper-traded anyway" in v["headline"]
     assert v["counts"] == {"champions": 0, "challengers": 0, "monitors": 2, "research_admitted": 0, "research_ran_at": "2026-11-15T10:34:08Z"}
     by_id = {a["id"]: a for a in v["accounts"]}
@@ -180,6 +180,23 @@ def test_each_rules_verdict_reaches_the_phone_with_the_reasons_in_plain_words(ro
     for gate, phrase in (("A1", "too few trades"), ("A2", "holding the same average amount of Bitcoin"), ("A3", "random timing"), ("A4", "settings were nudged"), ("A5", "costs were doubled")):
         assert phrase in V.GATE_WORDS[gate]
     assert V.OUTCOME_WORDS == {"admitted": "Admitted", "rejected": "Rejected", "too_thin": "Too few trades to judge"}
+
+
+def test_the_stability_gate_of_a_family_with_one_setting_is_worded_as_what_it_asks(tmp_path):
+    (tmp_path / "reports").mkdir()
+    rep = {"evaluation": {"families": {"monday": {"outcome": "rejected", "admission": {"failed": ["A4", "A5"]}, "stability": {"single": True, "passes": False}, "validation_timing": {"p": 0.4}},
+                                       "tsmom": {"outcome": "rejected", "admission": {"failed": ["A4"]}, "stability": {"passes": False}}}}}
+    (tmp_path / "reports" / "research_1.3.json").write_text(json.dumps(rep))
+    dash = {"protocol": "1.3", "research": {"outcomes": {"monday": "rejected", "tsmom": "rejected"}, "runs": [{"protocol": "1.3"}]}}
+    out = V.verdicts(tmp_path, dash)
+    assert out["monday"]["why"] == [V.GATE_WORDS_ONE_SETTING["A4"], V.GATE_WORDS["A5"]] and out["tsmom"]["why"] == [V.GATE_WORDS["A4"]]
+    assert "2020-2022" in V.GATE_WORDS_ONE_SETTING["A4"] and "one setting" in V.GATE_WORDS_ONE_SETTING["A4"] and not V.GATE_WORDS_ONE_SETTING["A4"][0].isupper()
+
+
+def test_a_weekday_setting_is_shown_as_the_name_of_the_day_and_the_family_has_its_logo():
+    assert V.params_text({"params": {"day": 0}}) == "Monday" and V.params_text({"params": {"day": 6}}) == "Sunday" and V.params_text({"params": {"L": 30}}) == "L 30"
+    assert V.label({"id": "monday-abcd1234", "family": "monday", "params": {"day": 0}}) == "Day-of-week holding (Monday)"
+    assert V.short({"id": "monday-abcd1234", "family": "monday"}) == "MON" and V.family_name({"id": "monday-abcd1234", "family": "monday"}) == "Day-of-week holding"
 
 
 def test_without_the_research_report_only_the_reasons_and_the_period_figures_are_lost(root):

@@ -9,6 +9,11 @@ Worlds (all 2,875 daily candles from 2019-01-01, as in the stored data):
   null_drift       the same with drift 0.15% a day (a buy-and-hold Sharpe of about 0.8: closer to Bitcoin in 2020 to 2024)
   planted_strong   a hidden two-state trend: the daily drift is +0.40% or -0.40% (volatility 2.5%), switching with probability 2% a day (regimes of about 50 days)
   planted_weak     the same with drift +-0.25%
+  planted_monday_small (protocol 1.3) no trend and no other skill, but the candle of one weekday (Monday) pays a premium of 0.3% on top of the 0.04% drift: exactly what a weekly round trip costs
+  planted_monday_mid   the same with a premium of 0.6% (the cost of a round trip at doubled costs, the level of gate A5)
+  planted_monday_big   the same with a premium of 1.0%
+The two weekday worlds exist only to see whether the machinery can find a calendar effect and how large it must be: a Monday-only holder pays about 0.30% in fees and slippage every week, so a premium under that cannot
+pay for itself whatever the data say. They are used with `run_family_world` (one family at a time); the first calibration of the other worlds is not repeated.
 """
 from __future__ import annotations
 
@@ -18,6 +23,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 from . import backtest as B
+from . import strategies as S
 from . import validation as V
 
 DAY = 86400
@@ -26,7 +32,10 @@ N_CANDLES = 2875                                           # 2019-01-01 to 2026-
 WORLDS = {"null_mild": {"kind": "null", "drift": 0.0004, "vol": 0.035},
           "null_drift": {"kind": "null", "drift": 0.0015, "vol": 0.035},
           "planted_strong": {"kind": "planted", "mu": 0.004, "vol": 0.025, "switch": 0.02},
-          "planted_weak": {"kind": "planted", "mu": 0.0025, "vol": 0.025, "switch": 0.02}}
+          "planted_weak": {"kind": "planted", "mu": 0.0025, "vol": 0.025, "switch": 0.02},
+          "planted_monday_small": {"kind": "calendar", "drift": 0.0004, "vol": 0.035, "day": 0, "premium": 0.003},
+          "planted_monday_mid": {"kind": "calendar", "drift": 0.0004, "vol": 0.035, "day": 0, "premium": 0.006},
+          "planted_monday_big": {"kind": "calendar", "drift": 0.0004, "vol": 0.035, "day": 0, "premium": 0.010}}
 
 
 def daily_returns(world: str, seed: int, n: int = N_CANDLES) -> np.ndarray:
@@ -34,6 +43,8 @@ def daily_returns(world: str, seed: int, n: int = N_CANDLES) -> np.ndarray:
     rng = np.random.default_rng(seed)
     if w["kind"] == "null":
         return rng.normal(w["drift"], w["vol"], n)
+    if w["kind"] == "calendar":                                                                   # independent returns, plus a premium on every candle of one weekday (0 = Monday, from the candle's UTC open time)
+        return rng.normal(w["drift"], w["vol"], n) + w["premium"] * (S.weekday(T0 + np.arange(n) * DAY) == w["day"])
     state, out = 1, np.empty(n)
     for i in range(n):
         if rng.random() < w["switch"]:
@@ -74,6 +85,27 @@ def run_world(world: str, seeds, *, n_shifts: int = V.NULL_SHIFTS) -> list:
     return out
 
 
+def compact_family(e: dict) -> dict:
+    """The numbers of one family's evaluation that the admission gates use (small enough to keep for hundreds of datasets)."""
+    ex = e["excess"]
+    return {"outcome": e["outcome"], "failed": e["admission"]["failed"], "activity": e["admission"]["gates"]["A1"]["value"], "train": e["train"]["sharpe"], "val": e["validation"]["sharpe"],
+            "stable": bool(e["stability"]["passes"]), "cost2": e["costs"][V.A5_COST_INDEX]["sharpe"], "ir_train": ex["train"], "ir_val": ex["validation"], "val_null_p": e["validation_timing"]["p"],
+            "exposure": e["train"]["exposure"], "chosen": e["chosen"]}
+
+
+def run_family_world(world: str, seeds, family: str, *, n_shifts: int = V.NULL_SHIFTS) -> list:
+    """One family alone through selection on TRAIN and the five admission gates, on synthetic datasets: for a family pre-registered after the first calibration (protocol 1.3), whose admission share can be measured
+    without repeating the twelve others (about a second a dataset instead of ten). No walk-forward and no deflated Sharpe ratio, which are not admission gates; the trial count passed to the deflated Sharpe is the full 101."""
+    out = []
+    for s in seeds:
+        prep = B.Prepared(synthetic_candles(world, s))
+        tr, va = prep.period("TRAIN"), prep.period("VALIDATION")
+        runs = {"TRAIN": B.run_all(prep, family, *tr), "VALIDATION": B.run_all(prep, family, *va)}
+        ev = V.evaluate_family(prep, family, runs, 1e-4, S.n_configurations(), walk=False, n_shifts=n_shifts)
+        out.append({"world": world, "seed": s, "family": family, **compact_family(ev)})
+    return out
+
+
 def admission_summary(rows: list) -> dict:
     """How often the stored outcome 'admitted' happens: the share of datasets with at least one admitted family, and the average number admitted per dataset."""
     n = len(rows)
@@ -83,11 +115,15 @@ def admission_summary(rows: list) -> dict:
 
 def main(argv: list) -> int:
     import json
-    if len(argv) < 4 or argv[1] not in WORLDS:
-        print("usage: python -m atlas_api.btcquant.calibration <" + "|".join(WORLDS) + "> <first seed> <end seed> [output.json]")
+    if len(argv) < 4 or argv[1] not in WORLDS or (len(argv) > 5 and argv[5] not in [f.id for f in S.RESEARCH]):
+        print("usage: python -m atlas_api.btcquant.calibration <" + "|".join(WORLDS) + "> <first seed> <end seed> [output.json [family]]")
         return 2
-    rows = run_world(argv[1], range(int(argv[2]), int(argv[3])))
-    print(argv[1], admission_summary(rows))
+    if len(argv) > 5:
+        rows = run_family_world(argv[1], range(int(argv[2]), int(argv[3])), argv[5])
+        print(argv[1], argv[5], "admitted", sum(1 for r in rows if r["outcome"] == "admitted"), "of", len(rows))
+    else:
+        rows = run_world(argv[1], range(int(argv[2]), int(argv[3])))
+        print(argv[1], admission_summary(rows))
     if len(argv) > 4:
         with open(argv[4], "w", encoding="utf-8") as fh:
             json.dump(rows, fh)

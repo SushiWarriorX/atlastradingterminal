@@ -107,6 +107,18 @@ def test_stability_is_not_computed_for_a_chosen_configuration_that_is_not_positi
         assert res["applicable"] is False and res["passes"] is False
 
 
+def test_a_family_with_one_configuration_has_no_neighbours_so_a4_asks_only_that_its_own_train_sharpe_is_above_zero():
+    fam = S.FAMILIES["monday"]
+    key = B.param_key({"day": 0})
+    for own in (0.01, 0.4, 3.0):
+        assert V.stability({key: own}, fam, {"day": 0}) == {"applicable": False, "passes": True, "neighbours": 0, "reaching": 0, "share": None, "threshold": None, "single": True}
+    for own in (0.0, -0.3):                                                                    # nothing to compare with, but a rule that lost money on TRAIN is still not stable in any useful sense
+        res = V.stability({key: own}, fam, {"day": 0})
+        assert res["passes"] is False and res["single"] is True and res["neighbours"] == 0 and res["applicable"] is False
+    many = V.stability({B.param_key({"N": 20}): 1.0, B.param_key({"N": 40}): 0.9, B.param_key({"N": 55}): 0.0, B.param_key({"N": 80}): 0.0}, S.FAMILIES["donchian"], {"N": 20})
+    assert "single" not in many and many["neighbours"] == 1 and many["passes"] is True               # a family with neighbours is judged as before
+
+
 def test_a_two_neighbour_family_needs_both_neighbours_to_keep_the_result():
     fam = S.FAMILIES["donchian"]                                                       # N = 40 has the neighbours 20 and 55
     base = {B.param_key({"N": 40}): 1.0, B.param_key({"N": 80}): 0.0}
@@ -396,7 +408,7 @@ def test_one_family_end_to_end_gives_a_complete_json_record_consistent_with_its_
     runs = {"TRAIN": B.run_all(prep, "sma_cross", *tr), "VALIDATION": B.run_all(prep, "sma_cross", *va)}
     ev = V.evaluate_family(prep, "sma_cross", runs, trial_var=1e-4, n_trials=100, trial_var_excess=2e-4, n_shifts=200)
     json.dumps(ev)
-    assert ev["family"] == "sma_cross" and ev["protocol"] == "1.2" and ev["configurations"] == 15 and len(ev["table"]) == 15 and ev["outcome"] in ("admitted", "rejected", "too_thin")
+    assert ev["family"] == "sma_cross" and ev["protocol"] == C.PROTOCOL_VERSION == "1.3" and ev["configurations"] == 15 and len(ev["table"]) == 15 and ev["outcome"] in ("admitted", "rejected", "too_thin")
     assert ev["spec_hash"] == S.spec_hash("sma_cross", ev["chosen"]) and ev["outcome"] == ev["admission"]["outcome"]
     best = max(ev["table"], key=lambda r: r["score"])
     assert best["params"] == ev["chosen"] or best["score"] == pytest.approx(next(r["score"] for r in ev["table"] if r["params"] == ev["chosen"]))
@@ -422,10 +434,10 @@ def test_a_weight_family_is_counted_by_position_changes_and_has_no_full_exposure
     assert ev["admission"]["gates"]["A1"]["value"] == ev["train"]["fills"] + ev["validation"]["fills"] and "position changes" in ev["admission"]["gates"]["A1"]["need"]
 
 
-def test_the_whole_procedure_always_counts_all_one_hundred_trials_whichever_families_are_asked_for():
+def test_the_whole_procedure_always_counts_all_the_trials_whichever_families_are_asked_for():
     prep = B.Prepared(history(2875, seed=23, vol=0.035))
     out = V.evaluate_all(prep, families=["donchian", "sma_filter"], walk=False, n_shifts=30)
-    assert out["n_trials"] == 100 and set(out["families"]) == {"donchian", "sma_filter"} and out["protocol"] == "1.2"
+    assert out["n_trials"] == 101 == S.n_configurations() and set(out["families"]) == {"donchian", "sma_filter"} and out["protocol"] == C.PROTOCOL_VERSION
     tr, va = prep.period("TRAIN"), prep.period("VALIDATION")
     sharpes = []
     for f in S.RESEARCH:
@@ -433,7 +445,7 @@ def test_the_whole_procedure_always_counts_all_one_hundred_trials_whichever_fami
         for k in a:
             st = V.return_stats(np.concatenate([a[k].returns, b[k].returns]))["sr_daily"]
             sharpes.append(0.0 if st is None else st)
-    assert out["trial_variance"] == pytest.approx(float(np.var(sharpes, ddof=1)), rel=1e-12) and len(sharpes) == 100
+    assert out["trial_variance"] == pytest.approx(float(np.var(sharpes, ddof=1)), rel=1e-12) and len(sharpes) == 101
     for fid, ev in out["families"].items():
-        assert ev["deflated_sharpe"]["n_trials"] == 100 and ev["deflated_sharpe"]["sr0"] == pytest.approx(math.sqrt(out["trial_variance"]) * V.expected_max_normal(100), rel=1e-12)
+        assert ev["deflated_sharpe"]["n_trials"] == 101 and ev["deflated_sharpe"]["sr0"] == pytest.approx(math.sqrt(out["trial_variance"]) * V.expected_max_normal(101), rel=1e-12)
     json.dumps(out)
