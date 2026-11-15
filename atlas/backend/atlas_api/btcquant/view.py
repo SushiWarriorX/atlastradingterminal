@@ -11,7 +11,7 @@ from . import config as C
 from . import data as D
 from . import strategies as S
 
-SHOWN_EVENTS = ("order", "fill", "reject", "stop_hit", "breaker", "breaker_reset", "account_opened")
+SHOWN_EVENTS = ("order", "fill", "reject", "stop_hit", "breaker", "breaker_reset")       # the trades as they happened; an account opening is not a trade (its day is in the account's opened_after)
 PORTFOLIO_LABEL = "Main portfolio ($100,000, champions only)"
 BENCHMARK_LABELS = {"buy_hold": "Buy and hold Bitcoin", "cash": "Cash only"}
 SHORT = {"sma_cross": "SMA", "donchian": "DON", "ma_atr_trend": "ATR", "tsmom": "TSM", "rsi_momentum": "RSM", "mom_vol": "MOM", "bollinger_mr": "BOL", "rsi_oversold": "RSO", "vol_breakout": "VBO",
@@ -202,7 +202,7 @@ def paper_view(root: Path | None = None, recent: int = 30) -> dict:
         accounts.append({"id": a["id"], "label": label(a), "stage": a["stage"], "family": a["family"], "equity": a["equity"], "start_equity": a["start_equity"], "return": a["return"], "day_pnl": a["day_pnl"],
                          "hold_return": a.get("hold_return"), "matched_hold_return": a.get("matched_hold_return"), "exposure": a["exposure"], "drawdown": a["drawdown"], "trades": a["trades"], "days": a["days"],
                          "halted": a["halted"], "breaker_trips": a["breaker_trips"], "pending": pend_text,
-                         "short": short(a), "name": family_name(a), "params_text": params_text(a), "backtest": backtest_block(verd.get(a["family"]), (bt or {"curves": {}})["curves"].get(a["id"])),
+                         "opened_after": a.get("opened_after_candle"), "short": short(a), "name": family_name(a), "params_text": params_text(a), "backtest": backtest_block(verd.get(a["family"]), (bt or {"curves": {}})["curves"].get(a["id"])),
                          "forward": forward_series(root, a["id"])})
         lp = root / "state" / "ledger" / f"{a['id']}.jsonl"
         if lp.exists():

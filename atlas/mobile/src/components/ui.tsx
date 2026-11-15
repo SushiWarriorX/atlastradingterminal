@@ -28,9 +28,9 @@ export function GCard({ style, children, tone, colors, testID }: { style?: Style
   return <Gradient colors={colors ?? (tone ? grad[tone] : grad.card)} from={[0, 0]} to={[1, 1]} style={[{ borderRadius: radius.lg, borderWidth: 1, borderColor: color.border }, style]} testID={testID}>{children}</Gradient>;
 }
 
-/** A small outlined tag, used for facts about an asset (its type, where it trades) instead of a dot-joined string. */
+/** A small badge for facts about an asset (its type, where it trades): neutral grey like the badge beside a symbol in TradingView's lists, or tinted when it carries a warning. */
 export function Tag({ label, tint }: { label: string; tint?: string }) {
-  return <View style={[s.tag, tint ? { borderColor: tint + "88", backgroundColor: tint + "22" } : { backgroundColor: color.accent + "1A", borderColor: color.accent + "55" }]}><Text style={{ color: tint ?? color.accent, fontSize: font.xs + 1, fontFamily: famFor(700) }}>{label}</Text></View>;
+  return <View style={[s.tag, tint ? { borderColor: tint + "55", backgroundColor: tint + "1A" } : { backgroundColor: color.surface2, borderColor: color.surface2 }]}><Text style={{ color: tint ?? color.dim, fontSize: font.xs, fontFamily: famFor(600) }}>{label}</Text></View>;
 }
 
 export function Divider() {
@@ -45,11 +45,20 @@ export function IconButton({ name, onPress, label, tint = color.text, size = 22,
   );
 }
 
+/** A round light-grey button with one icon: the header buttons (back, search, profile) of TradingView's phone app. */
+export function RoundButton({ name, onPress, label, tint = color.text, size = 40, testID, disabled }: { name: React.ComponentProps<typeof Ionicons>["name"]; onPress: () => void; label: string; tint?: string; size?: number; testID?: string; disabled?: boolean }) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} testID={testID} disabled={disabled} hitSlop={6}
+      style={({ pressed }) => [{ width: size, height: size, borderRadius: size / 2, backgroundColor: color.surface2, alignItems: "center", justifyContent: "center" }, pressed && { opacity: 0.6 }, disabled && { opacity: 0.35 }]}>
+      <Ionicons name={name} size={Math.round(size * 0.5)} color={tint} />
+    </Pressable>
+  );
+}
+
 export function Chip({ label, active, onPress, testID }: { label: string; active?: boolean; onPress: () => void; testID?: string }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: !!active }} testID={testID}>
-      {active ? <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={s.chip}><Text style={[s.chipText, { color: color.onSilver }]}>{label}</Text></Gradient>
-        : <View style={[s.chip, { backgroundColor: color.surface2 }]}><Text style={s.chipText}>{label}</Text></View>}
+      <View style={[s.chip, { backgroundColor: active ? color.text : color.surface2 }]}><Text style={[s.chipText, active && { color: color.bg }]}>{label}</Text></View>
     </Pressable>
   );
 }
@@ -60,7 +69,7 @@ export function TextButton({ label, onPress, tint = color.accent, testID, disabl
   return (
     <Pressable onPress={onPress} accessibilityRole="button" testID={testID} disabled={disabled} hitSlop={6} style={({ pressed }) => [pressed && { opacity: 0.7 }, disabled && { opacity: 0.4 }]}>
       {solid && tint === color.accent
-        ? <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={box}><Text style={{ color: color.onSilver, fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></Gradient>
+        ? <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={box}><Text style={{ color: color.onAccent, fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></Gradient>
         : <View style={[box, { backgroundColor: solid ? tint : tint + "2E", borderColor: solid ? "transparent" : tint + "77", borderWidth: 1 }]}><Text style={{ color: solid ? "#FFFFFF" : tint, fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></View>}
     </Pressable>
   );
@@ -68,14 +77,14 @@ export function TextButton({ label, onPress, tint = color.accent, testID, disabl
 
 /** The small "Show / Hide" button on a collapsible card. */
 export function Pill({ label }: { label: string }) {
-  return <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={{ borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 8 }}><Text style={{ color: color.onSilver, fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></Gradient>;
+  return <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={{ borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 8 }}><Text style={{ color: color.onAccent, fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></Gradient>;
 }
 
 export function PrimaryButton({ label, onPress, busy, testID, disabled }: { label: string; onPress: () => void; busy?: boolean; testID?: string; disabled?: boolean }) {
   return (
     <Pressable onPress={onPress} disabled={busy || disabled} accessibilityRole="button" testID={testID} style={({ pressed }) => [(pressed || busy || disabled) && { opacity: 0.7 }]}>
       <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={s.primary}>
-        {busy ? <ActivityIndicator color={color.onSilver} /> : <Text style={s.primaryText}>{label}</Text>}
+        {busy ? <ActivityIndicator color={color.onAccent} /> : <Text style={s.primaryText}>{label}</Text>}
       </Gradient>
     </Pressable>
   );
@@ -111,7 +120,7 @@ export function Spinner({ label }: { label?: string }) {
 export function EmptyState({ icon, title, body, action, testID }: { icon: React.ComponentProps<typeof Ionicons>["name"]; title: string; body: string; action?: React.ReactNode; testID?: string }) {
   return (
     <View style={s.empty} testID={testID}>
-      <Gradient colors={grad.accent} style={s.emptyIcon}><Ionicons name={icon} size={28} color={color.onSilver} /></Gradient>
+      <Gradient colors={grad.accent} style={s.emptyIcon}><Ionicons name={icon} size={28} color={color.onAccent} /></Gradient>
       <Txt variant="h2" style={{ textAlign: "center" }}>{title}</Txt>
       <Txt variant="small" style={{ textAlign: "center", marginTop: space.xs, maxWidth: 300 }}>{body}</Txt>
       {action ? <View style={{ marginTop: space.lg }}>{action}</View> : null}
@@ -135,14 +144,13 @@ export function ErrorState({ title, body, onRetry, extra, testID }: { title: str
 
 const s = StyleSheet.create({
   card: { padding: space.xl - 4 },
-  tag: { borderWidth: 1, borderColor: color.border, borderRadius: 7, paddingHorizontal: 7, paddingVertical: 1 },
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: color.border, marginLeft: 78 },
+  tag: { borderWidth: 1, borderColor: color.border, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1 },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: color.border, marginLeft: 68 },
   iconBtn: { padding: 4, alignItems: "center", justifyContent: "center" },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: "transparent" },
-  chipOn: { backgroundColor: color.surface2 },
   chipText: { color: color.dim, fontSize: font.sm, fontFamily: famFor(600) },
   primary: { borderRadius: radius.pill, paddingVertical: 17, paddingHorizontal: 28, alignItems: "center", justifyContent: "center", minWidth: 160 },
-  primaryText: { color: color.onSilver, fontSize: font.lg, fontFamily: famFor(700) },
+  primaryText: { color: color.onAccent, fontSize: font.lg, fontFamily: famFor(700) },
   banner: { flexDirection: "row", alignItems: "center", gap: space.md, borderRadius: 18, paddingVertical: 12, paddingHorizontal: space.lg },
   center: { alignItems: "center", justifyContent: "center", padding: space.xl },
   empty: { alignItems: "center", justifyContent: "center", paddingHorizontal: space.xl, paddingVertical: 56 },

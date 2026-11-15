@@ -203,14 +203,14 @@ async function healthy(browser) {
       assert(!(await present(page, "tab-stocks")), "must stay on the connect screen");
     });
 
-    await check("connects and shows an honest empty watchlist under five tabs and a profile icon", async () => {
+    await check("connects and shows an honest empty watchlist under six tabs and a profile icon", async () => {
       await page.fill(T("server-url"), be.url);
       await page.click(T("connect-submit"));
       await page.waitForSelector(T("tab-stocks"));
       await toStocks(page);
       await page.waitForSelector(T("watchlist-empty"));
       const tabs = await page.$$eval('[data-testid^="tab-"]', (els) => els.map((e) => e.innerText.replace(/[^A-Za-z]+/g, "")));
-      eq(tabs, ["BTC", "Stocks", "Macro", "Discover", "Journal"], "the only tabs");
+      eq(tabs, ["BTC", "Journey", "Stocks", "Macro", "Discover", "Journal"], "the only tabs");
       assert(await present(page, "profile-button"), "settings must sit behind the profile icon");
       assert(!(await present(page, "demo-banner")), "no demo label on a live server");
       await shot(page, "01-empty-watchlist");
@@ -491,7 +491,7 @@ async function healthy(browser) {
       try {
         await connectTo(w, be.url);
         await w.waitForSelector(T("ticker"));
-        for (const d of ["btc", "stocks", "macro", "discover", "journal"]) assert(await present(w, `nav-${d}`), `top navigation must offer ${d}`);
+        for (const d of ["btc", "journey", "stocks", "macro", "discover", "journal"]) assert(await present(w, `nav-${d}`), `top navigation must offer ${d}`);
         await w.click(T("nav-stocks"));
         await w.waitForSelector(T("pane-watchlist"));
         await w.waitForSelector(T("news-panel"));
@@ -549,6 +549,36 @@ async function healthy(browser) {
       eq(await page.locator('[data-testid^="entry-e:"]').count(), 1, "one entry left after a delete");
       eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls in the journal");
       await shot(page, "12-journal");
+    });
+
+    await check("Journey tab: the paper lab says what the research run decided, lists each strategy with its backtest and verdict, records orders on signal, and offers no trading controls", async () => {
+      await page.click(V("tab-journey"));
+      await page.waitForSelector(`${T("journey-headline")}, ${T("journey-unavailable")}, ${T("journey-error")}`);
+      if (!(await present(page, "journey-headline"))) {          // no daily run on this machine: the page must say so plainly, and that is all there is to check
+        match(await text(page), /paper lab has not run yet|Can't load the paper lab/i, "the page must say why there is nothing to show");
+        return;
+      }
+      const head = await inner(page, "journey-headline");
+      match(head, /strategies passed|No research run yet/i, "the verdict of the research run is the first thing said");
+      match(head, /DISABLED|nothing in this system can place an order/i, "real trading is stated as disabled");
+      assert(await present(page, "journey-cards"), "the paper accounts are shown as cards");
+      const ids = await page.$$eval('[data-testid^="journey-row-"]', (els) => els.map((e) => e.getAttribute("data-testid")));
+      assert(ids.length >= 1, "at least one strategy row");
+      for (const id of ids) match(await page.locator(`${T(id)}:visible`).first().innerText(), /Rejected|Too few trades to judge|Admitted/, `${id} must show its verdict`);
+      await page.locator(`${T(ids[0])}:visible`).locator('[role="button"]').first().click();
+      await page.waitForSelector(V(`journey-detail-${ids[0].slice("journey-row-".length)}`));
+      assert(await present(page, "curve-chart"), "an opened strategy shows its backtest as a chart");
+      const detail = await inner(page, `journey-detail-${ids[0].slice("journey-row-".length)}`);
+      match(detail, /Holding Bitcoin over the same days/, "the backtest is set beside holding Bitcoin");
+      match(detail, /Paper: day \d+/, "the forward paper record is stated");
+      match(await inner(page, "journey-note"), /simulations/i, "the page says these are simulations");
+      await shot(page, "17-journey");
+      const names = await clickableNames(page);
+      eq(names.filter((n) => TRADING_CONTROL.test(n)), [], "trading controls on the Journey page");
+      noMatch(await text(page), FORECASTS, "no promise of profit");
+      await page.evaluate(() => { const el = document.querySelector('[data-testid="journey-scroll"]'); if (el) el.scrollTop = 1e6; });
+      await sleep(300);
+      await shot(page, "17b-journey-feed");
     });
 
     await check("Macro: what matters today, indicators and headlines are labelled, gaps are listed, and a missing FRED key is said plainly", async () => {

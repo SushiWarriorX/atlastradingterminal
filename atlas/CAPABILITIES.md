@@ -50,6 +50,7 @@ Current total: 100 (baseline 67 + 8 strategies + 3 skills + 22 data sources; the
 | 2026-11-15 | Data source | Henry Hub natural gas spot price, daily, with a cross-check against EIA's own monthly average (US Energy Information Administration via FRED) | Data loop |
 | 2026-11-15 | Data source | M2 money supply, monthly seasonally adjusted, with cross-checks against the unadjusted and weekly series (Federal Reserve Board via FRED) | Data loop |
 | 2026-11-15 | Data source | Bank reserves, currency in circulation and the monetary base (weekly and monthly), with the base = currency + reserves identity and a weekly-against-monthly check (Federal Reserve Board via FRED) | Data loop |
+| 2026-11-15 | App feature | Journey tab on the phone app: the paper-trading lab that runs the backtested Bitcoin strategies (verdict of the research run, backtest beside holding Bitcoin, paper accounts, every order recorded on signal; `GET /api/btcquant/paper`), with a TradingView-style light redesign of the whole app (owner request) | Owner request |
 
 ## Loop budget (measured 2026-11-09)
 - Strategy cycle with 3 rules and the full backend suite: about 4 minutes wall time. Improvement cycle with all suites: roughly 20 to 45 minutes. Skills and data cycles: a few minutes each, data often blocked by hosts the sandbox cannot reach.

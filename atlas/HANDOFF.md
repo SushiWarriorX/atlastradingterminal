@@ -24,6 +24,8 @@ A job means one cycle as written in `LOOP.md` (improve), `STRATEGY_LOOP.md`, `DA
 
 **Strategy hours now build and run the `btcquant` system (owner mission of 2026-11-15; the 2026-11-14 pause is lifted for it).** Read `btcquant/BUILD_PLAN.md`, take the first unchecked step, write its tests first, follow `btcquant/PROTOCOL.md` (pre-registered; never run or change a family outside it), mark the step done with the commit. Once the system is operating (step 11 done), a strategy hour is a research cycle: look for a genuinely new hypothesis, check it is not a renamed version of an existing one, write its note and protocol amendment, push, then run it once. The old lab stays closed except for reporting its 60-day marks (the first is 2027-01-07).
 
+**The `btcquant` daily run is a separate scheduled task at 00:15 UTC** (not one of the hourly jobs; it runs two minutes before the 00:17 hourly cycle). Its steps are in `btcquant/DAILY_LOOP.md`. The Signal phone app shows its results on the **Journey** tab (owner request 2026-11-15).
+
 ## Avoiding collisions
 - Strategy queue: Claude takes ideas from the FRONT of the queue, ChatGPT from the BACK. Never take an id the other side has on the state board.
 - Log files (`IMPROVEMENT_LOG.md`, `SKILLS_LOG.md`, `DATA_SOURCES.md`, `CAPABILITIES.md`) are append-only. On a merge conflict keep both sides.

@@ -16,6 +16,14 @@ export function formatPct(v: number | null | undefined, digits = 2, signed = tru
   return signed ? `${v < 0 ? "−" : "+"}${s}%` : `${v < 0 ? "−" : ""}${s}%`;
 }
 
+/** A change in price units with a real minus and no currency sign ("+1.52", "−0.0042"), the figure TradingView shows beside the percentage. */
+export function formatChange(v: number | null | undefined): string {
+  if (v === null || v === undefined || !Number.isFinite(v)) return "n/a";
+  const a = Math.abs(v);
+  const s = a >= 1 ? a.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : a >= 0.01 ? a.toFixed(4) : a === 0 ? "0.00" : a.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+  return `${v < 0 ? "−" : "+"}${s}`;
+}
+
 export function directionOf(v: number | null | undefined): "up" | "down" | "flat" {
   if (v === null || v === undefined || !Number.isFinite(v) || v === 0) return "flat";
   return v > 0 ? "up" : "down";

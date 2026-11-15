@@ -206,6 +206,12 @@ export function useExperiments() {
   return useQuery({ queryKey: keys(baseUrl).experiments, queryFn: () => need(api).experiments(), enabled: !!api, staleTime: 60 * 60_000, retry: 0 });
 }
 
+/** The paper-trading lab for the Journey tab. It changes once a day (the daily run is at 00:15 UTC), so it is kept for five minutes and re-read every quarter of an hour. */
+export function usePaperLab() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).paperLab, queryFn: () => need(api).paperLab(), enabled: !!api, staleTime: 5 * 60_000, refetchInterval: 15 * 60_000, retry: 1 });
+}
+
 export function useStrategyTracker() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).tracker, queryFn: () => need(api).strategyTracker(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 2 * 60 * 60_000, retry: 0 });

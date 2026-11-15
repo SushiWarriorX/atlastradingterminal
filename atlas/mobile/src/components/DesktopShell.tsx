@@ -9,6 +9,7 @@ import { color, radius, space } from "../theme";
 import { DiscoverView } from "./DiscoverView";
 import { MacroView } from "./MacroView";
 import { JournalView } from "./JournalView";
+import { JourneyView } from "./JourneyView";
 import { AssetView } from "./AssetView";
 import { NewsPanel } from "./NewsPanel";
 import { SettingsView } from "./SettingsView";
@@ -16,7 +17,7 @@ import { Ticker } from "./Ticker";
 import { IconButton, Txt } from "./ui";
 
 function Panel({ children, width, style }: { children: React.ReactNode; width?: number; style?: object }) {
-  return <View style={[{ backgroundColor: "#090909", borderWidth: 1, borderColor: color.border, borderRadius: radius.md, overflow: "hidden", ...(width ? { width } : { flex: 1, minWidth: 0 }) }, style]}>{children}</View>;
+  return <View style={[{ backgroundColor: color.bg, borderWidth: 1, borderColor: color.border, borderRadius: radius.md, overflow: "hidden", ...(width ? { width } : { flex: 1, minWidth: 0 }) }, style]}>{children}</View>;
 }
 
 /** Wide screens: watchlist/search on the left, the research for the selected asset in the middle, its news on the right, a ticker across the top. Five destinations along the top; still no trading. */
@@ -28,13 +29,13 @@ export function DesktopShell() {
   useEffect(() => { if (!selectedId && first) select(first); }, [selectedId, first, select]);
   
   return (
-    <View style={{ flex: 1, backgroundColor: color.bg }}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: space.lg, paddingVertical: 10 }}>
+    <View style={{ flex: 1, backgroundColor: color.surface }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: space.lg, paddingVertical: 10, backgroundColor: color.bg }}>
         <Txt variant="h2" style={{ fontSize: 20, fontWeight: "800" }}>Signal</Txt>
         <View style={{ flexDirection: "row", gap: 4 }}>
           {DESTS.map((d) => (
-            <Pressable key={d.key} onPress={() => setDest(d.key)} accessibilityRole="button" accessibilityState={{ selected: dest === d.key }} testID={`nav-${d.key}`} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: dest === d.key ? color.surface2 : "transparent" }}>
-              <Txt variant="small" c={dest === d.key ? color.text : color.dim} style={{ fontWeight: "700" }}>{d.label}</Txt>
+            <Pressable key={d.key} onPress={() => setDest(d.key)} accessibilityRole="button" accessibilityState={{ selected: dest === d.key }} testID={`nav-${d.key}`} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: dest === d.key ? color.text : "transparent" }}>
+              <Txt variant="small" c={dest === d.key ? color.bg : color.dim} style={{ fontWeight: "700" }}>{d.label}</Txt>
             </Pressable>
           ))}
         </View>
@@ -65,7 +66,9 @@ export function DesktopShell() {
         </> : dest === "btc" ? <>
           <Panel><AssetView key={BTC_ID} id={BTC_ID} embedded /></Panel>
           <Panel width={360}><NewsPanel id={BTC_ID} /></Panel>
-        </> : dest === "journal" ? (
+        </> : dest === "journey" ? (
+          <Panel><JourneyView /></Panel>
+        ) : dest === "journal" ? (
           <Panel><JournalView /></Panel>
         ) : dest === "macro" ? (
           <Panel><MacroView /></Panel>

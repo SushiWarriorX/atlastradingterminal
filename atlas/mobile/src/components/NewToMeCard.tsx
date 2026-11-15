@@ -7,7 +7,7 @@ import { moneyShort as money } from "../lib/money";
 import { useCandidates } from "../state/queries";
 import { useOpenAsset } from "../state/selection";
 import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, TextButton, Txt } from "./ui";
+import { Banner, Chip, Divider, GCard, Skeleton, TextButton, Txt } from "./ui";
 
 const pc = (x: number | null, d = 1) => (x == null ? "n/a" : `${x.toFixed(d)}%`);
 const FACT: Record<string, string> = { growth: "Growth", quality: "Revenue quality", resilience: "Resilience", valuation: "Valuation" };
@@ -54,12 +54,12 @@ export function NewToMeCard() {
     <GCard style={{ padding: space.lg, gap: space.md }} testID="newtome-card">
       <View><Txt variant="h2">New to me</Txt><Txt variant="tiny">Companies you have not researched, with the evidence for each</Txt></View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }} testID="newtome-filters">
-        <TextButton solid={!sector} label="all sectors" onPress={() => setSector("")} />
-        {SECTORS.map((s) => <TextButton key={s} solid={sector === s} label={s} onPress={() => setSector(sector === s ? "" : s)} testID={`filter-sector-${s}`} />)}
+        <Chip active={!sector} label="all sectors" onPress={() => setSector("")} />
+        {SECTORS.map((s) => <Chip key={s} active={sector === s} label={s} onPress={() => setSector(sector === s ? "" : s)} testID={`filter-sector-${s}`} />)}
       </View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
-        {SIZES.map(([l], k) => <TextButton key={l} solid={size === k} label={l} onPress={() => setSize(k)} testID={`filter-size-${k}`} />)}
-        {["", "Nasdaq", "NYSE"].map((e) => <TextButton key={e || "both"} solid={exchange === e} label={e || "both exchanges"} onPress={() => setExchange(e)} />)}
+        {SIZES.map(([l], k) => <Chip key={l} active={size === k} label={l} onPress={() => setSize(k)} testID={`filter-size-${k}`} />)}
+        {["", "Nasdaq", "NYSE"].map((e) => <Chip key={e || "both"} active={exchange === e} label={e || "both exchanges"} onPress={() => setExchange(e)} />)}
       </View>
       {q.isLoading ? <Skeleton h={100} />
         : q.isError || !d ? <Banner tone="warn" title="Couldn't load candidates" testID="newtome-error">{q.error instanceof Error ? q.error.message : "Something went wrong."}</Banner>

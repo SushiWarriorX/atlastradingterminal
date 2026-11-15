@@ -10,7 +10,7 @@ import { useIsWide } from "../state/layout";
 import { color, font, radius, space, fonts } from "../theme";
 import { noOutline } from "./ConnectForm";
 import { ScreenHeader } from "./ScreenHeader";
-import { Chip, Divider, GCard, EmptyState, ErrorState, IconButton, PrimaryButton, Skeleton, Tag, TextButton, Txt } from "./ui";
+import { Chip, Divider, GCard, EmptyState, ErrorState, IconButton, PrimaryButton, RoundButton, Skeleton, Tag, TextButton, Txt } from "./ui";
 
 const FILTERS: { key: NonNullable<JournalFilters["status"]>; label: string }[] = [{ key: "", label: "All" }, { key: "open", label: "Open" }, { key: "closed", label: "Closed" }, { key: "note", label: "Notes" }];
 const today = () => new Date().toISOString().slice(0, 10);
@@ -26,7 +26,7 @@ export function JournalView() {
   const st = log.data?.stats;
   return (
     <View style={{ flex: 1, backgroundColor: color.bg }}>
-      <ScreenHeader title="Journal" subtitle={log.data ? `${log.data.total} ${log.data.total === 1 ? "entry" : "entries"}` : undefined} right={<IconButton name="add-circle" size={32} tint={color.accent} label="Add an entry" onPress={() => setEditing("new")} testID="journal-add" />} />
+      <ScreenHeader title="Journal" subtitle={log.data ? `${log.data.total} ${log.data.total === 1 ? "entry" : "entries"}` : undefined} right={<RoundButton name="add" label="Add an entry" onPress={() => setEditing("new")} testID="journal-add" />} />
       <View style={{ paddingHorizontal: space.lg, gap: space.md, paddingBottom: space.sm }}>
         {st && st.n > 0 && (
           <GCard testID="journal-stats" style={{ padding: space.lg }}>

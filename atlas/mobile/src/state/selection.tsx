@@ -3,8 +3,8 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 import { useIsWide } from "./layout";
 
 export type Pane = "watchlist" | "search";
-export type Dest = "btc" | "stocks" | "macro" | "discover" | "journal";
-export const DESTS: { key: Dest; label: string }[] = [{ key: "btc", label: "BTC" }, { key: "stocks", label: "Stocks" }, { key: "macro", label: "Macro" }, { key: "discover", label: "Discover" }, { key: "journal", label: "Journal" }];
+export type Dest = "btc" | "journey" | "stocks" | "macro" | "discover" | "journal";
+export const DESTS: { key: Dest; label: string }[] = [{ key: "btc", label: "BTC" }, { key: "journey", label: "Journey" }, { key: "stocks", label: "Stocks" }, { key: "macro", label: "Macro" }, { key: "discover", label: "Discover" }, { key: "journal", label: "Journal" }];
 export const BTC_ID = "CRYPTO:COINBASE:BTC-USD:SPOT";
 interface Sel { selectedId: string | null; select: (id: string) => void; pane: Pane; setPane: (p: Pane) => void; dest: Dest; setDest: (d: Dest) => void }
 const Ctx = createContext<Sel | null>(null);

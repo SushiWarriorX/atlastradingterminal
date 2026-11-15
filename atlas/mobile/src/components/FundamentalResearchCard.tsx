@@ -61,7 +61,7 @@ function Mine({ symbol, d }: { symbol: string; d: FundamentalResearch }) {
       {c ? (c.has_review && c.changed ? <Txt variant="small" testID="fr-changes">Changes since you last reviewed ({c.reviewed_at?.slice(0, 10)}): {c.changed.length === 0 ? "nothing in the tracked figures has changed." : c.changed.map((r) => `${r.label}: ${String(r.before ?? "n/a")} → ${String(r.after ?? "n/a")}`).join(" · ")}</Txt>
         : <Txt variant="tiny">{c.note ?? c.reason ?? "Nothing to compare with yet."}</Txt>) : null}
       <TextInput value={text} onChangeText={setText} placeholder="A note for yourself: what you checked, what you still doubt…" placeholderTextColor={color.faint} multiline accessibilityLabel="Research note" testID="fr-note-input"
-        style={{ minHeight: 56, borderRadius: radius.md, padding: space.md, color: color.text, backgroundColor: "rgba(255,255,255,0.06)" }} />
+        style={{ minHeight: 56, borderRadius: radius.md, padding: space.md, color: color.text, backgroundColor: color.surface }} />
       <TextButton label="Add note" onPress={() => add.mutate()} disabled={!text.trim() || add.isPending} testID="fr-note-add" />
       {(m?.notes ?? []).map((n) => <View key={n.id} style={{ flexDirection: "row", justifyContent: "space-between", gap: space.sm }} testID="fr-note"><Txt variant="small" style={{ flex: 1 }}>• {n.body} ({n.created_at.slice(0, 10)})</Txt><TextButton label="Delete" onPress={() => del.mutate(n.id)} /></View>)}
       {err ? <Txt variant="small" c={color.down}>{err}</Txt> : null}

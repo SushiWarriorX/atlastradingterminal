@@ -472,3 +472,25 @@ export interface OutlayTotals { month_billions: number; year_so_far_billions: nu
 export interface OutlaysData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; fiscal_year?: number; months_in_year?: number;
   outlays?: OutlayTotals; receipts?: OutlayTotals; deficit?: OutlayTotals; functions?: OutlayFunction[];
   checks?: { purposes_add_up_to_total_outlays: boolean; receipts_lines_add_up_to_total: boolean; problems: string[]; ok: boolean } }
+
+// ---- the paper-trading lab (Journey): GET /api/btcquant/paper. Simulated accounts only; nothing here can place an order. ----
+export interface PaperPeriod { return: number | null; hold_return: number | null; matched_hold_return: number | null; max_drawdown: number | null; sharpe: number | null; trades: number | null; exposure: number | null }
+export interface PaperBacktest {
+  outcome: "admitted" | "rejected" | "too_thin" | null; outcome_text: string; why: string[]; train: PaperPeriod | null; validation: PaperPeriod | null; timing_p: number | null;
+  run: { return: number; max_drawdown: number; trades: number; breaker_trips: number; sharpe: number | null } | null;      // one continuous replay from 2020-01-01 (null when the candle file is missing)
+  curve: number[] | null;                                                                                                // that replay's equity as a ratio of its start, sampled weekly (times in PaperLab.backtest.times)
+}
+export interface PaperAccount {
+  id: string; label: string; stage: "benchmark" | "portfolio" | "monitor" | "challenger" | "champion"; family: string; equity: number; start_equity: number; return: number; day_pnl: number;
+  hold_return: number | null; matched_hold_return: number | null; exposure: number; drawdown: number; trades: number; days: number; halted: boolean; breaker_trips: number; pending: string | null;
+  opened_after: string | null; short: string; name: string; params_text: string; backtest: PaperBacktest | null; forward: number[];
+}
+export interface PaperTrade { when: string; recorded_at: string; seq: number; account: string; label: string; kind: string; text: string }
+export interface PaperLab {
+  available: true; generated_at: string; protocol: string; real_trading: string; status: string; headline: string;
+  data: { last_candle: string; last_close: number; stale: boolean; update: string };
+  counts: { champions: number; challengers: number; monitors: number; research_admitted: number | null; research_ran_at: string | null };
+  backtest: { from: string; to: string; step_days: number; times: string[]; periods: { name: "TRAIN" | "VALIDATION" | "TEST"; from: number; to: number }[]; note: string } | null;
+  accounts: PaperAccount[]; recent: PaperTrade[]; problems: string[]; note: string;
+}
+export type PaperLabResponse = PaperLab | { available: false; reason: string };

@@ -51,6 +51,8 @@ def test_the_view_has_the_headline_the_accounts_and_the_trades_in_plain_words(ro
     mon = [a for a in v["accounts"] if a["stage"] == "monitor"]
     assert sorted(a["label"] for a in mon) == ["Donchian breakout (N 20)", "Time-series momentum (L 30)"] and all(a["days"] == 24 for a in mon)
     assert "simulations" in v["note"] and "no real order is ever placed" in v["note"] and v["data"]["stale"] is False and v["problems"] == []
+    dash = {a["id"]: a for a in json.loads((root / "dashboard.json").read_text())["accounts"]}
+    assert all(a["opened_after"] == dash[a["id"]]["opened_after_candle"] and a["opened_after"] == "2020-01-31T00:00:00Z" for a in v["accounts"])
 
 
 def test_the_recent_trades_are_the_ledger_rows_newest_first_with_plain_text(root):
@@ -58,7 +60,7 @@ def test_the_recent_trades_are_the_ledger_rows_newest_first_with_plain_text(root
     rows = v["recent"]
     assert rows and [r["when"] for r in rows] == sorted((r["when"] for r in rows), reverse=True)
     kinds = {r["kind"] for r in rows}
-    assert {"order", "fill", "account_opened"} <= kinds
+    assert {"order", "fill"} <= kinds and "account_opened" not in kinds                    # an account opening is not a trade
     bh = [r for r in rows if r["account"] == "buy_hold"]
     fill = next(r for r in bh if r["kind"] == "fill")
     assert fill["text"].startswith("BOUGHT ") and " BTC at $" in fill["text"] and "fee $" in fill["text"] and fill["label"] == "Buy and hold Bitcoin"

@@ -22,6 +22,7 @@ export const keys = (base: string | null) => ({
   fx: ["fx", base] as const,
   tracker: ["tracker", base] as const,
   experiments: ["experiments", base] as const,
+  paperLab: ["paperLab", base] as const,
   world: ["world", base] as const,
   cryptoMarket: ["cryptoMarket", base] as const,
   ops: ["ops", base] as const,

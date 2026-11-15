@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Asset, Briefing, Finding, Prov, WatchlistResponse, WatchRow } from "../api/types";
 import { AGENT_ORDER, briefingSections, coverageNote, lineText, rowKind } from "./briefing";
-import { countdown, dateOnly, directionOf, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime, ymdLabel } from "./format";
+import { countdown, dateOnly, directionOf, formatChange, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime, ymdLabel } from "./format";
 import { describeFreshness, isOutdated, summarizeTones, worstTone } from "./freshness";
 import { keys } from "./keys";
 import { safeUrl } from "./links";
@@ -266,11 +266,40 @@ describe("readable text on every card", () => {
     expect(contrast("#777777", "#777777")).toBeCloseTo(1, 5);
   });
   it("small captions (faint) and body-small text (dim) reach 4.5:1 on every stop of every card gradient and on the screen background", () => {
-    const stops = [color.bg, color.surface, ...grad.card, ...grad.hot];
+    const stops = [color.bg, color.surface, ...grad.card, ...grad.hot, ...grad.good, ...grad.warn, ...grad.bad];
     for (const bg of stops) {
       expect(contrast(color.faint, bg), `faint on ${bg}`).toBeGreaterThanOrEqual(4.5);
       expect(contrast(color.dim, bg), `dim on ${bg}`).toBeGreaterThanOrEqual(4.5);
     }
+  });
+});
+
+describe("readable colours for direction, warnings and buttons", () => {
+  it("green, red, amber and the two blues are readable as text on white and on the light card background", () => {
+    for (const bg of [color.bg, color.surface]) {
+      for (const [name, c] of Object.entries({ up: color.up, down: color.down, warn: color.warn, demo: color.demo, accent: color.accent, accent3: color.accent3 })) expect(contrast(c, bg), `${name} on ${bg}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+  it("white text on the blue button reaches 4.5:1 at its darkest and 3:1 (large bold text) at its lightest stop", () => {
+    expect(contrast(color.onAccent, grad.accent[2])).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(color.onAccent, grad.accent[1])).toBeGreaterThanOrEqual(4.5);
+    for (const stop of grad.accent) expect(contrast(color.onAccent, stop)).toBeGreaterThanOrEqual(3);
+  });
+  it("the chosen text colour is near-black on white", () => {
+    expect(contrast(color.text, color.bg)).toBeGreaterThanOrEqual(15);
+  });
+});
+
+describe("a change in price units", () => {
+  it("shows a sign, a real minus and no currency sign, with more places for small prices", () => {
+    expect(formatChange(1.5)).toBe("+1.50");
+    expect(formatChange(-1.98)).toBe("−1.98");
+    expect(formatChange(1234.5)).toBe("+1,234.50");
+    expect(formatChange(-0.0421)).toBe("−0.0421");
+    expect(formatChange(0.00001234)).toBe("+0.000012");
+    expect(formatChange(0)).toBe("+0.00");
+    expect(formatChange(null)).toBe("n/a");
+    expect(formatChange(NaN)).toBe("n/a");
   });
 });
 
