@@ -10,6 +10,8 @@ from datetime import date, datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 URL = "https://markets.newyorkfed.org/api/rates/secured/sofr/last/10.json"
 SOURCE = "NY Fed, Secured Overnight Financing Rate (official, free public API)"
 TTL = 1800.0
@@ -61,7 +63,7 @@ class NyFedSofr:
             self._cache = (time.monotonic() + TTL, f)
             return f
         except (httpx.HTTPError, ValueError, KeyError) as e:
-            f = {"id": "sofr", "label": "SOFR (overnight funding rate)", "error": f"NY Fed could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            f = {"id": "sofr", "label": "SOFR (overnight funding rate)", "error": f"NY Fed could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, f)
             return f
         finally:

@@ -15,6 +15,8 @@ from datetime import date, datetime, timedelta, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 URL = "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml"
 SOURCE = "US Treasury, Daily Treasury Par Yield Curve Rates and Par Real Yield Curve Rates (official, free public data)"
 PAGE = "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_real_yield_curve"
@@ -169,7 +171,7 @@ class RealYields:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, ET.ParseError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"US Treasury real yields could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"US Treasury real yields could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

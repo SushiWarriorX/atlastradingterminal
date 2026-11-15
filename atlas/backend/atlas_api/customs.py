@@ -12,6 +12,8 @@ from datetime import date, datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 URL = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_4"
 FIELDS = ("record_date,classification_desc,current_month_gross_rcpt_amt,current_month_refund_amt,current_month_net_rcpt_amt,current_fytd_gross_rcpt_amt,current_fytd_refund_amt,current_fytd_net_rcpt_amt,"
           "prior_fytd_gross_rcpt_amt,prior_fytd_refund_amt,prior_fytd_net_rcpt_amt")
@@ -118,7 +120,7 @@ class Customs:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, TypeError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"Treasury customs duties could not be read right now ({type(e).__name__}: {str(e)[:100]})"}
+            res = {**base, "available": False, "reason": f"Treasury customs duties could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

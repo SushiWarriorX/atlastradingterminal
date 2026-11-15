@@ -12,6 +12,8 @@ from datetime import date, datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 CHART_URL = "https://stablecoins.llama.fi/stablecoincharts/all"
 LIST_URL = "https://stablecoins.llama.fi/stablecoins"
 SOURCE = "DefiLlama stablecoin tracker (free public data, adds up on-chain supply; not an official statistic)"
@@ -105,7 +107,7 @@ class Stablecoins:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, TypeError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"DefiLlama could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"DefiLlama could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

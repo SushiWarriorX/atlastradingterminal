@@ -14,6 +14,8 @@ from datetime import date, datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 FIELDS = ("record_date,cusip,security_type,security_term,auction_date,issue_date,offering_amt,total_tendered,total_accepted,high_discnt_rate,high_investment_rate,bid_to_cover_ratio,reopening,"
           "cash_management_bill_cmb,comp_accepted,primary_dealer_accepted,direct_bidder_accepted,indirect_bidder_accepted")
 URL = f"https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/auctions_query?sort=-auction_date&page%5Bsize%5D=400&filter=security_type:eq:Bill&fields={FIELDS}"
@@ -109,7 +111,7 @@ class BillAuctions:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, TypeError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"US Treasury FiscalData could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"US Treasury FiscalData could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

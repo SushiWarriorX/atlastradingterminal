@@ -12,6 +12,8 @@ from datetime import date, datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 URL = "https://publicreporting.cftc.gov/resource/gpe5-46if.json"
 CODE = "133741"                    # BITCOIN - CHICAGO MERCANTILE EXCHANGE
 SOURCE = "CFTC Commitments of Traders, Traders in Financial Futures, CME Bitcoin futures (official, free public data)"
@@ -101,7 +103,7 @@ class CftcBitcoin:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, TypeError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"CFTC could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"CFTC could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

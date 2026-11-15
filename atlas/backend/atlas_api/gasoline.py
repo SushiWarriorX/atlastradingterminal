@@ -14,6 +14,7 @@ import httpx
 
 from .claims import _pct, reading
 from .fincond import parse
+from .failreason import fail_reason
 
 URL = "https://fred.stlouisfed.org/graph/fredgraph.csv"
 SOURCE = "US Energy Information Administration weekly retail gasoline prices, via FRED, St. Louis Fed (official, free public data)"
@@ -104,7 +105,7 @@ class GasolinePrices:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"Gasoline prices could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"Gasoline prices could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

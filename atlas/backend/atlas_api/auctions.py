@@ -16,6 +16,8 @@ from datetime import date, datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 URL = ("https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/auctions_query?sort=-auction_date&page%5Bsize%5D=150"
        "&fields=record_date,cusip,security_type,security_term,auction_date,issue_date,high_yield,bid_to_cover_ratio,offering_amt,total_accepted,reopening,inflation_index_security,floating_rate")
 SOURCE = "US Treasury FiscalData, Treasury Securities Auctions Data (official, free public data)"
@@ -113,7 +115,7 @@ class Auctions:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, TypeError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"US Treasury FiscalData could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"US Treasury FiscalData could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

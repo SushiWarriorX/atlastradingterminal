@@ -14,6 +14,8 @@ from datetime import date, datetime, timedelta, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 URL = "https://fred.stlouisfed.org/graph/fredgraph.csv"
 SOURCE = "Chicago Fed National Financial Conditions Index, via FRED, St. Louis Fed (official, free public data)"
 PAGE = "https://fred.stlouisfed.org/series/NFCI"
@@ -104,7 +106,7 @@ class FinConditions:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"Financial conditions could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"Financial conditions could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

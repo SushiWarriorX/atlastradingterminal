@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 URL = "https://api.coingecko.com/api/v3/global"
 SOURCE = "CoinGecko (free public API; totals depend on which coins it lists and how it counts supply)"
 TTL = 900.0
@@ -59,7 +61,7 @@ class CoinGeckoGlobal:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, TypeError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"CoinGecko could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"CoinGecko could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

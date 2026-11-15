@@ -13,6 +13,7 @@ from datetime import date, datetime, timedelta, timezone
 import httpx
 
 from .fincond import parse
+from .failreason import fail_reason
 
 URL = "https://fred.stlouisfed.org/graph/fredgraph.csv"
 SOURCE = "US Department of Labor weekly unemployment insurance claims, via FRED, St. Louis Fed (official, free public data)"
@@ -102,7 +103,7 @@ class JoblessClaims:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"Jobless claims could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"Jobless claims could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

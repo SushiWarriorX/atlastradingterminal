@@ -13,6 +13,8 @@ from datetime import date, datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 URL = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_9"
 FIELDS = "record_date,classification_desc,print_order_nbr,sequence_level_nbr,data_type_cd,current_month_rcpt_outly_amt,current_fytd_rcpt_outly_amt,prior_fytd_rcpt_outly_amt"
 SOURCE = "US Treasury FiscalData, Monthly Treasury Statement Table 9, receipts and outlays by function (official, free public data)"
@@ -142,7 +144,7 @@ class Outlays:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, TypeError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"Treasury outlays could not be read right now ({type(e).__name__}: {str(e)[:110]})"}
+            res = {**base, "available": False, "reason": f"Treasury outlays could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

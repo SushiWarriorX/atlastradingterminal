@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 BASE = "https://mempool.space/api"
 SOURCE = "mempool.space (free public Bitcoin explorer API)"
 TTL = 300.0
@@ -90,7 +92,7 @@ class OnChain:
                 try:
                     return await build()
                 except (httpx.HTTPError, ValueError, TypeError, KeyError, ZeroDivisionError) as e:
-                    return {"available": False, "reason": f"mempool.space {name} could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+                    return {"available": False, "reason": f"mempool.space {name} could not be read right now ({fail_reason(e)})"}
 
             async def fees():
                 p = (await get("v1/fees/recommended")).json()

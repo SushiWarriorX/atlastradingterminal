@@ -11,6 +11,8 @@ from datetime import datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 BASE = "https://api.worldbank.org/v2/country/USA;CHN;EMU;JPN;GBR;IND/indicator"
 SOURCE = "World Bank Open Data (official, free public data; annual figures, revised later)"
 COUNTRIES = [("USA", "United States"), ("EMU", "Euro area"), ("CHN", "China"), ("JPN", "Japan"), ("GBR", "United Kingdom"), ("IND", "India")]
@@ -78,7 +80,7 @@ class WorldBank:
                         raise ValueError(f"HTTP {r.status_code}")
                     out.append({"key": key, "title": title, "unit": unit, "what": what, "available": True, "rows": table(parse(r.json(), title), now.year)})
                 except (httpx.HTTPError, ValueError, TypeError, KeyError) as e:
-                    out.append({"key": key, "title": title, "unit": unit, "what": what, "available": False, "reason": f"World Bank {title.lower()} could not be read right now ({type(e).__name__}: {str(e)[:80]})", "rows": []})
+                    out.append({"key": key, "title": title, "unit": unit, "what": what, "available": False, "reason": f"World Bank {title.lower()} could not be read right now ({fail_reason(e)})", "rows": []})
         finally:
             if self._client is None:
                 await c.aclose()

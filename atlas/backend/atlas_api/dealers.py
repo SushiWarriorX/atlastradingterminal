@@ -14,6 +14,8 @@ from datetime import date, datetime, timedelta, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 URL = "https://markets.newyorkfed.org/api/pd/get/{key}.json"
 KEY, KEY_CHANGE = "PDPOSGST-TOT", "PDPOSGST-TOTC"
 SOURCE = "Federal Reserve Bank of New York, Primary Dealer Statistics (official, free public data)"
@@ -106,7 +108,7 @@ class Dealers:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, TypeError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"The New York Fed could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"The New York Fed could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

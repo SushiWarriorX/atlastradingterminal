@@ -12,6 +12,8 @@ from datetime import date, datetime, timedelta, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 URL = "https://markets.newyorkfed.org/api/soma/summary.json"
 SOURCE = "Federal Reserve Bank of New York, System Open Market Account holdings (official, free public data)"
 PAGE = "https://www.newyorkfed.org/markets/soma-holdings"
@@ -97,7 +99,7 @@ class Soma:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, TypeError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"The New York Fed could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"The New York Fed could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

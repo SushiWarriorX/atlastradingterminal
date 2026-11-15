@@ -13,6 +13,8 @@ from datetime import date, datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 CURVE_URL = "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml"
 DEBT_URL = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny"
 SOURCE_CURVE = "US Treasury, Daily Treasury Par Yield Curve Rates (official, free public data)"
@@ -139,7 +141,7 @@ class Treasury:
                 raise ValueError("no readable yield curves")
             return curve_fact(days, today)
         except (httpx.HTTPError, ValueError, ET.ParseError) as e:
-            return {"available": False, "reason": f"US Treasury yield curve could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            return {"available": False, "reason": f"US Treasury yield curve could not be read right now ({fail_reason(e)})"}
 
     async def _debt(self, c, today: date) -> dict:
         try:
@@ -148,4 +150,4 @@ class Treasury:
                 raise ValueError(f"HTTP {r.status_code}")
             return parse_debt(r.json(), today)
         except (httpx.HTTPError, ValueError, KeyError) as e:
-            return {"available": False, "reason": f"US Treasury debt figure could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            return {"available": False, "reason": f"US Treasury debt figure could not be read right now ({fail_reason(e)})"}

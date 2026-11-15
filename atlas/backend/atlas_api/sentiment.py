@@ -11,6 +11,8 @@ from datetime import datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 URL = "https://api.alternative.me/fng/"
 SOURCE = "alternative.me Crypto Fear & Greed Index (free public API, unofficial composite)"
 TTL = 1800.0
@@ -67,7 +69,7 @@ class FearGreed:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"alternative.me could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"alternative.me could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

@@ -12,6 +12,8 @@ from datetime import date, datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 LATEST_URL = "https://markets.newyorkfed.org/api/rates/all/latest.json"
 HISTORY_URL = "https://markets.newyorkfed.org/api/rates/unsecured/effr/last/260.json"
 SOURCE = "Federal Reserve Bank of New York, reference rates (official, free public data)"
@@ -134,7 +136,7 @@ class FedRates:
             self._cache = (time.monotonic() + (TTL if hist is not None else FAIL_TTL), res)
             return res
         except (httpx.HTTPError, ValueError, TypeError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"The New York Fed could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"The New York Fed could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

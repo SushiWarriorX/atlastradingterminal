@@ -14,6 +14,8 @@ from datetime import date, datetime, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 URL = "https://data-api.ecb.europa.eu/service/data/EXR/D.USD+JPY+GBP+CHF+CNY+CAD+AUD.EUR.SP00.A"
 SOURCE = "European Central Bank euro reference rates (official, free public data); dollar pairs are calculated from them"
 TTL = 3600.0
@@ -102,7 +104,7 @@ class EcbFx:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, KeyError, ZeroDivisionError) as e:
-            res = {**base, "available": False, "reason": f"The ECB could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"The ECB could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:

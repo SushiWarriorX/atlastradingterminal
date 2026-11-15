@@ -15,6 +15,8 @@ from datetime import date, datetime, timedelta, timezone
 
 import httpx
 
+from .failreason import fail_reason
+
 BASE = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/public_debt_transactions"
 FIELDS = "record_date,transaction_type,security_market,security_type,security_type_desc,transaction_today_amt,transaction_mtd_amt,transaction_fytd_amt"
 SOURCE = "US Treasury FiscalData, Daily Treasury Statement: Public Debt Transactions (official, free public data)"
@@ -146,7 +148,7 @@ class Borrowing:
             self._cache = (time.monotonic() + TTL, res)
             return res
         except (httpx.HTTPError, ValueError, TypeError, KeyError) as e:
-            res = {**base, "available": False, "reason": f"US Treasury FiscalData could not be read right now ({type(e).__name__}: {str(e)[:80]})"}
+            res = {**base, "available": False, "reason": f"US Treasury FiscalData could not be read right now ({fail_reason(e)})"}
             self._cache = (time.monotonic() + FAIL_TTL, res)
             return res
         finally:
