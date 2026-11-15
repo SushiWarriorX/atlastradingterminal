@@ -58,6 +58,26 @@ New hypotheses found in published research or practitioner sources, each screene
 
 If all six were pre-registered, N would grow from 100 to 149.
 
-## Screen result
+## Screen result (run 2026-11-15 after the rules above were pushed; `python -m atlas_api.btcquant.novelty`, written to `reports/novelty.json`)
 
-Not yet run. The screen is run after this file, the rules above and `atlas_api/btcquant/novelty.py` (with its tests) are pushed, so that the rules are fixed before anyone sees how they overlap.
+Data: 2,875 daily Coinbase BTC-USD candles to 2026-11-14 (hash `c9cb205d1d501e6a`), compared over the 1,827 TRAIN and VALIDATION days against all 100 configurations of the twelve families. **None of the six is a renamed copy (all are below 0.90).**
+
+| order | id | ON share of days | highest correlation | closest existing configuration | renamed? | source, as seen |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `monday` | 14% | +0.02 | `vol_target` (target 0.3, window 20) | no | working paper and a journal paper; contested by a third study |
+| 2 | `three_down` | 10% | +0.12 | `rsi_oversold` (enter 30, exit 50, n 7) | no | mostly intraday; thin at the daily horizon |
+| 3 | `volume_surge` | 12% | +0.44 | `vol_breakout` (hold 5, k 1.5) | no | a predictability paper, not a trading rule |
+| 4 | `squeeze_break` | 17% | +0.45 | `donchian` (N 20) | no | practitioner |
+| 5 | `money_flow` | 56% | +0.49 | `rsi_momentum` (n 14, enter 55, exit 50) | no | practitioner |
+| 6 | `near_high` | 30% | +0.69 | `rsi_momentum` (n 21, enter 60, exit 50) | no | a stocks paper; none found for crypto |
+
+The order is the fixed priority rule applied to these numbers (lowest highest-correlation first; where two are within 0.05, a published source first: `volume_surge` before `squeeze_break` and `money_flow`).
+
+What the screen says and does not say. The calendar rule and the reversal rule are almost uncorrelated with anything already tested, so a result for them could not be an old result in disguise. The other four are different position series, but they share 0.4 to 0.7 of their timing with a trend or momentum family: if one of them had an edge it could be the trend edge already rejected. The screen compares the default configuration only (a member of a planned grid could overlap more; the registry flags a renamed copy again at logging time, on the chosen configuration's exposure), uses state series rather than the engine's sized positions, and says nothing about returns. A low correlation is not evidence for a rule.
+
+## Before the first entry can be run (engineering for the next strategy hour; nothing here has been done)
+
+1. **A protocol version bump must not change any existing specification hash.** `strategies.spec` puts `config.PROTOCOL_VERSION` into every specification, and an account's id is derived from the hash, so bumping the version to 1.3 would give all fourteen accounts new ids and the daily run would open twelve duplicate monitors. Each family should carry the protocol version it was pre-registered under and the specification should use that. First test: every existing hash is unchanged (for example `sma_cross` fast 10, slow 50 is `c0f76650213f0d13`) and a daily run after the change opens no account.
+2. **A research run must be able to evaluate only the families pre-registered under the new version.** `validation.evaluate_all` and `research.run_research` run every family; the twelve results must stay as they are (reported, never re-run), and N for the (reported, not gating) deflated Sharpe ratio becomes 100 plus the new family's configurations.
+3. **The calibration** (`CALIBRATION.md`: about one noise dataset in six admits something among twelve families) must be restated for thirteen families, by arithmetic or by re-running `calibration.py` with the new family, in the amendment.
+4. **The entry itself:** `strategies/<id>.md`, the protocol amendment (v1.3: the family, its grid, N), the family as code with its tests first (including the no-look-ahead test), pushed before the run; then one run, and a monitor account for it (the existing code opens one for a non-admitted chosen configuration).

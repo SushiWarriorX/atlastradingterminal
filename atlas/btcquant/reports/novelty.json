@@ -1,0 +1,220 @@
+{
+ "candidates": {
+  "monday": {
+   "closest": [
+    {
+     "correlation": 0.01802420527073868,
+     "family": "vol_target",
+     "params": {
+      "target": 0.3,
+      "window": 20
+     }
+    },
+    {
+     "correlation": 0.016418093287984513,
+     "family": "vol_target",
+     "params": {
+      "target": 0.5,
+      "window": 20
+     }
+    },
+    {
+     "correlation": 0.01580127871649572,
+     "family": "sma_cross",
+     "params": {
+      "fast": 20,
+      "slow": 50
+     }
+    }
+   ],
+   "days": 1827,
+   "max_correlation": 0.01802420527073868,
+   "name": "Monday-only holding (day-of-week effect)",
+   "renamed": false,
+   "share_on": 0.14285714285714285
+  },
+  "money_flow": {
+   "closest": [
+    {
+     "correlation": 0.491302992312058,
+     "family": "rsi_momentum",
+     "params": {
+      "enter": 55,
+      "exit": 50,
+      "n": 14
+     }
+    },
+    {
+     "correlation": 0.4868887239725816,
+     "family": "rsi_momentum",
+     "params": {
+      "enter": 55,
+      "exit": 50,
+      "n": 21
+     }
+    },
+    {
+     "correlation": 0.47952732028456496,
+     "family": "rsi_momentum",
+     "params": {
+      "enter": 60,
+      "exit": 50,
+      "n": 14
+     }
+    }
+   ],
+   "days": 1827,
+   "max_correlation": 0.491302992312058,
+   "name": "Hold while Chaikin money flow is positive",
+   "renamed": false,
+   "share_on": 0.5632183908045977
+  },
+  "near_high": {
+   "closest": [
+    {
+     "correlation": 0.6889865900796202,
+     "family": "rsi_momentum",
+     "params": {
+      "enter": 60,
+      "exit": 50,
+      "n": 21
+     }
+    },
+    {
+     "correlation": 0.6886036843779095,
+     "family": "rsi_momentum",
+     "params": {
+      "enter": 65,
+      "exit": 50,
+      "n": 14
+     }
+    },
+    {
+     "correlation": 0.6704820426559448,
+     "family": "rsi_momentum",
+     "params": {
+      "enter": 60,
+      "exit": 50,
+      "n": 14
+     }
+    }
+   ],
+   "days": 1827,
+   "max_correlation": 0.6889865900796202,
+   "name": "Hold while within 5% of the 13-week high",
+   "renamed": false,
+   "share_on": 0.2961138478379858
+  },
+  "squeeze_break": {
+   "closest": [
+    {
+     "correlation": 0.45136088763125637,
+     "family": "donchian",
+     "params": {
+      "N": 20
+     }
+    },
+    {
+     "correlation": 0.41837976851020403,
+     "family": "rsi_momentum",
+     "params": {
+      "enter": 65,
+      "exit": 50,
+      "n": 14
+     }
+    },
+    {
+     "correlation": 0.40301374676871354,
+     "family": "rsi_momentum",
+     "params": {
+      "enter": 60,
+      "exit": 50,
+      "n": 14
+     }
+    }
+   ],
+   "days": 1827,
+   "max_correlation": 0.45136088763125637,
+   "name": "Volatility squeeze, then a break above the upper band",
+   "renamed": false,
+   "share_on": 0.1746031746031746
+  },
+  "three_down": {
+   "closest": [
+    {
+     "correlation": 0.11813741985701207,
+     "family": "rsi_oversold",
+     "params": {
+      "enter": 30,
+      "exit": 50,
+      "n": 7
+     }
+    },
+    {
+     "correlation": 0.10653942659358201,
+     "family": "rsi_oversold",
+     "params": {
+      "enter": 25,
+      "exit": 50,
+      "n": 7
+     }
+    },
+    {
+     "correlation": 0.09679232492243704,
+     "family": "rsi_oversold",
+     "params": {
+      "enter": 20,
+      "exit": 50,
+      "n": 7
+     }
+    }
+   ],
+   "days": 1827,
+   "max_correlation": 0.11813741985701207,
+   "name": "Buy after three lower closes (short-term reversal)",
+   "renamed": false,
+   "share_on": 0.09523809523809523
+  },
+  "volume_surge": {
+   "closest": [
+    {
+     "correlation": 0.4414135582102885,
+     "family": "vol_breakout",
+     "params": {
+      "hold": 5,
+      "k": 1.5
+     }
+    },
+    {
+     "correlation": 0.3957775285624633,
+     "family": "vol_breakout",
+     "params": {
+      "hold": 5,
+      "k": 2.0
+     }
+    },
+    {
+     "correlation": 0.33595432557457444,
+     "family": "vol_breakout",
+     "params": {
+      "hold": 10,
+      "k": 2.0
+     }
+    }
+   ],
+   "days": 1827,
+   "max_correlation": 0.4414135582102885,
+   "name": "Hold after a volume surge on an up day",
+   "renamed": false,
+   "share_on": 0.120415982484948
+  }
+ },
+ "data": {
+  "candles": 2875,
+  "first": "2019-01-01T00:00:00Z",
+  "last": "2026-11-14T00:00:00Z",
+  "sha256": "c9cb205d1d501e6af73a4299a67fe15ca1faa68e03c223f63e4733a71e2ea740"
+ },
+ "protocol": "1.2",
+ "threshold": 0.9
+}
