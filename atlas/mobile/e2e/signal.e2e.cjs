@@ -818,6 +818,24 @@ async function healthy(browser) {
       await page.locator(V("m2-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07t-m2");
 
+      await page.waitForSelector(V("reserves-card"));
+      await page.waitForSelector(V("reserves-body") + ", " + V("reserves-unavailable") + ", " + V("reserves-error"), { timeout: 45000 });
+      const resTxt = await text(page);
+      match(resTxt, /Bank reserves and currency/); match(resTxt, /Federal Reserve Board/); noMatch(resTxt, FORECASTS, "the bank reserves card makes no forecasts");
+      if (await liveCard(page, "reserves-body")) {
+        const resBody = await inner(page, "reserves-body");
+        const MON = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        match(resBody, /Week ending Wednesday [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the Wednesday is written out");
+        match(resBody, /Bank reserves at the Fed were \$\d\.\d{2} trillion, (up \d{1,2}\.\d% on the week before|down \d{1,2}\.\d% on the week before|the same as the week before)\. Currency in circulation was \$\d\.\d{2} trillion\./, "reserves and currency with the weekly change");
+        match(resBody, /Past year: low \$\d\.\d{2} trillion, high \$\d\.\d{2} trillion; \d{1,3}% of its \d{2} weeks were at or below this level\./, "the reading is explained in weeks");
+        match(resBody, new RegExp(`Monetary base \\(monthly\\): \\$\\d\\.\\d{2} trillion in ${MON} = currency \\$\\d\\.\\d{2} trillion \\+ reserve balances \\$\\d\\.\\d{2} trillion; the three figures add up to within \\$0\\.1 billion`), "the base is shown as the sum of its two parts");
+        match(resBody, new RegExp(`Cross-check: the weekly figures for ${MON} \\(\\d weeks\\) add up to an average of \\$[\\d,]+\\.\\d billion, (the same as|\\d\\.\\d{2}% (under|over)) the monthly base\\.`), "the weekly figures are checked against the monthly base");
+        match(resBody, /Checked: every recent weekly figure is in a plausible range/); match(resBody, /not a market signal or a forecast/);
+        noMatch(resBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("reserves-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07u-reserves");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);

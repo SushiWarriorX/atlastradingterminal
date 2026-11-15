@@ -13,7 +13,7 @@ Baseline counted 2026-11-09:
 
 Target: at least 71 (67 x 1.05 = 70.35, rounded up). Each loop adds its own kind; update the table and the current total when something ships.
 
-Current total: 99 (baseline 67 + 8 strategies + 3 skills + 21 data sources; the Chicago Fed index shipped on 2026-11-12 but was not counted until 2026-11-14). Research-only inputs that Signal does not show (Fear & Greed and hash-rate histories, the Fed balance-sheet series) are not counted. Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
+Current total: 100 (baseline 67 + 8 strategies + 3 skills + 22 data sources; the Chicago Fed index shipped on 2026-11-12 but was not counted until 2026-11-14). Research-only inputs that Signal does not show (Fear & Greed and hash-rate histories, the Fed balance-sheet series) are not counted. Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
 
 ## Added since baseline
 | Date | Kind | Name | Source/loop |
@@ -49,6 +49,7 @@ Current total: 99 (baseline 67 + 8 strategies + 3 skills + 21 data sources; the 
 | 2026-11-14 | Data source | US regular gasoline weekly price with a cross-check against WTI crude (US Energy Information Administration via FRED) | Data loop |
 | 2026-11-15 | Data source | Henry Hub natural gas spot price, daily, with a cross-check against EIA's own monthly average (US Energy Information Administration via FRED) | Data loop |
 | 2026-11-15 | Data source | M2 money supply, monthly seasonally adjusted, with cross-checks against the unadjusted and weekly series (Federal Reserve Board via FRED) | Data loop |
+| 2026-11-15 | Data source | Bank reserves, currency in circulation and the monetary base (weekly and monthly), with the base = currency + reserves identity and a weekly-against-monthly check (Federal Reserve Board via FRED) | Data loop |
 
 ## Loop budget (measured 2026-11-09)
 - Strategy cycle with 3 rules and the full backend suite: about 4 minutes wall time. Improvement cycle with all suites: roughly 20 to 45 minutes. Skills and data cycles: a few minutes each, data often blocked by hosts the sandbox cannot reach.

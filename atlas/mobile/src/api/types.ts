@@ -445,6 +445,12 @@ export interface MoneySupplyData { available: boolean; reason?: string; demo: bo
   seasonal?: { month: string; adjusted: number; unadjusted: number; pct: number | null };
   weekly?: { newest: { month: string; weeks: number; average: number; unadjusted: number; diff_pct: number }; months_compared: number };
   history?: { date: string; level: number }[] }
+export interface BankReservesData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  weekly?: { date: string; reserves_millions: number; currency_millions: number; reserves_change_1w_pct: number | null; reserves_change_4w_pct: number | null; reserves_change_1y_pct: number | null; currency_change_1y_pct: number | null;
+    reserves_year_low_millions: number; reserves_year_high_millions: number; weeks_in_year: number; reserves_rank_in_year: number };
+  monthly?: { month: string; age_days: number; freshness: "CURRENT" | "OVERDUE"; base_billions: number; currency_billions: number; reserves_billions: number; gap_billions: number; base_change_1m_pct: number | null; base_change_1y_pct: number | null };
+  crosscheck?: { newest: { month: string; weeks: number; weekly_average_billions: number; monthly_base_billions: number; diff_pct: number }; months_compared: number };
+  history?: { date: string; reserves_millions: number }[] }
 export interface RealYieldRow { tenor: string; nominal_pct: number | null; real_pct: number | null; breakeven_pct: number; breakeven_change_1m_bp: number | null; breakeven_change_1y_bp: number | null; real_change_1y_bp: number | null }
 export interface RealYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   month_ago_date?: string | null; year_ago_date?: string | null; rows?: RealYieldRow[]; history?: { date: string; breakeven_10y_pct: number }[];
