@@ -11,8 +11,8 @@ Code lives in `atlas/backend/atlas_api/btcquant/`, tests in `atlas/backend/tests
 - [x] 2. Indicators (`btcquant/indicators.py`, 10 tests with hand-worked numbers).
 - [x] 3. Account and execution engine (`btcquant/account.py`, 30 tests; 41 deliberate breakages each caught by a failing test, run clean): next-open fills, fee and slippage, 1% risk sizing, stops, armed re-entry, circuit breaker, weight mode, as one step function with a signal-time order ledger.
 - [x] 4. Strategy families 1 to 12 plus benchmarks as code (`btcquant/strategies.py`, 54 tests; 47 deliberate breakages each caught), with `strategies/<family>.md` notes and `SOURCES.md` pushed first (commit 420babb, protocol v1.1) and a future-perturbation test over all 100 configurations. Nothing has been run on real data.
-- [ ] 5. Metrics (all of section 6 of the protocol) with hand-worked tests.
-- [ ] 6. Backtest runner by period, benchmarks, exposure-matched hold, full-exposure sensitivity, regimes; tests (buy-and-hold equals the price ratio less costs; cash is flat).
+- [x] 5. Metrics (`btcquant/metrics.py`, 20 tests with hand-worked numbers; 48 deliberate breakages each caught): every number of protocol section 6, regimes with their equality boundaries, the exposure-matched hold with costs.
+- [x] 6. Backtest runner (`btcquant/backtest.py`, 19 tests; 32 deliberate breakages each caught): periods on the calendar, benchmarks, exposure-matched hold, full-exposure and cost sensitivities, regimes, circuit-breaker cool-off; no look-ahead from the runner's point of view.
 - [ ] 7. Validation: selection with neighbour smoothing, parameter stability, walk-forward, cost sensitivity, deflated Sharpe, random-timing null, gates; tests including boundaries.
 - [ ] 8. Registry: candidate log with spec hash and duplicate check, champions and challengers, freeze guard, holdout log.
 - [ ] 9. Paper engine with persistent state, ledger on signal, idempotent daily processing, catch-up after missed days; parity test with the backtest.

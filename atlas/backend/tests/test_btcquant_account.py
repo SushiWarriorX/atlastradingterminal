@@ -452,3 +452,32 @@ def test_the_cool_off_and_the_trip_record_survive_a_save_and_a_load():
     a = tripped(cool_off_days=7)
     b = Account.from_dict(a.to_dict())
     assert b.cool_off_days == 7 and b.breaker_trips == a.breaker_trips and b.halted and b.breaker_at == a.breaker_at
+
+
+def test_every_executed_buy_and_sell_is_counted_as_a_fill():
+    a = acct(kind="weight", fee=0.0, slip=0.0)
+    a.begin(bar(0, 100, 100, 100, 100), Sig(weight=0.5))
+    a.step(bar(1, 100, 101, 99, 100), Sig(weight=0.8))                              # buys at this open (fill 1); then asks for 0.8
+    a.step(bar(2, 100, 101, 99, 100), Sig(weight=0.0))                              # buys up to 0.8 at this open (fill 2); then asks for 0
+    a.step(bar(3, 100, 101, 99, 100), Sig(weight=0.0))                              # sells everything (fill 3)
+    assert a.fills == 3 and a.qty == 0
+    b = acct()
+    enter_at(b, 100.0, 94.0)
+    assert b.fills == 1
+    b.step(bar(2, 99.0, 99.5, 94.0, 96.0), Sig(state=True, stop=94.0))               # stopped out: the sell is a fill
+    assert b.fills == 2 and len(b.trades) == 1
+
+
+def test_the_curve_records_the_share_of_equity_held_at_the_open_after_the_days_order_executed():
+    a = acct(sizing="full", fee=0.0, slip=0.0)
+    a.begin(bar(0, 100, 100, 100, 100), Sig(state=True, stop=50.0))
+    a.step(bar(1, 100, 110, 100, 110), Sig(state=True, stop=50.0))                  # buys everything at this open, then the price rises 10%: held 100% at the open and at the close
+    a.step(bar(2, 110, 110, 90, 99), Sig(state=False, stop=50.0))                   # still all in at the open; the exit order made at this close fills at the next open
+    a.step(bar(3, 99, 100, 98, 99), Sig(state=False))                               # sells at this open: flat for the day, so 0% at the open
+    row = lambda i: a.curve[i]
+    assert row(0)[6] == pytest.approx(1.0) and row(1)[6] == pytest.approx(1.0) and row(2)[6] == pytest.approx(0.0)
+    assert row(0)[2] == pytest.approx(1.0) and row(2)[2] == pytest.approx(0.0)         # the exposure at the close is unchanged by this
+    b = acct(kind="cash")
+    b.begin(bar(0, 100, 100, 100, 100), None)
+    b.step(bar(1, 100, 101, 99, 100), None)
+    assert b.curve[0][6] == 0.0

@@ -67,6 +67,7 @@ class Account:
     fees_paid: float = 0.0
     slip_paid: float = 0.0
     traded: float = 0.0                              # notional traded, both sides
+    fills: int = 0                                   # number of executed buys and sells (for weight mode these are the position changes)
     pending: dict | None = None
     last_target: float | None = None
     last_bar: int | None = None
@@ -75,7 +76,7 @@ class Account:
     breaker_trips: list = field(default_factory=list)        # every trip: {"t": candle open time, "equity": ..., "peak": ...}
     open_trade: dict | None = None
     trades: list = field(default_factory=list)
-    curve: list = field(default_factory=list)        # (t_open, equity, exposure, cash, qty, close)
+    curve: list = field(default_factory=list)        # (t_open, equity, exposure at the close, cash, qty, close, exposure at the open after the day's order executed)
     events: list = field(default_factory=list)
 
     def __post_init__(self):
@@ -142,6 +143,7 @@ class Account:
         self.fees_paid += fee
         self.slip_paid += qty * (fill - ref)
         self.traded += cost
+        self.fills += 1
         if self.open_trade is None:
             self.open_trade = {"entry_t": t, "buys": 0.0, "buy_qty": 0.0, "sells": 0.0, "sell_qty": 0.0, "fees": 0.0, "slip": 0.0, "bars": 0}
         ot = self.open_trade
@@ -163,6 +165,7 @@ class Account:
         self.fees_paid += fee
         self.slip_paid += qty * (ref - fill)
         self.traded += proceeds
+        self.fills += 1
         ot = self.open_trade
         if ot is not None:
             ot["sells"] += net; ot["sell_qty"] += qty; ot["fees"] += fee; ot["slip"] += qty * (ref - fill)
@@ -209,6 +212,8 @@ class Account:
                         self._buy(t, o, q, od["reason"], od["id"], eq_before=eq0)
                 elif delta < 0 and self.qty > TINY:
                     self._sell(t, o, min(self.qty, -delta / o), od["reason"], od["id"], eq_before=eq0)
+        eq_open = self.equity(o)
+        open_exposure = self.qty * o / eq_open if eq_open > 0 else 0.0
         # (2) protective stop, against this candle's low
         if self.qty > TINY and self.stop is not None and l <= self.stop:
             ref = o if o <= self.stop else self.stop                         # a gap through the stop fills at the open
@@ -219,7 +224,7 @@ class Account:
         eq = self.equity(c)
         self.peak = max(self.peak, eq)
         exposure = self.qty * c / eq if eq > 0 else 0.0
-        self.curve.append((t, eq, exposure, self.cash, self.qty, c))
+        self.curve.append((t, eq, exposure, self.cash, self.qty, c, open_exposure))
         if self.open_trade is not None:
             self.open_trade["bars"] += 1
         self.last_bar = t
