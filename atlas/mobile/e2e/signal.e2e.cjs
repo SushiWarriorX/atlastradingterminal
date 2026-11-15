@@ -866,6 +866,28 @@ async function healthy(browser) {
       await page.locator(V("reserves-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07u-reserves");
 
+      await page.waitForSelector(V("ecbrates-card"));
+      await page.waitForSelector(V("ecbrates-body") + ", " + V("ecbrates-unavailable") + ", " + V("ecbrates-error"), { timeout: 45000 });
+      const ecbTxt = await text(page);
+      match(ecbTxt, /ECB interest rates/); match(ecbTxt, /European Central Bank/); noMatch(ecbTxt, FORECASTS, "the ECB rates card makes no forecasts");
+      if (await liveCard(page, "ecbrates-body")) {
+        const ecbBody = await inner(page, "ecbrates-body");
+        const DAY = "[A-Z][a-z]{2} \\d{1,2}, 20\\d\\d";
+        match(ecbBody, new RegExp(`In force on ${DAY}`), "the date is written out");
+        match(ecbBody, /Deposit facility rate\s+-?\d{1,2}\.\d{2}%\s+What the ECB pays banks for money left with it overnight\./, "the deposit rate with its plain meaning");
+        match(ecbBody, /Main refinancing rate\s+-?\d{1,2}\.\d{2}%\s+What banks pay for the ECB's regular one-week loans at a fixed rate; \d\.\d{2} points above the deposit rate\./, "the main refinancing rate sits above the deposit rate");
+        match(ecbBody, /Marginal lending rate\s+-?\d{1,2}\.\d{2}%\s+What banks pay to borrow from the ECB overnight; \d\.\d{2} points above the deposit rate\./, "the marginal lending rate sits above the deposit rate");
+        match(ecbBody, new RegExp(`Last changed on ${DAY}: (up|down) \\d\\.\\d{2} points, from -?\\d{1,2}\\.\\d{2}%\\.`), "when each rate last changed, found from the data");
+        match(ecbBody, /(Up|Down) \d\.\d{2} points on a year ago \(-?\d{1,2}\.\d{2}%\)\.|The same as a year ago \(-?\d{1,2}\.\d{2}%\)\./, "against a year ago");
+        match(ecbBody, new RegExp(`Recent changes to the deposit rate\\s+${DAY}: (up|down) \\d\\.\\d{2} points, from -?\\d{1,2}\\.\\d{2}% to -?\\d{1,2}\\.\\d{2}%`), "the recent changes are listed");
+        match(ecbBody, new RegExp(`Market check: the euro short-term rate \\(€STR\\), .* was -?\\d{1,2}\\.\\d{3}% on ${DAY}.*, (\\d\\.\\d{3} points (under|over)|level with) the deposit rate \\(-?\\d{1,2}\\.\\d{2}%\\)\\.`), "the market rate against the deposit rate");
+        match(ecbBody, new RegExp(`On each of its last 60 business days \\(${DAY} to ${DAY}\\) it was (between \\d\\.\\d{3} points and \\d\\.\\d{3} points|from \\d\\.\\d{3} points).* the deposit rate\\.`), "the 60-day range is explained");
+        match(ecbBody, /Checked: every recent day is present/); match(ecbBody, /not a market signal or a forecast/);
+        noMatch(ecbBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("ecbrates-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);      // the top of a tall card, not its nearest edge
+      await shot(page, "07v-ecbrates");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);

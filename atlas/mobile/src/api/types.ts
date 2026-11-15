@@ -453,6 +453,11 @@ export interface BankReservesData { available: boolean; reason?: string; demo: b
   monthly?: { month: string; age_days: number; freshness: "CURRENT" | "OVERDUE"; base_billions: number; currency_billions: number; reserves_billions: number; gap_billions: number; base_change_1m_pct: number | null; base_change_1y_pct: number | null };
   crosscheck?: { newest: { month: string; weeks: number; weekly_average_billions: number; monthly_base_billions: number; diff_pct: number }; months_compared: number };
   history?: { date: string; reserves_millions: number }[] }
+export interface EcbRateChange { date: string; from: number; to: number; change: number }
+export interface EcbRateRow { id: "DFR" | "MRR_FR" | "MLFR"; name: string; meaning: string; rate: number; above_deposit_rate: number | null; year_ago: number | null; change_1y: number | null; last_change: EcbRateChange | null }
+export interface EcbRatesData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; year_ago_date?: string;
+  rates?: EcbRateRow[]; decisions?: EcbRateChange[];
+  market?: { date: string; age_days: number; freshness: "CURRENT" | "OVERDUE"; rate: number; deposit_rate: number; gap: number; observations: number; first_date: string; gap_low: number; gap_high: number } }
 export interface RealYieldRow { tenor: string; nominal_pct: number | null; real_pct: number | null; breakeven_pct: number; breakeven_change_1m_bp: number | null; breakeven_change_1y_bp: number | null; real_change_1y_bp: number | null }
 export interface RealYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   month_ago_date?: string | null; year_ago_date?: string | null; rows?: RealYieldRow[]; history?: { date: string; breakeven_10y_pct: number }[];

@@ -49,6 +49,7 @@ export const keys = (base: string | null) => ({
   naturalGas: ["naturalgas", base] as const,
   moneySupply: ["moneysupply", base] as const,
   bankReserves: ["bankreserves", base] as const,
+  ecbRates: ["ecbrates", base] as const,
   futuresPositioning: ["futurespos", base] as const,
   commodityPositioning: ["commoditypos", base] as const,
   currencyPositioning: ["currencypos", base] as const,

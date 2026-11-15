@@ -54,6 +54,7 @@ from .gasoline import GasolinePrices
 from .naturalgas import NaturalGas
 from .moneysupply import MoneySupply
 from .reserves import BankReserves
+from .ecbrates import EcbRates
 from .receipts import Receipts
 from .avgrates import AvgRates
 from .mspd import Mspd
@@ -405,6 +406,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     natural_gas = NaturalGas(demo=demo)
     money_supply = MoneySupply(demo=demo)
     bank_reserves = BankReserves(demo=demo)
+    ecb_rates = EcbRates(demo=demo)
     commodity_positioning = CftcCommodities(demo=demo)
     currency_positioning = CftcCurrencies(demo=demo)
     agri_positioning = CftcAgriculture(demo=demo)
@@ -502,6 +504,11 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     async def macro_bank_reserves():
         """Bank reserves, currency and the monetary base (Federal Reserve Board H.4.1 weekly and H.6 monthly via FRED): checked for dates, ranges, one-week and one-month moves (real shocks like 2020 are allowed), the identity base = currency + reserves, and the weekly figures against the monthly base. Describes what already happened; not a signal or a forecast."""
         return ok(await bank_reserves.overview())
+
+    @app.get("/api/macro/ecb-rates")
+    async def macro_ecb_rates():
+        """The European Central Bank's three key interest rates (deposit, main refinancing, marginal lending) and the euro short-term rate (ECB Data Portal): checked for days in a row, steps of 0.05, range, one-day moves, the order of the three rates and that the market rate sits near the deposit rate. Describes what the rates are and were; not a signal or a forecast."""
+        return ok(await ecb_rates.overview())
 
     @app.get("/api/macro/jobless-claims")
     async def macro_jobless_claims():
@@ -1893,7 +1900,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
                                       "listings": listings_service, "new_to_me": new_to_me,
-                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "bank_reserves": bank_reserves, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

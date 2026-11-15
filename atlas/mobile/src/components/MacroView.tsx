@@ -26,6 +26,7 @@ import { GasolinePricesCard } from "./GasolinePricesCard";
 import { NaturalGasCard } from "./NaturalGasCard";
 import { MoneySupplyCard } from "./MoneySupplyCard";
 import { BankReservesCard } from "./BankReservesCard";
+import { EcbRatesCard } from "./EcbRatesCard";
 import { CustomsCard } from "./CustomsCard";
 import { ReceiptsCard } from "./ReceiptsCard";
 import { OutlaysCard } from "./OutlaysCard";
@@ -78,6 +79,7 @@ export function MacroView() {
                 </View>))}
             </Section>
             <FedRatesCard />
+            <EcbRatesCard />
             <TreasuryCard />
             <FxCard />
             <FedOpsCard />

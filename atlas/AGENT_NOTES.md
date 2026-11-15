@@ -13,6 +13,7 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 - Free and keyless only. Check terms. The SEC contact and any keys live in environment variables or the untracked `local-settings.ps1`, never in the repo or a request header from the user's account.
 - Show what it is and what it is not (a mood gauge is not a signal). Say "unavailable" with a reason when the source fails.
 - A refused host fails at once (`curl: (56) CONNECT tunnel failed, response 403`); a flaky one gives empty replies or hangs (FRED on 2026-11-15: fine at 08:30, silent at 14:20). Log them differently, ship another source the same cycle, and tell the owner if the same host fails twice running.
+- Accept a date only as exactly `YYYY-MM-DD` (a regex before `date.fromisoformat`): from Python 3.11 `fromisoformat` also reads `2026-W46` and `20261113` as days, so a weekly or differently dated series would slip in silently (a test written to refuse one found this on 2026-11-15).
 
 ## Numbers that went wrong once
 - Bars per year: about 252 for stocks, 365 for crypto. Derive it from the dates, never hard-code.
