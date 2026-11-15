@@ -1,5 +1,6 @@
 """btcquant view: what the phone app shows of the paper lab, in plain words, built only from the dashboard and the ledgers the daily run writes."""
 import json
+import os
 
 import numpy as np
 import pytest
@@ -133,3 +134,169 @@ def test_a_waiting_order_is_worded_by_its_kind(tmp_path):
 def test_a_problem_found_in_the_frozen_specifications_reaches_the_phone(tmp_path):
     root = crafted_root(tmp_path, [None], frozen=["challenger abc: the stored specification does not hash to the recorded hash"])
     assert V.paper_view(root)["problems"] == ["challenger abc: the stored specification does not hash to the recorded hash"]
+
+
+# ---- the backtest side of the Journey page: each rule's verdict, its continuous replay on the stored candles, and its forward paper series ----
+from atlas_api.btcquant import backtest as B  # noqa: E402
+from atlas_api.btcquant import config as C  # noqa: E402
+from atlas_api.btcquant import data as D  # noqa: E402
+from atlas_api.btcquant import strategies as S  # noqa: E402
+
+
+def period(r, h, m, dd, sh, n, ex):
+    return {"total_return": r, "hold_return": h, "matched_hold_return": m, "max_drawdown": dd, "sharpe": sh, "trades": n, "exposure": ex, "days": 731}
+
+
+def write_report(root, text=None):
+    rep = {"protocol": "1.2", "evaluation": {"families": {
+        "tsmom": {"outcome": "rejected", "admission": {"failed": ["A3"]}, "train": period(0.41, 1.30, 0.13, 0.12, 1.41, 69, 0.08), "validation": period(0.25, 4.64, 0.19, 0.04, 1.93, 20, 0.09), "validation_timing": {"p": 0.12}},
+        "donchian": {"outcome": "rejected", "admission": {"failed": ["A2", "A9"]}, "train": period(0.2, 1.30, 0.1, 0.1, 0.95, 33, 0.05), "validation": None, "validation_timing": {"p": 0.17}},
+        "not_in_the_dashboard": {"outcome": "rejected", "admission": {"failed": ["A1"]}}}}}
+    (root / "reports").mkdir(exist_ok=True)
+    (root / "reports" / "research_1.2.json").write_text(text if text is not None else json.dumps(rep))
+
+
+@pytest.fixture()
+def root_with_data(root):
+    D.save(root / "data" / "btcusd_1d.csv", history(420, seed=3, vol=0.035))
+    return root
+
+
+def monitors(v):
+    return {a["family"]: a for a in v["accounts"] if a["stage"] == "monitor"}
+
+
+def test_each_rules_verdict_reaches_the_phone_with_the_reasons_in_plain_words(root):
+    write_report(root)
+    by = monitors(V.paper_view(root))
+    t, d = by["tsmom"]["backtest"], by["donchian"]["backtest"]
+    assert (t["outcome"], t["outcome_text"], t["why"], t["timing_p"]) == ("rejected", "Rejected", [V.GATE_WORDS["A3"]], 0.12)
+    assert t["train"] == {"return": 0.41, "hold_return": 1.30, "matched_hold_return": 0.13, "max_drawdown": 0.12, "sharpe": 1.41, "trades": 69, "exposure": 0.08}
+    assert t["validation"] == {"return": 0.25, "hold_return": 4.64, "matched_hold_return": 0.19, "max_drawdown": 0.04, "sharpe": 1.93, "trades": 20, "exposure": 0.09}
+    assert d["why"] == [V.GATE_WORDS["A2"], "A9"] and d["validation"] is None and d["train"]["trades"] == 33     # a gate the words do not know is shown as it is; a missing period stays missing
+    assert set(V.GATE_WORDS) == {"A1", "A2", "A3", "A4", "A5"} and all(not w[0].isupper() for w in V.GATE_WORDS.values())
+    for gate, phrase in (("A1", "too few trades"), ("A2", "holding the same average amount of Bitcoin"), ("A3", "random timing"), ("A4", "settings were nudged"), ("A5", "costs were doubled")):
+        assert phrase in V.GATE_WORDS[gate]
+    assert V.OUTCOME_WORDS == {"admitted": "Admitted", "rejected": "Rejected", "too_thin": "Too few trades to judge"}
+
+
+def test_without_the_research_report_only_the_reasons_and_the_period_figures_are_lost(root):
+    for text in (None, "{not json", "[]", json.dumps({"evaluation": {}})):
+        if text is not None:
+            write_report(root, text)
+        t = monitors(V.paper_view(root))["tsmom"]["backtest"]
+        assert (t["outcome"], t["outcome_text"], t["why"], t["train"], t["validation"], t["timing_p"]) == ("rejected", "Rejected", [], None, None, None)
+
+
+def test_the_benchmarks_and_the_main_portfolio_have_no_verdict(root_with_data):
+    by = {a["id"]: a for a in V.paper_view(root_with_data)["accounts"]}
+    assert by["buy_hold"]["backtest"]["outcome"] is None and by["buy_hold"]["backtest"]["outcome_text"] == "Benchmark" and by["buy_hold"]["backtest"]["why"] == []
+    assert by["cash"]["backtest"]["outcome_text"] == "Benchmark" and by["portfolio"]["backtest"] is None
+    assert by["portfolio"]["name"] == "Main portfolio" and by["portfolio"]["short"] == "MP" and by["buy_hold"]["short"] == "BTC" and by["cash"]["short"] == "USD"
+
+
+def test_the_replay_is_one_continuous_run_sampled_weekly_and_matches_the_engine(root_with_data):
+    v = V.paper_view(root_with_data)
+    bt = v["backtest"]
+    cs = history(420, seed=3, vol=0.035)
+    prep = B.Prepared(cs)
+    i0, i1 = prep.span(C.EVAL_START, None)
+    assert (bt["from"], bt["to"], bt["step_days"]) == ("2020-01-01", "2020-02-24", 7) and i1 - i0 + 1 == 55
+    assert bt["times"] == ["2020-01-01", "2020-01-08", "2020-01-15", "2020-01-22", "2020-01-29", "2020-02-05", "2020-02-12", "2020-02-19", "2020-02-24"]
+    assert bt["periods"] == [{"name": "TRAIN", "from": 0, "to": 8}]                  # TRAIN is cut where the data end; VALIDATION and TEST have not started in this data
+    assert "looks better than anything that can be expected" in bt["note"] and "2025 onward is not a clean test" in bt["note"]
+    params = {a["id"]: a["params"] for a in json.loads((root_with_data / "dashboard.json").read_text())["accounts"]}
+    for a in v["accounts"]:
+        if a["id"] == "portfolio":
+            continue
+        b = a["backtest"]
+        r = B.run(prep, a["family"], params[a["id"]], i0, i1, keep_account=True)
+        want = [round(r.account.curve[i - i0][1] / 10_000.0, 4) for i in [i0 + 7 * k for k in range(8)] + [i1]]
+        assert b["curve"] == want and len(b["curve"]) == len(bt["times"])
+        assert b["run"] == {"return": r.metrics["total_return"], "max_drawdown": r.metrics["max_drawdown"], "trades": r.metrics["trades"], "breaker_trips": r.metrics["breaker_trips"], "sharpe": r.metrics["sharpe"]}
+    by = {a["id"]: a for a in v["accounts"]}
+    assert by["cash"]["backtest"]["curve"] == [1.0] * 9 and by["buy_hold"]["backtest"]["run"]["return"] == pytest.approx(B.hold_return(prep, i0, i1))
+    json.dumps(v)
+
+
+def test_each_period_is_marked_by_the_samples_that_fall_inside_it(tmp_path):
+    cs = history(1400, seed=5, vol=0.02)                                       # 2019-01-01 to 2022-10-31: TRAIN is still running at the end of the data
+    D.save(tmp_path / "data" / "btcusd_1d.csv", cs)
+    acc = {"id": "buy_hold", "family": "buy_hold", "params": {}}
+    bt = V.backtest_curves(tmp_path, [acc])
+    n = len(bt["times"])
+    assert bt["periods"] == [{"name": "TRAIN", "from": 0, "to": n - 1}] and bt["times"][0] == "2020-01-01" and bt["times"][-1] == "2022-10-31"
+    cs = history(2300, seed=5, vol=0.02)                                       # to 2025-04-12: TRAIN and VALIDATION are complete and TEST has begun
+    D.save(tmp_path / "data" / "btcusd_1d.csv", cs)
+    bt = V.backtest_curves(tmp_path, [acc])
+    t = bt["times"]
+    p = {x["name"]: x for x in bt["periods"]}
+    assert t[p["TRAIN"]["from"]] == "2020-01-01" and t[p["TRAIN"]["to"]] <= "2022-12-31" < t[p["TRAIN"]["to"] + 1]
+    assert p["VALIDATION"]["from"] == p["TRAIN"]["to"] + 1 and "2023-01-01" <= t[p["VALIDATION"]["from"]] and t[p["VALIDATION"]["from"] - 1] < "2023-01-01"
+    assert t[p["VALIDATION"]["to"]] <= "2024-12-31" < t[p["VALIDATION"]["to"] + 1]
+    assert p["TEST"]["from"] == p["VALIDATION"]["to"] + 1 and p["TEST"]["to"] == len(t) - 1 and t[p["TEST"]["from"] - 1] < "2025-01-01" <= t[p["TEST"]["from"]] and [x["name"] for x in bt["periods"]] == ["TRAIN", "VALIDATION", "TEST"]
+
+
+def test_without_a_usable_candle_file_only_the_replay_is_lost(root, root_with_data):
+    v = V.paper_view(root)
+    (root / "data" / "btcusd_1d.csv").unlink()
+    v = V.paper_view(root)
+    assert v["backtest"] is None and len(v["accounts"]) == 5 and all(a["backtest"] is None or a["backtest"]["curve"] is None for a in v["accounts"])
+    for junk in (b"not a candle file", b"t,o,h,l,c,v\n1,2,3\n", b"t,o,h,l,c,v\nx,2,3,4,5,6\n", b"t,o,h,l,c,v\n1,2,3,4,5,6\n"):      # a wrong header, a short row, a word for a number, a single candle
+        (root / "data" / "btcusd_1d.csv").write_bytes(junk)
+        v = V.paper_view(root)
+        assert v["backtest"] is None and len(v["accounts"]) == 5 and v["available"] is True
+    D.save(root / "data" / "btcusd_1d.csv", history(100, seed=3))                # candles that do not reach the first evaluation day
+    assert V.paper_view(root)["backtest"] is None
+
+
+def test_the_replay_is_cached_until_the_candle_file_or_the_rules_change(root_with_data):
+    raw = json.loads((root_with_data / "dashboard.json").read_text())["accounts"]
+    first = V.backtest_curves(root_with_data, raw)
+    assert V.backtest_curves(root_with_data, raw) is first
+    assert V.backtest_curves(root_with_data, raw[:2]) is not first and V.backtest_curves(root_with_data, raw) is not first          # a different set of rules replaces the entry
+    again = V.backtest_curves(root_with_data, raw)
+    f = root_with_data / "data" / "btcusd_1d.csv"
+    st = f.stat()
+    os.utime(f, ns=(st.st_atime_ns, st.st_mtime_ns + 5_000_000_000))           # the file's time alone changed: not the same replay
+    settled = V.backtest_curves(root_with_data, raw)
+    assert settled is not again and V.backtest_curves(root_with_data, raw) is settled
+    t1 = f.stat().st_mtime_ns
+    D.save(f, history(421, seed=3, vol=0.035))
+    os.utime(f, ns=(st.st_atime_ns, t1))                                       # one more candle but the same time as before: not the same replay either
+    later = V.backtest_curves(root_with_data, raw)
+    assert later is not settled and later["to"] == "2020-02-25" and again["to"] == "2020-02-24"
+
+
+def test_the_forward_series_is_the_paper_accounts_equity_as_a_ratio_of_its_start(root):
+    v = V.paper_view(root)
+    for a in v["accounts"]:
+        assert len(a["forward"]) == a["days"] == 24 and a["forward"][-1] == pytest.approx(a["equity"] / a["start_equity"], abs=1e-4)
+    assert V.forward_series(root, "buy_hold", keep=5) == [a for a in v["accounts"] if a["id"] == "buy_hold"][0]["forward"][-5:]
+    assert V.forward_series(root, "nobody") == [] and V.forward_series(root / "nowhere", "buy_hold") == []
+    (root / "state" / "accounts" / "buy_hold.json").write_text("{broken")
+    assert V.forward_series(root, "buy_hold") == []
+
+
+def test_every_family_has_its_own_letters_for_the_logo():
+    codes = [V.SHORT[f] for f in list(S.FAMILIES) + ["portfolio"]]
+    assert len(set(codes)) == len(codes) and all(c.isupper() and 2 <= len(c) <= 3 for c in codes)
+    assert V.short({"id": "x-1", "family": "newfamily"}) == "NEW" and V.short({"id": "sma_cross-ab", "family": "sma_cross"}) == "SMA"
+
+
+def test_the_view_built_from_the_committed_artifacts_is_complete_and_makes_no_promise():
+    if not (C.ROOT / "dashboard.json").exists():
+        pytest.skip("no daily run has been committed")
+    v = V.paper_view()
+    mons = [a for a in v["accounts"] if a["stage"] == "monitor"]
+    assert len(mons) == 12 and v["backtest"] is not None and v["backtest"]["to"] >= "2026-11-14"
+    for a in v["accounts"]:
+        if a["id"] == "portfolio":
+            assert a["backtest"] is None
+            continue
+        assert len(a["backtest"]["curve"]) == len(v["backtest"]["times"]) and 0.9 < a["backtest"]["curve"][0] < 1.1
+    for a in mons:
+        b = a["backtest"]
+        assert b["outcome"] in ("rejected", "too_thin", "admitted") and b["why"] and b["train"]["trades"] is not None and b["validation"]["return"] is not None
+    text = json.dumps(v).lower()
+    assert "guaranteed" not in text and "will make money" not in text and "buy now" not in text
