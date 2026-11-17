@@ -4,7 +4,7 @@ import { safeUrl } from "../lib/links";
 import { useStockResearch } from "../state/queries";
 import { color, radius, space } from "../theme";
 import { SEC_OFF_POINTER, isSecOff, withoutSecOff } from "../lib/secOff";
-import { Banner, Divider, Skeleton, Tag, Txt, GCard, Pill } from "./ui";
+import { Banner, Divider, Skeleton, Tag, TAP, Txt, GCard, Pill } from "./ui";
 
 const money = (x: number | null) => (x === null ? "n/a" : `${x < 0 ? "−" : ""}$${(Math.abs(x) / 1e9).toFixed(2)}B`);
 const pc = (x: number | null) => (x === null ? "n/a" : `${x.toFixed(1)}%`);
@@ -22,7 +22,7 @@ export function StockResearchCard({ symbol }: { symbol: string }) {
   const last = d?.financials.years[d.financials.years.length - 1];
   return (
     <GCard style={{ padding: space.lg, gap: space.md }} testID="stock-card">
-      <Pressable onPress={() => setShown(!shown)} accessibilityRole="button" testID="stock-toggle" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+      <Pressable onPress={() => setShown(!shown)} accessibilityRole="button" testID="stock-toggle" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", minHeight: TAP }}>
         <View style={{ flex: 1 }}><Txt variant="h2">Company deep-dive</Txt><Txt variant="tiny">Filings, valuation, earnings, bull and bear points</Txt></View>
         <Pill label={shown ? "Hide" : "Show"} />
       </Pressable>

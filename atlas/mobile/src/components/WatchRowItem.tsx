@@ -1,13 +1,13 @@
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { WatchRow } from "../api/types";
-import { directionOf, formatChange, formatPct, providerName, TYPE_LABEL } from "../lib/format";
+import { directionOf, formatChange, formatPct, providerName, spoken, TYPE_LABEL } from "../lib/format";
 import { describeFreshness } from "../lib/freshness";
 import { color, dirColor, space } from "../theme";
 import { Avatar } from "./Avatar";
 import { FreshDot } from "./FreshnessLine";
 import { Sparkline } from "./Sparkline";
-import { IconButton, Skeleton, Tag, Txt } from "./ui";
+import { IconButton, LOGO_PAD, LogoSlot, Skeleton, Tag, Txt } from "./ui";
 
 interface Props {
   row: WatchRow; now: number; editing: boolean; canUp: boolean; canDown: boolean;
@@ -20,12 +20,15 @@ export function WatchRowItem({ row, now, editing, canUp, canDown, onOpen, onRemo
   const fresh = describeFreshness(quote?.prov, now);
   const dir = directionOf(quote?.change_pct);
   const tint = dirColor(dir);
-  const label = `${asset.name}, ${asset.symbol}, ${TYPE_LABEL[asset.type]}. ${row.loading ? "Loading price." : quote ? `${quote.display}, ${formatPct(quote.change_pct)}. ${fresh.label}.` : "Price unavailable."}`;
+  const move = quote && quote.change !== null && quote.change !== undefined ? formatChange(quote.change) : null;
+  // The words the row shows, in the order it shows them (the logo is outside the button), then what only the dot says.
+  const label = spoken(asset.symbol, TYPE_LABEL[asset.type], asset.support === "unverified" && "Unverified", asset.name, row.takeaway ? row.takeaway.text : error ? error.message : null, quote ? quote.display : row.loading ? null : "Unavailable", move, quote ? formatPct(quote.change_pct) : null)
+    + (row.loading ? ". Loading price." : quote ? `. ${fresh.label}.` : ".");
   return (
     <View style={s.wrap} testID={`row-${asset.id}`}>
       {editing && <IconButton name="remove-circle" tint={color.down} label={`Remove ${asset.name} from watchlist`} onPress={onRemove} testID={`remove-${asset.id}`} />}
+      <View style={s.box}>
       <Pressable onPress={editing ? undefined : onOpen} disabled={editing} accessibilityRole="button" accessibilityLabel={label} style={({ pressed }) => [s.row, pressed && { opacity: 0.7 }]}>
-        <Avatar id={asset.id} symbol={asset.symbol} />
         <View style={s.mid}>
           <View style={s.sub}>
             <Txt variant="h2" numberOfLines={1} style={{ fontWeight: "700", marginRight: 6, flexShrink: 1 }}>{asset.symbol}</Txt>
@@ -54,6 +57,8 @@ export function WatchRowItem({ row, now, editing, canUp, canDown, onOpen, onRemo
           </View>
         )}
       </Pressable>
+      <LogoSlot><Avatar id={asset.id} symbol={asset.symbol} /></LogoSlot>
+      </View>
       {editing && (
         <View style={s.edit}>
           <IconButton name="chevron-up" label={`Move ${asset.name} up`} onPress={() => onMove("up")} disabled={!canUp} testID={`up-${asset.id}`} />
@@ -68,7 +73,8 @@ export const providerLine = (row: WatchRow) => (row.quote ? providerName(row.quo
 
 const s = StyleSheet.create({
   wrap: { flexDirection: "row", alignItems: "center", gap: space.sm, paddingHorizontal: space.lg },
-  row: { flex: 1, flexDirection: "row", alignItems: "center", gap: space.md, paddingVertical: 12 },
+  box: { flex: 1 },
+  row: { flexDirection: "row", alignItems: "center", gap: space.md, paddingVertical: 12, paddingLeft: LOGO_PAD },
   mid: { flex: 1, minWidth: 0 },
   sub: { flexDirection: "row", alignItems: "center" },
   spark: { width: 52 },

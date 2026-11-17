@@ -4,6 +4,16 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, t
 import { color, famFor, font, grad, radius, space } from "../theme";
 import { Gradient } from "./Gradient";
 
+/** The smallest tap target in points: what Apple's guidelines ask for (WCAG's own minimum is the smaller 24). Web ignores `hitSlop`, so the touchable element itself has to be this big. */
+export const TAP = 44;
+
+/** The room a 40-point round logo and its gap take at the left of a list row (see LogoSlot). */
+export const LOGO_PAD = 40 + space.md;
+/** A round logo drawn over the left padding of a row's button instead of inside it, so its letters ("BTC", "AA") are not part of what the button says or shows to a screen reader. It lets touches through to the button below. */
+export function LogoSlot({ children }: { children: React.ReactNode }) {
+  return <View style={{ position: "absolute", left: 0, top: 0, bottom: 0, justifyContent: "center", pointerEvents: "none" }}>{children}</View>;
+}
+
 type Variant = "hero" | "title" | "h2" | "body" | "small" | "tiny" | "label";
 const V: Record<Variant, TextStyle> = {
   hero: { fontSize: font.hero, fontWeight: "700", color: color.text, letterSpacing: -1.2, fontVariant: ["tabular-nums"] },
@@ -46,7 +56,7 @@ export function IconButton({ name, onPress, label, tint = color.text, size = 22,
 }
 
 /** A round light-grey button with one icon: the header buttons (back, search, profile) of TradingView's phone app. */
-export function RoundButton({ name, onPress, label, tint = color.text, size = 40, testID, disabled }: { name: React.ComponentProps<typeof Ionicons>["name"]; onPress: () => void; label: string; tint?: string; size?: number; testID?: string; disabled?: boolean }) {
+export function RoundButton({ name, onPress, label, tint = color.text, size = TAP, testID, disabled }: { name: React.ComponentProps<typeof Ionicons>["name"]; onPress: () => void; label: string; tint?: string; size?: number; testID?: string; disabled?: boolean }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} testID={testID} disabled={disabled} hitSlop={6}
       style={({ pressed }) => [{ width: size, height: size, borderRadius: size / 2, backgroundColor: color.surface2, alignItems: "center", justifyContent: "center" }, pressed && { opacity: 0.6 }, disabled && { opacity: 0.35 }]}>
@@ -57,7 +67,7 @@ export function RoundButton({ name, onPress, label, tint = color.text, size = 40
 
 export function Chip({ label, active, onPress, testID }: { label: string; active?: boolean; onPress: () => void; testID?: string }) {
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: !!active }} testID={testID}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: !!active }} testID={testID} style={s.chipHit}>
       <View style={[s.chip, { backgroundColor: active ? color.text : color.surface2 }]}><Text style={[s.chipText, active && { color: color.bg }]}>{label}</Text></View>
     </Pressable>
   );
@@ -65,9 +75,9 @@ export function Chip({ label, active, onPress, testID }: { label: string; active
 
 /** A real button: a rounded pill with a tinted fill. `solid` makes it the filled main action. */
 export function TextButton({ label, onPress, tint = color.accent, testID, disabled, solid, large }: { label: string; onPress: () => void; tint?: string; testID?: string; disabled?: boolean; solid?: boolean; large?: boolean }) {
-  const box = { borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: large ? 13 : 9, minHeight: large ? 44 : undefined, alignItems: "center" as const, justifyContent: "center" as const };      // large: a 44-point tap target
+  const box = { borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: large ? 13 : 9, minHeight: large ? TAP : undefined, alignItems: "center" as const, justifyContent: "center" as const };      // large: the pill itself is 44 high
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" testID={testID} disabled={disabled} hitSlop={6} style={({ pressed }) => [pressed && { opacity: 0.7 }, disabled && { opacity: 0.4 }]}>
+    <Pressable onPress={onPress} accessibilityRole="button" testID={testID} disabled={disabled} hitSlop={6} style={({ pressed }) => [{ minHeight: TAP, justifyContent: "center" }, pressed && { opacity: 0.7 }, disabled && { opacity: 0.4 }]}>
       {solid && tint === color.accent
         ? <Gradient colors={grad.accent} from={[0, 0]} to={[1, 1]} style={box}><Text style={{ color: color.onAccent, fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></Gradient>
         : <View style={[box, { backgroundColor: solid ? tint : tint + "2E", borderColor: solid ? "transparent" : tint + "77", borderWidth: 1 }]}><Text style={{ color: solid ? "#FFFFFF" : tint, fontSize: font.sm + 1, fontFamily: famFor(700) }}>{label}</Text></View>}
@@ -146,8 +156,9 @@ const s = StyleSheet.create({
   card: { padding: space.xl - 4 },
   tag: { borderWidth: 1, borderColor: color.border, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1 },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: color.border, marginLeft: 68 },
-  iconBtn: { padding: 4, alignItems: "center", justifyContent: "center" },
+  iconBtn: { padding: 4, minWidth: TAP, minHeight: TAP, alignItems: "center", justifyContent: "center" },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: "transparent" },
+  chipHit: { minHeight: TAP, minWidth: TAP, justifyContent: "center" },      // the pill stays as drawn; the button around it is at least 44 by 44
   chipText: { color: color.dim, fontSize: font.sm, fontFamily: famFor(600) },
   primary: { borderRadius: radius.pill, paddingVertical: 17, paddingHorizontal: 28, alignItems: "center", justifyContent: "center", minWidth: 160 },
   primaryText: { color: color.onAccent, fontSize: font.lg, fontFamily: famFor(700) },

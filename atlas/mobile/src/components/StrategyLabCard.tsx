@@ -5,7 +5,7 @@ import { signed } from "../lib/journal";
 import { busyText } from "../lib/lab";
 import { useLabRun } from "../state/queries";
 import { color, radius, space } from "../theme";
-import { Banner, Chip, Divider, PrimaryButton, Tag, Txt, GCard, Pill } from "./ui";
+import { Banner, Chip, Divider, PrimaryButton, Tag, TAP, Txt, GCard, Pill } from "./ui";
 import { Sparkline } from "./Sparkline";
 
 const LEVEL = { none: "No reliable evidence", weak: "Weak evidence", moderate: "Moderate evidence" } as const;
@@ -50,7 +50,7 @@ export function StrategyLabCard() {
   const go = () => { setOpenId(null); run.mutate({ timeframe: tf, market, leverage: market === "perp" ? lev : 1, long_short: false }); };
   return (
     <GCard style={{ padding: space.lg, gap: space.md }} testID="lab-card">
-      <Pressable onPress={() => setShown(!shown)} accessibilityRole="button" testID="lab-toggle" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+      <Pressable onPress={() => setShown(!shown)} accessibilityRole="button" testID="lab-toggle" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", minHeight: TAP }}>
         <View style={{ flex: 1 }}><Txt variant="h2">Strategy Lab</Txt><Txt variant="tiny">Five tested BTC rules, compared after costs</Txt></View>
         <Pill label={shown ? "Hide" : "Show"} />
       </Pressable>

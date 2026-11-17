@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Asset, Briefing, Finding, Prov, WatchlistResponse, WatchRow } from "../api/types";
 import { AGENT_ORDER, briefingSections, coverageNote, lineText, rowKind } from "./briefing";
-import { atOrBelow, countdown, dateOnly, directionOf, formatChange, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime, ymdLabel } from "./format";
+import { atOrBelow, countdown, dateOnly, directionOf, formatChange, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime, spoken, ymdLabel } from "./format";
 import { describeFreshness, isOutdated, summarizeTones, worstTone } from "./freshness";
 import { keys } from "./keys";
 import { safeUrl } from "./links";
@@ -399,5 +399,30 @@ describe("the missing SEC contact setting is explained once", () => {
   it("the pointer says where the steps are and does not repeat them", () => {
     expect(SEC_OFF_POINTER).toMatch(/SEC filings card above/);
     expect(SEC_OFF_POINTER).not.toMatch(/ATLAS_SEC_CONTACT|\$env|local-settings|example\.com/);
+  });
+});
+
+describe("what a screen reader says for a list row", () => {
+  it("is the words the row shows, in order, with empty ones left out", () => {
+    expect(spoken("BTC", "Crypto", false, "Bitcoin", null, undefined, "", "  ", "$169.78", "+0.90%")).toBe("BTC Crypto Bitcoin $169.78 +0.90%");
+    expect(spoken()).toBe("");
+  });
+  it("trims each word and never starts or ends with a space", () => {
+    expect(spoken("  AAPL ", " Stock")).toBe("AAPL Stock");
+  });
+});
+
+describe("tap targets", () => {
+  it("the shared buttons ask for 44 points, because the web build ignores hitSlop", () => {
+    const ui = readFileSync(join(__dirname, "..", "components", "ui.tsx"), "utf8");
+    expect(ui).toMatch(/export const TAP = 44;/);
+    expect(ui).toMatch(/size = TAP/);                       // the round header buttons
+    expect(ui).toMatch(/iconBtn: \{[^}]*minWidth: TAP[^}]*minHeight: TAP/);
+    expect(ui).toMatch(/chipHit: \{ minHeight: TAP/);
+  });
+  it("the tab bar groups its tabs in a tablist", () => {
+    const bar = readFileSync(join(__dirname, "..", "components", "PillTabBar.tsx"), "utf8");
+    expect(bar).toMatch(/accessibilityRole="tablist"/);
+    expect(bar).toMatch(/accessibilityRole="tab"/);
   });
 });

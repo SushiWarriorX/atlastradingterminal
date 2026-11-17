@@ -10,7 +10,7 @@ import { useIsWide } from "../state/layout";
 import { color, font, radius, space, fonts } from "../theme";
 import { noOutline } from "./ConnectForm";
 import { ScreenHeader } from "./ScreenHeader";
-import { Chip, Divider, GCard, EmptyState, ErrorState, IconButton, PrimaryButton, RoundButton, Skeleton, Tag, TextButton, Txt } from "./ui";
+import { Chip, Divider, GCard, EmptyState, ErrorState, IconButton, PrimaryButton, RoundButton, Skeleton, TAP, Tag, TextButton, Txt } from "./ui";
 
 const FILTERS: { key: NonNullable<JournalFilters["status"]>; label: string }[] = [{ key: "", label: "All" }, { key: "open", label: "Open" }, { key: "closed", label: "Closed" }, { key: "note", label: "Notes" }];
 const today = () => new Date().toISOString().slice(0, 10);
@@ -157,6 +157,6 @@ function Field({ label, value, onChange, placeholder, multiline, keyboard, testI
 const s = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: space.md, paddingHorizontal: space.lg, paddingVertical: 14 },
   search: { flexDirection: "row", alignItems: "center", gap: space.sm, paddingHorizontal: space.md, backgroundColor: color.surface, borderRadius: 16 },
-  input: { flex: 1, color: color.text, fontFamily: fonts.regular, fontSize: font.md, paddingVertical: 11 },
+  input: { flex: 1, color: color.text, fontFamily: fonts.regular, fontSize: font.md, paddingVertical: 11, minHeight: TAP },
   field: { backgroundColor: color.surface, borderRadius: 14, color: color.text, fontFamily: fonts.regular, paddingHorizontal: space.md, paddingVertical: 12, fontSize: font.md },
 });

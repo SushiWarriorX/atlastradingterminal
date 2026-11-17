@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { PaperAccount, PaperLab, PaperTrade } from "../api/types";
+import { spoken } from "../lib/format";
 import { chanceText, dayLabel, forwardLine, money, outcomeTone, paperLine, pctOf, periodLine, sample, split, whenLabel, type Tone } from "../lib/journey";
 import { usePaperLab } from "../state/queries";
 import { useIsWide } from "../state/layout";
@@ -12,7 +13,7 @@ import { CoinCard } from "./CoinCard";
 import { CurveChart } from "./CurveChart";
 import { ScreenHeader } from "./ScreenHeader";
 import { Sparkline } from "./Sparkline";
-import { Banner, Divider, EmptyState, ErrorState, GCard, Skeleton, Tag, TextButton, Txt } from "./ui";
+import { Banner, Divider, EmptyState, ErrorState, GCard, LOGO_PAD, LogoSlot, Skeleton, TAP, Tag, TextButton, Txt } from "./ui";
 
 const TONE: Record<Tone, string> = { up: color.up, down: color.down, warn: color.warn, dim: color.dim };
 const CARD_TITLE: Record<string, string> = { portfolio: "Main portfolio", buy_hold: "Buy and hold", cash: "Cash only" };
@@ -30,7 +31,7 @@ function SectionTitle({ title, sub, onPress, open, label, testID }: { title: str
   );
   return (
     <View style={{ paddingHorizontal: space.lg, gap: 2 }}>
-      {onPress ? <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label ?? title} accessibilityState={{ expanded: !!open }} testID={testID}>{head}</Pressable> : head}
+      {onPress ? <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label ? `${title}. ${label}` : title} accessibilityState={{ expanded: !!open }} testID={testID} style={{ minHeight: TAP, justifyContent: "center" }}>{head}</Pressable> : head}
       {sub ? <Txt variant="small">{sub}</Txt> : null}
     </View>
   );
@@ -82,11 +83,14 @@ function Detail({ a, lab, hold }: { a: PaperAccount; lab: PaperLab; hold: PaperA
 function StrategyRow({ a, lab, hold, open, onToggle }: { a: PaperAccount; lab: PaperLab; hold: PaperAccount | null; open: boolean; onToggle: () => void }) {
   const run = a.backtest?.run ?? null;
   const tone = outcomeTone(a.backtest?.outcome);
+  const holding = hold?.backtest?.run ? `holding ${pctOf(hold.backtest.run.return, 0)}` : "backtest";
+  // The words the row shows, in the order it shows them (the logo is drawn beside the button), then what the tap does.
+  const label = `${spoken(a.name, a.backtest?.outcome ? a.backtest.outcome_text : null, a.params_text, run ? pctOf(run.return) : "n/a", holding)}. ${open ? "Hide details" : "Show details"}`;
   return (
     <View style={{ paddingHorizontal: space.lg }} testID={`journey-row-${a.id}`}>
-      <Pressable onPress={onToggle} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={`${a.name}${a.params_text ? `, ${a.params_text}` : ""}. ${a.backtest?.outcome_text ?? ""}. ${open ? "Hide details" : "Show details"}`}
-        style={({ pressed }) => [{ flexDirection: "row", alignItems: "center", gap: space.md, paddingVertical: 12 }, pressed && { opacity: 0.7 }]}>
-        <Avatar id={a.family} symbol={a.short} />
+      <View>
+      <Pressable onPress={onToggle} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={label}
+        style={({ pressed }) => [{ flexDirection: "row", alignItems: "center", gap: space.md, paddingVertical: 12, paddingLeft: LOGO_PAD }, pressed && { opacity: 0.7 }]}>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Txt variant="h2" numberOfLines={2} style={{ fontWeight: "700", fontSize: 16, lineHeight: 20 }}>{a.name}</Txt>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
@@ -96,9 +100,11 @@ function StrategyRow({ a, lab, hold, open, onToggle }: { a: PaperAccount; lab: P
         </View>
         <View style={{ alignItems: "flex-end", minWidth: 92 }}>
           <Txt variant="h2" c={dirOf(run?.return)} style={{ fontWeight: "700", fontVariant: ["tabular-nums"] }}>{run ? pctOf(run.return) : "n/a"}</Txt>
-          <Txt variant="tiny" style={{ marginTop: 1 }}>{hold?.backtest?.run ? `holding ${pctOf(hold.backtest.run.return, 0)}` : "backtest"}</Txt>
+          <Txt variant="tiny" style={{ marginTop: 1 }}>{holding}</Txt>
         </View>
       </Pressable>
+      <LogoSlot><Avatar id={a.family} symbol={a.short} /></LogoSlot>
+      </View>
       {open ? <Detail a={a} lab={lab} hold={hold} /> : null}
     </View>
   );
@@ -119,7 +125,7 @@ function FeedItem({ t, tint }: { t: PaperTrade; tint: string }) {
 function Cards({ lab, list }: { lab: PaperLab; list: { portfolio: PaperAccount | null; benchmarks: PaperAccount[] } }) {
   const cards = [list.portfolio, ...list.benchmarks].filter((a): a is PaperAccount => !!a);
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: space.lg, gap: space.md }} testID="journey-cards">
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: space.lg, gap: space.md }} testID="journey-cards" tabIndex={0}>      {/* tabIndex: with a keyboard the cards cannot be scrolled sideways unless the row can take focus */}
       {cards.map((a) => {
         const run = a.backtest?.run ?? null;
         const isMain = a.stage === "portfolio";

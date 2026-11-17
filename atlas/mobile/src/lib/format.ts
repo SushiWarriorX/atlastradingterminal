@@ -105,6 +105,11 @@ export function hueFor(id: string): number {
 
 export const TYPE_LABEL = { crypto: "Crypto", stock: "Stock", etf: "ETF" } as const;
 
+/** What a screen reader says for a row: the words the row shows, in the order it shows them, with anything empty left out. A person who speaks the words they see to a voice-control app then finds the button (WCAG 2.5.3, "label in name"); whatever only a colour or a dot says is added after, by the caller. */
+export function spoken(...words: Array<string | null | undefined | false>): string {
+  return words.filter((w): w is string => typeof w === "string" && w.trim() !== "").map((w) => w.trim()).join(" ");
+}
+
 const PROVIDERS: Record<string, string> = { yahoo: "Yahoo Finance", coinbase: "Coinbase", demo: "Demo data", ibkr: "Interactive Brokers", fred: "FRED" };
 export function providerName(p: string | null | undefined): string {
   return p ? PROVIDERS[p] ?? p : "unknown source";

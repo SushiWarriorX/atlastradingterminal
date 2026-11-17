@@ -3,7 +3,7 @@ import { Pressable, View } from "react-native";
 import { useEarnings } from "../state/queries";
 import { useOpenAsset } from "../state/selection";
 import { color, radius, space } from "../theme";
-import { Chip, Txt, GCard, Pill } from "./ui";
+import { Chip, TAP, Txt, GCard, Pill } from "./ui";
 
 const WINDOWS = [7, 14, 30, 60];
 
@@ -16,7 +16,7 @@ export function EarningsCard() {
   const d = q.data;
   return (
     <GCard style={{ padding: space.lg, gap: space.sm }} testID="earnings-card">
-      <Pressable onPress={() => setShown(!shown)} accessibilityRole="button" testID="earnings-toggle" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+      <Pressable onPress={() => setShown(!shown)} accessibilityRole="button" testID="earnings-toggle" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", minHeight: TAP }}>
         <View style={{ flex: 1 }}><Txt variant="h2">Earnings calendar</Txt><Txt variant="tiny">Next report dates for your watchlist stocks</Txt></View>
         <Pill label={shown ? "Hide" : "Show"} />
       </Pressable>

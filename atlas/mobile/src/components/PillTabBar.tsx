@@ -11,7 +11,7 @@ export function PillTabBar({ state, descriptors, emitter, navigateToTab, insets 
   return (
     <View style={{ backgroundColor: color.bg, paddingHorizontal: 12, paddingTop: 6, paddingBottom: Math.max(insets.bottom, 10), gap: 8 }}>
       {btc && current.name !== "btc" ? <MiniQuoteBar onOpen={() => navigateToTab(btc.key)} /> : null}
-      <View style={{ flexDirection: "row", backgroundColor: color.bg, borderRadius: 32, borderWidth: 1, borderColor: color.border, padding: 4, boxShadow: "0 2px 14px rgba(16,24,40,0.10)" }}>
+      <View accessibilityRole="tablist" style={{ flexDirection: "row", backgroundColor: color.bg, borderRadius: 32, borderWidth: 1, borderColor: color.border, padding: 4, boxShadow: "0 2px 14px rgba(16,24,40,0.10)" }}>
         {state.routes.map((route) => {
           const { options } = descriptors[route.key];
           const focused = current.key === route.key;

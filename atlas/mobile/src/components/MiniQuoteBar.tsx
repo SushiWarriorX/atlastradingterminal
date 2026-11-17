@@ -24,8 +24,8 @@ export function MiniQuoteBar({ onOpen }: { onOpen: () => void }) {
   const spark = chart.data?.points.map((p) => p[1]) ?? null;
   const since = /24h/.test(q.basis) ? "in 24h" : "today";
   return (
-    <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={`Bitcoin ${q.display}, ${formatPct(q.change_pct)} ${since}. Open Bitcoin.`} testID="mini-quote"
-      style={({ pressed }) => [{ flexDirection: "row", alignItems: "center", gap: space.sm, backgroundColor: color.bg, borderRadius: radius.lg, borderWidth: 1, borderColor: color.border, paddingVertical: 9, paddingHorizontal: space.md, boxShadow: "0 2px 10px rgba(16,24,40,0.08)" }, pressed && { opacity: 0.7 }]}>
+    <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={`BTC ${q.display} ${formatPct(q.change_pct)} ${since}. Open Bitcoin.`} testID="mini-quote"
+      style={({ pressed }) => [{ flexDirection: "row", alignItems: "center", gap: space.sm, backgroundColor: color.bg, borderRadius: radius.lg, borderWidth: 1, borderColor: color.border, minHeight: 44, paddingVertical: 9, paddingHorizontal: space.md, boxShadow: "0 2px 10px rgba(16,24,40,0.08)" }, pressed && { opacity: 0.7 }]}>
       <FreshDot tone={fresh.tone} size={7} />
       <Txt variant="small" c={color.text} style={{ fontWeight: "700" }}>BTC</Txt>
       <Txt variant="small" c={color.text} style={{ fontVariant: ["tabular-nums"], fontWeight: "600" }}>{q.display}</Txt>

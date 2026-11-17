@@ -1396,7 +1396,111 @@ async function demo(browser) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------- main
-const SCENARIOS = { healthy, stale, partial, missing, login, demo };
+// ---------------------------------------------------------------------------------------------------------------- scenario 7: accessibility
+// axe-core (free, runs inside the page, no network) with the WCAG 2.x level A and AA rules, plus a rule of our own for tap targets of at least 44 x 44 points (what Apple recommends; WCAG's own minimum is the smaller 24).
+// Known and queued (LOOP.md): the one-line "Source: ..." links that end the cards are 15 points high. Everything else tappable has to be 44 x 44.
+const A11Y_KNOWN_SMALL = /^(Source: |Data provided by )/;
+const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+async function a11yProbe(page) {
+  if (!(await page.evaluate(() => !!window.axe))) await page.addScriptTag({ path: require.resolve("axe-core") });
+  return page.evaluate(async (tags) => {
+    // axe's own "label in name" rule (label-content-name-mismatch) glues the text of separate blocks together without spaces ("BTCCryptoBitcoin..."), and react-native-web draws every Text as its own block, so it flags a label that does contain every visible word. It is switched off and replaced by the check below, which compares words.
+    const res = await window.axe.run(document, { runOnly: { type: "tag", values: tags }, rules: { "label-content-name-mismatch": { enabled: false } }, resultTypes: ["violations", "incomplete"], elementRef: true });
+    const unjudged = res.incomplete.filter((v) => v.id === "color-contrast").reduce((n, v) => n + v.nodes.filter((x) => !(x.element && x.element.closest('[aria-hidden="true"]'))).length, 0);      // text on this screen that axe could not measure (over a gradient or an image): not counted as a pass
+    window.axe.utils.getFlattenedTree(document.documentElement);
+    const violations = res.violations.map((v) => ({ id: v.id, impact: v.impact, count: v.nodes.length, sample: v.nodes.slice(0, 3).map((n) => ({ target: n.target.join(" ").slice(0, 120), html: n.html.slice(0, 170), why: String((n.any[0] || n.all[0] || n.none[0] || {}).message || "").slice(0, 170), id: n.element ? n.element.getAttribute("data-testid") || "" : "", label: n.element ? String(n.element.getAttribute("aria-label") || "").slice(0, 110) : "", text: n.element ? String(n.element.innerText || "").replace(/\s+/g, " ").slice(0, 110) : "", spoken: (() => { try { return n.element ? String(window.axe.commons.text.accessibleText(n.element)).slice(0, 110) : ""; } catch (e) { return "?"; } })(), seen: (() => { try { return n.element ? String(window.axe.commons.text.visibleVirtual(window.axe.utils.getNodeFromTree(n.element), false, false)).replace(/\s+/g, " ").slice(0, 110) : ""; } catch (e) { return "?" + e.message; } })() })) }));
+    const words = (t) => String(t || "").normalize("NFKD").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim().split(" ").filter(Boolean);
+    const within = (hay, needle) => { for (let i = 0; i + needle.length <= hay.length; i++) if (needle.every((w, j) => hay[i + j] === w)) return true; return false; };
+    const unlike = [];                                     // WCAG 2.5.3: the spoken name of a control contains the words it shows, in order
+    for (const el of document.querySelectorAll('button, [role="button"], a[href], [role="link"], [role="tab"]')) {
+      const label = el.getAttribute("aria-label");
+      if (!label || el.closest('[aria-hidden="true"]')) continue;
+      const seen = words(el.innerText);
+      if (seen.length && !within(words(label), seen)) unlike.push({ target: el.getAttribute("data-testid") || el.tagName, html: el.outerHTML.slice(0, 120), why: "the accessible name does not contain the visible words in order", id: el.getAttribute("data-testid") || "", label: label.slice(0, 110), text: String(el.innerText).replace(/\s+/g, " ").slice(0, 110), spoken: "", seen: "" });
+    }
+    if (unlike.length) violations.push({ id: "label-in-name", impact: "serious", count: unlike.length, sample: unlike.slice(0, 3) });
+    const small = [];
+    for (const el of document.querySelectorAll('button, [role="button"], a[href], input, select, textarea, [role="link"], [role="tab"], [role="switch"], [role="checkbox"]')) {
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      if (r.width === 0 || r.height === 0 || cs.visibility === "hidden" || cs.display === "none" || el.closest('[aria-hidden="true"]')) continue;      // the tabs you are not on stay mounted and marked aria-hidden
+      if (r.width < 44 || r.height < 44) small.push({ name: String(el.getAttribute("aria-label") || el.innerText || el.getAttribute("placeholder") || el.getAttribute("data-testid") || el.tagName).replace(/\s+/g, " ").trim().slice(0, 40), id: el.getAttribute("data-testid") || "", w: Math.round(r.width), h: Math.round(r.height) });
+    }
+    return { violations, small, unjudged };
+  }, AXE_TAGS);
+}
+async function a11y(browser) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "signal-e2e-"));
+  const be = await startBackend(["--db", path.join(dir, "signal.db")]);
+  const S = await phone(browser);
+  const page = S.page;
+  try {
+    await addVia(be, ID.btc);
+    await addVia(be, ID.aapl);
+    const probeScreen = async (name) => {
+      await sleep(2500);                                    // let the cards load and the sparklines draw
+      await shot(page, `a11y-${name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`);
+      const r = await a11yProbe(page);
+      const kinds = new Map();
+      for (const s of r.small) { const k = s.id.replace(/-[A-Z]+:.*$/, "-*").replace(/^(row|toggle)-.*$/, "$1-*") || s.name; kinds.set(k, `${s.w}x${s.h}`); }
+      console.log(`    ${name}: ${r.violations.length ? r.violations.map((v) => `${v.id} x${v.count} (${v.impact})`).join(", ") : "no axe violations"}; ${r.small.length} tap targets under 44 x 44${kinds.size ? `: ${[...kinds].map(([k, v]) => `${k} ${v}`).join(", ")}` : ""}; text axe could not measure: ${r.unjudged}`);
+      for (const v of r.violations) for (const s of v.sample.slice(0, 2)) console.log(`      - ${v.id}: ${s.why} | id=${s.id} | label="${s.label}" | text="${s.text}" | ${s.target}`);
+      // The gate: nothing new may get worse. No rule may be broken, and every tappable element is 44 x 44 or on the short list of known ones.
+      assert(r.violations.length === 0, `${name}: ${r.violations.map((v) => `${v.id} x${v.count} (${v.sample.map((x) => x.id || x.target).join(", ")})`).join("; ")}`);
+      const unknown = r.small.filter((x) => !A11Y_KNOWN_SMALL.test(x.name));
+      assert(unknown.length === 0, `${name}: tap targets under 44 x 44: ${unknown.map((x) => `${x.name} (${x.id}) ${x.w}x${x.h}`).join("; ")}`);
+      return r;
+    };
+    await check("accessibility probe: the connect screen", async () => {
+      await page.goto(WEB_ORIGIN);
+      await page.waitForSelector(T("connect-title"));
+      await probeScreen("the connect screen");
+    });
+    await check("the probe itself notices a bad button, so a clean result means something", async () => {
+      await page.evaluate(() => {
+        const mk = (css, label, text) => { const b = document.createElement("button"); b.setAttribute("data-bad", "1"); b.style.cssText = `position:fixed;left:0;top:0;z-index:9;${css}`; if (label) b.setAttribute("aria-label", label); if (text) b.textContent = text; document.body.appendChild(b); };
+        mk("width:20px;height:20px;", "Save", "Remove");                  // small, and its name does not hold the words it shows
+        mk("left:60px;width:60px;height:60px;", "", "");                   // no name at all
+      });
+      const r = await a11yProbe(page);
+      await page.evaluate(() => document.querySelectorAll("[data-bad]").forEach((e) => e.remove()));
+      assert(r.small.some((x) => x.name === "Save" && x.w === 20), "a 20 x 20 button was not reported as too small");
+      assert(r.violations.some((v) => v.id === "label-in-name"), "a button labelled Save that shows Remove was not reported");
+      assert(r.violations.some((v) => v.id === "button-name"), "a button with no name was not reported");
+    });
+    await check("the app connects and has something on the watchlist", async () => {
+      await page.fill(T("server-url"), be.url);
+      await page.click(T("connect-submit"));
+      await ready(page);
+      await toStocks(page);
+      await waitRows(page, [ID.btc, ID.aapl]);
+    });
+    // The asset page is opened before any other tab is visited: a tab you have been to stays mounted under the screen on top, and both would carry the same test ids.
+    const screens = [
+      ["the watchlist", async () => { await toStocks(page); }],
+      ["an asset page", async () => { await openFromWatchlist(page, ID.aapl); }],
+      ["Settings", async () => { await page.click(V("back")); await page.click(V("profile-button")); await page.waitForSelector(T("settings-title")); }],
+      ["BTC", async () => { await page.click(V("settings-close")); await page.click(V("tab-btc")); }],
+      ["Journey", async () => { await page.click(V("tab-journey")); }],
+      ["Macro", async () => { await page.click(V("tab-macro")); }],
+      ["Discover", async () => { await page.click(V("tab-discover")); }],
+      ["Journal", async () => { await page.click(V("tab-journal")); }],
+      ["search", async () => { await gotoSearch(page); }],
+      ["search results", async () => { await search(page, "apple"); await page.waitForSelector(T(`result-${ID.aapl}`)); }],
+    ];
+    for (const [name, go] of screens) {
+      await check(`accessibility probe: ${name}`, async () => {
+        await go();
+        await probeScreen(name);
+      });
+    }
+  } finally {
+    await S.ctx.close().catch(() => undefined);
+    await be.stop();
+  }
+}
+
+const SCENARIOS = { healthy, a11y, stale, partial, missing, login, demo };
 (async () => {
   if (!fs.existsSync(path.join(DIST, "index.html"))) { console.error("dist/ is missing: run `npm run export:web` first"); process.exit(2); }
   const wanted = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(SCENARIOS);

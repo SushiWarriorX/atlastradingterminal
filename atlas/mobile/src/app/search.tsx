@@ -6,7 +6,7 @@ import type { Asset } from "../api/types";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { SearchRowItem } from "../components/SearchRowItem";
 import { noOutline } from "../components/ConnectForm";
-import { Banner, Divider, EmptyState, ErrorState, Skeleton, TextButton, Txt } from "../components/ui";
+import { Banner, Divider, EmptyState, ErrorState, Skeleton, TAP, TextButton, Txt } from "../components/ui";
 import { idsOf } from "../lib/watchlist";
 import { useAddToWatchlist, useDebounced, useRecents, useRemoveFromWatchlist, useSearch, useWatchlist } from "../state/queries";
 import { useIsWide } from "../state/layout";
@@ -70,7 +70,7 @@ export default function SearchScreen() {
       <View style={s.inputWrap}>
         <Ionicons name="search" size={18} color={color.faint} />
         <TextInput value={q} onChangeText={setQ} placeholder="Bitcoin, AAPL, SPY…" placeholderTextColor={color.faint} autoCapitalize="none" autoCorrect={false} returnKeyType="search" style={[s.input, noOutline]} testID="search-input" accessibilityLabel="Search assets" />
-        {typing && <Pressable onPress={() => setQ("")} accessibilityRole="button" accessibilityLabel="Clear search" hitSlop={10} testID="search-clear"><Ionicons name="close-circle" size={18} color={color.faint} /></Pressable>}
+        {typing && <Pressable onPress={() => setQ("")} accessibilityRole="button" accessibilityLabel="Clear search" hitSlop={10} testID="search-clear" style={{ width: TAP, height: TAP, marginRight: -space.sm, alignItems: "center", justifyContent: "center" }}><Ionicons name="close-circle" size={18} color={color.faint} /></Pressable>}
       </View>
       {notice && <View style={{ paddingHorizontal: space.lg, paddingBottom: space.sm }}><Banner tone="warn" title="Couldn't save" action={<TextButton label="Dismiss" onPress={() => setNotice(null)} />}>{notice}</Banner></View>}
       <FlatList data={[0]} keyExtractor={() => "c"} renderItem={() => <>{content}</>} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: space.xxl }} />
@@ -80,6 +80,6 @@ export default function SearchScreen() {
 
 const s = StyleSheet.create({
   inputWrap: { flexDirection: "row", alignItems: "center", gap: space.sm, marginHorizontal: space.lg, marginBottom: space.md, paddingHorizontal: space.md, backgroundColor: color.surface, borderRadius: 16 },
-  input: { flex: 1, color: color.text, fontFamily: fonts.regular, fontSize: font.md, paddingVertical: 12 },
+  input: { flex: 1, color: color.text, fontFamily: fonts.regular, fontSize: font.md, paddingVertical: 12, minHeight: TAP },
   sectionHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: space.lg, paddingVertical: space.sm },
 });
