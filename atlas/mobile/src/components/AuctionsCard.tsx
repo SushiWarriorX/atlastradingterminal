@@ -1,10 +1,10 @@
 import { ymdLabel } from "../lib/format";
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useAuctions } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const pts = (x: number | null) => (x == null ? "no earlier auction" : `${x > 0 ? "+" : x < 0 ? "−" : ""}${Math.abs(x).toFixed(3)} pts vs the previous`);
 
@@ -32,7 +32,7 @@ export function AuctionsCard() {
             {(d.pending_results ?? []).length > 0 ? <Txt variant="tiny">Results not yet published by the source: {d.pending_results!.map((p) => `${p.tenor} auction of ${ymdLabel(p.auction_date)}`).join(", ")}.</Txt> : null}
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Treasury FiscalData</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: US Treasury FiscalData</SourceLink>
     </GCard>
   );
 }

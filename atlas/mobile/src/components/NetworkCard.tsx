@@ -1,10 +1,10 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useNetwork } from "../state/queries";
 import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const n = (x: number) => x.toLocaleString("en-US");
 const btc = (x: number, max = 2) => x.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: max });
@@ -84,7 +84,7 @@ export function NetworkCard() {
                 <Txt variant="tiny">{d.revenue.note}</Txt>
               </View>) : null}
             <Txt variant="tiny">Not a price signal: fees can be near zero while price moves a lot.</Txt>
-            {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: mempool.space</Txt></Pressable> : null}
+            <SourceLink url={link}>Source: mempool.space</SourceLink>
           </View>)}
     </GCard>
   );

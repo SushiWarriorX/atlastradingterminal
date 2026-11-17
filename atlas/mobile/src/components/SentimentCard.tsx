@@ -1,9 +1,9 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useSentiment } from "../state/queries";
 import { color, space } from "../theme";
-import { Banner, GCard, Skeleton, Tag, Txt } from "./ui";
+import { Banner, GCard, Skeleton, SourceLink, Tag, Txt } from "./ui";
 
 const tint = (v: number) => (v < 25 ? color.down : v < 45 ? color.warn : v < 55 ? color.dim : color.up);
 
@@ -29,7 +29,7 @@ export function SentimentCard() {
             <Txt variant="tiny">Reading for {d.date}.</Txt>
           </View>)}
       <Txt variant="tiny">{d?.note ?? "A published mood gauge, not a forecast or a trading signal."}</Txt>
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: alternative.me</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: alternative.me</SourceLink>
     </GCard>
   );
 }

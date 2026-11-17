@@ -1,9 +1,9 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useBuybacks } from "../state/queries";
 import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const day = (iso?: string) => (iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "");
 const bn = (x: number | null | undefined) => (x == null ? "no result reported" : `$${x.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 2 })}B`);
@@ -45,7 +45,7 @@ export function BuybacksCard() {
             {!!d.anomalies && <Txt variant="tiny" c={color.down}>{d.anomalies} operation(s) show more bought than offered or announced; the source may contain an error.</Txt>}
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Treasury FiscalData</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: US Treasury FiscalData</SourceLink>
     </GCard>
   );
 }

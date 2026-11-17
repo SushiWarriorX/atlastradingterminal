@@ -1,11 +1,11 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useAgriPositioning, useCommodityPositioning, useCurrencyPositioning, useFuturesPositioning } from "../state/queries";
 import type { FuturesPositioningData } from "../api/types";
 import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const n = (x: number) => `${x < 0 ? "−" : ""}${Math.abs(x).toLocaleString("en-US")}`;
 const moved = (x: number | null | undefined) => (x == null ? "no change shown" : x === 0 ? "unchanged" : `${x > 0 ? "up" : "down"} ${Math.abs(x).toLocaleString("en-US")}`);
@@ -55,7 +55,7 @@ function PositioningCard({ id, heading, sub, q }: { id: string; heading: string;
             <Txt variant="tiny">Each week is checked against the report's own totals before it is shown.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: CFTC Commitments of Traders</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: CFTC Commitments of Traders</SourceLink>
     </GCard>
   );
 }

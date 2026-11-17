@@ -1,10 +1,10 @@
 import { ymdLabel } from "../lib/format";
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useFedOps } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const b = (x: number) => `$${x.toFixed(x >= 10 ? 1 : 2)}B`;
 const chg = (x: number) => `${x > 0 ? "+" : x < 0 ? "−" : ""}$${Math.abs(x).toFixed(2)}B`;
@@ -32,7 +32,7 @@ export function FedOpsCard() {
             <Txt variant="tiny">About a month: used on {d.repo!.days_used} of {d.repo!.dates_in_window} days, highest {b(d.repo!.highest_billions)}.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: New York Fed</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: New York Fed</SourceLink>
     </GCard>
   );
 }

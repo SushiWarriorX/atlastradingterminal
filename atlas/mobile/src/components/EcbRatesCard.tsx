@@ -1,10 +1,10 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useEcbRates } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const pct = (x: number, digits = 2) => `${x.toFixed(digits)}%`;
 const points = (x: number, digits = 2) => `${Math.abs(x).toFixed(digits)} points`;
@@ -47,7 +47,7 @@ export function EcbRatesCard() {
             <Txt variant="tiny">On each of its last {d.market.observations} business days ({ymdLabel(d.market.first_date)} to {ymdLabel(d.market.date)}) it was {between(d.market.gap_low, d.market.gap_high)} the deposit rate.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: European Central Bank</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: European Central Bank</SourceLink>
     </GCard>
   );
 }

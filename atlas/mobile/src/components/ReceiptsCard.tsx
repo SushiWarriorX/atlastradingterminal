@@ -1,9 +1,9 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useReceipts } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const bn = (x: number) => `${x < 0 ? "−" : ""}$${Math.abs(x).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}B`;
 const move = (x: number | null) => (x == null ? "n/a" : x === 0 ? "unchanged" : `${x > 0 ? "up" : "down"} ${Math.abs(x)}%`);
@@ -33,7 +33,7 @@ export function ReceiptsCard() {
             <Txt variant="tiny">Checked: the seven sources add up to the source's own total for the month, the year so far and last year's same point, and on-budget plus off-budget equals it too.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Treasury, Monthly Treasury Statement</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: US Treasury, Monthly Treasury Statement</SourceLink>
     </GCard>
   );
 }

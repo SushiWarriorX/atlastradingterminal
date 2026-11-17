@@ -1,12 +1,13 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import type { ListingItem } from "../api/types";
+import { sourceLine } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { moneyShort as money } from "../lib/money";
 import { useListings } from "../state/queries";
 import { useOpenAsset } from "../state/selection";
 import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, TextButton, Txt } from "./ui";
+import { Banner, Divider, GCard, Skeleton, SourceLink, TextButton, Txt } from "./ui";
 
 function Row({ i, onOpen }: { i: ListingItem; onOpen: (id: string) => void }) {
   const tag = i.status === "trading" ? "confirmed trading" : i.status === "priced" ? "priced, not yet confirmed" : i.status === "upcoming" ? "upcoming, not trading yet" : i.status === "upcoming_date_passed" ? "date passed" : i.status;
@@ -20,7 +21,7 @@ function Row({ i, onOpen }: { i: ListingItem; onOpen: (id: string) => void }) {
       {i.listing_type === "SPAC IPO" ? <Txt variant="tiny" c={color.warn} testID="spac-note">{i.listing_type_note}</Txt> : null}
       {i.verification ? (
         <View><Txt variant="tiny">{i.verification.verified ? "✓ " : ""}SEC check: {i.verification.note}</Txt>
-          {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Open the filing</Txt></Pressable> : null}</View>) : null}
+          <SourceLink url={link}>Open the filing</SourceLink></View>) : null}
       {i.newness ? <Txt variant="tiny">{i.newness.reason}</Txt> : null}
       {i.symbol && (i.status === "priced" || i.status === "trading") && i.listing_type !== "SPAC IPO"
         ? <TextButton label="Research this company" onPress={() => onOpen(`EQUITY:${(i.exchange ?? "NASDAQ").toUpperCase().replace(" ", "")}:${i.symbol}`)} testID={`listing-research-${i.symbol}`} /> : null}
@@ -32,6 +33,7 @@ export function ListingsCard() {
   const q = useListings();
   const open = useOpenAsset();
   const d = q.data;
+  const line = sourceLine(d?.coverage, d?.source);
   return (
     <GCard style={{ padding: space.lg, gap: space.md }} testID="listings-card">
       <View><Txt variant="h2">New listings</Txt><Txt variant="tiny">NYSE and Nasdaq: upcoming deals and recent pricings</Txt></View>
@@ -50,7 +52,7 @@ export function ListingsCard() {
             {d.recent.length > 12 ? <Txt variant="tiny">{d.recent.length - 12} more not shown here; the terminal lists them all.</Txt> : null}
             {(d.errors ?? []).map((e, k) => <Txt key={k} variant="tiny" c={color.warn}>{e}</Txt>)}
           </View>)}
-      <Txt variant="tiny">{d?.coverage} Source: {d?.source}.</Txt>
+      {line ? <Txt variant="tiny">{line}</Txt> : null}
     </GCard>
   );
 }

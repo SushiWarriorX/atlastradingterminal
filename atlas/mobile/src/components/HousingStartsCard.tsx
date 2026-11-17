@@ -1,10 +1,10 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useHousingStarts } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const thousands = (k: number | null | undefined) => (k == null ? "n/a" : `${Math.round(k).toLocaleString("en-US")} thousand`);
 const millions = (k: number | null | undefined) => (k == null ? "n/a" : `${(k / 1000).toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} million`);
@@ -33,7 +33,7 @@ export function HousingStartsCard() {
             <Txt variant="tiny">Check: in each of the last {d.parts.months_checked} months, single-family plus five-or-more-unit starts are no more than the total; what is left, mostly buildings of two to four units, was between {thousands(d.parts.smallest_remainder_thousands)} and {thousands(d.parts.largest_remainder_thousands)}.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Census Bureau and HUD, via FRED</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: US Census Bureau and HUD, via FRED</SourceLink>
     </GCard>
   );
 }

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Asset, Briefing, Finding, Prov, WatchlistResponse, WatchRow } from "../api/types";
 import { AGENT_ORDER, briefingSections, coverageNote, lineText, rowKind } from "./briefing";
-import { atOrBelow, countdown, dateOnly, directionOf, formatChange, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime, spoken, ymdLabel } from "./format";
+import { atOrBelow, countdown, dateOnly, directionOf, formatChange, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime, sourceLine, spoken, ymdLabel } from "./format";
 import { describeFreshness, isOutdated, summarizeTones, worstTone } from "./freshness";
 import { keys } from "./keys";
 import { safeUrl } from "./links";
@@ -399,6 +399,21 @@ describe("the missing SEC contact setting is explained once", () => {
   it("the pointer says where the steps are and does not repeat them", () => {
     expect(SEC_OFF_POINTER).toMatch(/SEC filings card above/);
     expect(SEC_OFF_POINTER).not.toMatch(/ATLAS_SEC_CONTACT|\$env|local-settings|example\.com/);
+  });
+});
+
+describe("the closing line of a card that names its source", () => {
+  it("says what the card covers and where the data comes from", () => {
+    expect(sourceLine("This feed covers IPOs only.", "Nasdaq IPO calendar (public website feed)")).toBe("This feed covers IPOs only. Source: Nasdaq IPO calendar (public website feed).");
+    expect(sourceLine(undefined, "FRED")).toBe("Source: FRED.");
+    expect(sourceLine("  ", "FRED")).toBe("Source: FRED.");
+  });
+  it("is empty until the source is known, never an empty \"Source: .\"", () => {
+    expect(sourceLine(undefined, undefined)).toBe("");
+    expect(sourceLine("This feed covers IPOs only.", undefined)).toBe("");
+    expect(sourceLine("This feed covers IPOs only.", null)).toBe("");
+    expect(sourceLine("x", "")).toBe("");
+    expect(sourceLine("x", "   ")).toBe("");
   });
 });
 

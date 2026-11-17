@@ -1,9 +1,9 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useCryptoMarket } from "../state/queries";
 import { color, space } from "../theme";
-import { Banner, GCard, Skeleton, Txt } from "./ui";
+import { Banner, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 function Row({ k, v }: { k: string; v: string }) {
   return <View style={{ flexDirection: "row", justifyContent: "space-between", gap: space.md, paddingVertical: 3 }}><Txt variant="small" style={{ flex: 1 }}>{k}</Txt><Txt variant="body">{v}</Txt></View>;
@@ -32,7 +32,7 @@ export function CryptoMarketCard() {
             <Txt variant="tiny">Largest: {d.top!.map((t) => `${t.symbol} ${t.share_pct}%`).join(" · ")}. {d.coins!.toLocaleString("en-US")} coins tracked.</Txt>
           </View>)}
       <Txt variant="tiny">{d?.note ?? "Describes the crypto market's size and structure. Descriptive, not a signal."}</Txt>
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>{d?.credit ?? "Data provided by CoinGecko"}</Txt></Pressable> : null}
+      <SourceLink url={link}>{d?.credit ?? "Data provided by CoinGecko"}</SourceLink>
     </GCard>
   );
 }

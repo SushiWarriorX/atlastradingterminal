@@ -1,10 +1,10 @@
 import { ymdLabel } from "../lib/format";
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useTga } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const b = (x: number) => `$${x.toFixed(1)}B`;
 const chg = (x: number) => `${x > 0 ? "+" : x < 0 ? "−" : ""}$${Math.abs(x).toFixed(1)}B`;
@@ -27,7 +27,7 @@ export function TgaCard() {
             <Txt variant="tiny">Month average {b(d.month_average_billions!)}. Past year: low {b(d.year_low_billions!)} on {ymdLabel(d.year_low_date)}, high {b(d.year_high_billions!)} on {ymdLabel(d.year_high_date)}.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Treasury FiscalData</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: US Treasury FiscalData</SourceLink>
     </GCard>
   );
 }

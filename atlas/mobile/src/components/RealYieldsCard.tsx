@@ -1,10 +1,10 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useRealYields } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const pc = (x: number | null | undefined) => (x == null ? "n/a" : `${x.toFixed(2)}%`);
 const moved = (bp: number | null | undefined) => (bp == null ? "not available" : bp === 0 ? "unchanged" : `${bp > 0 ? "up" : "down"} ${(Math.abs(bp) / 100).toFixed(2)} points`);
@@ -32,7 +32,7 @@ export function RealYieldsCard() {
             <Txt variant="tiny">Compared with {d.month_ago_date ? ymdLabel(d.month_ago_date) : "a month ago (no day close enough)"} and {d.year_ago_date ? ymdLabel(d.year_ago_date) : "a year ago (no day close enough)"}. Checked: both curves are for the same day and every value is in a plausible range.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Treasury, par yield curve rates</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: US Treasury, par yield curve rates</SourceLink>
     </GCard>
   );
 }

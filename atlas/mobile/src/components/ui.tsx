@@ -1,11 +1,26 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from "react-native";
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from "react-native";
 import { color, famFor, font, grad, radius, space } from "../theme";
 import { Gradient } from "./Gradient";
 
 /** The smallest tap target in points: what Apple's guidelines ask for (WCAG's own minimum is the smaller 24). Web ignores `hitSlop`, so the touchable element itself has to be this big. */
 export const TAP = 44;
+
+/** How far the touch target of a card's one-line "Source: ..." link reaches above and below its 15-point text: 15 + 15 + 15 = 45 points, over the 44 that WCAG-minded phone guidelines ask for. */
+export const SOURCE_REACH = 15;
+/**
+ * The one-line "Source: ..." link that ends a card. The web build ignores `hitSlop`, so the touch target is made bigger by padding that an equal negative margin takes back: nothing on screen moves (a test compares the screenshots), the part above the text sits in the gap between the card's rows and the part below it in the card's own 16-point bottom padding.
+ * `url` is the already-checked address (`safeUrl`); with none, nothing is drawn.
+ */
+export function SourceLink({ url, children }: { url: string | null | undefined; children: React.ReactNode }) {
+  if (!url) return null;
+  return (
+    <Pressable onPress={() => Linking.openURL(url).catch(() => undefined)} accessibilityRole="link" style={{ paddingVertical: SOURCE_REACH, marginVertical: -SOURCE_REACH }}>
+      <Txt variant="tiny" c={color.accent}>{children}</Txt>
+    </Pressable>
+  );
+}
 
 /** The room a 40-point round logo and its gap take at the left of a list row (see LogoSlot). */
 export const LOGO_PAD = 40 + space.md;

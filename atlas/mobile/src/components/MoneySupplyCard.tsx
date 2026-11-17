@@ -1,10 +1,10 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useMoneySupply } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const trillions = (b: number | null | undefined) => (b == null ? "n/a" : `$${(b / 1000).toFixed(2)} trillion`);
 const billions = (b: number | null | undefined) => (b == null ? "n/a" : `$${b.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} billion`);
@@ -32,7 +32,7 @@ export function MoneySupplyCard() {
             <Txt variant="small">Cross-checks: seasonal adjustment moved {ymdLabel(d.seasonal.month)}'s figure by {d.seasonal.pct == null ? "n/a" : signed(d.seasonal.pct)} ({billions(d.seasonal.adjusted)} adjusted against {billions(d.seasonal.unadjusted)} unadjusted), and its {d.weekly.newest.weeks} weekly figures average {billions(d.weekly.newest.average)}, {gap(d.weekly.newest.diff_pct)} the unadjusted monthly figure.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: Federal Reserve Board, via FRED</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: Federal Reserve Board, via FRED</SourceLink>
     </GCard>
   );
 }

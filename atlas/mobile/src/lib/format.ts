@@ -110,6 +110,14 @@ export function spoken(...words: Array<string | null | undefined | false>): stri
   return words.filter((w): w is string => typeof w === "string" && w.trim() !== "").map((w) => w.trim()).join(" ");
 }
 
+/** The closing line of a card that says what it covers and where its data comes from. Nothing at all until the source is known: the new listings card once printed an empty "Source: ." under its loading skeleton (found in a screenshot on 2026-11-17). */
+export function sourceLine(coverage: string | null | undefined, source: string | null | undefined): string {
+  const src = (source ?? "").trim();
+  if (!src) return "";
+  const cov = (coverage ?? "").trim();
+  return `${cov ? `${cov} ` : ""}Source: ${src}.`;
+}
+
 const PROVIDERS: Record<string, string> = { yahoo: "Yahoo Finance", coinbase: "Coinbase", demo: "Demo data", ibkr: "Interactive Brokers", fred: "FRED" };
 export function providerName(p: string | null | undefined): string {
   return p ? PROVIDERS[p] ?? p : "unknown source";

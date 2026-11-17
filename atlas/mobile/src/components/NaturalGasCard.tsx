@@ -1,10 +1,10 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { atOrBelow, ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useNaturalGas } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const usd = (x: number | null | undefined) => (x == null ? "n/a" : `$${x.toFixed(2)}`);
 const dayMove = (x: number | null | undefined) => (x == null ? "not available since the previous trading day" : x === 0 ? "unchanged since the previous trading day" : `${x > 0 ? "up" : "down"} ${usd(Math.abs(x))} since the previous trading day`);
@@ -31,7 +31,7 @@ export function NaturalGasCard() {
             <Txt variant="small">Cross-check: the daily prices for {ymdLabel(d.monthly.month)} average {usd(d.monthly.average_of_daily)}; the EIA publishes {usd(d.monthly.published)} for the month.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Energy Information Administration, via FRED</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: US Energy Information Administration, via FRED</SourceLink>
     </GCard>
   );
 }

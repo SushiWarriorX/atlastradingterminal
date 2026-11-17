@@ -1,10 +1,10 @@
 import { ymdLabel } from "../lib/format";
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useDebtMix } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const money = (b: number) => (Math.abs(b) >= 1000 ? `$${(b / 1000).toFixed(2)}T` : `$${b.toFixed(1)}B`);
 const chg = (b: number | null) => (b == null ? "no earlier month to compare" : `${b > 0 ? "+" : b < 0 ? "−" : ""}${money(Math.abs(b))} vs last month`);
@@ -35,7 +35,7 @@ export function DebtMixCard() {
               </View>))}
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Treasury FiscalData</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: US Treasury FiscalData</SourceLink>
     </GCard>
   );
 }

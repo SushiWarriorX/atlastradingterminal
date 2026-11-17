@@ -1,9 +1,9 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useStablecoins } from "../state/queries";
 import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const pc = (x: number | null | undefined) => (x === null || x === undefined ? "n/a" : `${x > 0 ? "+" : x < 0 ? "−" : ""}${Math.abs(x).toFixed(2)}%`);
 const tone = (x: number | null | undefined) => (x === null || x === undefined ? color.dim : x > 0 ? color.up : x < 0 ? color.down : color.text);
@@ -33,7 +33,7 @@ export function StablecoinsCard() {
                 </View>
               </View>))}
             <Txt variant="tiny">{d.note}</Txt>
-            {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: DefiLlama</Txt></Pressable> : null}
+            <SourceLink url={link}>Source: DefiLlama</SourceLink>
           </View>)}
     </GCard>
   );

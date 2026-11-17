@@ -1,10 +1,10 @@
 import { ymdLabel } from "../lib/format";
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useFedRates } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const pct = (x: number) => `${x.toFixed(2)}%`;
 const pp = (x: number | null | undefined) => (x == null ? "n/a" : `${x > 0 ? "+" : x < 0 ? "−" : ""}${Math.abs(x).toFixed(2)}`);
@@ -35,7 +35,7 @@ export function FedRatesCard() {
               </View>))}
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: New York Fed</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: New York Fed</SourceLink>
     </GCard>
   );
 }

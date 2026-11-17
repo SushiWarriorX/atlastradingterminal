@@ -1,10 +1,10 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useBankReserves } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const trillionsFromMillions = (m: number | null | undefined) => (m == null ? "n/a" : `$${(m / 1_000_000).toFixed(2)} trillion`);
 const trillionsFromBillions = (b: number | null | undefined) => (b == null ? "n/a" : `$${(b / 1000).toFixed(2)} trillion`);
@@ -35,7 +35,7 @@ export function BankReservesCard() {
             <Txt variant="small">Cross-check: the weekly figures for {ymdLabel(d.crosscheck.newest.month)} ({d.crosscheck.newest.weeks} weeks) add up to an average of {billions(d.crosscheck.newest.weekly_average_billions)}, {off(d.crosscheck.newest.diff_pct)} the monthly base.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: Federal Reserve Board, via FRED</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: Federal Reserve Board, via FRED</SourceLink>
     </GCard>
   );
 }

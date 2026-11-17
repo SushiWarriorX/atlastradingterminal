@@ -1,10 +1,10 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { atOrBelow, ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useGasolinePrices } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const usd3 = (x: number | null | undefined) => (x == null ? "n/a" : `$${x.toFixed(3)}`);
 const usd2 = (x: number | null | undefined) => (x == null ? "n/a" : `$${x.toFixed(2)}`);
@@ -32,7 +32,7 @@ export function GasolinePricesCard() {
             <Txt variant="small">That is {usd2(d.crude.per_barrel)} a barrel-equivalent (the price times 42 gallons) against WTI crude at {usd2(d.crude.wti)} a barrel: a gap of {usd2(d.crude.gap)} for refining, distribution, marketing and taxes.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Energy Information Administration, via FRED</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: US Energy Information Administration, via FRED</SourceLink>
     </GCard>
   );
 }

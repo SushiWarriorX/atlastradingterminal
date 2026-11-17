@@ -1,10 +1,10 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useRetailSales } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const billions = (b: number | null | undefined) => (b == null ? "n/a" : `$${b.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} billion`);
 const signed = (x: number) => `${x > 0 ? "+" : x < 0 ? "-" : ""}${Math.abs(x).toFixed(1)}%`;
@@ -32,7 +32,7 @@ export function RetailSalesCard() {
             <Txt variant="tiny">Check: in each of the last {d.sums.months_checked} months, retail trade plus food services adds up to the total {d.sums.max_difference_millions === 0 ? "exactly" : `to within $${d.sums.max_difference_millions} million`}.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Census Bureau, via FRED</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: US Census Bureau, via FRED</SourceLink>
     </GCard>
   );
 }

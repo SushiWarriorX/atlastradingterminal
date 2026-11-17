@@ -1,9 +1,9 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useBillAuctions } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const day = (iso?: string) => (iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "");
 const termName = (t: string) => t.replace("-Week", " weeks");
@@ -37,7 +37,7 @@ export function BillAuctionsCard() {
             {d.pending_results?.length ? <Txt variant="tiny">Results not published yet: {d.pending_results.map((p) => `${termName(p.term)} (${day(p.auction_date)})`).join(", ")}.</Txt> : null}
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Treasury FiscalData</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: US Treasury FiscalData</SourceLink>
     </GCard>
   );
 }

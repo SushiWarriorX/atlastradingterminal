@@ -1,10 +1,10 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { ymdLabel } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { useIndustrialProduction } from "../state/queries";
-import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { space } from "../theme";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 import type { IndustrialGroup } from "../api/types";
 
 const signed = (x: number) => `${x > 0 ? "+" : x < 0 ? "-" : ""}${Math.abs(x).toFixed(1)}%`;
@@ -35,7 +35,7 @@ export function IndustrialProductionCard() {
             <Txt variant="tiny">Check: in each of the last {d.detail.changes_checked} months, the total's change lay between those of manufacturing, mining and utilities, and the capacity implied by output and utilization moved by between {signed2(d.detail.capacity_change_pct.smallest)} and {signed2(d.detail.capacity_change_pct.largest)} a month.</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: Federal Reserve Board, via FRED</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: Federal Reserve Board, via FRED</SourceLink>
     </GCard>
   );
 }

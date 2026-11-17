@@ -1,9 +1,9 @@
 import React from "react";
-import { Linking, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { safeUrl } from "../lib/links";
 import { useBorrowing } from "../state/queries";
 import { color, space } from "../theme";
-import { Banner, Divider, GCard, Skeleton, Txt } from "./ui";
+import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const day = (iso?: string | null) => (iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "");
 const monthYear = (iso?: string) => (iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }) : "");
@@ -43,7 +43,7 @@ export function BorrowingCard() {
             {d.mtd_check ? <Txt variant="tiny" c={d.mtd_check.match ? undefined : color.down}>{d.mtd_check.match ? "Checked: the daily amounts add up to the source's own month-to-date totals." : "DOES NOT MATCH: the daily amounts differ from the source's own month-to-date totals."}</Txt> : null}
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
-      {link ? <Pressable onPress={() => Linking.openURL(link).catch(() => undefined)} accessibilityRole="link"><Txt variant="tiny" c={color.accent}>Source: US Treasury FiscalData</Txt></Pressable> : null}
+      <SourceLink url={link}>Source: US Treasury FiscalData</SourceLink>
     </GCard>
   );
 }

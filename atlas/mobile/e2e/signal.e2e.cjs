@@ -1437,8 +1437,7 @@ async function demo(browser) {
 // ---------------------------------------------------------------------------------------------------------------- main
 // ---------------------------------------------------------------------------------------------------------------- scenario 7: accessibility
 // axe-core (free, runs inside the page, no network) with the WCAG 2.x level A and AA rules, plus a rule of our own for tap targets of at least 44 x 44 points (what Apple recommends; WCAG's own minimum is the smaller 24).
-// Known and queued (LOOP.md): the one-line "Source: ..." links that end the cards are 15 points high. Everything else tappable has to be 44 x 44.
-const A11Y_KNOWN_SMALL = /^(Source: |Data provided by )/;
+// Everything tappable has to be 44 x 44, with no exceptions: the one-line "Source: ..." links that end the cards use `SourceLink` (components/ui.tsx), whose touch target reaches 15 points above and below its text without moving anything.
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 async function a11yProbe(page) {
   if (!(await page.evaluate(() => !!window.axe))) await page.addScriptTag({ path: require.resolve("axe-core") });
@@ -1465,7 +1464,9 @@ async function a11yProbe(page) {
       if (r.width === 0 || r.height === 0 || cs.visibility === "hidden" || cs.display === "none" || el.closest('[aria-hidden="true"]')) continue;      // the tabs you are not on stay mounted and marked aria-hidden
       if (r.width < 44 || r.height < 44) small.push({ name: String(el.getAttribute("aria-label") || el.innerText || el.getAttribute("placeholder") || el.getAttribute("data-testid") || el.tagName).replace(/\s+/g, " ").trim().slice(0, 40), id: el.getAttribute("data-testid") || "", w: Math.round(r.width), h: Math.round(r.height) });
     }
-    return { violations, small, unjudged };
+    let sources = 0, sourcesMin = 0;                                       // the one-line "Source: ..." links of the cards on screen: they are measured like everything else, and counted so that a clean result is known to include them
+    for (const el of document.querySelectorAll('[role="link"]')) { const r = el.getBoundingClientRect(); if (r.width && r.height && !el.closest('[aria-hidden="true"]') && /^(Source: |Data provided by )/.test(String(el.innerText).trim())) { sources++; sourcesMin = sourcesMin ? Math.min(sourcesMin, Math.round(r.height)) : Math.round(r.height); } }
+    return { violations, small, unjudged, sources, sourcesMin };
   }, AXE_TAGS);
 }
 async function a11y(browser) {
@@ -1476,18 +1477,27 @@ async function a11y(browser) {
   try {
     await addVia(be, ID.btc);
     await addVia(be, ID.aapl);
-    const probeScreen = async (name) => {
+    const settleSourceLinks = async () => {                 // the Macro screen loads about thirty cards from live sources, each with a source link once it has data: wait until the number of links stops growing (three polls of 2 seconds in a row, at most 60 seconds), so that the gate measures them and not an empty screen
+      let last = -1, same = 0;
+      for (let i = 0; i < 30 && same < 3; i++) {
+        await sleep(2000);
+        const n = await page.evaluate(() => [...document.querySelectorAll('[role="link"]')].filter((el) => /^(Source: |Data provided by )/.test(String(el.innerText).trim())).length);
+        same = n === last ? same + 1 : 0; last = n;
+      }
+    };
+    const probeScreen = async (name, settle = false) => {
+      if (settle) await settleSourceLinks();
       await sleep(2500);                                    // let the cards load and the sparklines draw
       await shot(page, `a11y-${name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`);
       const r = await a11yProbe(page);
+      assert(!/Source: \.(\s|$)/.test(await text(page)), `${name}: a card prints an empty source line ("Source: .")`);      // found 2026-11-17: the new listings card printed it while its feed was still loading
       const kinds = new Map();
       for (const s of r.small) { const k = s.id.replace(/-[A-Z]+:.*$/, "-*").replace(/^(row|toggle)-.*$/, "$1-*") || s.name; kinds.set(k, `${s.w}x${s.h}`); }
-      console.log(`    ${name}: ${r.violations.length ? r.violations.map((v) => `${v.id} x${v.count} (${v.impact})`).join(", ") : "no axe violations"}; ${r.small.length} tap targets under 44 x 44${kinds.size ? `: ${[...kinds].map(([k, v]) => `${k} ${v}`).join(", ")}` : ""}; text axe could not measure: ${r.unjudged}`);
+      console.log(`    ${name}: ${r.violations.length ? r.violations.map((v) => `${v.id} x${v.count} (${v.impact})`).join(", ") : "no axe violations"}; ${r.small.length} tap targets under 44 x 44${kinds.size ? `: ${[...kinds].map(([k, v]) => `${k} ${v}`).join(", ")}` : ""}; ${r.sources} card source links measured${r.sources ? ` (the smallest ${r.sourcesMin} points high)` : ""}; text axe could not measure: ${r.unjudged}`);
       for (const v of r.violations) for (const s of v.sample.slice(0, 2)) console.log(`      - ${v.id}: ${s.why} | id=${s.id} | label="${s.label}" | text="${s.text}" | ${s.target}`);
-      // The gate: nothing new may get worse. No rule may be broken, and every tappable element is 44 x 44 or on the short list of known ones.
+      // The gate: no rule may be broken, and every tappable element is 44 x 44.
       assert(r.violations.length === 0, `${name}: ${r.violations.map((v) => `${v.id} x${v.count} (${v.sample.map((x) => x.id || x.target).join(", ")})`).join("; ")}`);
-      const unknown = r.small.filter((x) => !A11Y_KNOWN_SMALL.test(x.name));
-      assert(unknown.length === 0, `${name}: tap targets under 44 x 44: ${unknown.map((x) => `${x.name} (${x.id}) ${x.w}x${x.h}`).join("; ")}`);
+      assert(r.small.length === 0, `${name}: tap targets under 44 x 44: ${r.small.map((x) => `${x.name} (${x.id}) ${x.w}x${x.h}`).join("; ")}`);
       return r;
     };
     await check("accessibility probe: the connect screen", async () => {
@@ -1500,10 +1510,12 @@ async function a11y(browser) {
         const mk = (css, label, text) => { const b = document.createElement("button"); b.setAttribute("data-bad", "1"); b.style.cssText = `position:fixed;left:0;top:0;z-index:9;${css}`; if (label) b.setAttribute("aria-label", label); if (text) b.textContent = text; document.body.appendChild(b); };
         mk("width:20px;height:20px;", "Save", "Remove");                  // small, and its name does not hold the words it shows
         mk("left:60px;width:60px;height:60px;", "", "");                   // no name at all
+        const a = document.createElement("a"); a.setAttribute("data-bad", "1"); a.setAttribute("href", "https://example.org/"); a.style.cssText = "position:fixed;left:140px;top:0;z-index:9;display:block;width:200px;height:15px;"; a.textContent = "Source: Example, via Test"; document.body.appendChild(a);   // a card's source link at its old 15 points: no longer excused
       });
       const r = await a11yProbe(page);
       await page.evaluate(() => document.querySelectorAll("[data-bad]").forEach((e) => e.remove()));
       assert(r.small.some((x) => x.name === "Save" && x.w === 20), "a 20 x 20 button was not reported as too small");
+      assert(r.small.some((x) => x.name.startsWith("Source: Example") && x.h === 15), "a 15 point high Source link was not reported as too small");
       assert(r.violations.some((v) => v.id === "label-in-name"), "a button labelled Save that shows Remove was not reported");
       assert(r.violations.some((v) => v.id === "button-name"), "a button with no name was not reported");
     });
@@ -1530,7 +1542,7 @@ async function a11y(browser) {
     for (const [name, go] of screens) {
       await check(`accessibility probe: ${name}`, async () => {
         await go();
-        await probeScreen(name);
+        await probeScreen(name, name === "Macro");
       });
     }
   } finally {
