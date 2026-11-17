@@ -450,6 +450,12 @@ export interface MoneySupplyData { available: boolean; reason?: string; demo: bo
   seasonal?: { month: string; adjusted: number; unadjusted: number; pct: number | null };
   weekly?: { newest: { month: string; weeks: number; average: number; unadjusted: number; diff_pct: number }; months_compared: number };
   history?: { date: string; level: number }[] }
+export interface HousingPart { level_thousands: number; share_pct: number; change_1m_pct: number | null; change_1y_pct: number | null }
+export interface HousingStartsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; level_thousands?: number;
+  change_1m_pct?: number | null; change_3m_pct?: number | null; change_1y_pct?: number | null; single_family?: HousingPart; five_plus?: HousingPart;
+  growth?: { months: number; slowest: { pct: number; month: string }; fastest: { pct: number; month: string }; share_slower_pct: number } | null;
+  parts?: { months_checked: number; smallest_remainder_thousands: number; largest_remainder_thousands: number; newest: { month: string; total_thousands: number; single_family_thousands: number; five_plus_thousands: number; remainder_thousands: number } };
+  history?: { date: string; level: number }[] }
 export interface RetailPart { level_billions: number; share_pct: number; change_1m_pct: number | null; change_1y_pct: number | null }
 export interface RetailSalesData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; level_billions?: number;
   change_1m_pct?: number | null; change_3m_pct?: number | null; change_1y_pct?: number | null; retail?: RetailPart; food?: RetailPart;

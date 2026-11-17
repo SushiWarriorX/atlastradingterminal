@@ -320,6 +320,10 @@ export function useMoneySupply() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).moneySupply, queryFn: () => need(api).moneySupply(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
 }
+export function useHousingStarts() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).housingStarts, queryFn: () => need(api).housingStarts(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
 export function useRetailSales() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).retailSales, queryFn: () => need(api).retailSales(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });

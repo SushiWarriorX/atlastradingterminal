@@ -26,6 +26,7 @@ import { GasolinePricesCard } from "./GasolinePricesCard";
 import { NaturalGasCard } from "./NaturalGasCard";
 import { MoneySupplyCard } from "./MoneySupplyCard";
 import { BankReservesCard } from "./BankReservesCard";
+import { HousingStartsCard } from "./HousingStartsCard";
 import { RetailSalesCard } from "./RetailSalesCard";
 import { EcbRatesCard } from "./EcbRatesCard";
 import { CustomsCard } from "./CustomsCard";
@@ -101,6 +102,7 @@ export function MacroView() {
             <BankReservesCard />
             <JoblessClaimsCard />
             <RetailSalesCard />
+            <HousingStartsCard />
             <FuturesPositioningCard />
             <OilPricesCard />
             <GasolinePricesCard />

@@ -910,6 +910,25 @@ async function healthy(browser) {
       await page.locator(V("retail-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07w-retail");
 
+      await page.waitForSelector(V("housing-card"));
+      await page.waitForSelector(V("housing-body") + ", " + V("housing-unavailable") + ", " + V("housing-error"), { timeout: 45000 });
+      const houTxt = await text(page);
+      match(houTxt, /Housing starts/); match(houTxt, /Census Bureau and HUD/); noMatch(houTxt, FORECASTS, "the housing starts card makes no forecasts");
+      if (await liveCard(page, "housing-body")) {
+        const houBody = await inner(page, "housing-body");
+        const HMONTH = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        const HVS = "(up \\d{1,3}\\.\\d% on a year ago|down \\d{1,3}\\.\\d% on a year ago|the same as a year ago)";
+        match(houBody, new RegExp(`Builders began new homes at a pace of \\d\\.\\d{3} million a year in ${HMONTH}, ${HVS}\\.`), "the pace with its month and the yearly change");
+        match(houBody, /(up \d{1,3}\.\d% on a month ago|down \d{1,3}\.\d% on a month ago|the same as a month ago), (up \d{1,3}\.\d% on three months ago|down \d{1,3}\.\d% on three months ago|the same as three months ago)\. This is a yearly pace, not the number of homes started in the month\./, "the one- and three-month changes and what the pace means");
+        match(houBody, new RegExp(`the change over a year ran from [-+]?\\d{1,3}\\.\\d% \\(${HMONTH}\\) to [-+]?\\d{1,3}\\.\\d% \\(${HMONTH}\\); \\d{1,3}% of those months were weaker than now\\.`), "the ten-year range is explained in months");
+        match(houBody, new RegExp(`Single-family homes, \\d{1,3}(,\\d{3})* thousand \\(\\d{1,2}\\.\\d% of the total; ${HVS}\\)\\. Homes in buildings of five or more units, \\d{1,3}(,\\d{3})* thousand \\(\\d{1,2}\\.\\d% of the total; ${HVS}\\)\\.`), "the two parts with their shares and yearly changes");
+        match(houBody, /Check: in each of the last \d{2} months, single-family plus five-or-more-unit starts are no more than the total; what is left, mostly buildings of two to four units, was between \d{1,3} thousand and \d{1,3} thousand\./, "the parts check is shown");
+        match(houBody, /Checked: every recent monthly total is between 300 and 3,000 thousand/); match(houBody, /not a market signal or a forecast/); match(houBody, /estimate that is revised/); match(houBody, /no exact parts-add-up check/);
+        noMatch(houBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("housing-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07x-housing");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);
