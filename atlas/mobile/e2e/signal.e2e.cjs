@@ -891,6 +891,25 @@ async function healthy(browser) {
       await page.locator(V("ecbrates-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);      // the top of a tall card, not its nearest edge
       await shot(page, "07v-ecbrates");
 
+      await page.waitForSelector(V("retail-card"));
+      await page.waitForSelector(V("retail-body") + ", " + V("retail-unavailable") + ", " + V("retail-error"), { timeout: 45000 });
+      const retTxt = await text(page);
+      match(retTxt, /Retail sales/); match(retTxt, /Census Bureau/); noMatch(retTxt, FORECASTS, "the retail sales card makes no forecasts");
+      if (await liveCard(page, "retail-body")) {
+        const retBody = await inner(page, "retail-body");
+        const RMONTH = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        const RVS = "(up \\d{1,2}\\.\\d% on a year ago|down \\d{1,2}\\.\\d% on a year ago|the same as a year ago)";
+        match(retBody, new RegExp(`Retail and food services sales were \\$[\\d,]+\\.\\d billion in ${RMONTH}, ${RVS}\\.`), "the level with its month and the yearly change");
+        match(retBody, /(up \d{1,2}\.\d% on a month ago|down \d{1,2}\.\d% on a month ago|the same as a month ago), (up \d{1,2}\.\d% on three months ago|down \d{1,2}\.\d% on three months ago|the same as three months ago)\. Not adjusted for price changes\./, "the one- and three-month changes and the price warning");
+        match(retBody, new RegExp(`growth over a year ran from [-+]?\\d{1,2}\\.\\d% \\(${RMONTH}\\) to [-+]?\\d{1,2}\\.\\d% \\(${RMONTH}\\); \\d{1,3}% of those months grew slower than now\\.`), "the ten-year growth range is explained in months");
+        match(retBody, new RegExp(`Made up of retail trade, \\$[\\d,]+\\.\\d billion \\(\\d{1,2}\\.\\d% of the total; ${RVS}\\), and food services and drinking places, \\$[\\d,]+\\.\\d billion \\(\\d{1,2}\\.\\d% of the total; ${RVS}\\)\\.`), "the two parts with their shares and yearly changes");
+        match(retBody, /Check: in each of the last \d{2} months, retail trade plus food services adds up to the total (exactly|to within \$\d+(\.\d+)? million)\./, "the parts-add-up check is shown");
+        match(retBody, /Checked: every recent monthly total is between \$100 billion and \$2 trillion/); match(retBody, /not a market signal or a forecast/); match(retBody, /advance estimate/);
+        noMatch(retBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("retail-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07w-retail");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);
