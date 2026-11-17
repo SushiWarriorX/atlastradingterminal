@@ -462,6 +462,13 @@ export interface EuroMoneySupplyData { available: boolean; reason?: string; demo
   growth_range?: { months: number; lowest: { pct: number; month: string }; highest: { pct: number; month: string }; share_lower_pct: number } | null;
   detail?: { months_checked: number; sums_checked: number; largest_gap_points: number; largest_gap_month: string | null };
   history?: { date: string; level_millions: number }[] }
+export interface EuroInflationPart { id: string; label: string; rate_pct: number; share_pct: number; points: number | null }
+export interface EuroInflationData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; estimate?: boolean;
+  headline?: { rate_pct: number; change_1m_points: number | null; change_3m_points: number | null; core_rate_pct: number };
+  parts?: EuroInflationPart[]; contributions?: { shown: boolean; sum_points: number; gap_points: number };
+  range?: { months: number; lowest: { pct: number; month: string }; highest: { pct: number; month: string }; share_lower_pct: number } | null;
+  detail?: { months_checked: number; largest_rate_gap_points: number; largest_index_gap: number; largest_index_gap_month: string | null };
+  history?: { date: string; rate_pct: number }[] }
 export interface IndustrialGroup { level: number; change_1m_pct: number | null; change_1y_pct: number | null }
 export interface IndustrialProductionData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; level?: number;
   change_1m_pct?: number | null; change_3m_pct?: number | null; change_1y_pct?: number | null; manufacturing?: IndustrialGroup; mining?: IndustrialGroup; utilities?: IndustrialGroup;

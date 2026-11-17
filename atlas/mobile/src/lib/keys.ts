@@ -52,6 +52,7 @@ export const keys = (base: string | null) => ({
   housingStarts: ["housingstarts", base] as const,
   industrialProduction: ["industrialproduction", base] as const,
   euroMoneySupply: ["euromoney", base] as const,
+  euroInflation: ["euroinflation", base] as const,
   bankReserves: ["bankreserves", base] as const,
   ecbRates: ["ecbrates", base] as const,
   futuresPositioning: ["futurespos", base] as const,

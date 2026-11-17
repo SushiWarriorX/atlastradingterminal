@@ -969,6 +969,36 @@ async function healthy(browser) {
       await page.locator(V("euromoney-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07z-euromoney");
 
+      await page.waitForSelector(V("euroinflation-card"));
+      await page.waitForSelector(V("euroinflation-body") + ", " + V("euroinflation-unavailable") + ", " + V("euroinflation-error"), { timeout: 45000 });
+      const eiTxt = await text(page);
+      match(eiTxt, /Euro-area consumer prices/); match(eiTxt, /Eurostat/); noMatch(eiTxt, FORECASTS, "the euro consumer prices card makes no forecasts");
+      if (await liveCard(page, "euroinflation-body")) {
+        const eiBody = await inner(page, "euroinflation-body");
+        const EIMONTH = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        const EIMV = "(up \\d{1,2}\\.\\d points on (a month|three months) ago|down \\d{1,2}\\.\\d points on (a month|three months) ago|the same as (a month|three months) ago)";
+        match(eiBody, new RegExp(`In ${EIMONTH} consumer prices in the euro area were (\\d{1,2}\\.\\d% (higher|lower) than a year earlier|unchanged from a year earlier)\\. Without energy, food, alcohol and tobacco \\(core\\) the rate was -?\\d{1,2}\\.\\d%\\.`), "the headline with its month, and the core rate");
+        match(eiBody, new RegExp(`The annual rate was ${EIMV} and ${EIMV}\\.`), "the one- and three-month changes of the rate, in points");
+        match(eiBody, new RegExp(`it ran from [-+]?\\d{1,2}\\.\\d% \\(${EIMONTH}\\) to [-+]?\\d{1,2}\\.\\d% \\(${EIMONTH}\\); \\d{1,3}% of those months were lower than now\\.`), "the ten-year range is explained in months");
+        const PARTS = { FOODPR: "Processed food, alcohol and tobacco", FOODUN: "Unprocessed food", IGXE00: "Non-energy industrial goods", NRGY00: "Energy", SERV00: "Services" };
+        let shares = 0;
+        for (const [id, label] of Object.entries(PARTS)) {
+          const line = (await inner(page, `euroinflation-part-${id}`)).trim();
+          match(line, new RegExp(`^${label}: (\\d{1,2}\\.\\d)% of the basket, [-+]?\\d{1,2}\\.\\d% a year(, about -?\\d{1,2}\\.\\d points of the -?\\d{1,2}\\.\\d%)?\\.$`), `the ${label} line has its share, its rate and (when they agree) its points`);
+          shares += Number(/(\d{1,2}\.\d)% of the basket/.exec(line)[1]);
+        }
+        if (Math.abs(shares - 100) > 0.3) throw new Error(`the five shares of the basket add up to ${shares.toFixed(1)}%, not 100`);
+        match(eiBody, /The points (are each part's share of the basket times its annual rate: an approximation|are not shown this month)/, "the points say what they are");
+        match(eiBody, /Check: in each of the last \d{2} months the headline lay between the rates of its five parts and core between the goods and the services/, "the checks are shown");
+        match(eiBody, /largest gap \d\.\d{3} index points/); match(eiBody, /largest gap \d\.\d{2} points/); match(eiBody, /not that the figures are right/);
+        match(eiBody, /early \(flash\) estimate/); match(eiBody, /not a market signal or a forecast/);
+        noMatch(eiBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("euroinflation-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);      // the top of a tall card, not its nearest edge
+      await shot(page, "07za-euroinflation-top");
+      await page.locator(V("euroinflation-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07za-euroinflation");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);
