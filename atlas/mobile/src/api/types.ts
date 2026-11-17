@@ -456,6 +456,12 @@ export interface HousingStartsData { available: boolean; reason?: string; demo: 
   growth?: { months: number; slowest: { pct: number; month: string }; fastest: { pct: number; month: string }; share_slower_pct: number } | null;
   parts?: { months_checked: number; smallest_remainder_thousands: number; largest_remainder_thousands: number; newest: { month: string; total_thousands: number; single_family_thousands: number; five_plus_thousands: number; remainder_thousands: number } };
   history?: { date: string; level: number }[] }
+export interface EuroAggregate { level_millions: number; growth_pct: number; change_1m_pct: number | null; change_3m_pct: number | null }
+export interface EuroMoneySupplyData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
+  m3?: EuroAggregate; m2?: EuroAggregate; m1?: EuroAggregate; makeup?: { id: string; label: string; level_millions: number; share_pct: number }[];
+  growth_range?: { months: number; lowest: { pct: number; month: string }; highest: { pct: number; month: string }; share_lower_pct: number } | null;
+  detail?: { months_checked: number; sums_checked: number; largest_gap_points: number; largest_gap_month: string | null };
+  history?: { date: string; level_millions: number }[] }
 export interface IndustrialGroup { level: number; change_1m_pct: number | null; change_1y_pct: number | null }
 export interface IndustrialProductionData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; level?: number;
   change_1m_pct?: number | null; change_3m_pct?: number | null; change_1y_pct?: number | null; manufacturing?: IndustrialGroup; mining?: IndustrialGroup; utilities?: IndustrialGroup;

@@ -949,6 +949,26 @@ async function healthy(browser) {
       await page.locator(V("industrial-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07y-industrial");
 
+      await page.waitForSelector(V("euromoney-card"));
+      await page.waitForSelector(V("euromoney-body") + ", " + V("euromoney-unavailable") + ", " + V("euromoney-error"), { timeout: 45000 });
+      const emTxt = await text(page);
+      match(emTxt, /Euro-area money supply/); match(emTxt, /European Central Bank/); noMatch(emTxt, FORECASTS, "the euro money supply card makes no forecasts");
+      if (await liveCard(page, "euromoney-body")) {
+        const emBody = await inner(page, "euromoney-body");
+        const EMONTH = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        const EVS = "(up \\d{1,3}\\.\\d% on (a month|three months) ago|down \\d{1,3}\\.\\d% on (a month|three months) ago|the same as (a month|three months) ago)";
+        match(emBody, new RegExp(`At the end of ${EMONTH} the euro area's broad money supply \\(M3\\) was €\\d{1,2}\\.\\d{2} trillion, ((growing|shrinking) \\d{1,2}\\.\\d% a year|not growing) \\(the ECB's own annual rate\\)\\.`), "M3 with its month and the ECB's growth rate");
+        match(emBody, new RegExp(`The amount was ${EVS} and ${EVS}\\.`), "the one- and three-month changes of the amount");
+        match(emBody, new RegExp(`the ECB's growth rate ran from [-+]?\\d{1,2}\\.\\d% \\(${EMONTH}\\) to [-+]?\\d{1,2}\\.\\d% \\(${EMONTH}\\); \\d{1,3}% of those months were slower than now\\.`), "the ten-year range is explained in months");
+        match(emBody, /M2, €\d{1,2}\.\d{2} trillion, (growing|shrinking) \d{1,2}\.\d% a year\. M1, €\d{1,2}\.\d{2} trillion, (growing|shrinking) \d{1,2}\.\d% a year\./, "M2 and M1");
+        match(emBody, /M3 is made of: currency and overnight deposits, \d{1,2}\.\d%; deposits with an agreed maturity of up to two years, \d{1,2}\.\d%; deposits redeemable at notice of up to three months, \d{1,2}\.\d%; repurchase agreements, money market fund shares and debt securities of up to two years, \d{1,2}\.\d%\./, "what M3 is made of");
+        match(emBody, /Check: in each of the last \d{2} months, M1, M2 and M3 equal the sums of their parts to the million euro/, "the sums check is shown"); match(emBody, /not that they are right/);
+        match(emBody, /Checked: the units are the ones assumed/); match(emBody, /not a market signal or a forecast/); match(emBody, /provisional and is revised later/);
+        noMatch(emBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("euromoney-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07z-euromoney");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);

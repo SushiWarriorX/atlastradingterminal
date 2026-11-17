@@ -30,6 +30,7 @@ import { HousingStartsCard } from "./HousingStartsCard";
 import { IndustrialProductionCard } from "./IndustrialProductionCard";
 import { RetailSalesCard } from "./RetailSalesCard";
 import { EcbRatesCard } from "./EcbRatesCard";
+import { EuroMoneyCard } from "./EuroMoneyCard";
 import { CustomsCard } from "./CustomsCard";
 import { ReceiptsCard } from "./ReceiptsCard";
 import { OutlaysCard } from "./OutlaysCard";
@@ -83,6 +84,7 @@ export function MacroView() {
             </Section>
             <FedRatesCard />
             <EcbRatesCard />
+            <EuroMoneyCard />
             <TreasuryCard />
             <FxCard />
             <FedOpsCard />

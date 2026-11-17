@@ -5,7 +5,7 @@ Owner goal (2026-11-09): grow the system's tools and skills by at least 5% so th
 Baseline counted 2026-11-09:
 | Kind | Count | Where counted |
 | --- | --- | --- |
-| Live data sources | 29 (now 55: the 29 of the baseline plus the 26 counted below) | `DATA_SOURCES.md` LIVE table |
+| Live data sources | 29 (now 56: the 29 of the baseline plus the 27 counted below) | `DATA_SOURCES.md` LIVE table |
 | Strategy library rules | 31 (now 39) | `btclab/strategies.py` (tracker ledger holds 11 frozen) |
 | AI desk tools | 7 | `backend/atlas_api/ai/tools.py` |
 | Repo skills | 0 (now 3) | `atlas/.claude/skills/` |
@@ -13,7 +13,7 @@ Baseline counted 2026-11-09:
 
 Target: at least 71 (67 x 1.05 = 70.35, rounded up). Each loop adds its own kind; update the table and the current total when something ships.
 
-Current total: 104 (baseline 67 + 8 strategies + 3 skills + 26 data sources; retail sales and housing starts shipped on 2026-11-17 and were first counted here on 2026-11-17 09:3x, industrial production on 2026-11-17 at the 11 UTC data job; the Chicago Fed index shipped on 2026-11-12 but was not counted until 2026-11-14). Research-only inputs that Signal does not show (Fear & Greed and hash-rate histories, the Fed balance-sheet series) are not counted. Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
+Current total: 105 (baseline 67 + 8 strategies + 3 skills + 27 data sources; retail sales and housing starts shipped on 2026-11-17 and were first counted here on 2026-11-17 09:3x, industrial production on 2026-11-17 at the 11 UTC data job and the euro-area money supply at the 14 UTC one; the Chicago Fed index shipped on 2026-11-12 but was not counted until 2026-11-14). Research-only inputs that Signal does not show (Fear & Greed and hash-rate histories, the Fed balance-sheet series) are not counted. Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
 
 ## Added since baseline
 | Date | Kind | Name | Source/loop |
@@ -57,6 +57,7 @@ Current total: 104 (baseline 67 + 8 strategies + 3 skills + 26 data sources; ret
 | 2026-11-17 | Data source | US retail and food services sales, monthly, with the retail trade plus food services identity checked against the total in every one of the last 24 months (Census Bureau via FRED) | Data loop |
 | 2026-11-17 | Data source | US housing starts, monthly annual rate: total, single-family and five-or-more-unit homes (Census Bureau and HUD via FRED); no exact parts check exists because the two-to-four-unit series is calculated by a third party, which is held | Data loop |
 | 2026-11-17 | Data source | US industrial production and capacity utilization, monthly: the total index, manufacturing, mining and electric and gas utilities, and the share of capacity in use (Board of Governors of the Federal Reserve System via FRED); the total's monthly change is checked to lie between its three groups' changes (true in every month since May 1971) | Data loop |
+| 2026-11-17 | Data source | Euro-area money supply, monthly: M3 with the ECB's own annual growth rate, M2 and M1, and what M3 is made of (ECB Data Portal); units checked against the source's own labels, four sums checked to the million euro in each of the last 24 months (and said to be the ECB's own arithmetic) and the published growth checked against the growth of the amounts | Data loop |
 | 2026-11-17 | App feature (not counted) | Accessibility gate in the phone e2e: `axe-core` plus 44 point tap targets and label-in-name on 11 screens, with a self-test and nine break-it checks | Improve loop |
 
 ## Loop budget (measured 2026-11-09)

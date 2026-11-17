@@ -336,6 +336,10 @@ export function useBankReserves() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).bankReserves, queryFn: () => need(api).bankReserves(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
 }
+export function useEuroMoneySupply() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).euroMoneySupply, queryFn: () => need(api).euroMoneySupply(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
 export function useEcbRates() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).ecbRates, queryFn: () => need(api).ecbRates(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 60 * 60_000, retry: 0 });

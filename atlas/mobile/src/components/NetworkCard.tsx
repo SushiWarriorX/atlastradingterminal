@@ -7,7 +7,8 @@ import { color, space } from "../theme";
 import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
 const n = (x: number) => x.toLocaleString("en-US");
-const btc = (x: number, max = 2) => x.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: max });
+// A fixed number of decimals: "2.5710 BTC", never "2.571 BTC" when the last digit happens to be a zero (a live-data flake of the browser test, found 2026-11-17).
+const btc = (x: number, digits = 2) => x.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 const pc = (x: number) => `${x > 0 ? "+" : x < 0 ? "−" : ""}${Math.abs(x).toFixed(1)}%`;
 const tone = (x: number) => (x > 0 ? color.up : x < 0 ? color.down : color.text);
 
