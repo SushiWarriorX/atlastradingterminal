@@ -208,6 +208,18 @@ def test_every_world_carries_the_same_positive_volume_series_for_a_seed_and_the_
     assert np.array_equal(r, np.random.default_rng(5).normal(0.0004, 0.035, 2875))                                                      # and the returns are the same numbers the generator always drew
 
 
+def test_the_volume_has_a_random_stream_of_its_own_and_starts_in_its_stationary_distribution():
+    seed, n = 5, 2875
+    v = K.volume_series(seed)
+    a = np.log(v / K.VOLUME_LEVEL)
+    e = a[1:] - K.VOLUME_PERSISTENCE * a[:-1]                                                      # the innovations of the autoregression
+    for other in (seed, seed + 1000):                                                              # the stream of the returns, and the stream of the wicks (the first draw of the candle builder)
+        z = np.random.default_rng(other).normal(0.0, 1.0, n)[1:]
+        assert abs(float(np.corrcoef(e, z)[0, 1])) < 0.08, other                                   # unrelated to both: four standard errors
+    first = np.array([np.log(K.volume_series(s, n=1)[0] / K.VOLUME_LEVEL) for s in range(3000)])
+    assert first.std() == pytest.approx(K.VOLUME_INNOVATION / np.sqrt(1 - K.VOLUME_PERSISTENCE ** 2), rel=0.06) and abs(first.mean()) < 0.05      # the first day is a draw from the long-run spread, not a start at the mean
+
+
 def test_the_synthetic_volume_surges_about_as_often_and_is_about_as_persistent_as_the_stored_series():
     v = K.volume_series(1, n=200_000)
     base = np.convolve(v, np.ones(20) / 20, "valid")[:-1]                                           # base[j] is the mean of candles j .. j+19: the baseline of candle j+20
