@@ -279,3 +279,75 @@ def test_the_record_of_the_volume_family_carries_the_outcome_and_the_numbers_of_
     got = K.run_family_world("planted_surge_big", [45], "volume_surge")[0]
     assert (got["outcome"], got["failed"], got["chosen"], got["activity"], got["stable"]) == ("admitted", [], {"hold": 10, "ratio": 1.5}, 61, True) and got["val_null_p"] == pytest.approx(0.0065, abs=0.001)
     assert got["ir_train"] == pytest.approx(1.04, abs=0.01) and got["ir_val"] == pytest.approx(1.48, abs=0.01) and got["cost2"] == pytest.approx(1.1406, abs=0.001) and got["train"] == pytest.approx(0.7392, abs=0.001) and got["val"] == pytest.approx(1.8531, abs=0.001)
+
+
+# ---- a fixed ON/OFF schedule with a planted premium: what the procedure can see of a rule whose timing is already known (step 14e) ----
+
+def test_a_schedule_holds_the_candle_after_each_on_candle():
+    assert K.held_candles([False, True, True, False, True]).tolist() == [False, False, True, True, False]
+    assert K.held_candles([True]).tolist() == [False] and K.held_candles([]).tolist() == []                    # the order is filled at the next open: the last candle's state holds nothing
+
+
+def test_schedule_returns_pay_the_premium_on_held_candles_only_and_are_the_null_worlds_returns_without_it():
+    n, premium = 200_000, 0.002
+    state = np.random.default_rng(3).random(n) < 0.2
+    r = K.schedule_returns(state, premium, 1)
+    held = K.held_candles(state)
+    se = 0.035 / np.sqrt(held.sum())
+    assert r[held].mean() == pytest.approx(0.0004 + premium, abs=4 * se) and r[~held].mean() == pytest.approx(0.0004, abs=4 * 0.035 / np.sqrt((~held).sum()))
+    assert np.array_equal(K.schedule_returns(state[:2875], 0.0, 4), K.daily_returns("null_mild", 4))              # with no premium it is exactly the mild null world (same stream, same drift and volatility)
+    assert np.array_equal(K.schedule_returns(state, premium, 1), r) and not np.array_equal(K.schedule_returns(state, premium, 2), r)
+
+
+def test_candles_from_returns_are_the_candles_a_world_builds():
+    assert K.candles_from_returns(K.daily_returns("null_mild", 3), 3) == K.synthetic_candles("null_mild", 3)
+    cs = K.candles_from_returns(np.zeros(5), 9, start=100.0)
+    assert len(cs) == 5 and [c[4] for c in cs] == [100.0] * 5 and cs[0][0] == K.T0 and all(c[2] >= 100.0 >= c[3] for c in cs)
+
+
+def test_what_a_schedules_trades_cost_per_day_held_is_the_round_trip_over_the_average_holding():
+    state = np.zeros(100, dtype=bool)
+    state[10:15] = True                                                                 # a trade of 5 candles held (11 to 15)
+    state[40:50] = True                                                                 # a trade of 10 (41 to 50)
+    assert K.ROUND_TRIP_COST == pytest.approx(0.003) and K.break_even_per_held_day(state, [(0, 99)]) == pytest.approx(0.003 * 2 / 15)
+    assert K.break_even_per_held_day(state, [(0, 30)]) == pytest.approx(0.003 / 5)       # only the first trade lies inside the range
+    assert K.break_even_per_held_day(state, [(0, 30), (35, 99)]) == pytest.approx(0.003 * 2 / 15)                   # ranges add up, as TRAIN and VALIDATION do
+    with pytest.raises(ValueError, match="holds nothing"):
+        K.break_even_per_held_day(np.zeros(50, dtype=bool), [(0, 49)])
+
+
+def test_a_fixed_schedule_family_exists_only_inside_the_block_and_returns_the_given_state_whatever_the_candles():
+    from atlas_api.btcquant import strategies as S
+    state = np.random.default_rng(1).random(420) < 0.3
+    before = set(S.FAMILIES)
+    with K.fixed_schedule(state) as fid:
+        fam = S.FAMILIES[fid]
+        sig = fam.build(S.Bars(K.synthetic_candles("null_mild", 5, n=420)), {"run": 0})
+        assert np.array_equal(sig.state, state) and sig.weight is None and fam.kind == "stop" and S.configs(fam) == [{"run": 0}]
+        assert S.n_configurations() == 113                                                               # the count behind the deflated Sharpe ratio is the protocol's, not the temporary family's
+    assert set(S.FAMILIES) == before
+    with pytest.raises(RuntimeError):
+        with K.fixed_schedule(state):
+            raise RuntimeError("boom")
+    assert set(S.FAMILIES) == before                                                                     # removed even when the block fails
+
+
+def test_a_schedule_with_a_large_premium_is_found_and_one_without_is_not_and_the_record_is_compact():
+    state = np.zeros(2875, dtype=bool)
+    for start in range(400, 2800, 12):
+        state[start:start + 4] = True                                                                    # a trade of 4 candles every 12: about a third of the days
+    big = K.run_schedule_world(state, 0.01, [1, 2], n_shifts=40)
+    json.dumps(big)
+    assert all(r["premium"] == 0.01 and r["chosen"] == {"run": 0} and r["train"] > 1.0 and r["val"] > 1.0 and r["activity"] > 100 for r in big)
+    none = K.run_schedule_world(state, 0.0, [1, 2], n_shifts=40)
+    assert all(r["premium"] == 0.0 and r["train"] < 1.0 for r in none)
+    assert K.run_schedule_world(state, 0.01, [1, 2], n_shifts=40) == big                                  # reproducible
+
+
+def test_the_command_line_runs_a_queued_schedule_at_a_multiple_of_its_costs_and_refuses_an_unknown_one(tmp_path, capsys):
+    out = tmp_path / "rows.json"
+    assert K.main(["calibration", "schedule", "monday", "6.7", "3", "5", str(out)]) == 0
+    rows = json.loads(out.read_text())
+    printed = capsys.readouterr().out
+    assert [r["seed"] for r in rows] == [3, 4] and "monday" in printed and "x 6.7" in printed and rows[0]["premium"] == pytest.approx(6.7 * 0.003)       # a Monday trade is one candle: its cost per day held is the whole 0.30%
+    assert K.main(["calibration", "schedule", "no_such_rule", "1", "1", "2"]) == 2

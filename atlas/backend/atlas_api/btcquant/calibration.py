@@ -22,6 +22,8 @@ The weekday, reversal and surge worlds exist only to see whether the machinery c
 premium under that cannot pay for itself whatever the data say, and a reversal or surge trade pays the same 0.30% for every trade. They are used with `run_family_world` (one family at a time); the first calibration
 of the other worlds is not repeated.
 
+Schedules (step 14e). `run_schedule_world` takes an ON/OFF schedule found on the real candles (the default setting of a queued entry in the novelty screen), holds it fixed and plants a premium on the candles it holds in synthetic independent returns, to see how large an effect the five gates could see for a rule with that timing before anything is written for it (BUILD_PLAN.md, step 14e).
+
 Volume (protocol 1.5). Every world carries a synthetic daily volume series, drawn from a random stream of its own (seed + 2000) so that no price, wick or return of any world changed when it was added; it used to be a constant 100,
 which no family read. Log volume is a first-order autoregression (persistence 0.7, innovation 0.4) around 10,000: it surges (volume at least 1.5, 2 and 3 times the mean of the 20 days before) on 17.7%, 7.4% and 1.4% of days against
 15.9%, 6.3% and 1.5% in the stored Coinbase series, and its first-order autocorrelation is about 0.7 against 0.65. Those three shares and the autocorrelation were measured once from the stored volumes (no price and no return was
@@ -29,12 +31,14 @@ used) to set the two numbers; this module never reads the data files. Volume is 
 """
 from __future__ import annotations
 
+import contextlib
 import sys
 from datetime import datetime, timezone
 
 import numpy as np
 
 from . import backtest as B
+from . import config as C
 from . import strategies as S
 from . import validation as V
 
@@ -101,9 +105,10 @@ def daily_returns(world: str, seed: int, n: int = N_CANDLES) -> np.ndarray:
     return out
 
 
-def synthetic_candles(world: str, seed: int, n: int = N_CANDLES, start: float = 20_000.0) -> list:
-    """Daily candles built from the world's returns: each opens at the previous close, with wicks beyond the open and close."""
-    r = daily_returns(world, seed, n)
+def candles_from_returns(r, seed: int, start: float = 20_000.0) -> list:
+    """Daily candles built from daily returns: each opens at the previous close, with wicks beyond the open and close (from the seed's own stream, seed + 1000) and the seed's volume series."""
+    r = np.asarray(r, dtype=float)
+    n = len(r)
     rng = np.random.default_rng(seed + 1000)
     c = start * np.exp(np.cumsum(r))
     o = np.concatenate([[start], c[:-1]])
@@ -111,6 +116,11 @@ def synthetic_candles(world: str, seed: int, n: int = N_CANDLES, start: float = 
     l = np.minimum(o, c) * (1 - np.abs(rng.normal(0, 0.01, n)))
     v = volume_series(seed, n)
     return [(T0 + i * DAY, float(o[i]), float(h[i]), float(l[i]), float(c[i]), float(v[i])) for i in range(n)]
+
+
+def synthetic_candles(world: str, seed: int, n: int = N_CANDLES, start: float = 20_000.0) -> list:
+    """Daily candles built from the world's returns."""
+    return candles_from_returns(daily_returns(world, seed, n), seed, start)
 
 
 def compact(ev: dict) -> dict:
@@ -155,6 +165,63 @@ def run_family_world(world: str, seeds, family: str, *, n_shifts: int = V.NULL_S
     return out
 
 
+# ---- a fixed ON/OFF schedule with a planted premium (step 14e, 2026-11-17) ----
+# What can the procedure see of a rule whose timing is already known? Take the ON/OFF schedule of a queued entry's default setting (from the novelty screen, computed on the real candles; it reads prices and volume, never a return),
+# hold it fixed, plant a premium on every candle it holds in synthetic independent returns, and run it alone through the five gates. Nothing is selected on TRAIN (one setting), so this is a best case for the full procedure.
+ROUND_TRIP_COST = 2 * (C.FEE + C.SLIPPAGE)                                            # 0.30% of the amount traded for a completed trade
+
+
+def held_candles(state) -> np.ndarray:
+    """The candles a schedule holds: the candle AFTER each candle whose state is ON (the order is decided at the close and filled at the next open)."""
+    state = np.asarray(state, dtype=bool)
+    held = np.zeros(len(state), dtype=bool)
+    held[1:] = state[:-1]
+    return held
+
+
+def schedule_returns(state, premium: float, seed: int, drift: float = 0.0004, vol: float = 0.035) -> np.ndarray:
+    """Independent daily returns (the mild null world's, for premium 0) plus `premium` on every candle the schedule holds."""
+    held = held_candles(state)
+    return np.random.default_rng(seed).normal(drift, vol, len(held)) + premium * held
+
+
+def break_even_per_held_day(state, periods) -> float:
+    """What the trades of a schedule cost per day held over the given index ranges: a completed trade costs 0.30%, so a schedule that holds 15 days per trade must earn 0.02% a day just to pay for itself."""
+    state = np.asarray(state, dtype=bool)
+    held, trades, days = held_candles(state), 0, 0
+    for i0, i1 in periods:
+        st = state[i0:i1 + 1]
+        trades += int((st & ~np.concatenate([[False], st[:-1]])).sum())
+        days += int(held[i0:i1 + 1].sum())
+    if days == 0:
+        raise ValueError("the schedule holds nothing in these ranges")
+    return ROUND_TRIP_COST * trades / days
+
+
+@contextlib.contextmanager
+def fixed_schedule(state):
+    """For the length of the block, a one-setting stop-based family whose ON/OFF state is the given schedule whatever the candles it is built on (so a schedule found on the real candles can be run through the gates on synthetic ones). Yields its id."""
+    st = np.asarray(state, dtype=bool)
+    S.FAMILIES["fixed_schedule"] = S.Family("fixed_schedule", "A fixed ON/OFF schedule", "calendar", "stop", False, {"run": [0]}, lambda b, p: S.Signals(state=st.copy(), stop=S._fixed_stop(b)), lambda b, p, i: {}, since=C.PROTOCOL_VERSION)
+    try:
+        yield "fixed_schedule"
+    finally:
+        S.FAMILIES.pop("fixed_schedule", None)
+
+
+def run_schedule_world(state, premium: float, seeds, *, n_shifts: int = V.NULL_SHIFTS) -> list:
+    """The schedule alone through selection (one setting) and the five admission gates on synthetic datasets: independent returns with `premium` on every held candle, the seed's wicks and volume; the trial count passed to the deflated Sharpe is the protocol's."""
+    out = []
+    with fixed_schedule(state) as fid:
+        for s in seeds:
+            prep = B.Prepared(candles_from_returns(schedule_returns(state, premium, s), s))
+            tr, va = prep.period("TRAIN"), prep.period("VALIDATION")
+            runs = {"TRAIN": B.run_all(prep, fid, *tr), "VALIDATION": B.run_all(prep, fid, *va)}
+            ev = V.evaluate_family(prep, fid, runs, 1e-4, S.n_configurations(), walk=False, n_shifts=n_shifts)
+            out.append({"premium": premium, "seed": s, **compact_family(ev)})
+    return out
+
+
 def admission_summary(rows: list) -> dict:
     """How often the stored outcome 'admitted' happens: the share of datasets with at least one admitted family, and the average number admitted per dataset."""
     n = len(rows)
@@ -162,8 +229,32 @@ def admission_summary(rows: list) -> dict:
     return {"datasets": n, "any_admitted": sum(1 for c in counts if c > 0), "share": (sum(1 for c in counts if c > 0) / n) if n else None, "mean_admitted": (sum(counts) / n) if n else None}
 
 
+def _schedule_main(argv: list) -> int:
+    """`calibration schedule <queued entry> <multiple> <first seed> <end seed> [output.json]`: the entry's default schedule on the real candles, held fixed, with a premium of <multiple> times its trades' cost per day held planted on synthetic returns."""
+    import json
+    from . import data as D
+    from . import novelty as N
+    if len(argv) < 6 or argv[2] not in N.CANDIDATES:
+        print("usage: python -m atlas_api.btcquant.calibration schedule <" + "|".join(N.CANDIDATES) + "> <multiple of the cost per day held> <first seed> <end seed> [output.json]")
+        return 2
+    candles = D.load(D.daily_path())
+    state = N.CANDIDATES[argv[2]].fn(S.Bars(candles))
+    real = B.Prepared(candles)
+    premium = float(argv[3]) * break_even_per_held_day(state, [real.period("TRAIN"), real.period("VALIDATION")])
+    rows = run_schedule_world(state, premium, range(int(argv[4]), int(argv[5])))
+    n = len(rows)
+    adm = sum(1 for r in rows if r["outcome"] == "admitted")
+    print(f"{argv[2]} x {argv[3]} (premium {100 * premium:.4f}% a day held): admitted {adm} of {n} = {100 * adm / n:.1f}%; too thin {sum(1 for r in rows if r['outcome'] == 'too_thin')}; failed A1 {sum(1 for r in rows if 'A1' in r['failed'])}, A2 {sum(1 for r in rows if 'A2' in r['failed'])}, A3 {sum(1 for r in rows if 'A3' in r['failed'])}, A4 {sum(1 for r in rows if 'A4' in r['failed'])}, A5 {sum(1 for r in rows if 'A5' in r['failed'])}")
+    if len(argv) > 6:
+        with open(argv[6], "w", encoding="utf-8") as fh:
+            json.dump(rows, fh)
+    return 0
+
+
 def main(argv: list) -> int:
     import json
+    if len(argv) > 1 and argv[1] == "schedule":
+        return _schedule_main(argv)
     if len(argv) < 4 or argv[1] not in WORLDS or (len(argv) > 5 and argv[5] not in [f.id for f in S.RESEARCH]):
         print("usage: python -m atlas_api.btcquant.calibration <" + "|".join(WORLDS) + "> <first seed> <end seed> [output.json [family]]")
         return 2
