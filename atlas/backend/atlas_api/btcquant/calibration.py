@@ -12,8 +12,12 @@ Worlds (all 2,875 daily candles from 2019-01-01, as in the stored data):
   planted_monday_small (protocol 1.3) no trend and no other skill, but the candle of one weekday (Monday) pays a premium of 0.3% on top of the 0.04% drift: exactly what a weekly round trip costs
   planted_monday_mid   the same with a premium of 0.6% (the cost of a round trip at doubled costs, the level of gate A5)
   planted_monday_big   the same with a premium of 1.0%
-The two weekday worlds exist only to see whether the machinery can find a calendar effect and how large it must be: a Monday-only holder pays about 0.30% in fees and slippage every week, so a premium under that cannot
-pay for itself whatever the data say. They are used with `run_family_world` (one family at a time); the first calibration of the other worlds is not repeated.
+  planted_reversal_small (protocol 1.4) no trend and no other skill, but the candle that follows three or more lower closes in a row pays a premium of 0.3% on top of the 0.04% drift
+  planted_reversal_mid   the same with a premium of 0.6%
+  planted_reversal_big   the same with a premium of 1.0%
+The weekday and reversal worlds exist only to see whether the machinery can find a calendar or a reversal effect and how large it must be: a Monday-only holder pays about 0.30% in fees and slippage every week, so a
+premium under that cannot pay for itself whatever the data say, and a reversal trade pays the same 0.30% for every run of lower closes. They are used with `run_family_world` (one family at a time); the first calibration
+of the other worlds is not repeated.
 """
 from __future__ import annotations
 
@@ -35,7 +39,10 @@ WORLDS = {"null_mild": {"kind": "null", "drift": 0.0004, "vol": 0.035},
           "planted_weak": {"kind": "planted", "mu": 0.0025, "vol": 0.025, "switch": 0.02},
           "planted_monday_small": {"kind": "calendar", "drift": 0.0004, "vol": 0.035, "day": 0, "premium": 0.003},
           "planted_monday_mid": {"kind": "calendar", "drift": 0.0004, "vol": 0.035, "day": 0, "premium": 0.006},
-          "planted_monday_big": {"kind": "calendar", "drift": 0.0004, "vol": 0.035, "day": 0, "premium": 0.010}}
+          "planted_monday_big": {"kind": "calendar", "drift": 0.0004, "vol": 0.035, "day": 0, "premium": 0.010},
+          "planted_reversal_small": {"kind": "reversal", "drift": 0.0004, "vol": 0.035, "streak": 3, "premium": 0.003},
+          "planted_reversal_mid": {"kind": "reversal", "drift": 0.0004, "vol": 0.035, "streak": 3, "premium": 0.006},
+          "planted_reversal_big": {"kind": "reversal", "drift": 0.0004, "vol": 0.035, "streak": 3, "premium": 0.010}}
 
 
 def daily_returns(world: str, seed: int, n: int = N_CANDLES) -> np.ndarray:
@@ -45,6 +52,13 @@ def daily_returns(world: str, seed: int, n: int = N_CANDLES) -> np.ndarray:
         return rng.normal(w["drift"], w["vol"], n)
     if w["kind"] == "calendar":                                                                   # independent returns, plus a premium on every candle of one weekday (0 = Monday, from the candle's UTC open time)
         return rng.normal(w["drift"], w["vol"], n) + w["premium"] * (S.weekday(T0 + np.arange(n) * DAY) == w["day"])
+    if w["kind"] == "reversal":                                                                   # independent returns, plus a premium on every candle that follows `streak` or more lower closes in a row
+        noise = rng.normal(w["drift"], w["vol"], n)
+        out, run = np.empty(n), 0
+        for i in range(n):
+            out[i] = noise[i] + (w["premium"] if run >= w["streak"] else 0.0)
+            run = run + 1 if i > 0 and out[i] < 0 else 0                                          # a lower close is a negative return; the first candle has no close before it
+        return out
     state, out = 1, np.empty(n)
     for i in range(n):
         if rng.random() < w["switch"]:

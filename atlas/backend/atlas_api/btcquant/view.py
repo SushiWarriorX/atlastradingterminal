@@ -15,7 +15,7 @@ SHOWN_EVENTS = ("order", "fill", "reject", "stop_hit", "breaker", "breaker_reset
 PORTFOLIO_LABEL = "Main portfolio ($100,000, champions only)"
 BENCHMARK_LABELS = {"buy_hold": "Buy and hold Bitcoin", "cash": "Cash only"}
 SHORT = {"sma_cross": "SMA", "donchian": "DON", "ma_atr_trend": "ATR", "tsmom": "TSM", "rsi_momentum": "RSM", "mom_vol": "MOM", "bollinger_mr": "BOL", "rsi_oversold": "RSO", "vol_breakout": "VBO",
-         "regime_switch": "REG", "vol_target": "VTG", "sma_filter": "FLT", "monday": "MON", "buy_hold": "BTC", "cash": "USD", "portfolio": "MP"}      # the letters on a strategy's round logo
+         "regime_switch": "REG", "vol_target": "VTG", "sma_filter": "FLT", "monday": "MON", "three_down": "REV", "buy_hold": "BTC", "cash": "USD", "portfolio": "MP"}      # the letters on a strategy's round logo
 OUTCOME_WORDS = {"admitted": "Admitted", "rejected": "Rejected", "too_thin": "Too few trades to judge"}
 GATE_WORDS = {"A1": "it made too few trades to judge (at least 10 are needed)",
               "A2": "it did not beat holding the same average amount of Bitcoin, in both 2020-2022 and 2023-2024",
@@ -47,8 +47,16 @@ def family_name(account: dict) -> str:
     return "Main portfolio" if account["id"] == "portfolio" else S.FAMILIES[account["family"]].name
 
 
+def _param_text(k: str, v) -> str:
+    if k == "day" and isinstance(v, int) and 0 <= v <= 6:
+        return WEEKDAYS[v]                                                           # a weekday is shown by its name
+    if k == "streak" and isinstance(v, int) and v >= 1:
+        return f"{v} lower close{'' if v == 1 else 's'} in a row"                    # protocol v1.4: the reversal rule's setting
+    return f"{PARAM_WORDS.get(k, k)} {v}"
+
+
 def params_text(account: dict) -> str:
-    return ", ".join(WEEKDAYS[v] if k == "day" and isinstance(v, int) and 0 <= v <= 6 else f"{PARAM_WORDS.get(k, k)} {v}" for k, v in account["params"].items())
+    return ", ".join(_param_text(k, v) for k, v in account["params"].items())
 
 
 def money(x) -> str:

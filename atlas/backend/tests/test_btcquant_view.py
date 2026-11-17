@@ -42,7 +42,7 @@ def root(tmp_path):
 def test_the_view_has_the_headline_the_accounts_and_the_trades_in_plain_words(root):
     v = V.paper_view(root)
     json.dumps(v)
-    assert v["available"] is True and v["protocol"] == C.PROTOCOL_VERSION == "1.3" and v["real_trading"].startswith("DISABLED") and v["status"] == "no champions: the main portfolio is in cash"
+    assert v["available"] is True and v["protocol"] == C.PROTOCOL_VERSION and v["real_trading"].startswith("DISABLED") and v["status"] == "no champions: the main portfolio is in cash"
     assert v["headline"].startswith("None of the 2 strategies passed the admission bar in the research run of 2026-11-15") and "stays in cash" in v["headline"] and "All 2 are paper-traded anyway" in v["headline"]
     assert v["counts"] == {"champions": 0, "challengers": 0, "monitors": 2, "research_admitted": 0, "research_ran_at": "2026-11-15T10:34:08Z"}
     by_id = {a["id"]: a for a in v["accounts"]}
@@ -199,6 +199,14 @@ def test_a_weekday_setting_is_shown_as_the_name_of_the_day_and_the_family_has_it
     assert V.short({"id": "monday-abcd1234", "family": "monday"}) == "MON" and V.family_name({"id": "monday-abcd1234", "family": "monday"}) == "Day-of-week holding"
 
 
+def test_the_reversal_setting_is_shown_in_words_and_the_family_has_its_logo():
+    assert V.params_text({"params": {"streak": 3}}) == "3 lower closes in a row" and V.params_text({"params": {"streak": 2}}) == "2 lower closes in a row"
+    assert V.params_text({"params": {"streak": 1}}) == "1 lower close in a row" and V.params_text({"params": {"streak": 0}}) == "streak 0" and V.params_text({"params": {"streak": 4.5}}) == "streak 4.5"      # one lower close; zero and a fraction are not a run
+    assert V.params_text({"params": {"day": 6}}) == "Sunday" and V.params_text({"params": {"L": 30}}) == "L 30"                                                                          # the other words are unchanged
+    assert V.label({"id": "three_down-abcd1234", "family": "three_down", "params": {"streak": 3}}) == "Reversal after a losing streak (3 lower closes in a row)"
+    assert V.short({"id": "three_down-abcd1234", "family": "three_down"}) == "REV" and V.family_name({"id": "three_down-abcd1234", "family": "three_down"}) == "Reversal after a losing streak"
+
+
 def test_without_the_research_report_only_the_reasons_and_the_period_figures_are_lost(root):
     for text in (None, "{not json", "[]", json.dumps({"evaluation": {}})):
         if text is not None:
@@ -308,7 +316,7 @@ def test_the_view_built_from_the_committed_artifacts_is_complete_and_makes_no_pr
         pytest.skip("no daily run has been committed")
     v = V.paper_view()
     mons = [a for a in v["accounts"] if a["stage"] == "monitor"]
-    assert len(mons) == 12 and v["backtest"] is not None and v["backtest"]["to"] >= "2026-11-14"
+    assert len(mons) >= 12 and len({a["family"] for a in mons}) == len(mons) and v["backtest"] is not None and v["backtest"]["to"] >= "2026-11-14"        # twelve from the first run, one more for each family a later run did not admit; one monitor a family
     for a in v["accounts"]:
         if a["id"] == "portfolio":
             assert a["backtest"] is None

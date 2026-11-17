@@ -63,7 +63,7 @@ def test_one_dataset_goes_through_the_whole_procedure_and_leaves_a_compact_recor
     rows = K.run_world("null_mild", [1], n_shifts=20)
     json.dumps(rows)
     r = rows[0]
-    assert r["world"] == "null_mild" and r["seed"] == 1 and len(r["families"]) == 13 and "monday" in r["families"] and r["trial_variance"] > 0 and r["trial_variance_excess"] > 0       # thirteen families since protocol 1.3
+    assert r["world"] == "null_mild" and r["seed"] == 1 and len(r["families"]) == 14 and {"monday", "three_down"} <= set(r["families"]) and r["trial_variance"] > 0 and r["trial_variance_excess"] > 0       # fourteen families since protocol 1.4
     f = r["families"]["tsmom"]
     assert set(f) >= {"outcome", "failed", "activity", "train", "val", "ir_train", "ir_val", "dsr", "dsr_excess", "null_p", "val_null_p", "wf_passes", "exposure", "stable", "cost2"}
     assert f["outcome"] in ("admitted", "rejected", "too_thin") and (f["val_null_p"] is None or 0.0 <= f["val_null_p"] <= 1.0)
@@ -128,3 +128,60 @@ def test_the_command_line_runs_one_family_and_refuses_an_unknown_one(tmp_path, c
     rows = json.loads(out.read_text())
     assert [r["seed"] for r in rows] == [5, 6] and all(r["family"] == "monday" for r in rows) and "planted_monday_mid" in capsys.readouterr().out
     assert K.main(["calibration", "planted_monday_mid", "5", "6", str(out), "moon"]) == 2 and "usage" in capsys.readouterr().out
+
+
+# ---- worlds with a planted reversal after a run of lower closes, and the family that is meant to find it (added with protocol 1.4) ----
+
+def run_before(r):
+    """For each candle, the number of lower closes in a row that end at the candle BEFORE it (a lower close is a negative return; the first candle has none), by a plain loop."""
+    out, run = [], 0
+    for i, x in enumerate(r):
+        out.append(run)
+        run = run + 1 if i > 0 and x < 0 else 0
+    return np.array(out)
+
+
+def test_the_planted_reversal_worlds_pay_their_premium_after_a_run_of_three_lower_closes_and_nowhere_else():
+    n = 300_000
+    for world, premium in (("planted_reversal_small", 0.003), ("planted_reversal_mid", 0.006), ("planted_reversal_big", 0.010)):
+        r = K.daily_returns(world, 1, n=n)
+        before = run_before(r)
+        after, exactly_two, others = before >= 3, before == 2, before < 2
+        se = 0.035 / np.sqrt(after.sum())
+        assert 0.10 < after.mean() < 0.14 and r[after].mean() == pytest.approx(0.0004 + premium, abs=4 * se), world            # about one day in eight follows a run of three, and it pays the premium
+        assert r[exactly_two].mean() == pytest.approx(0.0004, abs=4 * 0.035 / np.sqrt(exactly_two.sum())) and r[others].mean() == pytest.approx(0.0004, abs=4 * 0.035 / np.sqrt(others.sum())), world      # a run of two pays nothing extra
+        assert r.std() == pytest.approx(0.035, rel=0.02)
+    assert np.array_equal(K.daily_returns("planted_reversal_mid", 4), K.daily_returns("planted_reversal_mid", 4)) and not np.array_equal(K.daily_returns("planted_reversal_mid", 4), K.daily_returns("planted_reversal_big", 4))
+    names = ["planted_reversal_small", "planted_reversal_mid", "planted_reversal_big"]
+    assert [K.WORLDS[w]["premium"] for w in names] == [0.003, 0.006, 0.010] and all((K.WORLDS[w]["kind"], K.WORLDS[w]["drift"], K.WORLDS[w]["vol"], K.WORLDS[w]["streak"]) == ("reversal", 0.0004, 0.035, 3) for w in names)       # the numbers CALIBRATION.md quotes
+    assert K.synthetic_candles("planted_reversal_big", 2)[0][0] == K.T0
+
+
+def test_the_family_that_follows_runs_of_lower_closes_trades_in_a_reversal_world_and_leaves_a_compact_record():
+    rows = K.run_family_world("planted_reversal_big", [3], "three_down", n_shifts=40)
+    json.dumps(rows)
+    r = rows[0]
+    assert (r["world"], r["seed"], r["family"]) == ("planted_reversal_big", 3, "three_down") and r["chosen"] in ({"streak": 2}, {"streak": 3}, {"streak": 4}) and r["outcome"] in ("admitted", "rejected", "too_thin")
+    assert r["activity"] > 40 and 0.001 < r["exposure"] < 0.05                                      # dozens of trades; about a tenth of the account, a tenth of the days
+    assert K.run_family_world("planted_reversal_big", [3], "three_down", n_shifts=40) == rows        # reproducible
+
+
+def test_the_record_of_the_reversal_family_carries_the_outcome_and_the_numbers_of_the_evaluation_it_came_from():
+    # reference runs on seeded synthetic data (the random streams of numpy's default generator are stable): a no-skill dataset, and three with a reversal premium of 1.0% where the gates give different answers
+    r = K.run_family_world("null_mild", [1], "three_down")[0]
+    assert (r["outcome"], r["failed"], r["activity"], r["chosen"], r["stable"]) == ("rejected", ["A2", "A3", "A4", "A5"], 223, {"streak": 2}, False)
+    assert r["train"] == pytest.approx(-0.4306, abs=0.001) and r["val"] == pytest.approx(-0.428, abs=0.001) and r["cost2"] == pytest.approx(-0.8352, abs=0.001) and r["val_null_p"] == pytest.approx(0.8905, abs=0.001)
+    near = K.run_family_world("planted_reversal_big", [1], "three_down")[0]                                              # everything holds except the timing p-value, 0.217
+    assert (near["outcome"], near["failed"], near["activity"], near["chosen"], near["stable"]) == ("rejected", ["A3"], 229, {"streak": 2}, True) and near["val_null_p"] == pytest.approx(0.2173, abs=0.001)
+    got = K.run_family_world("planted_reversal_big", [2], "three_down")[0]
+    assert (got["outcome"], got["failed"], got["chosen"], got["activity"]) == ("admitted", [], {"streak": 4}, 49) and got["val_null_p"] == pytest.approx(0.0408, abs=0.001)
+    assert got["ir_train"] > 1.0 and got["ir_val"] > 1.0 and got["cost2"] == pytest.approx(0.8597, abs=0.001) and got["train"] == pytest.approx(1.0336, abs=0.001)
+    two = K.run_family_world("planted_reversal_big", [3], "three_down")[0]
+    assert (two["outcome"], two["failed"], two["chosen"], two["activity"]) == ("admitted", [], {"streak": 4}, 47) and two["val_null_p"] == pytest.approx(0.0131, abs=0.001)
+
+
+def test_the_command_line_runs_the_reversal_family_in_a_reversal_world(tmp_path, capsys):
+    out = tmp_path / "r.json"
+    assert K.main(["calibration", "planted_reversal_mid", "5", "7", str(out), "three_down"]) == 0
+    rows = json.loads(out.read_text())
+    assert [r["seed"] for r in rows] == [5, 6] and all(r["family"] == "three_down" for r in rows) and "planted_reversal_mid" in capsys.readouterr().out

@@ -408,7 +408,7 @@ def test_one_family_end_to_end_gives_a_complete_json_record_consistent_with_its_
     runs = {"TRAIN": B.run_all(prep, "sma_cross", *tr), "VALIDATION": B.run_all(prep, "sma_cross", *va)}
     ev = V.evaluate_family(prep, "sma_cross", runs, trial_var=1e-4, n_trials=100, trial_var_excess=2e-4, n_shifts=200)
     json.dumps(ev)
-    assert ev["family"] == "sma_cross" and ev["protocol"] == C.PROTOCOL_VERSION == "1.3" and ev["configurations"] == 15 and len(ev["table"]) == 15 and ev["outcome"] in ("admitted", "rejected", "too_thin")
+    assert ev["family"] == "sma_cross" and ev["protocol"] == C.PROTOCOL_VERSION and ev["configurations"] == 15 and len(ev["table"]) == 15 and ev["outcome"] in ("admitted", "rejected", "too_thin")
     assert ev["spec_hash"] == S.spec_hash("sma_cross", ev["chosen"]) and ev["outcome"] == ev["admission"]["outcome"]
     best = max(ev["table"], key=lambda r: r["score"])
     assert best["params"] == ev["chosen"] or best["score"] == pytest.approx(next(r["score"] for r in ev["table"] if r["params"] == ev["chosen"]))
@@ -437,7 +437,7 @@ def test_a_weight_family_is_counted_by_position_changes_and_has_no_full_exposure
 def test_the_whole_procedure_always_counts_all_the_trials_whichever_families_are_asked_for():
     prep = B.Prepared(history(2875, seed=23, vol=0.035))
     out = V.evaluate_all(prep, families=["donchian", "sma_filter"], walk=False, n_shifts=30)
-    assert out["n_trials"] == 101 == S.n_configurations() and set(out["families"]) == {"donchian", "sma_filter"} and out["protocol"] == C.PROTOCOL_VERSION
+    assert out["n_trials"] == S.n_configurations() and set(out["families"]) == {"donchian", "sma_filter"} and out["protocol"] == C.PROTOCOL_VERSION
     tr, va = prep.period("TRAIN"), prep.period("VALIDATION")
     sharpes = []
     for f in S.RESEARCH:
@@ -445,7 +445,7 @@ def test_the_whole_procedure_always_counts_all_the_trials_whichever_families_are
         for k in a:
             st = V.return_stats(np.concatenate([a[k].returns, b[k].returns]))["sr_daily"]
             sharpes.append(0.0 if st is None else st)
-    assert out["trial_variance"] == pytest.approx(float(np.var(sharpes, ddof=1)), rel=1e-12) and len(sharpes) == 101
+    assert out["trial_variance"] == pytest.approx(float(np.var(sharpes, ddof=1)), rel=1e-12) and len(sharpes) == S.n_configurations()
     for fid, ev in out["families"].items():
-        assert ev["deflated_sharpe"]["n_trials"] == 101 and ev["deflated_sharpe"]["sr0"] == pytest.approx(math.sqrt(out["trial_variance"]) * V.expected_max_normal(101), rel=1e-12)
+        assert ev["deflated_sharpe"]["n_trials"] == S.n_configurations() and ev["deflated_sharpe"]["sr0"] == pytest.approx(math.sqrt(out["trial_variance"]) * V.expected_max_normal(S.n_configurations()), rel=1e-12)
     json.dumps(out)

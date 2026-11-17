@@ -1,4 +1,4 @@
-"""Protocol constants for the btcquant system. One place, because the protocol (atlas/btcquant/PROTOCOL.md, version 1.3) fixes them in advance: changing a value here is an amendment, not an edit.
+"""Protocol constants for the btcquant system. One place, because the protocol (atlas/btcquant/PROTOCOL.md, version 1.4) fixes them in advance: changing a value here is an amendment, not an edit.
 
 Research and paper only. Nothing in this package places a real order, holds a key, uses leverage or sells short.
 """
@@ -7,7 +7,7 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-PROTOCOL_VERSION = "1.3"
+PROTOCOL_VERSION = "1.4"
 
 # --- data (protocol section 1) ---
 PROVIDER = "coinbase"                         # Binance (BTC/USDT) is blocked from this environment; Coinbase BTC-USD is the alternative provider

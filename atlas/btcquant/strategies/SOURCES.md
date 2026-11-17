@@ -53,6 +53,17 @@ Status of every row: abstracts and summaries returned by a web search on 2026-11
 | Kahraman and Kök (2024) (journal and title NOT confirmed) | seen only as a summary | A Monday effect in Bitcoin and Ether, and a rule that beat random investment | not recorded | monday: the hypothesis | that the rule beat holding or survives costs; the sample |
 | **Against:** Baur et al. (title, journal and year NOT confirmed) | seen only as a summary | Day-of-week effects on seven exchanges that varied over time with no persistent pattern; Bitcoin judged weak-form efficient | seven exchanges, sample not recorded | monday: the reason the effect may not persist | that no Monday effect exists in 2020 to 2024 |
 
+## Short-term reversal (family 14, `three_down`; added 2026-11-15 under protocol 1.4, before that family was run)
+
+Status of every row: summaries returned by a web search on 2026-11-15 (as recorded in `RESEARCH_QUEUE.md`), except Jegadeesh, which is from memory. **None of these was read in full, titles, journals and volumes are NOT confirmed, and the size of the reversal each reports is not known to the builder.** The Bitcoin evidence is mostly intraday, and none of it tests a daily rule on data after 2019.
+
+| Source | Record | What the authors report | Market and period | Used for | What it does NOT show |
+| --- | --- | --- | --- | --- | --- |
+| Jegadeesh (1990), "Evidence of Predictable Behavior of Security Returns", Journal of Finance (from memory: volume 45, pages 881 to 898; not checked) | from memory, not re-read | Negative serial correlation in monthly returns of individual stocks: the previous month's losers tend to do better in the next month | US stocks, monthly, sample not recorded here | three_down: the general idea of short-term reversal | anything about Bitcoin, daily data or costs |
+| De Nicola (title, journal and year NOT confirmed) | seen only as a summary | Negative first-order autocorrelation of Bitcoin returns at one, two and four hours, with larger moves reversing more | Bitstamp, intraday | three_down: the hypothesis | a daily effect; that a rule survives costs |
+| Corbet and Katsiampa (2018; title, journal and volume NOT confirmed) | seen only as a summary | Asymmetric mean reversion of Bitcoin price returns across frequencies | Bitcoin, sample not recorded | three_down: the hypothesis | a tradable net profit; the daily horizon in particular |
+| Quantpedia (a practitioner site; its daily backtests of buying local minima) | seen only as a summary | Buying local minima is less profitable but less risky than buying maxima; no significant seasonality in a later revisit; drawdowns above 80% | Bitcoin, daily | three_down: the closest daily test, and a caution | a rule defined as ours is; anything out of sample |
+
 ## What is not relied on
 
 Blogs, trading-platform script pages, newsletters and forum posts that appeared in searches were not used for any rule, number or claim. Where a secondary summary is mentioned above it is named as one.
@@ -63,4 +74,4 @@ Blogs, trading-platform script pages, newsletters and forum posts that appeared 
 
 ## Still to check (open items)
 
-Faber (2007) volume, issue and pages; Faith (2007) publisher; Williams (1999) and Crabel (1990) publishers and titles; Connors and Alvarez year; Kim, Tse and Wald journal details; the deflated Sharpe formula against the paper's text; the sample periods of Hudson and Urquhart (2021) and Liu and Tsyvinski (2021). The four weekday studies above: titles, journals, volumes, sample periods and the size of the Monday premium each reports (only abstracts and summaries were seen).
+Faber (2007) volume, issue and pages; Faith (2007) publisher; Williams (1999) and Crabel (1990) publishers and titles; Connors and Alvarez year; Kim, Tse and Wald journal details; the deflated Sharpe formula against the paper's text; the sample periods of Hudson and Urquhart (2021) and Liu and Tsyvinski (2021). The four weekday studies above: titles, journals, volumes, sample periods and the size of the Monday premium each reports (only abstracts and summaries were seen). The reversal sources of family 14: titles, journals, volumes, samples and the size of the reversal each reports (Jegadeesh's citation is from memory).

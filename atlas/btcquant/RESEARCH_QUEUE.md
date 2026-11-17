@@ -50,6 +50,7 @@ New hypotheses found in published research or practitioner sources, each screene
 - **Rule (default).** Buy after three lower closes in a row; sell at the first close that is not lower than the one before.
 - **Planned grid.** Streak 2, 3, 4: 3 configurations.
 - **Expected failure.** Falling markets keep falling (2022); and it overlaps the RSI and Bollinger mean-reversion families already tested, which were rejected.
+- **Pre-registered before any run (2026-11-17, protocol 1.4; the text above was written before the screen and is kept as it was).** The rule, the default of 3 and the grid of 2, 3, 4 are exactly as planned. What the entry did not say is now fixed: a lower close is a close strictly below the one before it (an equal close is not lower, and the first candle has none); the family is stop-based, with the protocol's fixed 3 x ATR stop and 1% risk sizing like the other two mean-reversion families, not a whole-account weight rule like `monday`; N becomes 104. Reasons, the calibration on synthetic data and what a rejection will mean are in `PROTOCOL.md` (amendment v1.4), `strategies/three_down.md` and `CALIBRATION.md` (fourteen families). Nothing of it has been run on the real data.
 
 ### `money_flow`: closes near the day's high on heavy volume (accumulation)
 - **Source.** Practitioner: Chaikin money flow (from memory); no rigorous Bitcoin test was found.

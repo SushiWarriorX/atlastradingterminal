@@ -80,9 +80,9 @@ def test_renamed_copies_among_the_admitted_are_counted_together(edge):
 
 def test_the_run_is_recorded_and_the_files_are_written(edge):
     runs = RS.previous_runs(edge["reg"])
-    assert len(runs) == 1 and runs[0]["protocol"] == "1.2" and runs[0]["ran_at"] == "2026-11-15T12:00:00Z" and runs[0]["data"]["sha256"] == RS.data_version(edge["prep"])["sha256"] and runs[0]["n_trials"] == 101
+    assert len(runs) == 1 and runs[0]["protocol"] == "1.2" and runs[0]["ran_at"] == "2026-11-15T12:00:00Z" and runs[0]["data"]["sha256"] == RS.data_version(edge["prep"])["sha256"] and runs[0]["n_trials"] == S.n_configurations()
     full = json.loads((edge["root"] / "reports" / "research_1.2.json").read_text())
-    assert full["evaluation"]["n_trials"] == 101 and set(full["evaluation"]["families"]) == set(RS.families_of("1.2")) and full["admitted"] == edge["res"]["admitted"] == runs[0]["admitted"]
+    assert full["evaluation"]["n_trials"] == S.n_configurations() and set(full["evaluation"]["families"]) == set(RS.families_of("1.2")) and full["admitted"] == edge["res"]["admitted"] == runs[0]["admitted"]
     assert (edge["root"] / "reports" / "research_1.2.md").read_text() == RS.research_report({k: v for k, v in edge["res"].items() if k != "evaluation"}, edge["res"]["evaluation"])
 
 
@@ -111,16 +111,16 @@ def test_new_data_or_a_new_protocol_version_is_a_new_run(edge, tmp_path, monkeyp
     monkeypatch.setattr(RS.V, "evaluate_all", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("reached the evaluation: not refused")))
     with pytest.raises(RuntimeError, match="reached the evaluation"):
         RS.run_research(prep2, reg2, None, None)                                      # different data: not refused
-    monkeypatch.setattr(C, "PROTOCOL_VERSION", "1.4")
-    with pytest.raises(RS.NothingToRun, match="no family was pre-registered under protocol 1.4"):
+    monkeypatch.setattr(C, "PROTOCOL_VERSION", "1.9")
+    with pytest.raises(RS.NothingToRun, match="no family was pre-registered under protocol 1.9"):
         RS.run_research(edge["prep"], reg2, None, None)                                # same data, other protocol: not refused as a repeat, but a version that added no family has nothing to run
-    toy = dataclasses.replace(S.FAMILIES["tsmom"], id="toy", grid={"L": [20, 45]}, since="1.4")
+    toy = dataclasses.replace(S.FAMILIES["tsmom"], id="toy", grid={"L": [20, 45]}, since="1.9")
     monkeypatch.setitem(S.FAMILIES, "toy", toy)
     monkeypatch.setattr(S, "RESEARCH", [*S.RESEARCH, toy])
     seen = {}
     monkeypatch.setattr(RS.V, "evaluate_all", lambda prep, **k: seen.update(k) or (_ for _ in ()).throw(RuntimeError("reached the evaluation: not refused")))
     with pytest.raises(RuntimeError, match="reached the evaluation"):
-        RS.run_research(edge["prep"], reg2, None, None)                                # a family registered under 1.4: not refused
+        RS.run_research(edge["prep"], reg2, None, None)                                # a family registered under 1.9: not refused
     assert seen["families"] == ["toy"]                                                  # and only that family is evaluated: the earlier results stand
 
 
@@ -182,7 +182,7 @@ def test_protocol_1_3_runs_the_monday_family_alone_end_to_end(tmp_path, monkeypa
     prep = B.Prepared(K.synthetic_candles("null_mild", 3))
     reg, book = R.Registry(tmp_path / "registry"), P.PaperBook(tmp_path / "state")
     res = RS.run_research(prep, reg, book, tmp_path / "reports", n_shifts=40, now=lambda: "2026-11-15T21:00:00Z")
-    assert res["protocol"] == "1.3" and res["families"] == ["monday"] and list(res["outcomes"]) == ["monday"] and res["n_trials"] == 101 == S.n_configurations()
+    assert res["protocol"] == "1.3" and res["families"] == ["monday"] and list(res["outcomes"]) == ["monday"] and res["n_trials"] == S.n_configurations()
     cands = reg.candidates()
     assert len(cands) == 1 and cands[0]["family"] == "monday" and cands[0]["params"] == {"day": 0} and cands[0]["protocol"] == "1.3" and cands[0]["decision"] == res["outcomes"]["monday"]
     ev = res["evaluation"]["families"]["monday"]
@@ -190,9 +190,33 @@ def test_protocol_1_3_runs_the_monday_family_alone_end_to_end(tmp_path, monkeypa
     assert ev["admission"]["gates"]["A1"]["value"] > 200 and "position changes" in ev["admission"]["gates"]["A1"]["need"]            # weight mode: about two fills a week
     text = (tmp_path / "reports" / "research_1.3.md").read_text()
     assert text.startswith("# Research run, protocol 1.3,") and "covers the 1 family pre-registered under protocol 1.3 (`monday`)" in text and "n/a (one setting)" in text
-    assert "The number of trials behind the deflated Sharpe ratio is 101" in text and "| `monday` |" in text and "| `tsmom` |" not in text
+    assert f"The number of trials behind the deflated Sharpe ratio is {S.n_configurations()}" in text and "| `monday` |" in text and "| `tsmom` |" not in text
     assert (tmp_path / "reports" / "research_1.3.json").exists() and len(RS.previous_runs(reg)) == 1
     if res["admitted"]:
         assert book.exists(RS.account_id("monday", {"day": 0})) and "1 of 1 family was admitted as a challenger" in text
+    else:
+        assert book.ids() == [] and "**No family was admitted.**" in text
+
+
+def test_protocol_1_4_runs_the_three_down_family_alone_end_to_end(tmp_path, monkeypatch):
+    monkeypatch.setattr(C, "PROTOCOL_VERSION", "1.4")                                                  # the real current version: only the family pre-registered under it is evaluated
+    prep = B.Prepared(K.synthetic_candles("null_mild", 3))
+    reg, book = R.Registry(tmp_path / "registry"), P.PaperBook(tmp_path / "state")
+    res = RS.run_research(prep, reg, book, tmp_path / "reports", n_shifts=40, now=lambda: "2026-11-17T05:00:00Z")
+    assert res["protocol"] == "1.4" and res["families"] == ["three_down"] and list(res["outcomes"]) == ["three_down"] and res["n_trials"] == S.n_configurations() == 104
+    cands = reg.candidates()
+    assert len(cands) == 3 and {c["family"] for c in cands} == {"three_down"} and {c["protocol"] for c in cands} == {"1.4"} and sorted(c["params"]["streak"] for c in cands) == [2, 3, 4]       # one record per configuration
+    decided = [c for c in cands if c["decision"] != "tested, not selected on TRAIN"]
+    ev = res["evaluation"]["families"]["three_down"]
+    assert len(decided) == 1 and decided[0]["decision"] == res["outcomes"]["three_down"] and decided[0]["params"] == ev["chosen"] and ev["spec_hash"] == S.spec_hash("three_down", ev["chosen"])
+    assert ev["configurations"] == 3 and 1 <= len(ev["neighbours"]) <= 2 and "single" not in ev["stability"]                  # the middle setting has two neighbours, an end setting one: gate A4 applies as written
+    gate = ev["admission"]["gates"]["A1"]
+    assert gate["value"] > 40 and "trades" in gate["need"] and "position changes" not in gate["need"]                          # stop mode: completed trades are counted
+    text = (tmp_path / "reports" / "research_1.4.md").read_text()
+    assert text.startswith("# Research run, protocol 1.4,") and "covers the 1 family pre-registered under protocol 1.4 (`three_down`)" in text and "n/a (one setting)" not in text
+    assert f"The number of trials behind the deflated Sharpe ratio is {S.n_configurations()}" in text and "| `three_down` |" in text and "| `monday` |" not in text and "| `tsmom` |" not in text
+    assert (tmp_path / "reports" / "research_1.4.json").exists() and len(RS.previous_runs(reg)) == 1
+    if res["admitted"]:
+        assert book.exists(RS.account_id("three_down", ev["chosen"])) and "1 of 1 family was admitted as a challenger" in text
     else:
         assert book.ids() == [] and "**No family was admitted.**" in text

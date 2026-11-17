@@ -63,13 +63,13 @@ def walk(n, seed, start=20_000.0, vol=0.03):
 # ---- the grid ----
 
 PROTOCOL_COUNTS = {"sma_cross": 15, "donchian": 4, "ma_atr_trend": 9, "tsmom": 5, "rsi_momentum": 18, "mom_vol": 9, "bollinger_mr": 6,
-                   "rsi_oversold": 12, "vol_breakout": 9, "regime_switch": 3, "vol_target": 6, "sma_filter": 4, "monday": 1}
+                   "rsi_oversold": 12, "vol_breakout": 9, "regime_switch": 3, "vol_target": 6, "sma_filter": 4, "monday": 1, "three_down": 3}
 
 
-def test_the_grids_hold_exactly_the_protocol_counts_and_one_hundred_and_one_in_all():
+def test_the_grids_hold_exactly_the_protocol_counts_and_one_hundred_and_four_in_all():
     assert {f.id: len(S.configs(f)) for f in S.RESEARCH} == PROTOCOL_COUNTS
-    assert S.n_configurations() == 101 == sum(PROTOCOL_COUNTS.values()) == 100 + len(S.configs(S.FAMILIES["monday"]))          # the twelve families of 1.2 hold 100 of them, the one family of 1.3 holds one
-    assert [f.id for f in S.RESEARCH] == list(PROTOCOL_COUNTS)                                  # thirteen families in protocol order
+    assert S.n_configurations() == 104 == sum(PROTOCOL_COUNTS.values()) == 100 + len(S.configs(S.FAMILIES["monday"])) + len(S.configs(S.FAMILIES["three_down"]))          # the twelve families of 1.2 hold 100 of them, the one of 1.3 holds one, the one of 1.4 holds three
+    assert [f.id for f in S.RESEARCH] == list(PROTOCOL_COUNTS)                                  # fourteen families in protocol order
     assert [len(S.configs(S.FAMILIES[b])) for b in ("buy_hold", "cash")] == [1, 1]
 
 
@@ -423,7 +423,7 @@ def test_monday_is_registered_as_family_13_in_weight_mode_with_one_configuration
     fam = S.FAMILIES["monday"]
     assert (fam.kind, fam.since, fam.trail, fam.category) == ("weight", "1.3", False, "calendar")
     assert S.configs(fam) == [{"day": 0}] and S.neighbours(fam, {"day": 0}) == []
-    assert [f.id for f in S.RESEARCH][-1] == "monday" and S.spec("monday", {"day": 0})["protocol"] == "1.3" and S.spec("tsmom", {"L": 30})["protocol"] == "1.2"
+    assert [f.id for f in S.RESEARCH].index("monday") == 12 and S.spec("monday", {"day": 0})["protocol"] == "1.3" and S.spec("tsmom", {"L": 30})["protocol"] == "1.2"
     assert S.spec_hash("monday", {"day": 0}) != S.spec_hash("monday", {"day": 1})
 
 
@@ -444,6 +444,109 @@ def test_monday_through_the_account_engine_a_flat_price_loses_exactly_the_round_
     held = [j + 1 for j, e in enumerate(r.exposure) if e > 0.5]                                     # the candle index of each day the account is invested through (run index j is candle j + 1)
     assert held == [7, 14, 21, 28] and all(true_weekday(cs[i][0]) == 0 for i in held)               # fully invested through each Monday and through no other day
     assert r.exposure[6] == pytest.approx(1.0, rel=1e-6)
+
+
+# ---- family 14: three_down (a short-term reversal rule, stop mode; pre-registered under protocol 1.4) ----
+
+STREAK_CLOSES = [100, 99, 98, 97, 96, 97, 96, 95, 94, 94, 93, 92, 91, 92]                 # lower-close streaks 0 1 2 3 4 0 1 2 3 0 1 2 3 0: a rise ends a run, and so does an EQUAL close
+
+
+def streak_reference(c):
+    """The number of lower closes in a row that end at each candle, by a plain loop written apart from the helper under test."""
+    out, run = [], 0
+    for i, x in enumerate(c):
+        run = run + 1 if i > 0 and x < c[i - 1] else 0
+        out.append(run)
+    return out
+
+
+def reversal_candles(tail):
+    """Twenty flat days at 100 (so the 14-day ATR exists) followed by the closes in `tail`; every candle opens at the close before it and reaches one above and one below its open and close."""
+    closes = [100.0] * 20 + [float(x) for x in tail]
+    opens = [100.0] + closes[:-1]
+    highs = [max(a, b) + 1.0 for a, b in zip(opens, closes)]
+    lows = [min(a, b) - 1.0 for a, b in zip(opens, closes)]
+    return candles(closes, highs=highs, lows=lows, opens=opens)
+
+
+def test_the_down_streak_counts_lower_closes_in_a_row_and_a_close_that_is_not_lower_ends_it():
+    assert S.down_streak(STREAK_CLOSES).tolist() == [0, 1, 2, 3, 4, 0, 1, 2, 3, 0, 1, 2, 3, 0] == streak_reference(STREAK_CLOSES)
+    assert S.down_streak([100.0]).tolist() == [0] and S.down_streak([]).tolist() == []                # the first candle has no close before it; no candles at all is an empty answer
+    assert S.down_streak([5, 4, 4, 3]).tolist() == [0, 1, 0, 1]                                        # an equal close is not a lower one
+    assert S.down_streak([5, 4, 3, 2]).tolist() == [0, 1, 2, 3] and S.down_streak([1, 2, 3, 4]).tolist() == [0, 0, 0, 0]
+
+
+def test_the_down_streak_agrees_with_a_plain_loop_on_random_walks_that_often_tie():
+    for seed in range(6):
+        c = np.cumsum(np.random.default_rng(seed).integers(-1, 2, 400)) + 1000                       # steps of -1, 0 or +1: a third of the days are ties
+        assert S.down_streak(c).tolist() == streak_reference(c.tolist()), seed
+
+
+def test_three_down_is_on_from_the_close_of_the_nth_lower_close_until_a_close_that_is_not_lower():
+    cs = candles(STREAK_CLOSES)
+
+    def on(n):
+        return states(S.signals("three_down", cs, {"streak": n}))
+    assert on(3) == [False, False, False, True, True, False, False, False, True, False, False, False, True, False]      # ON at the third lower close and while the run goes on; the rise and the EQUAL close end it
+    assert on(2) == [False, False, True, True, True, False, False, True, True, False, False, True, True, False]
+    assert on(4) == [False, False, False, False, True] + [False] * 9                                                      # only the first run reaches four
+
+
+def test_three_down_uses_the_fixed_atr_stop_and_the_first_candle_never_counts_as_a_lower_close():
+    cs = walk(60, seed=3)
+    b = S.Bars(cs)
+    sig = S.signals("three_down", cs, {"streak": 2})
+    assert np.array_equal(sig.stop, b.c - C.STOP_ATR_MULT * b.ind("atr", C.ATR_N), equal_nan=True) and sig.weight is None and sig.state.dtype == bool
+    assert states(S.signals("three_down", candles([100, 90, 80, 70]), {"streak": 1})) == [False, True, True, True]     # candle 0 has no earlier close, so even a one-day streak cannot start there
+
+
+def test_three_down_state_agrees_with_the_novelty_screens_separate_definition_of_the_same_rule():
+    from atlas_api.btcquant import novelty as N
+    b = S.Bars(walk(700, seed=9))
+    for n in (1, 2, 3, 4, 5):
+        assert S.signals("three_down", b, {"streak": n}).state.tolist() == N.three_down(b, n).tolist(), n
+
+
+def test_three_down_is_registered_as_family_14_in_stop_mode_with_a_streak_grid_of_three():
+    fam = S.FAMILIES["three_down"]
+    assert (fam.kind, fam.since, fam.trail, fam.category, fam.name) == ("stop", "1.4", False, "mean_reversion", "Reversal after a losing streak")
+    assert S.configs(fam) == [{"streak": 2}, {"streak": 3}, {"streak": 4}]
+    assert S.neighbours(fam, {"streak": 3}) == [{"streak": 2}, {"streak": 4}] and S.neighbours(fam, {"streak": 2}) == [{"streak": 3}] and S.neighbours(fam, {"streak": 4}) == [{"streak": 3}]
+    assert [f.id for f in S.RESEARCH][-1] == "three_down" and S.spec("three_down", {"streak": 3})["protocol"] == "1.4"
+    assert S.spec("monday", {"day": 0})["protocol"] == "1.3" and S.spec("tsmom", {"L": 30})["protocol"] == "1.2"
+    assert len({S.spec_hash("three_down", {"streak": n}) for n in (2, 3, 4)}) == 3
+
+
+def test_three_down_explains_a_signal_with_the_close_the_streak_and_the_streak_it_needs():
+    b = S.Bars(candles(STREAK_CLOSES))
+    assert S.FAMILIES["three_down"].explain(b, {"streak": 3}, 4) == {"close": 96.0, "down_streak": 4.0, "required_streak": 3.0}
+    assert S.FAMILIES["three_down"].explain(b, {"streak": 2}, 5) == {"close": 97.0, "down_streak": 0.0, "required_streak": 2.0}
+
+
+def test_three_down_cannot_enter_before_the_atr_stop_exists():
+    cs = candles([100, 99, 98, 97, 96, 97, 96, 95, 94, 95])                                   # a run of four lower closes at index 4, long before 14 candles give an ATR
+    sig = S.signals("three_down", cs, {"streak": 3})
+    assert sig.state[3] and np.isnan(sig.stop[3])
+    assert B.run(B.Prepared(cs), "three_down", {"streak": 3}, 1, len(cs) - 1).metrics["fills"] == 0         # the account turns a signal without a usable stop down
+
+
+def test_three_down_through_the_account_engine_buys_at_the_open_after_the_nth_lower_close_and_sells_at_the_open_after_the_first_close_that_is_not_lower():
+    cs = reversal_candles([99, 98, 97, 96, 95, 96, 96])                                      # candles 20 to 26: lower closes at 20 to 24 (the third at 22), a rise at 25, an equal close at 26
+    r = B.run(B.Prepared(cs), "three_down", {"streak": 3}, 1, len(cs) - 1, keep_account=True)
+    (trade,) = r.account.trades
+    assert r.metrics["fills"] == 2 and trade["entry_t"] == cs[23][0] and trade["exit_t"] == cs[26][0]           # decided at the close of candle 22, filled at the open of 23; the rise at 25 closes it at the open of 26
+    q_buy, q_sell = (1 + C.SLIPPAGE) * (1 + C.FEE), (1 - C.SLIPPAGE) * (1 - C.FEE)
+    assert trade["entry_px"] == pytest.approx(cs[23][1] * q_buy, rel=1e-9) and trade["exit_px"] == pytest.approx(cs[26][1] * q_sell, rel=1e-9)
+    assert [j + 1 for j, e in enumerate(r.exposure) if e > 1e-9] == [23, 24, 25]                          # invested through the candles 23, 24 and 25 and no other (run index j is candle j + 1)
+    assert 0.0 < max(r.exposure) < 0.5                                                                     # sized by the 1% risk rule against the 3 x ATR stop, not the whole account
+
+
+def test_three_down_does_not_enter_on_a_run_that_an_equal_close_cut_short_and_enters_twice_with_a_smaller_setting():
+    cs = reversal_candles([99, 98, 98, 97, 96, 97, 97])                                      # lower, lower, EQUAL, lower, lower, rise, equal: no run of three
+    prep = B.Prepared(cs)
+    assert B.run(prep, "three_down", {"streak": 3}, 1, len(cs) - 1).metrics["fills"] == 0
+    r = B.run(prep, "three_down", {"streak": 2}, 1, len(cs) - 1, keep_account=True)
+    assert [(t["entry_t"], t["exit_t"]) for t in r.account.trades] == [(cs[22][0], cs[23][0]), (cs[25][0], cs[26][0])] and r.metrics["fills"] == 4      # a run of two at 21 (filled at 22, sold at 23) and another at 24 (filled at 25, sold at 26)
 
 
 # ---- benchmarks ----
@@ -539,7 +642,7 @@ def test_each_family_and_benchmark_has_a_note_whose_grid_is_the_codes(fid):
     if fam.category != "benchmark":
         for heading in REQUIRED:
             assert any(line.startswith(heading) for line in text.splitlines()), (fid, heading)
-        assert "written 2026-11-15, before any run" in text and ("`SOURCES.md`" in text)
+        assert re.search(r"written 20\d\d-\d\d-\d\d, before any run", text) and ("`SOURCES.md`" in text)
 
 
 def test_the_sources_file_exists_and_every_cited_family_note_points_to_it():

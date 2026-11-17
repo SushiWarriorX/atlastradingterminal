@@ -143,6 +143,56 @@ PYTHONDONTWRITEBYTECODE=1 python -m atlas_api.btcquant.calibration planted_monda
 
 The worlds are `null_mild`, `null_drift`, `planted_monday_small`, `planted_monday_mid` and `planted_monday_big`; the records are not committed.
 
+## Fourteen families (added 2026-11-17 under protocol 1.4, before the fourteenth family was run on the real data)
+
+`three_down` (family 14, `strategies/three_down.md`) is a short-term reversal rule: it buys at the open after the n-th lower close in a row (n = 2, 3 or 4) and sells at the open after the first close that is not lower, with the protocol's 3 x ATR stop and 1% risk sizing. On paper two gates were doubtful: the stability gate A4 (the three settings are nested, and every neighbour must keep 70% of the chosen one's Sharpe ratio) and the random-timing test A3 (a schedule of 20 to 90 short trades in two years is a small sample). Both were measured, with the other gates, before the real data was touched, by running the new family alone through selection and the five gates (`calibration.run_family_world`; about 0.1 s a dataset). Nothing here reads the real candles.
+
+Three new worlds with **a planted reversal premium**: independent daily returns, drift 0.04%, volatility 3.5%, plus 0.3%, 0.6% or 1.0% on every candle that follows three or more lower closes in a row (about one candle in eight). A trade costs about 0.30% of the amount traded and lasts about two candles (one, plus one more for each further lower close), so a premium of about 0.15% a candle held pays for the trade and about 0.30% survives the doubled costs of gate A5: the three worlds are 2, 4 and 6.7 times the break-even.
+
+Share of datasets in which `three_down` alone was admitted (95% interval): the first 100 seeds and the 25 fresh seeds are the ones used for the twelve- and thirteen-family tables above; the 1,000 are seeds 1001 to 2000.
+
+| world | first 100 seeds | fresh 25 seeds | 1,000 further datasets |
+| --- | --- | --- | --- |
+| no skill, mild drift | 2 of 100 = 2.0% | 0 of 25 | **8 of 1,000 = 0.8% (0.4% to 1.6%)** |
+| no skill, strong drift | 3 of 100 = 3.0% | 0 of 25 | **8 of 1,000 = 0.8% (0.4% to 1.6%)** |
+| reversal premium 0.3% | 5 of 100 = 5.0% | 2 of 25 | **57 of 1,000 = 5.7% (4.4% to 7.3%)** |
+| reversal premium 0.6% | 14 of 100 = 14.0% | 4 of 25 | **159 of 1,000 = 15.9% (13.8% to 18.3%)** |
+| reversal premium 1.0% | 33 of 100 = 33.0% | 12 of 25 | **383 of 1,000 = 38.3% (35.3% to 41.4%)** |
+
+What the gates did on the 1,000 datasets of each world (share of datasets in which the gate failed; A1 never failed, with at least 32 trades on TRAIN plus VALIDATION in any dataset of any world and a median of 53 to 105):
+
+| world | A2 (information ratio, both periods) | A3 (timing p at most 0.05) | A4 (neighbours keep 70%) | A5 (doubled costs) | share with timing p at most 0.05 |
+| --- | --- | --- | --- | --- | --- |
+| no skill, mild drift | 84% | 94% | 79% | 74% | 5.9% |
+| no skill, strong drift | 86% | 95% | 68% | 61% | 5.2% |
+| reversal premium 0.3% | 63% | 87% | 47% | 41% | 12.6% |
+| reversal premium 0.6% | 39% | 78% | 22% | 14% | 22.2% |
+| reversal premium 1.0% | 18% | 59% | 4% | 2% | 40.7% |
+
+What this says.
+- **Every gate can be passed by this kind of rule, and the timing test is the one that limits the power.** With a premium of 1.0% a day after a run (6.7 times the break-even) the family was admitted in 38% of datasets, and A3 failed in 59% of them: VALIDATION alone is two years, which hold about 20 trades of a streak-4 rule and about 90 of a streak-2 rule. A2 and A5 are mostly cost hurdles on noise (they failed in 84% to 86% and 61% to 74%) and stop being obstacles as the premium grows. A4, which was the worry, failed in only 4% of datasets at a premium of 1.0%.
+- **The timing test is not broken by short trades.** On pure noise its p-value was at or below 0.05 in 5.9% and 5.2% of datasets, close to the 5% it should be (the 95% interval of 5.9% in 1,000 datasets is 4.6% to 7.5%).
+- **The false-admission rate of the new family is low (0.8%) and its power is limited.** A reversal premium of 1.0% a candle was found in about four datasets in ten, one of 0.6% in about 1.6 in ten and one of 0.3% in about one in seventeen. So **a rejection of `three_down` will mean that no premium of about 1% a day or more was present, not that there is no short-term reversal**, and an admission would be unusual by luck on this kind of data (about 1 in 125), though real prices have fat tails and volatility clusters that these worlds do not.
+- **The procedure chooses an end setting.** In the planted worlds the chosen setting on TRAIN was 2 in 37% to 42% of datasets, 4 in 57% to 58% and 3 in only 0.4% to 6.7% (on noise: 35% to 44% for 2, 12.7% to 13.5% for 3, 42% to 52% for 4), probably because the score of an end setting averages two Sharpe ratios and so varies more than the middle one's, which averages three, and the best of the three scores is more often an end one. The default of 3 named in the queue is therefore rarely the setting that is tested on VALIDATION. This is how the selection rule of the protocol works for a grid of three; nothing was changed for it.
+
+The twelve- and thirteen-family tables above are unchanged by the fourteenth family, which is evaluated on its own. The share of no-skill datasets in which at least one of the fourteen families is admitted is at most the thirteen-family bound plus the new family's admissions on the same seeds (an upper bound, because the per-dataset records of the earlier families were not kept):
+
+| world | thirteen families, first 100 seeds (at most) | fourteen, at most | thirteen, pooled 125 (at most) | fourteen, at most |
+| --- | --- | --- | --- | --- |
+| no skill, mild drift | 13 of 100 | 15 of 100 | 18 of 125 = 14.4% | 20 of 125 = 16.0% |
+| no skill, strong drift | 17 of 100 | 20 of 100 | 24 of 125 = 19.2% | 27 of 125 = 21.6% |
+
+Every family tried raises the chance of a lucky admission (the point of keeping the queue short): it is now about one no-skill dataset in six to one in five, up from about one in six. These are independent normal returns with a premium after runs of lower closes: real Bitcoin has fat tails, volatility clusters and structural breaks, so the real false-admission rate of any family is unknown.
+
+Reproduce (about 2 minutes a world on one core):
+
+```bash
+cd atlas/backend
+PYTHONDONTWRITEBYTECODE=1 python -m atlas_api.btcquant.calibration planted_reversal_mid 1001 2001 /tmp/reversal_mid.json three_down
+```
+
+The worlds are `null_mild`, `null_drift`, `planted_reversal_small`, `planted_reversal_mid` and `planted_reversal_big`; the records are not committed.
+
 ## Reproduce
 
 ```bash

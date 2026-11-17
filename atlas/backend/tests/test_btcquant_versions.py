@@ -1,8 +1,9 @@
 """btcquant protocol versions: adding a family needs a new protocol version, and that must change nothing that was already registered. Every specification hash and paper account id that exists survives a version bump; a family
 pre-registered under a later version carries that version; a research run covers only the families of its own version; and the runs of all versions read as one record in the dashboard, the daily report and the phone view,
-tested end to end on a synthetic world with a toy family under a later version, 1.4 (version 1.3 added the real family `monday`; this file adds no real family)."""
+tested end to end on a synthetic world with a toy family under a later version, 1.9 (versions 1.3 and 1.4 added the real families `monday` and `three_down`; this file adds no real family)."""
 import dataclasses
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -21,11 +22,19 @@ from atlas_api.btcquant import view as V
 DAY = 86400
 
 
-def toy_family(since="1.4"):
+def toy_family(since="1.9"):
     return dataclasses.replace(S.FAMILIES["tsmom"], id="toy", name="Toy momentum", grid={"L": [20, 45]}, since=since)
 
 
 # ---------------------------------------------------------------------------------------------------------- hashes and account ids
+def test_the_protocol_document_and_the_code_agree_on_the_version_and_the_trial_count():
+    """The one place that names the current version and N as literals: other tests compare with `C.PROTOCOL_VERSION` and `S.n_configurations()`, so an amendment edits this test and not a dozen."""
+    lines = (C.ROOT / "PROTOCOL.md").read_text(encoding="utf-8").splitlines()
+    assert re.search(r"PROTOCOL v(\d+\.\d+)\s*$", lines[0]).group(1) == C.PROTOCOL_VERSION == "1.4"
+    section5 = next(line for line in lines if line.startswith("## 5."))
+    assert f"N = {S.n_configurations()}" in section5 and S.n_configurations() == 104
+
+
 def test_every_registered_hash_and_paper_account_id_survives_a_protocol_version_bump(monkeypatch):
     registry = C.ROOT / "registry" / "candidates.jsonl"
     accounts = sorted((C.ROOT / "state" / "accounts").glob("*.json"))
@@ -33,8 +42,8 @@ def test_every_registered_hash_and_paper_account_id_survives_a_protocol_version_
         pytest.skip("no research run has been committed")
     cands = [json.loads(line) for line in registry.read_text().splitlines() if line.strip()]
     metas = [json.loads(p.read_text())["meta"] for p in accounts]
-    assert len(cands) >= 100 and len(metas) >= 15                                            # the twelve families' 100 configurations and the fifteen accounts of the first daily run, or more (the monday family of 1.3 adds one of each)
-    for bump in (None, "1.4", "2.0"):
+    assert len(cands) >= 100 and len(metas) >= 15                                            # the twelve families' 100 configurations and the fifteen accounts of the first daily run, or more (the monday family of 1.3 adds one of each, and the three_down family of 1.4 adds one more)
+    for bump in (None, "1.9", "2.0"):
         with monkeypatch.context() as m:
             if bump:
                 m.setattr(C, "PROTOCOL_VERSION", bump)
@@ -48,8 +57,8 @@ def test_every_registered_hash_and_paper_account_id_survives_a_protocol_version_
 def test_a_family_pre_registered_under_a_later_version_carries_that_version_in_its_specification(monkeypatch):
     params = {"L": 20}
     old = S.spec_hash("tsmom", params)
-    monkeypatch.setitem(S.FAMILIES, "toy", toy_family("1.4"))
-    assert S.spec("toy", params)["protocol"] == "1.4" and S.spec("tsmom", params)["protocol"] == "1.2"
+    monkeypatch.setitem(S.FAMILIES, "toy", toy_family("1.9"))
+    assert S.spec("toy", params)["protocol"] == "1.9" and S.spec("tsmom", params)["protocol"] == "1.2"
     under_14 = S.spec_hash("toy", params)
     monkeypatch.setitem(S.FAMILIES, "toy", toy_family("1.2"))
     assert S.spec_hash("toy", params) != under_14                                         # the same rules under another pre-registered version are another specification
@@ -59,12 +68,12 @@ def test_a_family_pre_registered_under_a_later_version_carries_that_version_in_i
 
 
 def test_a_research_run_covers_the_families_of_its_own_version_only(monkeypatch):
-    assert RS.families_of("1.2") == [f.id for f in S.RESEARCH if f.id != "monday"] and len(RS.families_of("1.2")) == 12 and RS.families_of("1.3") == ["monday"] and RS.families_of("1.4") == []
-    toy = toy_family("1.4")
+    assert RS.families_of("1.2") == [f.id for f in S.RESEARCH if f.since == "1.2"] and len(RS.families_of("1.2")) == 12 and RS.families_of("1.3") == ["monday"] and RS.families_of("1.4") == ["three_down"] and RS.families_of("1.9") == []
+    toy = toy_family("1.9")
     monkeypatch.setitem(S.FAMILIES, "toy", toy)
     monkeypatch.setattr(S, "RESEARCH", [*S.RESEARCH, toy])
-    assert RS.families_of("1.4") == ["toy"] and RS.families_of("1.3") == ["monday"] and len(RS.families_of("1.2")) == 12 and "toy" not in RS.families_of("1.2")
-    assert S.n_configurations() == 103                                                    # N grows by the new family's configurations: 100 + 1 (monday) + 2
+    assert RS.families_of("1.9") == ["toy"] and RS.families_of("1.3") == ["monday"] and RS.families_of("1.4") == ["three_down"] and len(RS.families_of("1.2")) == 12 and "toy" not in RS.families_of("1.2")
+    assert S.n_configurations() == 106                                                    # N grows by the new family's configurations: 100 + 1 (monday) + 3 (three_down) + 2
 
 
 def test_the_research_runs_of_all_versions_read_as_one_record():
@@ -87,7 +96,7 @@ def test_the_research_runs_of_all_versions_read_as_one_record():
 # ---------------------------------------------------------------------------------------------------------- the whole thing, end to end
 @pytest.fixture(scope="module")
 def world(tmp_path_factory):
-    """Two research runs on one synthetic noise world (nothing is admitted): protocol 1.2 for the twelve families, then protocol 1.4 for a toy family, with a daily run after each. Everything that is checked is
+    """Two research runs on one synthetic noise world (nothing is admitted): protocol 1.2 for the twelve families, then protocol 1.9 for a toy family, with a daily run after each. Everything that is checked is
     computed inside the patched block and returned as plain data, so no other test sees the toy family or the version number."""
     root = tmp_path_factory.mktemp("two_runs")
     candles = K.synthetic_candles("null_mild", 1)
@@ -105,10 +114,10 @@ def world(tmp_path_factory):
         out["report12_before"] = (root / "reports" / "research_1.2.json").read_bytes()
         out["md12"] = (root / "reports" / "research_1.2.md").read_text()
         out["view1"] = V.paper_view(root)
-        toy = toy_family("1.4")
+        toy = toy_family("1.9")
         mp.setitem(S.FAMILIES, "toy", toy)
         mp.setattr(S, "RESEARCH", [*S.RESEARCH, toy])
-        mp.setattr(C, "PROTOCOL_VERSION", "1.4")
+        mp.setattr(C, "PROTOCOL_VERSION", "1.9")
         out["second"] = RS.run_research(prep, reg, book, root / "reports", n_shifts=40, now=lambda: "2026-11-17T01:00:00Z")
         dash2 = DY.run_daily(root=root, now=now + DAY, candles=candles + [(candles[-1][0] + DAY,) + tuple(candles[-1][1:])])
         out["dash"] = dash2
@@ -117,7 +126,7 @@ def world(tmp_path_factory):
         out["candidates"] = reg.candidates()
         out["report12_after"] = (root / "reports" / "research_1.2.json").read_bytes()
         out["files"] = sorted(p.name for p in (root / "reports").glob("research_*"))
-        out["md14"] = (root / "reports" / "research_1.4.md").read_text()
+        out["md14"] = (root / "reports" / "research_1.9.md").read_text()
         out["report_text"] = (root / "reports" / "latest.md").read_text()
         out["view"] = V.paper_view(root)
         out["again"] = DY.run_daily(root=root, now=now + DAY, candles=candles + [(candles[-1][0] + DAY,) + tuple(candles[-1][1:])])["opened_today"]
@@ -128,18 +137,18 @@ def world(tmp_path_factory):
 
 def test_the_second_run_evaluates_only_the_new_family_and_counts_every_configuration_as_a_trial(world):
     second = world["second"]
-    assert second["protocol"] == "1.4" and second["families"] == ["toy"] and list(second["outcomes"]) == ["toy"] and second["n_trials"] == 103
-    assert list(second["evaluation"]["families"]) == ["toy"] and second["evaluation"]["n_trials"] == 103
-    assert [r["protocol"] for r in world["runs"]] == ["1.2", "1.4"] and len(world["runs"][0]["outcomes"]) == 12 and len(world["runs"][0]["families"]) == 12
+    assert second["protocol"] == "1.9" and second["families"] == ["toy"] and list(second["outcomes"]) == ["toy"] and second["n_trials"] == 106
+    assert list(second["evaluation"]["families"]) == ["toy"] and second["evaluation"]["n_trials"] == 106
+    assert [r["protocol"] for r in world["runs"]] == ["1.2", "1.9"] and len(world["runs"][0]["outcomes"]) == 12 and len(world["runs"][0]["families"]) == 12
 
 
 def test_the_twelve_earlier_results_and_their_hashes_stand_as_they_were(world):
     assert world["report12_before"] == world["report12_after"]                                    # the first report file is byte for byte what it was
     assert set(world["hashes_before"]) <= set(world["hashes_after"]) and len(world["hashes_before"]) == 100
     new = [c for c in world["candidates"] if c["family"] == "toy"]
-    assert len(new) == 2 and {c["protocol"] for c in new} == {"1.4"} and {c["protocol"] for c in world["candidates"] if c["family"] != "toy"} == {"1.2"}
+    assert len(new) == 2 and {c["protocol"] for c in new} == {"1.9"} and {c["protocol"] for c in world["candidates"] if c["family"] != "toy"} == {"1.2"}
     assert sorted(set(world["hashes_after"]) - set(world["hashes_before"])) == sorted(c["spec_hash"] for c in new)
-    assert world["files"] == ["research_1.2.json", "research_1.2.md", "research_1.4.json", "research_1.4.md"]
+    assert world["files"] == ["research_1.2.json", "research_1.2.md", "research_1.9.json", "research_1.9.md"]
 
 
 def test_the_version_bump_opens_one_new_account_and_no_duplicates(world):
@@ -151,16 +160,16 @@ def test_the_version_bump_opens_one_new_account_and_no_duplicates(world):
 
 def test_the_dashboard_reads_both_runs_as_one_record(world):
     r = world["dash"]["research"]
-    assert r["protocol"] == "1.4" and r["ran_at"] == "2026-11-17T01:00:00Z" and len(r["outcomes"]) == 13 and "toy" in r["outcomes"] and "monday" not in r["outcomes"] and r["admitted"] == []
-    assert [x["protocol"] for x in r["runs"]] == ["1.2", "1.4"] and r["runs"][1]["families"] == ["toy"] and len(r["runs"][0]["families"]) == 12
+    assert r["protocol"] == "1.9" and r["ran_at"] == "2026-11-17T01:00:00Z" and len(r["outcomes"]) == 13 and "toy" in r["outcomes"] and "monday" not in r["outcomes"] and r["admitted"] == []
+    assert [x["protocol"] for x in r["runs"]] == ["1.2", "1.9"] and r["runs"][1]["families"] == ["toy"] and len(r["runs"][0]["families"]) == 12
     assert world["dash1"]["research"]["runs"] == [{"protocol": "1.2", "ran_at": "2026-11-15T12:00:00Z", "families": sorted(world["dash1"]["research"]["outcomes"])}] and len(world["dash1"]["research"]["outcomes"]) == 12
 
 
 def test_each_research_report_says_which_families_it_covers(world):
     md12, md14 = world["md12"], world["md14"]
     assert md12.startswith("# Research run, protocol 1.2,") and "This run covers the 12 families pre-registered under protocol 1.2" in md12 and "| `tsmom` |" in md12 and "| `toy` |" not in md12     # the library holds later families now, so even the first run is one version's
-    assert md14.startswith("# Research run, protocol 1.4,") and "This run covers the 1 family pre-registered under protocol 1.4 (`toy`)" in md14 and "are not repeated here" in md14
-    assert "The number of trials behind the deflated Sharpe ratio is 103" in md14 and "| `toy` |" in md14 and "| `tsmom` |" not in md14
+    assert md14.startswith("# Research run, protocol 1.9,") and "This run covers the 1 family pre-registered under protocol 1.9 (`toy`)" in md14 and "are not repeated here" in md14
+    assert "The number of trials behind the deflated Sharpe ratio is 106" in md14 and "| `toy` |" in md14 and "| `tsmom` |" not in md14
     assert "no peer-reviewed test on Bitcoin" in md12 and "no peer-reviewed test on Bitcoin" not in md14                    # that caveat is about five of the first twelve families
     assert "**No family was admitted.**" in md14 and "timing p is the share of 40 shifted copies" in md14
 
@@ -177,7 +186,7 @@ def test_a_partial_run_that_admits_its_family_says_one_of_one(tmp_path):
 
 def test_the_daily_report_names_both_reports_and_counts_thirteen_families(world):
     text = world["report_text"]
-    assert "The research runs so far (protocols 1.2 and 1.4;" in text and "admitted 0 of 13 families as challengers" in text and "`reports/research_1.2.md` and `reports/research_1.4.md`" in text
+    assert "The research runs so far (protocols 1.2 and 1.9;" in text and "admitted 0 of 13 families as challengers" in text and "`reports/research_1.2.md` and `reports/research_1.9.md`" in text
     assert "13 accounts watched at once will always have a lucky one" in text
 
 
@@ -223,10 +232,10 @@ def test_the_command_counts_the_families_of_the_run_not_twelve(tmp_path, monkeyp
     cs = K.synthetic_candles("null_mild", 2)
     (tmp_path / "data").mkdir()
     D.save(tmp_path / "data" / "btcusd_1d.csv", cs)
-    toy = toy_family("1.4")
+    toy = toy_family("1.9")
     monkeypatch.setitem(S.FAMILIES, "toy", toy)
     monkeypatch.setattr(S, "RESEARCH", [*S.RESEARCH, toy])
-    monkeypatch.setattr(C, "PROTOCOL_VERSION", "1.4")
+    monkeypatch.setattr(C, "PROTOCOL_VERSION", "1.9")
     monkeypatch.setattr(D, "daily_path", lambda: tmp_path / "data" / "btcusd_1d.csv")
     monkeypatch.setattr(C, "REPORT_DIR", tmp_path / "reports")
     monkeypatch.setattr(R.Registry, "__init__", lambda self, root=None, now=R._now: (setattr(self, "root", tmp_path / "registry"), setattr(self, "_now", now))[0])
@@ -235,5 +244,5 @@ def test_the_command_counts_the_families_of_the_run_not_twelve(tmp_path, monkeyp
     monkeypatch.setattr(RS.V, "evaluate_all", lambda prep, **k: real(prep, n_shifts=20, families=k.get("families")))
     assert RS.main([]) == 0
     out = capsys.readouterr().out
-    assert "research run done: protocol 1.4, data to 2026-11-14, 0 of 1 families admitted: []" in out and out.count("\n") == 2 and "  toy " in out
-    assert (tmp_path / "reports" / "research_1.4.md").exists() and not (tmp_path / "reports" / "research_1.2.md").exists()
+    assert "research run done: protocol 1.9, data to 2026-11-14, 0 of 1 families admitted: []" in out and out.count("\n") == 2 and "  toy " in out
+    assert (tmp_path / "reports" / "research_1.9.md").exists() and not (tmp_path / "reports" / "research_1.2.md").exists()

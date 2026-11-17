@@ -1,4 +1,4 @@
-"""The thirteen strategy families of the protocol (section 5: twelve pre-registered under 1.2, one under 1.3) plus the two benchmarks, as pure functions of completed daily candles.
+"""The fourteen strategy families of the protocol (section 5: twelve pre-registered under 1.2, one under 1.3, one under 1.4) plus the two benchmarks, as pure functions of completed daily candles.
 
 A family turns candles and one parameter set into SIGNALS for every candle: at the close of candle i it says
   - state[i]  (stop kinds): True if the strategy wants to be long from the next open;
@@ -6,7 +6,7 @@ A family turns candles and one parameter set into SIGNALS for every candle: at t
   - stop[i]   (stop kinds): the protective stop level to use if it enters now (and, for trailing stops, the candidate level to ratchet up to).
 Every value at index i uses candles 0..i only; a test changes later candles and checks that nothing at or before i moves. Warm-up values are False / 0 / NaN.
 Families that "stay ON until stopped" (Donchian and the ATR trend filter) replay their own trailing stop on the candles to know when they were stopped, so the state they report matches what the account engine does with the same stop.
-Grids are fixed by the protocol: 101 configurations in all (100 under 1.2, one under 1.3), which is the N used for multiple testing.
+Grids are fixed by the protocol: 104 configurations in all (100 under 1.2, one under 1.3, three under 1.4), which is the N used for multiple testing.
 """
 from __future__ import annotations
 
@@ -297,6 +297,26 @@ def _monday_x(b, p, i):
     return {"close": _f(b.c[i]), "candle_weekday": float(weekday(b.t[i:i + 1])[0]), "held_weekday": float(p["day"])}           # numbers only (floats), as the ledger holds them; 0 = Monday
 
 
+# ---- 14. three_down (stop mode; a short-term reversal rule, pre-registered under protocol 1.4) ----
+def down_streak(c) -> np.ndarray:
+    """The number of lower closes in a row that end at each candle. It is 0 when the close is not lower than the close before it (an EQUAL close is not lower) and at the first candle, which has no close before it."""
+    c = np.asarray(c, dtype=float)
+    n = len(c)
+    down = np.zeros(n, dtype=bool)
+    down[1:] = c[1:] < c[:-1]
+    return np.arange(n) - np.maximum.accumulate(np.where(down, 0, np.arange(n)))                  # distance back to the latest candle that was not a lower close
+
+
+def _three_down(b, p):
+    """Long from the open after the `streak`-th lower close in a row, for as long as the run of lower closes goes on: the first close that is not lower ends it, and the sale fills at the next open. Once the run has
+    reached `streak` it can only end by a close that is not lower, so 'the run is at least `streak` long' is the whole state. The stop is the protocol's fixed close - 3 x ATR(14); it reads closes up to candle i only."""
+    return Signals(state=down_streak(b.c) >= int(p["streak"]), stop=_fixed_stop(b))
+
+
+def _three_down_x(b, p, i):
+    return {"close": _f(b.c[i]), "down_streak": float(down_streak(b.c[:i + 1])[i]), "required_streak": float(p["streak"])}
+
+
 # ---- benchmarks ----
 def _none(b, p):
     return Signals()
@@ -316,6 +336,7 @@ FAMILIES: dict[str, Family] = {f.id: f for f in [
     Family("vol_target", "Volatility-targeted exposure", "risk_managed", "weight", False, {"target": [0.30, 0.40, 0.50], "window": [20, 40]}, _vol_target, _vol_target_x),
     Family("sma_filter", "Simple trend filter exposure", "risk_managed", "weight", False, {"L": [100, 150, 200, 250]}, _sma_filter, _sma_filter_x),
     Family("monday", "Day-of-week holding", "calendar", "weight", False, {"day": [0]}, _monday, _monday_x, since="1.3"),
+    Family("three_down", "Reversal after a losing streak", "mean_reversion", "stop", False, {"streak": [2, 3, 4]}, _three_down, _three_down_x, since="1.4"),
     Family("buy_hold", "Buy and hold (benchmark)", "benchmark", "hold", False, {}, _none, lambda b, p, i: {}),
     Family("cash", "Cash only (benchmark)", "benchmark", "cash", False, {}, _none, lambda b, p, i: {}),
 ]}
