@@ -469,6 +469,13 @@ export interface EuroInflationData { available: boolean; reason?: string; demo: 
   range?: { months: number; lowest: { pct: number; month: string }; highest: { pct: number; month: string }; share_lower_pct: number } | null;
   detail?: { months_checked: number; largest_rate_gap_points: number; largest_index_gap: number; largest_index_gap_month: string | null };
   history?: { date: string; rate_pct: number }[] }
+export interface EuroStressSegment { id: string; label: string; contribution: number }
+export interface EuroStressBefore { date: string; value: number; change: number }
+export interface EuroStressData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
+  index?: number; week_ago?: EuroStressBefore | null; month_ago?: EuroStressBefore | null;
+  window?: { days: number; from: string; years: number; median: number; lowest: { value: number; date: string }; highest: { value: number; date: string }; share_lower_pct: number } | null;
+  segments?: EuroStressSegment[]; segments_total?: number; correlation?: number;
+  detail?: { days_checked: number; contribution_days_checked: number; largest_daily_move: number; largest_identity_gap: number } }
 export interface EuroUnemploymentGroup { id: string; label: string; rate_pct: number }
 export interface EuroUnemploymentData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
   headline?: { rate_pct: number; change_1m_points: number | null; change_3m_points: number | null; change_12m_points: number | null };

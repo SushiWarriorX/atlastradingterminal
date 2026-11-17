@@ -1023,6 +1023,31 @@ async function healthy(browser) {
       await page.locator(V("eurounemployment-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07zb-eurounemployment");
 
+      await page.waitForSelector(V("eurostress-card"));
+      await page.waitForSelector(V("eurostress-body") + ", " + V("eurostress-unavailable") + ", " + V("eurostress-error"), { timeout: 45000 });
+      const esTxt = await text(page);
+      match(esTxt, /Euro-area financial stress/); match(esTxt, /European Central Bank/); noMatch(esTxt, FORECASTS, "the euro stress card makes no forecasts");
+      if (await liveCard(page, "eurostress-body")) {
+        const esBody = await inner(page, "eurostress-body");
+        const ESD = "[A-Z][a-z]{2} \\d{1,2}, 20\\d\\d";
+        const ESV = "\\d\\.\\d{4}";
+        const ESN = "(unchanged|(up|down) \\d\\.\\d{4})";
+        match(esBody, new RegExp(`On ${ESD} the ECB's index of systemic stress in the euro area's financial markets stood at ${ESV} \\(the scale runs from 0 to 1; higher means more stress\\)\\.`), "the index with its day and its scale");
+        match(esBody, new RegExp(`A week ago \\(${ESD}\\) it was ${ESV}, now ${ESN}; a month ago \\(${ESD}\\) it was ${ESV}, now ${ESN}\\. Over the past 10 years \\(\\d,\\d{3} days\\), \\d{1,3}% of the days were calmer than now; the middle day was ${ESV}, the calmest ${ESV} \\(${ESD}\\) and the most stressed ${ESV} \\(${ESD}\\)\\.`), "the week and month back with their days, and the ten-year comparison");
+        for (const [id, label] of Object.entries({ SS_BMN: "Bond market", SS_EMN: "Equity market", SS_FIN: "Financial intermediaries", SS_FXN: "Foreign exchange market", SS_MMN: "Money market" })) {
+          match((await inner(page, `eurostress-segment-${id}`)).trim(), new RegExp(`^${label}: ${ESV}$`), `the ${label} line has its contribution`);
+        }
+        match(esBody, /Together \d\.\d{4}; the ECB's correlation term between the segments -\d\.\d{4} \(it has been negative on every day since 1999\); index \d\.\d{4}\. Figures are rounded/, "the sum is shown with the correlation term");
+        match(esBody, /Check: in each of the last \d,\d{3} days the index lay between 0 and 1 and moved by at most 0\.25 in a day, and in each of the last 520 days each segment contributed between 0 and 1/, "the checks are shown");
+        match(esBody, /largest gap within 0\.000001/); match(esBody, /not that the figures are right/);
+        match(esBody, /changing composition/); match(esBody, /not a market signal or a forecast/);
+        noMatch(esBody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("eurostress-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);      // the top of a tall card, not its nearest edge
+      await shot(page, "07zc-eurostress-top");
+      await page.locator(V("eurostress-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);           // and its bottom: the note and the source link
+      await shot(page, "07zc-eurostress-bottom");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);
