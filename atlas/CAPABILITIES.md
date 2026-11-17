@@ -5,7 +5,7 @@ Owner goal (2026-11-09): grow the system's tools and skills by at least 5% so th
 Baseline counted 2026-11-09:
 | Kind | Count | Where counted |
 | --- | --- | --- |
-| Live data sources | 29 (now 35) | `DATA_SOURCES.md` LIVE table |
+| Live data sources | 29 (now 54: the 29 of the baseline plus the 25 counted below) | `DATA_SOURCES.md` LIVE table |
 | Strategy library rules | 31 (now 39) | `btclab/strategies.py` (tracker ledger holds 11 frozen) |
 | AI desk tools | 7 | `backend/atlas_api/ai/tools.py` |
 | Repo skills | 0 (now 3) | `atlas/.claude/skills/` |
@@ -13,7 +13,7 @@ Baseline counted 2026-11-09:
 
 Target: at least 71 (67 x 1.05 = 70.35, rounded up). Each loop adds its own kind; update the table and the current total when something ships.
 
-Current total: 101 (baseline 67 + 8 strategies + 3 skills + 23 data sources; the Chicago Fed index shipped on 2026-11-12 but was not counted until 2026-11-14). Research-only inputs that Signal does not show (Fear & Greed and hash-rate histories, the Fed balance-sheet series) are not counted. Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
+Current total: 103 (baseline 67 + 8 strategies + 3 skills + 25 data sources; retail sales and housing starts shipped on 2026-11-17 and were first counted here on 2026-11-17 09:3x; the Chicago Fed index shipped on 2026-11-12 but was not counted until 2026-11-14). Research-only inputs that Signal does not show (Fear & Greed and hash-rate histories, the Fed balance-sheet series) are not counted. Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
 
 ## Added since baseline
 | Date | Kind | Name | Source/loop |
@@ -54,6 +54,9 @@ Current total: 101 (baseline 67 + 8 strategies + 3 skills + 23 data sources; the
 | 2026-11-15 | Data source | Bitcoin miner revenue over the last 144 blocks (reward, subsidy checked against the halving schedule, fees, fee share, transactions, next halving), a new section of the Bitcoin network card (mempool.space) | Data loop |
 | 2026-11-15 | Data source | Bitcoin mining pool shares over the last week, month and three months (who found the blocks, the largest pool, the top three, the Nakamoto coefficient and the HHI), a new section of the Bitcoin network card (mempool.space) | Data loop |
 | 2026-11-15 | App feature | Journey tab on the phone app: the paper-trading lab that runs the backtested Bitcoin strategies (verdict of the research run, backtest beside holding Bitcoin, paper accounts, every order recorded on signal; `GET /api/btcquant/paper`), with a TradingView-style light redesign of the whole app (owner request) | Owner request |
+| 2026-11-17 | Data source | US retail and food services sales, monthly, with the retail trade plus food services identity checked against the total in every one of the last 24 months (Census Bureau via FRED) | Data loop |
+| 2026-11-17 | Data source | US housing starts, monthly annual rate: total, single-family and five-or-more-unit homes (Census Bureau and HUD via FRED); no exact parts check exists because the two-to-four-unit series is calculated by a third party, which is held | Data loop |
+| 2026-11-17 | App feature (not counted) | Accessibility gate in the phone e2e: `axe-core` plus 44 point tap targets and label-in-name on 11 screens, with a self-test and nine break-it checks | Improve loop |
 
 ## Loop budget (measured 2026-11-09)
 - Strategy cycle with 3 rules and the full backend suite: about 4 minutes wall time. Improvement cycle with all suites: roughly 20 to 45 minutes. Skills and data cycles: a few minutes each, data often blocked by hosts the sandbox cannot reach.
