@@ -239,6 +239,66 @@ The earlier tables are unchanged by the fifteenth family, which is evaluated on 
 
 Every family tried raises the chance of a lucky admission: it is now about one no-skill dataset in six to one in four and a half. **A family whose test is this weak adds to N and to that chance while it can hardly add information**, and the remaining entries of the queue (`squeeze_break`, `money_flow`, `near_high`) should be weighed against that before they are pre-registered. These are independent normal returns with a premium after surge days and a volume unrelated to the returns: real Bitcoin has fat tails, volatility clusters, a real link between volume and the size of the day's move, and structural breaks, so the real false-admission rate of any family is unknown.
 
+## What the procedure can see in the entries that are left (added 2026-11-17, step 14e, before anything was written for the next entry)
+
+The fifteen-family result said that the full procedure finds even a premium of 6.7 times what a trade costs in only 6% of datasets for a rule like `volume_surge`. Before a note, an amendment and a family are written for another entry of the queue, this section measures the same thing for every entry that is left, **without building the family**.
+
+**Method** (`calibration.run_schedule_world`). The rule for using it was written and pushed first, in `BUILD_PLAN.md` step 14e (commit `7faf33d`, 2026-11-17 10:25 UTC; the first number of the study was written at 10:26). The ON/OFF schedule of an entry's default setting already exists in the novelty screen (`novelty.CANDIDATES`; it reads prices and volume only, and no return of the real candles after a signal was computed for this). The schedule is held fixed. In synthetic independent daily returns (drift 0.04%, volatility 3.5%, one random stream per seed) a premium is added to the return of every candle the schedule holds (the candle after an ON state), so the planted effect is exactly "the days this rule holds pay". The premium is M times what the schedule's trades cost per day held: a round trip costs 0.30% (fee 0.10% and slippage 0.05%, each way), so M x 0.30% divided by the average number of days held per trade on TRAIN plus VALIDATION. The dataset then goes alone through the protocol's five gates as a one-setting family (the 3 x ATR stop and 1% risk sizing of the other stop-based families; for a one-setting family A4 asks for a positive TRAIN Sharpe ratio). 400 datasets (seeds 1001 to 1400) for each entry and each M, about 40 seconds a cell; M = 0 is a world with no skill. **Nothing is selected on TRAIN, so every number below is a best case for the full procedure**, which has to choose a setting first.
+
+The schedules on the real candles (TRAIN 2020-2022 plus VALIDATION 2023-2024, 1,827 days):
+
+| entry | trades | of them on VALIDATION | days held per trade | share of days held | premium per day held at 6.7 x |
+| --- | --- | --- | --- | --- | --- |
+| `squeeze_break` | 21 | 7 | 15.2 | 17.5% | 0.132% |
+| `money_flow` | 87 | 33 | 11.8 | 56.3% | 0.170% |
+| `near_high` | 69 | 32 | 7.8 | 29.6% | 0.256% |
+| `volume_surge` (run, rejected) | 39 | 17 | 5.6 | 12.0% | 0.356% |
+| `three_down` (run, rejected) | 98 | 43 | 1.8 | 9.5% | 1.132% |
+| `monday` (run, rejected) | 261 | 105 | 1.0 | 14.3% | 2.010% |
+
+Share of datasets in which the schedule alone was admitted. The premium of a trade is the same for every entry (a multiple of the 0.30% it costs), so the columns compare like with like; the bar of the rule is the 6.7 x column.
+
+| entry | no premium | 0.5% a trade (1.7 x) | 1.0% (3.3 x) | **2.0% (6.7 x)** | 4.0% (13.3 x) | 6.0% (20 x) | 8.0% (26.7 x) | 12.0% (40 x) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `squeeze_break` | 2.5% | 3.0% | 4.5% | **8.5%** (6.1% to 11.6%) | 14.2% | 24.0% | 34.0% | 60.0% |
+| `money_flow` | 2.8% | 3.8% | 5.2% | **8.8%** (6.4% to 11.9%) | 25.5% | 48.0% | 73.2% | 97.0% |
+| `near_high` | 1.2% | 2.0% | 4.8% | **15.0%** (11.8% to 18.8%) | 49.2% | 82.5% | 97.0% | 100% |
+| `volume_surge` (run) | 2.8% | 5.5% | 10.0% | **20.0%** (16.4% to 24.2%) | 57.0% | 88.0% | 97.8% | 100% |
+| `three_down` (run) | 2.0% | 10.2% | 31.0% | **83.0%** (79.0% to 86.4%) | 100% | not run | not run | not run |
+| `monday` (run) | 0.0% | 21.2% | 73.0% | **98.5%** (96.8% to 99.3%) | 100% | not run | not run | not run |
+
+The columns from 6.0% a trade on were added after the main study, as a description of how large a premium each entry needs; they are not part of the rule. 95% intervals (Wilson) are shown for the bar's column only.
+
+Which gate stops them, at 2.0% a trade (share of the 400 datasets in which the gate failed; A1 never failed in any cell, each schedule having at least 21 trades):
+
+| entry | A2 (information ratio, both periods) | A3 (timing p at most 0.05) | A4 (own TRAIN Sharpe above 0) | A5 (doubled costs) | share with timing p at most 0.05 |
+| --- | --- | --- | --- | --- | --- |
+| `squeeze_break` | 65% | 88% | 23% | 23% | 12.5% |
+| `money_flow` | 61% | 85% | 8% | 6% | 15.0% |
+| `near_high` | 46% | 78% | 14% | 5% | 22.2% |
+| `volume_surge` | 31% | 76% | 12% | 7% | 23.8% |
+| `three_down` | 2% | 17% | 0% | 0% | 83.2% |
+| `monday` | 0% | 2% | 0% | 0% | 98.5% |
+
+**The method was checked against the two entries that have a full-procedure calibration.** At the same premium per trade (2.0%, and 1.0% a candle for `three_down`, where the schedule-level run plants 1.13% a candle because the real schedule holds 1.8 days a trade) the full procedure admitted `volume_surge` in 6.2% of datasets (4.9% to 7.9%) and `three_down` in 38.3% (35.3% to 41.4%); the schedule-level run gives 20.0% and 83.0%. **So the schedule-level number is an upper bound, 2.2 to 3.2 times the full-procedure number for those two**, as it should be: the full procedure has to choose a setting on TRAIN (for `volume_surge` it chose the default in only 2% to 7% of datasets, so the premium planted for the default was mostly planted on the wrong schedule) and has to pass the neighbour test of A4. The no-skill admission rate here (1.2% to 2.8%) is also above the full procedure's (0.8% to 1.2%), because a one-setting family has no neighbour test. Nothing says the other entries would show the same factor.
+
+What this says.
+- **`squeeze_break` is DEFERRED by the rule** (8.5% of datasets at 6.7 x, the interval 6.1% to 11.6% below the 20% bar). It made 21 trades in four years and **7 on the two VALIDATION years, which the timing test A3 judges alone**: A3 failed in 88% of datasets. A premium of 2.0% a trade (0.13% for each of the 15 days a trade is held) was found in about 1 dataset in 12 even in this best case; 6.0% a trade (about 0.4% a day held) in about 1 in 4; it needs about 10% a trade (0.7% for every day held, about 35 x the cost of the trade) to be found about half the time.
+- **The two entries after it fail the same rule**: `money_flow` 8.8% (6.4% to 11.9%) and `near_high` 15.0% (11.8% to 18.8%). By the rule neither is pre-registered at its turn. Read off the table, they are found about half the time at about 6% a trade (`money_flow`, 21 x) and 4% a trade (`near_high`, 13.5 x). Their order in the queue is unchanged.
+- **The bar is not a high one.** `volume_surge` sits exactly at it (20.0%), and the full procedure found it in 6.2% of datasets at that premium: the rule would have let it through as a borderline case. **No entry that is left comes near the 80% that a test is usually designed for**; the two that do (`three_down` and `monday`) were run and rejected.
+- **What decides the power is the number of trades, not the number of candles.** The four rules that hold a position for five days or more make 21 to 87 trades in four years, 7 to 33 of them in the period the timing test looks at; the two that can be seen make 98 and 261 short ones. More power needs more trades, which means more data (other assets, finer candles or an earlier start, each a protocol amendment; whether free keyless sources serve them was not checked here) and not more passes over the same candles.
+
+What is not shown. Independent normal returns with the same premium on every held day, which is not how any real effect looks (real Bitcoin has fat tails, volatility that clusters, a large drift and structural breaks); the default setting only (the other settings of a grid trade more or less often); a best case without selection; one random stream per seed, 400 datasets a cell (an interval of about plus or minus 3 points near 8% and 4 points near 20%). The premium sizes say what the test can see; they are not forecasts of what these rules earn, and nothing here says that any of them earns anything. **The 20% bar is my own judgement, written before the numbers; the owner can overrule it** (see `BUILD_PLAN.md` step 14e for the ways out).
+
+Reproduce (about 40 seconds for 400 datasets on one core; prints the premium per day held and the number admitted):
+
+```bash
+cd atlas/backend
+PYTHONDONTWRITEBYTECODE=1 python -m atlas_api.btcquant.calibration schedule squeeze_break 6.7 1001 1401 /tmp/schedule_squeeze_6.7.json
+```
+
+The entries are those of `novelty.CANDIDATES`; the multiple is of the cost per day held; the records are not committed.
+
 ## Reproduce
 
 ```bash

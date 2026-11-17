@@ -312,6 +312,8 @@ def test_what_a_schedules_trades_cost_per_day_held_is_the_round_trip_over_the_av
     assert K.ROUND_TRIP_COST == pytest.approx(0.003) and K.break_even_per_held_day(state, [(0, 99)]) == pytest.approx(0.003 * 2 / 15)
     assert K.break_even_per_held_day(state, [(0, 30)]) == pytest.approx(0.003 / 5)       # only the first trade lies inside the range
     assert K.break_even_per_held_day(state, [(0, 30), (35, 99)]) == pytest.approx(0.003 * 2 / 15)                   # ranges add up, as TRAIN and VALIDATION do
+    assert K.break_even_per_held_day(state, [(0, 12)]) == pytest.approx(0.003 / 2)       # a trade still open at the end of the range is a trade (entries are counted, not exits) and only the candles held inside the range are days (11 and 12, not the three ON candles)
+    assert K.break_even_per_held_day(state, [(12, 30)]) == pytest.approx(0.003 / 4)      # a range that starts inside a trade starts flat, as every period of the backtest does: that is a trade, and the candles held inside it are 12 to 15
     with pytest.raises(ValueError, match="holds nothing"):
         K.break_even_per_held_day(np.zeros(50, dtype=bool), [(0, 49)])
 
@@ -351,3 +353,28 @@ def test_the_command_line_runs_a_queued_schedule_at_a_multiple_of_its_costs_and_
     printed = capsys.readouterr().out
     assert [r["seed"] for r in rows] == [3, 4] and "monday" in printed and "x 6.7" in printed and rows[0]["premium"] == pytest.approx(6.7 * 0.003)       # a Monday trade is one candle: its cost per day held is the whole 0.30%
     assert K.main(["calibration", "schedule", "no_such_rule", "1", "1", "2"]) == 2
+
+
+def test_the_command_line_sets_the_premium_from_the_train_and_validation_days_and_prints_the_count_it_recorded(tmp_path, capsys):
+    from atlas_api.btcquant import backtest as B, data as D, novelty as N, strategies as S
+    candles = D.load(D.daily_path())
+    state = N.CANDIDATES["squeeze_break"].fn(S.Bars(candles))                                            # a rule with long holdings: its cost per day held differs between TRAIN alone and TRAIN plus VALIDATION
+    real = B.Prepared(candles)
+    both = 6.7 * K.break_even_per_held_day(state, [real.period("TRAIN"), real.period("VALIDATION")])
+    assert both != pytest.approx(6.7 * K.break_even_per_held_day(state, [real.period("TRAIN")]), rel=1e-3)
+    out = tmp_path / "rows.json"
+    assert K.main(["calibration", "schedule", "squeeze_break", "6.7", "1001", "1004", str(out)]) == 0
+    rows = json.loads(out.read_text())
+    printed = capsys.readouterr().out
+    assert [r["seed"] for r in rows] == [1001, 1002, 1003] and all(r["premium"] == pytest.approx(both) for r in rows)
+    admitted = sum(1 for r in rows if r["outcome"] == "admitted")
+    assert f"admitted {admitted} of 3" in printed and f"premium {100 * both:.4f}% a day held" in printed
+    assert sum(1 for r in rows if r["outcome"] == "rejected") != admitted                                # so the count printed cannot be the count of another outcome by accident
+
+
+def test_a_schedule_with_no_premium_is_the_same_dataset_the_mild_null_world_gives_for_that_seed():
+    state = np.random.default_rng(8).random(2875) < 0.25
+    with K.fixed_schedule(state) as fid:
+        want = K.run_family_world("null_mild", [3], fid, n_shifts=40)[0]                                  # the world's own candles for seed 3
+    got = K.run_schedule_world(state, 0.0, [3], n_shifts=40)[0]
+    assert all(got[k] == want[k] for k in ("outcome", "failed", "activity", "train", "val", "cost2", "ir_train", "ir_val", "val_null_p", "exposure", "chosen"))
