@@ -55,6 +55,7 @@ from .naturalgas import NaturalGas
 from .moneysupply import MoneySupply
 from .retailsales import RetailSales
 from .housingstarts import HousingStarts
+from .industrialproduction import IndustrialProduction
 from .reserves import BankReserves
 from .ecbrates import EcbRates
 from .receipts import Receipts
@@ -409,6 +410,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     money_supply = MoneySupply(demo=demo)
     retail_sales = RetailSales(demo=demo)
     housing_starts = HousingStarts(demo=demo)
+    industrial_production = IndustrialProduction(demo=demo)
     bank_reserves = BankReserves(demo=demo)
     ecb_rates = EcbRates(demo=demo)
     commodity_positioning = CftcCommodities(demo=demo)
@@ -513,6 +515,11 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     async def macro_housing_starts():
         """US housing starts, monthly seasonally adjusted annual rate in thousands (Census Bureau and HUD via FRED): the total, single-family and five-or-more-unit homes, checked for range, months in a row, one-month and one-year moves (real shocks like 2009 are allowed), the parts never exceeding the total and the single-family share; there is no exact parts-add-up check (the two-to-four-unit series is calculated from the other two). No key. A failure says so and shows nothing."""
         return ok(await housing_starts.overview())
+
+    @app.get("/api/macro/industrial-production")
+    async def macro_industrial_production():
+        """US industrial production, monthly seasonally adjusted index with 2017 = 100 (Board of Governors of the Federal Reserve System, release G.17, via FRED): the total, manufacturing, mining and electric and gas utilities, and capacity utilization, checked for range, months in a row, one-month and one-year moves (real shocks like 2020 are allowed), the total's change lying between those of its three groups, and the capacity implied by output and utilization moving slowly. The newest month is an estimate that is revised later. Describes what already happened: not a signal or a forecast."""
+        return ok(await industrial_production.overview())
 
     @app.get("/api/macro/bank-reserves")
     async def macro_bank_reserves():
@@ -1914,7 +1921,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
                                       "listings": listings_service, "new_to_me": new_to_me,
-                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

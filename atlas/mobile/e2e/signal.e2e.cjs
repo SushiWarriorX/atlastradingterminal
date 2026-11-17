@@ -929,6 +929,26 @@ async function healthy(browser) {
       await page.locator(V("housing-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07x-housing");
 
+      await page.waitForSelector(V("industrial-card"));
+      await page.waitForSelector(V("industrial-body") + ", " + V("industrial-unavailable") + ", " + V("industrial-error"), { timeout: 45000 });
+      const indTxt = await text(page);
+      match(indTxt, /Industrial production/); match(indTxt, /Federal Reserve/); noMatch(indTxt, FORECASTS, "the industrial production card makes no forecasts");
+      if (await liveCard(page, "industrial-body")) {
+        const indBody = await inner(page, "industrial-body");
+        const IMONTH = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        const IVS = "(up \\d{1,3}\\.\\d% on a year ago|down \\d{1,3}\\.\\d% on a year ago|the same as a year ago)";
+        match(indBody, new RegExp(`Output of US factories, mines and power and gas utilities was \\d{2,3}\\.\\d{2} on an index where 2017 is 100 in ${IMONTH}, ${IVS}\\.`), "the index with its month and the yearly change");
+        match(indBody, /(up \d{1,3}\.\d% on a month ago|down \d{1,3}\.\d% on a month ago|the same as a month ago), (up \d{1,3}\.\d% on three months ago|down \d{1,3}\.\d% on three months ago|the same as three months ago)\. This is the volume produced, not its value in dollars\./, "the one- and three-month changes and what the index measures");
+        match(indBody, new RegExp(`the change over a year ran from [-+]?\\d{1,3}\\.\\d% \\(${IMONTH}\\) to [-+]?\\d{1,3}\\.\\d% \\(${IMONTH}\\); \\d{1,3}% of those months were weaker than now\\.`), "the ten-year range is explained in months");
+        match(indBody, new RegExp(`Capacity in use: \\d{2}\\.\\d% of what the plants could sustainably produce in ${IMONTH}(, (up|down) \\d{1,2}\\.\\d points on a year ago|, the same as a year ago)?\\.`), "capacity in use with its month");
+        match(indBody, new RegExp(`Manufacturing, \\d{2,3}\\.\\d{2} \\(${IVS}\\)\\. Mining, \\d{2,3}\\.\\d{2} \\(${IVS}\\)\\. Electric and gas utilities, \\d{2,3}\\.\\d{2} \\(${IVS}\\)\\.`), "the three groups with their yearly changes");
+        match(indBody, /Check: in each of the last \d{2} months, the total's change lay between those of manufacturing, mining and utilities, and the capacity implied by output and utilization moved by between [-+]\d\.\d{2}% and [-+]\d\.\d{2}% a month\./, "the checks are shown");
+        match(indBody, /Checked: every recent index is between 30 and 300/); match(indBody, /not a market signal or a forecast/); match(indBody, /estimate that is revised/);
+        noMatch(indBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("industrial-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07y-industrial");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);
