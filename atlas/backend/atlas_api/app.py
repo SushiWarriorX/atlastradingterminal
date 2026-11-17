@@ -58,6 +58,7 @@ from .housingstarts import HousingStarts
 from .industrialproduction import IndustrialProduction
 from .euromoney import EuroMoneySupply
 from .eurohicp import EuroInflation
+from .eurounemployment import EuroUnemployment
 from .reserves import BankReserves
 from .ecbrates import EcbRates
 from .receipts import Receipts
@@ -415,6 +416,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     industrial_production = IndustrialProduction(demo=demo)
     euro_money_supply = EuroMoneySupply(demo=demo)
     euro_inflation = EuroInflation(demo=demo)
+    euro_unemployment = EuroUnemployment(demo=demo)
     bank_reserves = BankReserves(demo=demo)
     ecb_rates = EcbRates(demo=demo)
     commodity_positioning = CftcCommodities(demo=demo)
@@ -534,6 +536,11 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     async def macro_euro_inflation():
         """Euro-area consumer prices (HICP, compiled by Eurostat and published on the ECB Data Portal), monthly: the headline annual rate, core, the five parts of the basket with their shares and annual rates, and about how many points of the headline each contributes, checked for units, months in a row, range, one-month moves, the basket weights, the headline lying between its parts and core between goods and services, and two checks that are Eurostat's own arithmetic (the all-items index follows from its parts and weights; each published rate matches its index). The newest month is an early (flash) estimate until the final figure replaces it. Describes what already happened: not a signal or a forecast."""
         return ok(await euro_inflation.overview())
+
+    @app.get("/api/macro/euro-unemployment")
+    async def macro_euro_unemployment():
+        """Euro-area unemployment (the European Labour Force Survey, compiled by Eurostat and published on the ECB Data Portal; euro area of 20 countries, fixed composition, seasonally adjusted), monthly: the rate for everybody aged 15 to 74 with its change over a month, three months and a year, women, men, the under 25 and the 25 to 74, the number of unemployed persons, checked for units, months in a row, ranges, one-month moves, the rate for everybody lying between its parts, and three checks that are Eurostat's own arithmetic (the persons add up, the labour force implied by the parts agrees). Describes what already happened: not a signal or a forecast."""
+        return ok(await euro_unemployment.overview())
 
     @app.get("/api/macro/bank-reserves")
     async def macro_bank_reserves():
@@ -1935,7 +1942,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
                                       "listings": listings_service, "new_to_me": new_to_me,
-                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "euro_money_supply": euro_money_supply, "euro_inflation": euro_inflation, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "euro_money_supply": euro_money_supply, "euro_inflation": euro_inflation, "euro_unemployment": euro_unemployment, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

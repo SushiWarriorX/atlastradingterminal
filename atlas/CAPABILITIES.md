@@ -5,7 +5,7 @@ Owner goal (2026-11-09): grow the system's tools and skills by at least 5% so th
 Baseline counted 2026-11-09:
 | Kind | Count | Where counted |
 | --- | --- | --- |
-| Live data sources | 29 (now 57: the 29 of the baseline plus the 28 counted below) | `DATA_SOURCES.md` LIVE table |
+| Live data sources | 29 (now 58: the 29 of the baseline plus the 29 counted below) | `DATA_SOURCES.md` LIVE table |
 | Strategy library rules | 31 (now 39) | `btclab/strategies.py` (tracker ledger holds 11 frozen) |
 | AI desk tools | 7 | `backend/atlas_api/ai/tools.py` |
 | Repo skills | 0 (now 3) | `atlas/.claude/skills/` |
@@ -13,7 +13,7 @@ Baseline counted 2026-11-09:
 
 Target: at least 71 (67 x 1.05 = 70.35, rounded up). Each loop adds its own kind; update the table and the current total when something ships.
 
-Current total: 106 (baseline 67 + 8 strategies + 3 skills + 28 data sources; retail sales and housing starts shipped on 2026-11-17 and were first counted here on 2026-11-17 09:3x, industrial production on 2026-11-17 at the 11 UTC data job, the euro-area money supply at the 14 UTC one and the euro-area consumer prices at the 17 UTC one; the Chicago Fed index shipped on 2026-11-12 but was not counted until 2026-11-14). Research-only inputs that Signal does not show (Fear & Greed and hash-rate histories, the Fed balance-sheet series) are not counted. Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
+Current total: 107 (baseline 67 + 8 strategies + 3 skills + 29 data sources; retail sales and housing starts shipped on 2026-11-17 and were first counted here on 2026-11-17 09:3x, industrial production on 2026-11-17 at the 11 UTC data job, the euro-area money supply at the 14 UTC one and the euro-area consumer prices at the 17 UTC one and the euro-area unemployment at the 20 UTC one; the Chicago Fed index shipped on 2026-11-12 but was not counted until 2026-11-14). Research-only inputs that Signal does not show (Fear & Greed and hash-rate histories, the Fed balance-sheet series) are not counted. Note: `nr7_breakout` behaves like buy-and-hold on BTC history (see log), so it adds to the count but little else. Target of 71 reached on 2026-11-09; keep adding only what fills a real gap.
 
 ## Added since baseline
 | Date | Kind | Name | Source/loop |
@@ -59,6 +59,7 @@ Current total: 106 (baseline 67 + 8 strategies + 3 skills + 28 data sources; ret
 | 2026-11-17 | Data source | US industrial production and capacity utilization, monthly: the total index, manufacturing, mining and electric and gas utilities, and the share of capacity in use (Board of Governors of the Federal Reserve System via FRED); the total's monthly change is checked to lie between its three groups' changes (true in every month since May 1971) | Data loop |
 | 2026-11-17 | Data source | Euro-area money supply, monthly: M3 with the ECB's own annual growth rate, M2 and M1, and what M3 is made of (ECB Data Portal); units checked against the source's own labels, four sums checked to the million euro in each of the last 24 months (and said to be the ECB's own arithmetic) and the published growth checked against the growth of the amounts | Data loop |
 | 2026-11-17 | Data source | Euro-area consumer prices (HICP), monthly: the annual rate of all items with core and the five parts of the basket, their shares and about how many points each contributes (Eurostat via the ECB Data Portal); units checked against the source's own labels, the headline checked to lie between its parts and core between goods and services (properties, not sums), and the all-items index and each published rate checked against the parts' indices and weights (said to be Eurostat's own arithmetic) | Data loop |
+| 2026-11-17 | Data source | Euro-area unemployment, monthly: the rate for everybody aged 15 to 74 with the rates of women, men, the under 25 and the 25 to 74, and the number of unemployed (Eurostat's labour force survey via the ECB Data Portal); units checked against the source's own labels, the rate for everybody checked to lie between its parts (properties, not sums), and the persons and the implied labour force checked to agree between the parts and the total (said to be Eurostat's own arithmetic) | Data loop |
 | 2026-11-17 | App feature (not counted) | Accessibility gate in the phone e2e: `axe-core` plus 44 point tap targets and label-in-name on 11 screens, with a self-test and nine break-it checks | Improve loop |
 
 ## Loop budget (measured 2026-11-09)

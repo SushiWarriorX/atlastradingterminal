@@ -341,6 +341,11 @@ export function useEuroInflation() {
   return useQuery({ queryKey: keys(baseUrl).euroInflation, queryFn: () => need(api).euroInflation(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
 }
 
+export function useEuroUnemployment() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).euroUnemployment, queryFn: () => need(api).euroUnemployment(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+
 export function useEuroMoneySupply() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).euroMoneySupply, queryFn: () => need(api).euroMoneySupply(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });

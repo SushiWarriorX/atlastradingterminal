@@ -469,6 +469,14 @@ export interface EuroInflationData { available: boolean; reason?: string; demo: 
   range?: { months: number; lowest: { pct: number; month: string }; highest: { pct: number; month: string }; share_lower_pct: number } | null;
   detail?: { months_checked: number; largest_rate_gap_points: number; largest_index_gap: number; largest_index_gap_month: string | null };
   history?: { date: string; rate_pct: number }[] }
+export interface EuroUnemploymentGroup { id: string; label: string; rate_pct: number }
+export interface EuroUnemploymentData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
+  headline?: { rate_pct: number; change_1m_points: number | null; change_3m_points: number | null; change_12m_points: number | null };
+  persons?: { total_thousands: number; change_12m_thousands: number | null; women_thousands: number; men_thousands: number; youth_thousands: number; adults_thousands: number; women_share_pct: number; youth_share_pct: number };
+  groups?: EuroUnemploymentGroup[];
+  range?: { months: number; lowest: { pct: number; month: string }; highest: { pct: number; month: string }; share_lower_pct: number } | null;
+  detail?: { months_checked: number; largest_sum_gap_thousands: number; largest_labour_force_gap_pct: number; largest_labour_force_gap_month: string | null };
+  history?: { date: string; rate_pct: number }[] }
 export interface IndustrialGroup { level: number; change_1m_pct: number | null; change_1y_pct: number | null }
 export interface IndustrialProductionData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; level?: number;
   change_1m_pct?: number | null; change_3m_pct?: number | null; change_1y_pct?: number | null; manufacturing?: IndustrialGroup; mining?: IndustrialGroup; utilities?: IndustrialGroup;

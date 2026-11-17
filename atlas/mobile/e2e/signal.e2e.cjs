@@ -999,6 +999,30 @@ async function healthy(browser) {
       await page.locator(V("euroinflation-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07za-euroinflation");
 
+      await page.waitForSelector(V("eurounemployment-card"));
+      await page.waitForSelector(V("eurounemployment-body") + ", " + V("eurounemployment-unavailable") + ", " + V("eurounemployment-error"), { timeout: 45000 });
+      const euTxt = await text(page);
+      match(euTxt, /Euro-area unemployment/); match(euTxt, /Eurostat/); noMatch(euTxt, FORECASTS, "the euro unemployment card makes no forecasts");
+      if (await liveCard(page, "eurounemployment-body")) {
+        const euBody = await inner(page, "eurounemployment-body");
+        const EUMONTH = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        const EUMV = "(up \\d\\.\\d points on (a month|three months|a year) ago|down \\d\\.\\d points on (a month|three months|a year) ago|the same as (a month|three months|a year) ago)";
+        match(euBody, new RegExp(`In ${EUMONTH}, \\d{1,2}\\.\\d% of the euro area's labour force was unemployed: \\d{1,2}\\.\\d{2} million people \\(the euro area of 20 countries\\)\\.`), "the rate and the number of people, with the month");
+        match(euBody, new RegExp(`The rate was ${EUMV}, ${EUMV} and ${EUMV}\\.( There are \\d{1,3}(,\\d{3})* thousand (more|fewer) unemployed people than a year ago\\.| The number of unemployed is the same as a year ago\\.)? Over the past 10 years \\(\\d{2,3} months\\), the rate ran from \\d{1,2}\\.\\d% \\(${EUMONTH}\\) to \\d{1,2}\\.\\d% \\(${EUMONTH}\\); \\d{1,3}% of those months were lower than now\\.`), "the changes in points, the change over a year in people and the ten-year range in months");
+        for (const [id, label] of Object.entries({ "15_74.F": "women", "15_74.M": "men", "15_24.T": "people under 25", "25_74.T": "people aged 25 to 74" })) {
+          match((await inner(page, `eurounemployment-group-${id}`)).trim(), new RegExp(`^Unemployment among ${label}: \\d{1,2}\\.\\d%\\.$`), `the ${label} line has its rate`);
+        }
+        match(euBody, /Of the \d{1,2}\.\d{2} million unemployed, \d{1,2}% are women and \d{1,2}% are under 25 \(calculated here from the published numbers\)\./, "the shares are said to be calculated here");
+        match(euBody, /Check: in each of the last \d{2} months the rate for everybody lay between the rates of women and men and between those of the under 25 and the 25 to 74/, "the checks are shown");
+        match(euBody, /largest gap \d+\.\d thousand/); match(euBody, /largest gap \d\.\d{2}%/); match(euBody, /not that the figures are right/);
+        match(euBody, /fixed composition/); match(euBody, /not a market signal or a forecast/);
+        noMatch(euBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("eurounemployment-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);      // the top of a tall card, not its nearest edge
+      await shot(page, "07zb-eurounemployment-top");
+      await page.locator(V("eurounemployment-card")).scrollIntoViewIfNeeded().catch(() => undefined);
+      await shot(page, "07zb-eurounemployment");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);
