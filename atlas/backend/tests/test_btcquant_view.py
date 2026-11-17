@@ -207,6 +207,14 @@ def test_the_reversal_setting_is_shown_in_words_and_the_family_has_its_logo():
     assert V.short({"id": "three_down-abcd1234", "family": "three_down"}) == "REV" and V.family_name({"id": "three_down-abcd1234", "family": "three_down"}) == "Reversal after a losing streak"
 
 
+def test_the_volume_setting_is_shown_in_words_and_the_family_has_its_logo():
+    assert V.params_text({"params": {"ratio": 2.0, "hold": 5}}) == "volume 2x its 20-day average, hold days 5" and V.params_text({"params": {"ratio": 1.5, "hold": 10}}) == "volume 1.5x its 20-day average, hold days 10"
+    assert V.params_text({"params": {"ratio": 3.0}}) == "volume 3x its 20-day average" and V.params_text({"params": {"ratio": 0}}) == "ratio 0" and V.params_text({"params": {"ratio": "x"}}) == "ratio x"      # zero and a word are not a ratio
+    assert V.params_text({"params": {"streak": 3}}) == "3 lower closes in a row" and V.params_text({"params": {"L": 30}}) == "L 30"                                                  # the other words are unchanged
+    assert V.label({"id": "volume_surge-abcd1234", "family": "volume_surge", "params": {"ratio": 2.0, "hold": 5}}) == "Volume surge continuation (volume 2x its 20-day average, hold days 5)"
+    assert V.short({"id": "volume_surge-abcd1234", "family": "volume_surge"}) == "VSG" and V.family_name({"id": "volume_surge-abcd1234", "family": "volume_surge"}) == "Volume surge continuation"
+
+
 def test_without_the_research_report_only_the_reasons_and_the_period_figures_are_lost(root):
     for text in (None, "{not json", "[]", json.dumps({"evaluation": {}})):
         if text is not None:

@@ -15,9 +15,17 @@ Worlds (all 2,875 daily candles from 2019-01-01, as in the stored data):
   planted_reversal_small (protocol 1.4) no trend and no other skill, but the candle that follows three or more lower closes in a row pays a premium of 0.3% on top of the 0.04% drift
   planted_reversal_mid   the same with a premium of 0.6%
   planted_reversal_big   the same with a premium of 1.0%
-The weekday and reversal worlds exist only to see whether the machinery can find a calendar or a reversal effect and how large it must be: a Monday-only holder pays about 0.30% in fees and slippage every week, so a
-premium under that cannot pay for itself whatever the data say, and a reversal trade pays the same 0.30% for every run of lower closes. They are used with `run_family_world` (one family at a time); the first calibration
+  planted_surge_small  (protocol 1.5) no trend and no other skill, but each of the five candles that follow a SURGE DAY (volume at least twice the mean of the 20 days before it, close above the close before) pays a premium of 0.10% on top of the 0.04% drift: 0.5% in all, 1.7 times what a round trip costs
+  planted_surge_mid    the same with a premium of 0.20% a candle (1.0% in all)
+  planted_surge_big    the same with a premium of 0.40% a candle (2.0% in all)
+The weekday, reversal and surge worlds exist only to see whether the machinery can find a calendar, a reversal or a volume effect and how large it must be: a Monday-only holder pays about 0.30% in fees and slippage every week, so a
+premium under that cannot pay for itself whatever the data say, and a reversal or surge trade pays the same 0.30% for every trade. They are used with `run_family_world` (one family at a time); the first calibration
 of the other worlds is not repeated.
+
+Volume (protocol 1.5). Every world carries a synthetic daily volume series, drawn from a random stream of its own (seed + 2000) so that no price, wick or return of any world changed when it was added; it used to be a constant 100,
+which no family read. Log volume is a first-order autoregression (persistence 0.7, innovation 0.4) around 10,000: it surges (volume at least 1.5, 2 and 3 times the mean of the 20 days before) on 17.7%, 7.4% and 1.4% of days against
+15.9%, 6.3% and 1.5% in the stored Coinbase series, and its first-order autocorrelation is about 0.7 against 0.65. Those three shares and the autocorrelation were measured once from the stored volumes (no price and no return was
+used) to set the two numbers; this module never reads the data files. Volume is unrelated to the returns in every world: the returns are independent, so no rule that reads volume can have skill, except where a premium is planted.
 """
 from __future__ import annotations
 
@@ -42,7 +50,21 @@ WORLDS = {"null_mild": {"kind": "null", "drift": 0.0004, "vol": 0.035},
           "planted_monday_big": {"kind": "calendar", "drift": 0.0004, "vol": 0.035, "day": 0, "premium": 0.010},
           "planted_reversal_small": {"kind": "reversal", "drift": 0.0004, "vol": 0.035, "streak": 3, "premium": 0.003},
           "planted_reversal_mid": {"kind": "reversal", "drift": 0.0004, "vol": 0.035, "streak": 3, "premium": 0.006},
-          "planted_reversal_big": {"kind": "reversal", "drift": 0.0004, "vol": 0.035, "streak": 3, "premium": 0.010}}
+          "planted_reversal_big": {"kind": "reversal", "drift": 0.0004, "vol": 0.035, "streak": 3, "premium": 0.010},
+          "planted_surge_small": {"kind": "surge", "drift": 0.0004, "vol": 0.035, "ratio": 2.0, "hold": 5, "premium": 0.001},
+          "planted_surge_mid": {"kind": "surge", "drift": 0.0004, "vol": 0.035, "ratio": 2.0, "hold": 5, "premium": 0.002},
+          "planted_surge_big": {"kind": "surge", "drift": 0.0004, "vol": 0.035, "ratio": 2.0, "hold": 5, "premium": 0.004}}
+VOLUME_PERSISTENCE, VOLUME_INNOVATION, VOLUME_LEVEL = 0.7, 0.4, 10_000.0                  # log volume: first-order autoregression, innovation standard deviation, and the level it varies around
+
+
+def volume_series(seed: int, n: int = N_CANDLES) -> np.ndarray:
+    """The synthetic daily volume of a seed (protocol 1.5), the same in every world: log volume is an AR(1) with persistence 0.7 and innovation 0.4 around 10,000, started in its stationary distribution. It has a random stream of its own, so adding it moved nothing else."""
+    e = np.random.default_rng(seed + 2000).normal(0.0, VOLUME_INNOVATION, n)
+    a = np.empty(n)
+    a[0] = e[0] / np.sqrt(1.0 - VOLUME_PERSISTENCE ** 2)
+    for i in range(1, n):
+        a[i] = VOLUME_PERSISTENCE * a[i - 1] + e[i]
+    return VOLUME_LEVEL * np.exp(a)
 
 
 def daily_returns(world: str, seed: int, n: int = N_CANDLES) -> np.ndarray:
@@ -58,6 +80,18 @@ def daily_returns(world: str, seed: int, n: int = N_CANDLES) -> np.ndarray:
         for i in range(n):
             out[i] = noise[i] + (w["premium"] if run >= w["streak"] else 0.0)
             run = run + 1 if i > 0 and out[i] < 0 else 0                                          # a lower close is a negative return; the first candle has no close before it
+        return out
+    if w["kind"] == "surge":                                                                      # independent returns, plus a premium on each of the `hold` candles after a surge day; the volume is the seed's own series
+        noise, v = rng.normal(w["drift"], w["vol"], n), volume_series(seed, n)
+        base = S.volume_baseline(v)
+        with np.errstate(invalid="ignore"):
+            heavy = (base > 0) & (v >= w["ratio"] * base)
+        out, left = np.empty(n), 0
+        for i in range(n):
+            out[i] = noise[i] + (w["premium"] if left > 0 else 0.0)
+            left = max(left - 1, 0)
+            if i > 0 and heavy[i] and out[i] > 0:                                                  # a surge day: a rise on a heavy volume; the next `hold` candles are paid (a new surge day inside the window starts the count again)
+                left = w["hold"]
         return out
     state, out = 1, np.empty(n)
     for i in range(n):
@@ -75,7 +109,8 @@ def synthetic_candles(world: str, seed: int, n: int = N_CANDLES, start: float = 
     o = np.concatenate([[start], c[:-1]])
     h = np.maximum(o, c) * (1 + np.abs(rng.normal(0, 0.01, n)))
     l = np.minimum(o, c) * (1 - np.abs(rng.normal(0, 0.01, n)))
-    return [(T0 + i * DAY, float(o[i]), float(h[i]), float(l[i]), float(c[i]), 100.0) for i in range(n)]
+    v = volume_series(seed, n)
+    return [(T0 + i * DAY, float(o[i]), float(h[i]), float(l[i]), float(c[i]), float(v[i])) for i in range(n)]
 
 
 def compact(ev: dict) -> dict:

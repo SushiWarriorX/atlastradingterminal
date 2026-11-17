@@ -1,6 +1,6 @@
 """btcquant protocol versions: adding a family needs a new protocol version, and that must change nothing that was already registered. Every specification hash and paper account id that exists survives a version bump; a family
 pre-registered under a later version carries that version; a research run covers only the families of its own version; and the runs of all versions read as one record in the dashboard, the daily report and the phone view,
-tested end to end on a synthetic world with a toy family under a later version, 1.9 (versions 1.3 and 1.4 added the real families `monday` and `three_down`; this file adds no real family)."""
+tested end to end on a synthetic world with a toy family under a later version, 1.9 (versions 1.3, 1.4 and 1.5 added the real families `monday`, `three_down` and `volume_surge`; this file adds no real family)."""
 import dataclasses
 import json
 import re
@@ -30,9 +30,9 @@ def toy_family(since="1.9"):
 def test_the_protocol_document_and_the_code_agree_on_the_version_and_the_trial_count():
     """The one place that names the current version and N as literals: other tests compare with `C.PROTOCOL_VERSION` and `S.n_configurations()`, so an amendment edits this test and not a dozen."""
     lines = (C.ROOT / "PROTOCOL.md").read_text(encoding="utf-8").splitlines()
-    assert re.search(r"PROTOCOL v(\d+\.\d+)\s*$", lines[0]).group(1) == C.PROTOCOL_VERSION == "1.4"
+    assert re.search(r"PROTOCOL v(\d+\.\d+)\s*$", lines[0]).group(1) == C.PROTOCOL_VERSION == "1.5"
     section5 = next(line for line in lines if line.startswith("## 5."))
-    assert f"N = {S.n_configurations()}" in section5 and S.n_configurations() == 104
+    assert f"N = {S.n_configurations()}" in section5 and S.n_configurations() == 113
 
 
 def test_every_registered_hash_and_paper_account_id_survives_a_protocol_version_bump(monkeypatch):
@@ -68,12 +68,12 @@ def test_a_family_pre_registered_under_a_later_version_carries_that_version_in_i
 
 
 def test_a_research_run_covers_the_families_of_its_own_version_only(monkeypatch):
-    assert RS.families_of("1.2") == [f.id for f in S.RESEARCH if f.since == "1.2"] and len(RS.families_of("1.2")) == 12 and RS.families_of("1.3") == ["monday"] and RS.families_of("1.4") == ["three_down"] and RS.families_of("1.9") == []
+    assert RS.families_of("1.2") == [f.id for f in S.RESEARCH if f.since == "1.2"] and len(RS.families_of("1.2")) == 12 and RS.families_of("1.3") == ["monday"] and RS.families_of("1.4") == ["three_down"] and RS.families_of("1.5") == ["volume_surge"] and RS.families_of("1.9") == []
     toy = toy_family("1.9")
     monkeypatch.setitem(S.FAMILIES, "toy", toy)
     monkeypatch.setattr(S, "RESEARCH", [*S.RESEARCH, toy])
-    assert RS.families_of("1.9") == ["toy"] and RS.families_of("1.3") == ["monday"] and RS.families_of("1.4") == ["three_down"] and len(RS.families_of("1.2")) == 12 and "toy" not in RS.families_of("1.2")
-    assert S.n_configurations() == 106                                                    # N grows by the new family's configurations: 100 + 1 (monday) + 3 (three_down) + 2
+    assert RS.families_of("1.9") == ["toy"] and RS.families_of("1.3") == ["monday"] and RS.families_of("1.4") == ["three_down"] and RS.families_of("1.5") == ["volume_surge"] and len(RS.families_of("1.2")) == 12 and "toy" not in RS.families_of("1.2")
+    assert S.n_configurations() == 115                                                    # N grows by the new family's configurations: 100 + 1 (monday) + 3 (three_down) + 9 (volume_surge) + 2
 
 
 def test_the_research_runs_of_all_versions_read_as_one_record():
@@ -137,8 +137,8 @@ def world(tmp_path_factory):
 
 def test_the_second_run_evaluates_only_the_new_family_and_counts_every_configuration_as_a_trial(world):
     second = world["second"]
-    assert second["protocol"] == "1.9" and second["families"] == ["toy"] and list(second["outcomes"]) == ["toy"] and second["n_trials"] == 106
-    assert list(second["evaluation"]["families"]) == ["toy"] and second["evaluation"]["n_trials"] == 106
+    assert second["protocol"] == "1.9" and second["families"] == ["toy"] and list(second["outcomes"]) == ["toy"] and second["n_trials"] == 115
+    assert list(second["evaluation"]["families"]) == ["toy"] and second["evaluation"]["n_trials"] == 115
     assert [r["protocol"] for r in world["runs"]] == ["1.2", "1.9"] and len(world["runs"][0]["outcomes"]) == 12 and len(world["runs"][0]["families"]) == 12
 
 
@@ -169,7 +169,7 @@ def test_each_research_report_says_which_families_it_covers(world):
     md12, md14 = world["md12"], world["md14"]
     assert md12.startswith("# Research run, protocol 1.2,") and "This run covers the 12 families pre-registered under protocol 1.2" in md12 and "| `tsmom` |" in md12 and "| `toy` |" not in md12     # the library holds later families now, so even the first run is one version's
     assert md14.startswith("# Research run, protocol 1.9,") and "This run covers the 1 family pre-registered under protocol 1.9 (`toy`)" in md14 and "are not repeated here" in md14
-    assert "The number of trials behind the deflated Sharpe ratio is 106" in md14 and "| `toy` |" in md14 and "| `tsmom` |" not in md14
+    assert "The number of trials behind the deflated Sharpe ratio is 115" in md14 and "| `toy` |" in md14 and "| `tsmom` |" not in md14
     assert "no peer-reviewed test on Bitcoin" in md12 and "no peer-reviewed test on Bitcoin" not in md14                    # that caveat is about five of the first twelve families
     assert "**No family was admitted.**" in md14 and "timing p is the share of 40 shifted copies" in md14
 

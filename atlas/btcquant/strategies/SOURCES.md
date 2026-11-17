@@ -64,6 +64,14 @@ Status of every row: summaries returned by a web search on 2026-11-15 (as record
 | Corbet and Katsiampa (2018; title, journal and volume NOT confirmed) | seen only as a summary | Asymmetric mean reversion of Bitcoin price returns across frequencies | Bitcoin, sample not recorded | three_down: the hypothesis | a tradable net profit; the daily horizon in particular |
 | Quantpedia (a practitioner site; its daily backtests of buying local minima) | seen only as a summary | Buying local minima is less profitable but less risky than buying maxima; no significant seasonality in a later revisit; drawdowns above 80% | Bitcoin, daily | three_down: the closest daily test, and a caution | a rule defined as ours is; anything out of sample |
 
+## Trading volume and Bitcoin returns (family 15, `volume_surge`; added 2026-11-17 under protocol 1.5, before that family was run)
+
+Status of the row: the abstract, as recorded in `RESEARCH_QUEUE.md` (a web search summary on 2026-11-15); the paper was not read in full, and the size of any effect it finds is not known to the builder. **It tests predictability, not a trading rule: the rule of this family is our own proxy for it.**
+
+| Source | Record | What the authors report | Market and period | Used for | What it does NOT show |
+| --- | --- | --- | --- | --- | --- |
+| Balcilar, Bouri, Gupta and Roubaud (2017), "Can volume predict Bitcoin returns and volatility? A quantiles-based approach", Economic Modelling 64, 74 to 81 (the title is from memory and NOT confirmed; the journal, volume and pages are as recorded in the queue, not re-checked) | abstract only | With a nonparametric causality-in-quantiles test on daily data, trading volume predicted Bitcoin returns across most of the distribution (quantiles 0.25 to 0.75) except in bear and bull regimes, and did not predict volatility | Bitcoin, daily, December 2011 to April 2016 (one exchange's price index; not Coinbase) | volume_surge: the hypothesis that volume carries information about the next returns | a trading rule; the direction of the predicted return; that a rule survives costs; anything after April 2016; the bull and bear regimes where most of the return is made (the paper excludes them) |
+
 ## What is not relied on
 
 Blogs, trading-platform script pages, newsletters and forum posts that appeared in searches were not used for any rule, number or claim. Where a secondary summary is mentioned above it is named as one.

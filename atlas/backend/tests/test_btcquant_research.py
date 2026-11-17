@@ -203,7 +203,7 @@ def test_protocol_1_4_runs_the_three_down_family_alone_end_to_end(tmp_path, monk
     prep = B.Prepared(K.synthetic_candles("null_mild", 3))
     reg, book = R.Registry(tmp_path / "registry"), P.PaperBook(tmp_path / "state")
     res = RS.run_research(prep, reg, book, tmp_path / "reports", n_shifts=40, now=lambda: "2026-11-17T05:00:00Z")
-    assert res["protocol"] == "1.4" and res["families"] == ["three_down"] and list(res["outcomes"]) == ["three_down"] and res["n_trials"] == S.n_configurations() == 104
+    assert res["protocol"] == "1.4" and res["families"] == ["three_down"] and list(res["outcomes"]) == ["three_down"] and res["n_trials"] == S.n_configurations() == 113
     cands = reg.candidates()
     assert len(cands) == 3 and {c["family"] for c in cands} == {"three_down"} and {c["protocol"] for c in cands} == {"1.4"} and sorted(c["params"]["streak"] for c in cands) == [2, 3, 4]       # one record per configuration
     decided = [c for c in cands if c["decision"] != "tested, not selected on TRAIN"]

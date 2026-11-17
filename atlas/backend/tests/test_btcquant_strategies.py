@@ -57,19 +57,20 @@ def walk(n, seed, start=20_000.0, vol=0.03):
     o = np.concatenate([[start], c[:-1]])
     h = np.maximum(o, c) * (1 + np.abs(rng.normal(0, 0.01, n)))
     l = np.minimum(o, c) * (1 - np.abs(rng.normal(0, 0.01, n)))
-    return [(T0 + i * DAY, float(o[i]), float(h[i]), float(l[i]), float(c[i]), 100.0) for i in range(n)]
+    v = 100.0 * np.exp(np.random.default_rng(seed + 7).normal(0.0, 0.5, n))                  # a volume that changes from day to day, from its own stream so the prices above are what they always were
+    return [(T0 + i * DAY, float(o[i]), float(h[i]), float(l[i]), float(c[i]), float(v[i])) for i in range(n)]
 
 
 # ---- the grid ----
 
 PROTOCOL_COUNTS = {"sma_cross": 15, "donchian": 4, "ma_atr_trend": 9, "tsmom": 5, "rsi_momentum": 18, "mom_vol": 9, "bollinger_mr": 6,
-                   "rsi_oversold": 12, "vol_breakout": 9, "regime_switch": 3, "vol_target": 6, "sma_filter": 4, "monday": 1, "three_down": 3}
+                   "rsi_oversold": 12, "vol_breakout": 9, "regime_switch": 3, "vol_target": 6, "sma_filter": 4, "monday": 1, "three_down": 3, "volume_surge": 9}
 
 
-def test_the_grids_hold_exactly_the_protocol_counts_and_one_hundred_and_four_in_all():
+def test_the_grids_hold_exactly_the_protocol_counts_and_one_hundred_and_thirteen_in_all():
     assert {f.id: len(S.configs(f)) for f in S.RESEARCH} == PROTOCOL_COUNTS
-    assert S.n_configurations() == 104 == sum(PROTOCOL_COUNTS.values()) == 100 + len(S.configs(S.FAMILIES["monday"])) + len(S.configs(S.FAMILIES["three_down"]))          # the twelve families of 1.2 hold 100 of them, the one of 1.3 holds one, the one of 1.4 holds three
-    assert [f.id for f in S.RESEARCH] == list(PROTOCOL_COUNTS)                                  # fourteen families in protocol order
+    assert S.n_configurations() == 113 == sum(PROTOCOL_COUNTS.values()) == 100 + len(S.configs(S.FAMILIES["monday"])) + len(S.configs(S.FAMILIES["three_down"])) + len(S.configs(S.FAMILIES["volume_surge"]))          # the twelve families of 1.2 hold 100 of them, the one of 1.3 holds one, the one of 1.4 holds three
+    assert [f.id for f in S.RESEARCH] == list(PROTOCOL_COUNTS)                                  # fifteen families in protocol order
     assert [len(S.configs(S.FAMILIES[b])) for b in ("buy_hold", "cash")] == [1, 1]
 
 
@@ -512,7 +513,7 @@ def test_three_down_is_registered_as_family_14_in_stop_mode_with_a_streak_grid_o
     assert (fam.kind, fam.since, fam.trail, fam.category, fam.name) == ("stop", "1.4", False, "mean_reversion", "Reversal after a losing streak")
     assert S.configs(fam) == [{"streak": 2}, {"streak": 3}, {"streak": 4}]
     assert S.neighbours(fam, {"streak": 3}) == [{"streak": 2}, {"streak": 4}] and S.neighbours(fam, {"streak": 2}) == [{"streak": 3}] and S.neighbours(fam, {"streak": 4}) == [{"streak": 3}]
-    assert [f.id for f in S.RESEARCH][-1] == "three_down" and S.spec("three_down", {"streak": 3})["protocol"] == "1.4"
+    assert [f.id for f in S.RESEARCH].index("three_down") == 13 and S.spec("three_down", {"streak": 3})["protocol"] == "1.4"
     assert S.spec("monday", {"day": 0})["protocol"] == "1.3" and S.spec("tsmom", {"L": 30})["protocol"] == "1.2"
     assert len({S.spec_hash("three_down", {"streak": n}) for n in (2, 3, 4)}) == 3
 
@@ -547,6 +548,120 @@ def test_three_down_does_not_enter_on_a_run_that_an_equal_close_cut_short_and_en
     assert B.run(prep, "three_down", {"streak": 3}, 1, len(cs) - 1).metrics["fills"] == 0
     r = B.run(prep, "three_down", {"streak": 2}, 1, len(cs) - 1, keep_account=True)
     assert [(t["entry_t"], t["exit_t"]) for t in r.account.trades] == [(cs[22][0], cs[23][0]), (cs[25][0], cs[26][0])] and r.metrics["fills"] == 4      # a run of two at 21 (filled at 22, sold at 23) and another at 24 (filled at 25, sold at 26)
+
+
+# ---- volume_surge (protocol 1.5) ----
+
+def surge_candles(tail, warm=20, base_volume=100.0):
+    """`warm` flat days at 100 with a volume of `base_volume` each (so the baseline and the 14-day ATR exist), then the (close, volume) pairs of `tail`; every candle opens at the close before it and reaches one above and one below its open and close."""
+    closes = [100.0] * warm + [float(c) for c, _ in tail]
+    vols = [float(base_volume)] * warm + [float(v) for _, v in tail]
+    opens = [100.0] + closes[:-1]
+    highs = [max(a, b) + 1.0 for a, b in zip(opens, closes)]
+    lows = [min(a, b) - 1.0 for a, b in zip(opens, closes)]
+    return [(T0 + i * DAY, opens[i], highs[i], lows[i], closes[i], vols[i]) for i in range(len(closes))]
+
+
+def surge_on(tail, ratio, hold, **kw):
+    return states(S.signals("volume_surge", surge_candles(tail, **kw), {"ratio": ratio, "hold": hold}))
+
+
+def test_the_volume_baseline_is_the_mean_of_the_twenty_volumes_before_a_candle_and_never_includes_the_candle_itself():
+    v = np.random.default_rng(3).uniform(50, 500, 300)
+    got = S.volume_baseline(v)
+    assert len(got) == 300 and np.isnan(got[:20]).all()                                                    # twenty candles before it are needed
+    for i in range(20, 300):
+        assert got[i] == pytest.approx(sum(v[i - 20:i]) / 20, rel=1e-12), i                              # candles i-20 .. i-1: not candle i
+    assert np.isnan(S.volume_baseline([1.0] * 20)).all() and S.volume_baseline([1.0] * 21)[20] == 1.0     # the 21st candle is the first to have a baseline
+    assert S.volume_baseline([]).tolist() == [] and S.volume_baseline([5.0] * 3).shape == (3,)
+
+
+def test_a_volume_surge_needs_a_volume_of_at_least_the_ratio_times_the_baseline_and_a_close_above_the_one_before():
+    tail = [(101, 200), (101, 1000), (99, 1000), (100, 150)]                      # 20: up on exactly twice the baseline of 100; 21: heavy but an EQUAL close; 22: heavy but a lower close; 23: up but light
+    assert surge_on(tail, 2.0, 1) == [False] * 20 + [True, False, False, False]                     # "at least": exactly 2.0 times counts; one hold of one candle shows each surge by itself
+    assert surge_on(tail, 2.000001, 1) == [False] * 24                                              # a hair above the ratio and it does not
+    assert surge_on(tail, 1.5, 1) == [False] * 20 + [True, False, False, False]                     # the other days fail on the close or on the volume, not on the ratio
+
+
+def test_a_candle_is_not_part_of_its_own_baseline():
+    tail = [(101, 200)]                                                                    # twenty days of 100 and then 200 is exactly 2.0 times the baseline; with the day inside its own average (105) it would be 1.9
+    assert surge_on(tail, 2.0, 1)[20] is True and 200 / ((19 * 100 + 200) / 20) < 2.0
+
+
+def test_a_zero_baseline_never_fires():
+    assert 50.0 >= 1.5 * 0.0                                                                       # as written, with nothing to compare against, any volume would pass
+    assert surge_on([(101, 50), (102, 60)], 1.5, 1, base_volume=0.0) == [False] * 21 + [True]        # candle 20 has no volume at all before it: no surge; once one day of volume is in the baseline (50 / 20 = 2.5) candle 21's 60 is a surge
+
+
+def test_a_surge_keeps_the_position_on_for_the_hold_counting_the_surge_candle_and_the_next_surge_inside_it_starts_the_count_again():
+    one = [(101, 1000), (100, 100), (100, 100), (100, 100), (100, 100)]
+    assert surge_on(one, 3.0, 3) == [False] * 20 + [True, True, True, False, False]                 # a surge at candle 20 and a hold of 3: ON at 20, 21 and 22, so long through candles 21, 22 and 23
+    assert surge_on(one, 3.0, 5) == [False] * 20 + [True] * 5 and surge_on(one, 3.0, 10) == [False] * 20 + [True] * 5      # the series ends first
+    two = [(101, 1000), (100, 100), (101, 100), (102, 5000), (101, 100), (100, 100), (101, 100), (102, 100)]
+    assert surge_on(two, 3.0, 3) == [False] * 20 + [True, True, True, True, True, True, False, False]    # a second surge at candle 23, while the first hold is still running (22) or just over: ON from 20 to 25, with no gap
+
+
+def test_a_surge_cannot_fire_before_there_are_twenty_days_of_history():
+    cs = candles([100.0, 101.0, 102.0], opens=[100.0, 100.0, 101.0])
+    short = [(t, o, h, l, c, v) for (t, o, h, l, c, _), v in zip(cs, [100.0, 1000.0, 1000.0])]
+    assert states(S.signals("volume_surge", short, {"ratio": 1.5, "hold": 3})) == [False, False, False]
+
+
+def test_volume_surge_uses_the_fixed_atr_stop_and_the_state_is_boolean():
+    cs = walk(120, seed=3)
+    b = S.Bars(cs)
+    sig = S.signals("volume_surge", cs, {"ratio": 1.5, "hold": 5})
+    assert np.array_equal(sig.stop, b.c - C.STOP_ATR_MULT * b.ind("atr", C.ATR_N), equal_nan=True) and sig.weight is None and sig.state.dtype == bool and sig.state.any()
+
+
+def test_volume_surge_state_agrees_with_the_novelty_screens_separate_definition_of_the_same_rule():
+    from atlas_api.btcquant import novelty as N
+    b = S.Bars(walk(900, seed=9))
+    seen = 0
+    for ratio in (1.5, 2.0, 3.0):
+        for hold in (3, 5, 10):
+            mine = S.signals("volume_surge", b, {"ratio": ratio, "hold": hold}).state
+            assert mine.tolist() == N.volume_surge(b, ratio, 20, hold).tolist(), (ratio, hold)
+            seen += int(mine.any())
+    assert seen == 9                                                                               # every setting fired on these candles: the comparison saw something
+
+
+def test_volume_surge_is_registered_as_family_15_in_stop_mode_with_a_ratio_and_hold_grid_of_nine():
+    fam = S.FAMILIES["volume_surge"]
+    assert (fam.kind, fam.since, fam.trail, fam.category, fam.name) == ("stop", "1.5", False, "volume", "Volume surge continuation")
+    assert [(p["ratio"], p["hold"]) for p in S.configs(fam)] == [(r, h) for r in (1.5, 2.0, 3.0) for h in (3, 5, 10)]
+    centre = {"ratio": 2.0, "hold": 5}
+    assert S.neighbours(fam, centre) == [{"ratio": 1.5, "hold": 5}, {"ratio": 3.0, "hold": 5}, {"ratio": 2.0, "hold": 3}, {"ratio": 2.0, "hold": 10}]
+    assert S.neighbours(fam, {"ratio": 1.5, "hold": 3}) == [{"ratio": 2.0, "hold": 3}, {"ratio": 1.5, "hold": 5}]
+    assert [f.id for f in S.RESEARCH][-1] == "volume_surge" and S.spec("volume_surge", centre)["protocol"] == "1.5"
+    assert S.spec("three_down", {"streak": 3})["protocol"] == "1.4" and S.spec("monday", {"day": 0})["protocol"] == "1.3" and S.spec("tsmom", {"L": 30})["protocol"] == "1.2"
+    assert len({S.spec_hash("volume_surge", p) for p in S.configs(fam)}) == 9
+
+
+def test_volume_surge_explains_a_signal_with_the_close_the_volume_the_baseline_the_ratio_and_the_ratio_it_needs():
+    b = S.Bars(surge_candles([(101, 200), (101, 300)]))
+    fam = S.FAMILIES["volume_surge"]
+    assert fam.explain(b, {"ratio": 2.0, "hold": 5}, 20) == {"close": 101.0, "volume": 200.0, "volume_mean_20": 100.0, "volume_ratio": 2.0, "required_ratio": 2.0}
+    assert fam.explain(b, {"ratio": 3.0, "hold": 5}, 21) == {"close": 101.0, "volume": 300.0, "volume_mean_20": 105.0, "volume_ratio": round(300 / 105, 6), "required_ratio": 3.0}
+    early = fam.explain(b, {"ratio": 2.0, "hold": 5}, 5)
+    assert early == {"close": 100.0, "volume": 100.0, "volume_mean_20": None, "volume_ratio": None, "required_ratio": 2.0}      # before twenty days of history: None, not NaN
+
+
+def test_volume_surge_through_the_account_engine_buys_at_the_open_after_the_surge_and_sells_at_the_open_after_the_hold_has_run_out():
+    cs = surge_candles([(101, 300), (102, 100), (103, 100), (104, 100), (103, 100), (102, 100)])      # a surge of exactly 3 x the baseline at candle 20 (the last of the warm-up days is 19)
+    r = B.run(B.Prepared(cs), "volume_surge", {"ratio": 3.0, "hold": 3}, 1, len(cs) - 1, keep_account=True)
+    (trade,) = r.account.trades
+    assert r.metrics["fills"] == 2 and trade["entry_t"] == cs[21][0] and trade["exit_t"] == cs[24][0]       # decided at the close of 20, filled at the open of 21; ON at 20, 21 and 22, so sold at the open of 24
+    q_buy, q_sell = (1 + C.SLIPPAGE) * (1 + C.FEE), (1 - C.SLIPPAGE) * (1 - C.FEE)
+    assert trade["entry_px"] == pytest.approx(cs[21][1] * q_buy, rel=1e-9) and trade["exit_px"] == pytest.approx(cs[24][1] * q_sell, rel=1e-9)
+    assert [j + 1 for j, e in enumerate(r.exposure) if e > 1e-9] == [21, 22, 23]                         # invested through the candles 21, 22 and 23 and no other (run index j is candle j + 1)
+    assert 0.0 < max(r.exposure) < 0.5                                                                    # sized by the 1% risk rule against the 3 x ATR stop, not the whole account
+
+
+def test_a_second_surge_inside_the_hold_makes_one_longer_trade_not_two():
+    cs = surge_candles([(101, 1000), (100, 100), (101, 100), (102, 5000), (101, 100), (100, 100), (101, 100), (102, 100)])
+    r = B.run(B.Prepared(cs), "volume_surge", {"ratio": 3.0, "hold": 3}, 1, len(cs) - 1, keep_account=True)
+    assert [(t["entry_t"], t["exit_t"]) for t in r.account.trades] == [(cs[21][0], cs[27][0])] and r.metrics["fills"] == 2      # ON from 20 to 25 and off at the close of 26: bought at the open of 21 and sold at the open of 27
 
 
 # ---- benchmarks ----

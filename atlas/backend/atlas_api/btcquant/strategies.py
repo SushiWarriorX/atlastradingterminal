@@ -1,4 +1,4 @@
-"""The fourteen strategy families of the protocol (section 5: twelve pre-registered under 1.2, one under 1.3, one under 1.4) plus the two benchmarks, as pure functions of completed daily candles.
+"""The fifteen strategy families of the protocol (section 5: twelve pre-registered under 1.2, one under 1.3, one under 1.4, one under 1.5) plus the two benchmarks, as pure functions of completed daily candles.
 
 A family turns candles and one parameter set into SIGNALS for every candle: at the close of candle i it says
   - state[i]  (stop kinds): True if the strategy wants to be long from the next open;
@@ -6,7 +6,7 @@ A family turns candles and one parameter set into SIGNALS for every candle: at t
   - stop[i]   (stop kinds): the protective stop level to use if it enters now (and, for trailing stops, the candidate level to ratchet up to).
 Every value at index i uses candles 0..i only; a test changes later candles and checks that nothing at or before i moves. Warm-up values are False / 0 / NaN.
 Families that "stay ON until stopped" (Donchian and the ATR trend filter) replay their own trailing stop on the candles to know when they were stopped, so the state they report matches what the account engine does with the same stop.
-Grids are fixed by the protocol: 104 configurations in all (100 under 1.2, one under 1.3, three under 1.4), which is the N used for multiple testing.
+Grids are fixed by the protocol: 113 configurations in all (100 under 1.2, one under 1.3, three under 1.4, nine under 1.5), which is the N used for multiple testing.
 """
 from __future__ import annotations
 
@@ -317,6 +317,43 @@ def _three_down_x(b, p, i):
     return {"close": _f(b.c[i]), "down_streak": float(down_streak(b.c[:i + 1])[i]), "required_streak": float(p["streak"])}
 
 
+# ---- 15. volume_surge (stop mode; a volume continuation rule, pre-registered under protocol 1.5) ----
+VOLUME_WINDOW = 20                      # the days in the volume baseline: fixed by the protocol, not a setting
+
+
+def volume_baseline(v, n: int = VOLUME_WINDOW) -> np.ndarray:
+    """The mean volume of the `n` candles BEFORE each candle: the candle itself is not in its own baseline. NaN for the first `n` candles, which do not have `n` candles before them."""
+    v = np.asarray(v, dtype=float)
+    out = np.full(len(v), np.nan)
+    if len(v) > n:
+        out[n:] = np.lib.stride_tricks.sliding_window_view(v, n).mean(axis=1)[:len(v) - n]          # window j covers candles j .. j+n-1, which are the n candles before candle j+n
+    return out
+
+
+def _last_any(flag: np.ndarray, k: int) -> np.ndarray:
+    """True at i when `flag` was True at any of the last k candles, i included."""
+    cs = np.cumsum(flag.astype(int))
+    return (cs - np.concatenate([np.zeros(k, dtype=int), cs])[:len(cs)]) > 0
+
+
+def _volume_surge(b, p):
+    """A surge day is a candle whose volume is at least `ratio` times the mean volume of the 20 candles before it AND whose close is above the close before it. The state is ON at candle i when a surge day fell on any of the last
+    `hold` candles, i included: the position is held through `hold` candles after the surge day (it is decided at the surge day's close and filled at the next open), and a new surge day inside the hold starts the count again.
+    A baseline that is not positive (no volume at all in the 20 days) is no baseline. The stop is the protocol's fixed close - 3 x ATR(14); it reads closes up to candle i only."""
+    ratio, hold = float(p["ratio"]), int(p["hold"])
+    base = volume_baseline(b.v)
+    up = np.zeros(b.n, dtype=bool)
+    up[1:] = b.c[1:] > b.c[:-1]
+    with np.errstate(invalid="ignore"):                                    # a warm-up NaN compares False: no surge before there is a baseline
+        surge = (base > 0) & (b.v >= ratio * base) & up
+    return Signals(state=_last_any(surge, hold), stop=_fixed_stop(b))
+
+
+def _volume_surge_x(b, p, i):
+    base = volume_baseline(b.v[:i + 1])[i]
+    return {"close": _f(b.c[i]), "volume": _f(b.v[i]), "volume_mean_20": _f(base), "volume_ratio": _f(b.v[i] / base) if np.isfinite(base) and base > 0 else None, "required_ratio": float(p["ratio"])}
+
+
 # ---- benchmarks ----
 def _none(b, p):
     return Signals()
@@ -337,6 +374,7 @@ FAMILIES: dict[str, Family] = {f.id: f for f in [
     Family("sma_filter", "Simple trend filter exposure", "risk_managed", "weight", False, {"L": [100, 150, 200, 250]}, _sma_filter, _sma_filter_x),
     Family("monday", "Day-of-week holding", "calendar", "weight", False, {"day": [0]}, _monday, _monday_x, since="1.3"),
     Family("three_down", "Reversal after a losing streak", "mean_reversion", "stop", False, {"streak": [2, 3, 4]}, _three_down, _three_down_x, since="1.4"),
+    Family("volume_surge", "Volume surge continuation", "volume", "stop", False, {"ratio": [1.5, 2.0, 3.0], "hold": [3, 5, 10]}, _volume_surge, _volume_surge_x, since="1.5"),
     Family("buy_hold", "Buy and hold (benchmark)", "benchmark", "hold", False, {}, _none, lambda b, p, i: {}),
     Family("cash", "Cash only (benchmark)", "benchmark", "cash", False, {}, _none, lambda b, p, i: {}),
 ]}
