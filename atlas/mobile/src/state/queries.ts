@@ -389,6 +389,13 @@ export function useUsJobs() {
     staleTime: (q) => (down(q) ? 60_000 : 3 * 60 * 60_000), refetchInterval: (q) => (down(q) ? 120_000 : 6 * 60 * 60_000) });
 }
 
+export function useUsGdp() {
+  const { api, baseUrl } = useConnection();
+  const down = (q: { state: { data?: { available: boolean; demo: boolean } } }) => q.state.data?.available === false && !q.state.data.demo;      // an answer of "unavailable" is asked for again in a minute or two, not kept for six hours like a figure
+  return useQuery({ queryKey: keys(baseUrl).usGdp, queryFn: () => need(api).usGdp(), enabled: !!api, retry: 0,
+    staleTime: (q) => (down(q) ? 60_000 : 3 * 60 * 60_000), refetchInterval: (q) => (down(q) ? 120_000 : 6 * 60 * 60_000) });
+}
+
 export function useEuroYields() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).euroYields, queryFn: () => need(api).euroYields(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });

@@ -878,6 +878,32 @@ async function healthy(browser) {
       await page.locator(V("usjobs-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
       await shot(page, "07zj-usjobs-bottom");
 
+      await page.waitForSelector(V("usgdp-card"));
+      await page.waitForSelector(V("usgdp-body") + ", " + V("usgdp-unavailable") + ", " + V("usgdp-error"), { timeout: 45000 });
+      const gdTxt = await text(page);
+      match(gdTxt, /US GDP by component/); match(gdTxt, /Bureau of Economic Analysis/); noMatch(gdTxt, FORECASTS, "the US GDP card makes no forecasts");
+      if (await liveCard(page, "usgdp-body")) {
+        const gdBody = await inner(page, "usgdp-body");
+        const GQ = "Q[1-4] 20\\d\\d";
+        match(await inner(page, "usgdp-headline"), new RegExp(`^The US economy produced \\$\\d{2}\\.\\d{3} trillion of goods and services at an annual rate in ${GQ}, (?:(?:up|down) \\$[\\d,]+\\.\\d billion \\(\\d+\\.\\d{2}%\\)|unchanged) on the quarter before and (?:(?:up|down) \\d+\\.\\d{2}%|unchanged) on a year earlier, in the prices of the time\\.$`), "the level, its change on the quarter and on the year");
+        match(await inner(page, "usgdp-growth"), new RegExp(`^With price changes taken out, real GDP (?:grew \\d+\\.\\d%|shrank \\d+\\.\\d%|was unchanged) at an annual rate in ${GQ} \\(-?\\d+\\.\\d% in the quarter before and -?\\d+\\.\\d% a year earlier\\)\\.$`), "real growth with its comparisons");
+        match(gdBody, new RegExp(`Over the last 10 years \\(40 quarters\\) real growth ran from -?\\d+\\.\\d% \\(${GQ}\\) to -?\\d+\\.\\d% \\(${GQ}\\); \\d{1,3}% of those quarters were lower than now\\.`), "the ten-year range is explained in quarters");
+        match(await inner(page, "usgdp-components"), /^(?:(?:Consumer spending|Private investment|Government spending|Net exports): -?\$[\d,]+\.\d billion, -?\d+\.\d% of GDP, [+-]?\d+\.\d{2} points of the real growth\s*){4}$/, "the four parts with their share and their contribution");
+        match(await inner(page, "usgdp-part-consumption"), /^Consumer spending: \$[\d,]+\.\d billion, \d+\.\d% of GDP, [+-]?\d+\.\d{2} points of the real growth$/, "consumer spending is its own row");
+        match(await inner(page, "usgdp-part-net_exports"), /^Net exports: -?\$[\d,]+\.\d billion, -?\d+\.\d% of GDP, [+-]?\d+\.\d{2} points of the real growth$/, "net exports is its own row");
+        match(await inner(page, "usgdp-trade"), /^Net exports are exports of \$[\d,]+\.\d billion minus imports of \$[\d,]+\.\d billion\. The four contributions add to [+-]?\d+\.\d{2} points; the published growth is -?\d+\.\d%\.$/, "the trade and the sum of the contributions");
+        match(await inner(page, "usgdp-recent"), new RegExp(`^(?:${GQ}: [+-]?\\d+\\.\\d%\\s*){6}$`), "six quarters of real growth");
+        match(gdBody, new RegExp(`Check: in each of the \\d{2} quarters from ${GQ} to ${GQ} the twelve series covered the same quarters with none missing and every figure lay inside its range \\(plain checks, not the source's sums\\)`), "the plain checks are shown");
+        match(gdBody, /consumer spending plus private investment plus government spending plus net exports equal GDP \(largest gap \d\.\d{3} billion, which is rounding\), exports minus imports equal net exports \(largest gap \d\.\d{3} billion, rounding\), and the four contributions add up to real growth \(largest gap \d\.\d{2} points, rounding\)/, "the three relations are shown");
+        match(gdBody, /not that the figures are right/); match(gdBody, /counted by what it was spent on/); match(gdBody, /revised in later releases/); match(gdBody, /not a market signal or a forecast/);
+        noMatch(gdBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+        noMatch(gdBody, /\b20\d\d-Q[1-4]\b/, "no raw quarter labels on screen");
+      }
+      await page.locator(V("usgdp-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zk-usgdp-top");
+      await page.locator(V("usgdp-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
+      await shot(page, "07zk-usgdp-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);
