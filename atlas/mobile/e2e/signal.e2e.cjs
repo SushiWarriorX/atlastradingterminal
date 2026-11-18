@@ -1046,6 +1046,32 @@ async function healthy(browser) {
       await page.locator(V("eurobankrates-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);        // and its bottom: the note and the source link
       await shot(page, "07zg-eurobankrates-bottom");
 
+      await page.waitForSelector(V("euroemployment-card"));
+      await page.waitForSelector(V("euroemployment-body") + ", " + V("euroemployment-unavailable") + ", " + V("euroemployment-error"), { timeout: 110000 });         // the ECB's national accounts service takes 5 to 35 s per request when it has to compute, and the card asks for four at once
+      const eeTxt = await text(page);
+      match(eeTxt, /Euro-area employment and productivity/); match(eeTxt, /European Central Bank/); noMatch(eeTxt, FORECASTS, "the euro employment card makes no forecasts");
+      if (await liveCard(page, "euroemployment-body")) {
+        const eeBody = await inner(page, "euroemployment-body");
+        const EMOVE = "(?:up \\d{1,2}\\.\\d{2}%|down \\d{1,2}\\.\\d{2}%|unchanged)";
+        const EQ = "Q[1-4] 20\\d\\d";
+        match(eeBody, new RegExp(`\\d{3}\\.\\d million people were in work in ${EQ}, ${EMOVE} from the previous quarter \\(${EQ}\\) and ${EMOVE} from the same quarter a year earlier \\(${EQ}\\)\\.`), "the headline");
+        match(await inner(page, "euroemployment-recent"), new RegExp(`^(?:${EQ}: \\d{3}\\.\\d million, [+-]?\\d{1,2}\\.\\d{2}% on the previous quarter, [+-]?\\d{1,2}\\.\\d{2}% on a year earlier\\s*){6}$`), "six quarters of people in work");
+        match(await inner(page, "euroemployment-hours"), new RegExp(`^In ${EQ} \\(the newest quarter with a breakdown\\) people worked \\d{2}\\.\\d billion hours, \\d{3}\\.\\d hours each in the quarter; hours worked were ${EMOVE} from a year earlier\\.\\s*Employees were \\d{2}\\.\\d% of the people in work \\(\\d{3}\\.\\d million\\) and \\d{2}\\.\\d% of the hours; the self-employed were \\d{2}\\.\\d% \\(\\d{2}\\.\\d million\\) and \\d{2}\\.\\d% of the hours\\.$`), "hours and employees");
+        match(await inner(page, "euroemployment-sectors"), new RegExp(`^(?:[A-Z][a-z ,]+: \\d{1,2}\\.\\d million people \\(\\d{1,2}\\.\\d% of all jobs\\), ${EMOVE} \\([+-]?[\\d,]+ thousand\\) on a year earlier\\.\\s*){10}$`), "the ten activities");
+        match(await inner(page, "euroemployment-productivity"), new RegExp(`^Real GDP per person in work was ${EMOVE} on the previous quarter and ${EMOVE} on a year earlier \\(${EQ}\\)\\.\\s*Real GDP per hour worked was ${EMOVE} on the previous quarter and ${EMOVE} on a year earlier \\(${EQ}\\)\\.$`), "output per worker");
+        match(eeBody, /Check: in each of the last 45 quarters \(44 for persons, where total employment is a quarter ahead of its breakdown\) every figure lay inside its range and total employment moved by no more than 10% in a quarter \(plain checks, not the source's sums\)/, "the plain checks are shown");
+        match(eeBody, /the ten activities add up to total employment, and employees plus the self-employed add up to total employment, for persons \(largest gap under 0\.000001 thousand persons\) and for hours \(largest gap under 0\.000001 thousand hours\)/, "the sums are shown");
+        match(eeBody, /equals real GDP growth over employment growth \(largest gap under 0\.000001 points\)/, "the productivity relation is shown"); match(eeBody, /not that the figures are right/);
+        match(eeBody, /about 45 days/); match(eeBody, /not a market signal or a forecast/);
+        noMatch(eeBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("euroemployment-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);      // the top of a tall card, not its nearest edge
+      await shot(page, "07zh-euroemployment-top");
+      await page.locator(V("euroemployment-sectors")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);   // the middle: the ten activities
+      await shot(page, "07zh-euroemployment-middle");
+      await page.locator(V("euroemployment-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);        // and its bottom: the note and the source link
+      await shot(page, "07zh-euroemployment-bottom");
+
       await page.waitForSelector(V("euroinflation-card"));
       await page.waitForSelector(V("euroinflation-body") + ", " + V("euroinflation-unavailable") + ", " + V("euroinflation-error"), { timeout: 45000 });
       const eiTxt = await text(page);

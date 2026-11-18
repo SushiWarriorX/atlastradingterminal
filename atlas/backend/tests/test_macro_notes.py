@@ -8,7 +8,7 @@ import pytest
 API = Path(__file__).parent.parent / "atlas_api"
 COMPONENTS = Path(__file__).parent.parent.parent / "mobile" / "src" / "components"
 CARDS = {"euromoney": "EuroMoneyCard.tsx", "eurolending": "EuroLendingCard.tsx", "eurohicp": "EuroInflationCard.tsx", "eurounemployment": "EuroUnemploymentCard.tsx",
-         "eurostress": "EuroStressCard.tsx", "euroyields": "EuroYieldsCard.tsx", "eurogdp": "EuroGdpCard.tsx", "eurobankrates": "EuroBankRatesCard.tsx"}
+         "eurostress": "EuroStressCard.tsx", "euroyields": "EuroYieldsCard.tsx", "eurogdp": "EuroGdpCard.tsx", "eurobankrates": "EuroBankRatesCard.tsx", "euroemployment": "EuroEmploymentCard.tsx"}
 # sentences that belong to the Check line and must not come back in a note (each was in every note before)
 REPEATED = ("not that the figures are right", "not that they are right", "which show the series belong together", "which shows the series belong together", "show the series belong together",
             "two checks that are", "one check that is", "three checks that are", "three checks held", "own arithmetic", "The ECB builds the totals")
@@ -19,7 +19,8 @@ PLAIN = {"euromoney": "Plain checks: the units are the ones assumed, no month is
          "eurostress": "Plain checks: the units are the ones assumed and no hole is longer than 5 days; the ranges, the properties and the ECB's own sum that held are in the Check line.",
          "euroyields": "Plain checks: the units are the ones assumed and no hole is longer than 8 days; the ranges and the ECB's own sums that held are in the Check line.",
          "eurogdp": "Plain checks: the units are the ones assumed and no quarter is missing; the ranges and the source's own sums that held are in the Check line.",
-         "eurobankrates": "Plain checks: the units are the ones assumed and no month is missing; the ranges, the volume sums, the weighted-average identity and the bound on the composites are in the Check line."}
+         "eurobankrates": "Plain checks: the units are the ones assumed and no month is missing; the ranges, the volume sums, the weighted-average identity and the bound on the composites are in the Check line.",
+         "euroemployment": "Plain checks: the units are the ones assumed and no quarter is missing; the ranges, the sums and the growth rebuilt from GDP and jobs are in the Check line."}
 LIMIT = 1100                                                                                                                   # characters: the longest note before was 1,824
 
 
@@ -68,3 +69,4 @@ def test_the_notes_keep_what_only_they_say_about_their_source():
     assert "The newest month is provisional and is revised later" in note_of("euromoney") and "The newest month is provisional and is revised later" in note_of("eurolending") and "The newest month is provisional and is revised later" in note_of("eurobankrates")
     assert "flash" in note_of("eurohicp") and "fixed composition" in note_of("eurounemployment") and "changing composition" in note_of("eurostress") and "fitted curve, not a market quote" in note_of("euroyields")
     assert "stopped at Q1 2026" in note_of("eurogdp") and "about 45 days" in note_of("eurogdp") and "about 65 days" in note_of("eurogdp") and "NEW loans and pay on NEW deposits" in note_of("eurobankrates")
+    assert "about 45 days" in note_of("euroemployment") and "about 65 days" in note_of("euroemployment") and "usually one quarter behind" in note_of("euroemployment") and "real GDP divided by the persons employed or by the hours they worked" in note_of("euroemployment")

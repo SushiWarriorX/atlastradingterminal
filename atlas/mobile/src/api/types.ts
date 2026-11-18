@@ -493,6 +493,15 @@ export interface EuroBankRatesData { available: boolean; reason?: string; demo: 
   recent?: { date: string; month: string; firms_cost_pct: number; house_cost_pct: number }[];
   detail?: { months_checked: number; sums_checked: number; rate_months_checked: number; rates_checked: number; largest_sum_gap_millions: number; largest_sum_gap_month: string | null; largest_sum_gap_series: string | null;
     largest_rate_gap_points: number; largest_rate_gap_month: string | null; largest_rate_gap_series: string | null } }
+export interface EuroEmploymentSector { id: string; name: string; persons: number; share: number; change_year_thousands: number; change_year: number }
+export interface EuroEmploymentPart { persons: number; share: number; hours_share: number }
+export interface EuroEmploymentGrowth { quarter: string; quarter_on_quarter: number; year_on_year: number }
+export interface EuroEmploymentData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; quarter?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
+  jobs?: { quarter: string; persons: number; quarter_on_quarter: number; year_on_year: number; previous_quarter: string; year_earlier: string };
+  recent?: { quarter: string; persons: number; quarter_on_quarter: number; year_on_year: number }[];
+  breakdown?: { quarter: string; persons: number; hours: number; hours_per_person: number; hours_change_year: number; employees: EuroEmploymentPart; self_employed: EuroEmploymentPart; sectors: EuroEmploymentSector[] };
+  productivity?: { per_person: EuroEmploymentGrowth; per_hour: EuroEmploymentGrowth };
+  detail?: { quarters_checked: number; persons_quarters_checked: number; largest_persons_gap: number; largest_hours_gap: number; largest_productivity_gap: number } }
 export interface EuroYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
   rates?: EuroYieldRate[]; spreads?: EuroYieldSpread[];
   window?: { days: number; from: string; years: number; median: number; lowest: { value: number; date: string }; highest: { value: number; date: string }; share_lower_pct: number } | null;
