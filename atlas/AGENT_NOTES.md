@@ -24,9 +24,9 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 - Phone app tokens are `color.up` and `color.down` (not good/bad); `Txt` variants are hero, title, h2, body, small, tiny, label.
 - React Native accessibility props must not reach an SVG on web (the browser warns); the browser test fails on console warnings.
 - Browser tests: Playwright selectors from the helper `V()` contain `:visible`, which is not valid inside `page.waitForFunction`; use a plain attribute selector there.
-- A long heredoc mixed with shell edits can be blocked by the safety check; write files with the file tools and run small scripts from files.
 - The cloud machine only reaches hosts on the environment's allowed list; a timeout (no HTTP code) usually means "host not allowed", not "site down".
 - Before finishing: backend `pytest`, `npm run typecheck && npm test` in `mobile`, then `npm run export:web` and `node e2e/signal.e2e.cjs` after UI changes.
+- Breakage run (how the recent data cards and several modules were checked; the script was rewritten every time, see the `LOOP.md` backlog): one table of one-line changes, each pattern occurring exactly once in the module; for each, write the changed file, run only that module's test file with `PYTHONDONTWRITEBYTECODE=1` (clear its `__pycache__` first) and count a failing run as caught; restore the file and check its hash at the end; run nothing else that imports the backend meanwhile (it would run the broken copy). A survivor is a missing test or dead code: close it, or list it as equivalent (loop-rules items 11, 15 and 17).
 - A browser script that scrolls a React Native Web ScrollView must set `el.scrollTop = n`: RN Web puts its own `scrollTo(options)` on the node, so `el.scrollTo(0, n)` silently does nothing.
 - This sandbox blocks `sleep`. Wait for a background job with a Monitor until-loop, or block on its process with `tail --pid=<pid> -f /dev/null`; a foreground call is cut off after 10 minutes, so start long suites in the background.
 - All phone colours are tokens in `src/theme.ts` (the app is light since 2026-11-15; `onAccent` is the text on blue). The contrast test must list every gradient that hosts text: a red tint added without it sat at 4.41:1 against the 4.5 bar.
@@ -72,7 +72,7 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 
 ## Tooling traps found 2026-11-11
 - Inside a Python script written through a shell heredoc, "\\n" puts a literal backslash-n into the target file (and `rstrip("\\n")` strips backslashes and the letter n). Use real "\n", or the Edit tool, and grep the diff for `\\n` before committing.
-- A `sed` line holding `$` and `${` (template strings) made the sandbox refuse the WHOLE command, including later steps, as an unverifiable removal. Make such edits with the Edit tool and run build and test commands as separate calls.
+- A `sed` line holding `$` and `${` (template strings) made the sandbox refuse the WHOLE command, including later steps, as an unverifiable removal, and a long heredoc mixed with shell edits can be blocked the same way. Make such edits with the Edit tool (write files with the file tools, run small scripts from files) and run build and test commands as separate calls.
 - When a fix is for a whole class of bug (raw dates, missing caveat), put the check for the class into the browser script; the raw-date check found five spots a manual pass missed.
 - A source whose unit is not stated anywhere reachable (per day or per week) is HELD, not shipped, even when its numbers are internally consistent; a self-check proves consistency, not meaning.
 - Browser scripts go stale silently when the UI is restyled (the old terminal scripts expected old nav labels, an AI panel and a toolbar button, and had not been run for days). Run the Signal browser script (`node e2e/signal.e2e.cjs` in `mobile`, all scenarios) after any UI change; it starts its own backend and database for each scenario.
