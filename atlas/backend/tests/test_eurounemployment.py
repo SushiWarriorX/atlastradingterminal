@@ -83,7 +83,7 @@ def test_latest_headline_groups_persons_range_and_checks_by_hand():
     assert s["range"] == {"months": 120, "lowest": {"pct": 6.2, "month": "2024-10"}, "highest": {"pct": 9.9, "month": "2016-10"}, "share_lower_pct": 28}      # 2016-10 to 2026-09; 9.9 in 2016-10 and 2016-11 (the earlier month); 33 of 120 months under 6.6
     assert s["detail"] == {"months_checked": 24, "largest_sum_gap_thousands": 0.1, "largest_labour_force_gap_pct": 1.37, "largest_labour_force_gap_month": "2025-12"}      # 0.1 thousand rounding; -1.366% in 2025-12
     assert all(s["checks"].values()) and s["source"].startswith("Eurostat") and s["url"] == "https://data-api.ecb.europa.eu/service/data/LFSI/M.I9.S.UNEHRT.TOTAL0.15_74.T"
-    assert "fixed composition" in s["note"] and "not a market signal or a forecast" in s["note"] and "not that the figures are right" in s["note"]
+    assert "fixed composition" in s["note"] and "not a market signal or a forecast" in s["note"] and "Plain checks: the units are the ones assumed" in s["note"]
 
 
 def test_the_newest_month_is_provisional_only_when_the_source_says_so():

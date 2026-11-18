@@ -202,8 +202,7 @@ def summarize(rates: dict, rate_units: dict, indices: dict, index_units: dict, w
                      "The basket splits into five parts that together make up all of it; each has a share of the basket for the year and an annual rate; core is the all-items index without energy, food, alcohol and tobacco. "
                      "The newest month is Eurostat's early (flash) estimate until the final figure replaces it, about two weeks after the month ends. "
                      "Points of the headline are the share times the rate, an approximation shown only when it agrees with the headline within 0.3 points. "
-                     "Checked: the units are the ones assumed, no month is missing, no rate or index is outside what the real record allows, the headline lies between the rates of its five parts and core between the goods and the services, "
-                     "and two checks that are Eurostat's own arithmetic (the all-items index follows from the parts' indices and weights, and each published rate matches its index), which show the series belong together, not that the figures are right. "
+                     "Plain checks: the units are the ones assumed, no month is missing and no rate or index is outside what the real record allows; the properties and Eurostat's own sums that held are in the Check line. "
                      "This describes what already happened: it is not a market signal or a forecast.")}
 
 

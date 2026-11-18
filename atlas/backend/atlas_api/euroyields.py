@@ -184,8 +184,7 @@ def summarize(v: dict, units: dict, status: dict[str, str], today: date) -> dict
             "checks": {"units_ok": True, "days_in_a_row": True, "range_ok": True, "daily_move_ok": True, "parameters_in_range_ok": True, "spreads_are_differences_ok": True, "rates_follow_the_curve_ok": True},
             "note": ("The ECB fits a Svensson curve to the prices of AAA-rated euro-area government bonds every business day and publishes the spot rates read off it (zero-coupon rates, continuous compounding), the six numbers that describe the curve and the spreads between the 10-year and shorter spot rates. "
                      "It is a fitted curve, not a market quote, for the euro area with its changing composition. A day arrives one business day later. "
-                     "Checked: the units are the ones assumed, no hole of more than 8 days, every rate and spread inside its range and moving by no more than the real record allows (plain checks), "
-                     "and two checks that are the ECB's own arithmetic (the three spreads equal the 10-year rate minus the shorter one on each of the last 520 days, and on the newest day each rate equals the curve evaluated with the published parameters), which show the series belong together, not that the figures are right. "
+                     "Plain checks: the units are the ones assumed and no hole is longer than 8 days; the ranges and the ECB's own sums that held are in the Check line. "
                      "This describes yields that already happened: it is not a market signal or a forecast.")}
 
 

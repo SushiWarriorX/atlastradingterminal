@@ -128,7 +128,7 @@ def test_the_real_latest_growth_amounts_parts_ten_year_comparison_recent_months_
     assert r["detail"] == {"months_checked": 36, "sums_checked": 144, "growth_months_checked": 24, "largest_growth_gap_points": -0.0111, "largest_growth_gap_month": "2026-09", "largest_growth_gap_series": "loans to firms of up to one year"}
     assert r["checks"] == {"units_ok": True, "months_in_a_row": True, "range_ok": True, "monthly_move_ok": True, "growth_range_ok": True, "sums_ok": True, "growth_follows_the_flows_ok": True}
     assert r["source"].startswith("European Central Bank") and r["url"] == "https://data-api.ecb.europa.eu/service/data/BSI/M.U2.Y.U.A20T.A.I.U2.2240.Z01.A"
-    assert "not a market signal or a forecast" in r["note"] and "(firms) and to households, adjusted for loan sales and securitisation (a loan a bank sells on or packages into a security stays in the figure" in r["note"] and "last 36 months" in r["note"] and "within 0.0625 points, in each of the last 24 months" in r["note"] and "provisional and is revised later" in r["note"]
+    assert "not a market signal or a forecast" in r["note"] and "(firms) and to households, adjusted for loan sales and securitisation (a loan a bank sells on or packages into a security stays in the figure" in r["note"] and "Plain checks: the units are the ones assumed and no month is missing" in r["note"] and "provisional and is revised later" in r["note"]
 
 
 def test_the_real_record_by_plain_python_outside_the_module():

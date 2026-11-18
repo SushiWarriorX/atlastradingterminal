@@ -178,8 +178,7 @@ def summarize(rates: dict, rate_units: dict, levels: dict, level_units: dict, st
             "checks": {"units_ok": True, "months_in_a_row": True, "range_ok": True, "monthly_move_ok": True, "total_between_sexes_ok": True, "total_between_ages_ok": True, "persons_add_up_ok": True, "labour_force_agrees_ok": True},
             "note": ("The figures come from the European Labour Force Survey and are compiled by Eurostat; the ECB Data Portal republishes them. The rate is the share of the labour force (people who work or look for work) that is unemployed. "
                      "They are for the euro area of 20 countries with a fixed composition (countries that joined later are not in it), seasonally adjusted, ages 15 to 74 unless the card says otherwise; persons are in thousands. "
-                     "Checked: the units are the ones assumed, no month is missing, no rate or number is outside what the real record allows, the rate for everybody lies between the rates of women and men and between those of the under 25 and the 25 to 74 (not Eurostat's own sums), "
-                     "and three checks that are Eurostat's own arithmetic (the persons of the parts add up to everybody's, for sex and for age, and the labour force implied by the parts agrees with the one implied for everybody), which show the series belong together, not that the figures are right. "
+                     "Plain checks: the units are the ones assumed, no month is missing and no rate or number is outside what the real record allows; the properties and Eurostat's own sums that held are in the Check line. "
                      "This describes what already happened: it is not a market signal or a forecast.")}
 
 

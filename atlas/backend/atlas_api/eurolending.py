@@ -215,8 +215,7 @@ def summarize(v: dict, units: dict, status: dict[str, str], today: date) -> dict
             "note": ("The ECB's own measure of bank lending: loans of euro-area monetary financial institutions to non-financial corporations (firms) and to households, adjusted for loan sales and securitisation (a loan a bank sells on or packages into a security stays in the figure, so a sale does not look like a repayment), seasonally and working-day adjusted, for the euro area as it was at the time (an amount jumps when a country joins; the growth rates are built to ignore that). "
                      "Amounts are outstanding at the end of the month, in euro; the flow is the month's net new lending (transactions, which leave out write-offs and revaluations); the annual growth is the ECB's own rate, calculated from an index of notional stocks. "
                      "Households are split by purpose and firms by how long the loan runs. The newest month is provisional and is revised later; each figure carries its month. "
-                     "Checked: the units are the ones assumed, no month is missing, no amount, monthly change or growth rate is outside what the real record allows (plain checks), and two checks that are the source's own arithmetic held in each of the last 36 months: the parts add up to the totals, for the amounts and for the flows (to the million euro), "
-                     "and the published annual growth equals the growth rebuilt from the monthly flows and amounts (to within 0.0625 points, in each of the last 24 months). The ECB builds the totals and its growth rates that way, so these show the series belong together, not that the figures are right. "
+                     "Plain checks: the units are the ones assumed and no month is missing; the ranges, the sums and the growth rebuilt from the flows are in the Check line. "
                      "This describes what already happened: it is not a market signal or a forecast.")}
 
 

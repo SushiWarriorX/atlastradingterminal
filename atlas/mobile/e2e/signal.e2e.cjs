@@ -982,7 +982,7 @@ async function healthy(browser) {
         match(emBody, /M2, €\d{1,2}\.\d{2} trillion, (growing|shrinking) \d{1,2}\.\d% a year\. M1, €\d{1,2}\.\d{2} trillion, (growing|shrinking) \d{1,2}\.\d% a year\./, "M2 and M1");
         match(emBody, /M3 is made of: currency and overnight deposits, \d{1,2}\.\d%; deposits with an agreed maturity of up to two years, \d{1,2}\.\d%; deposits redeemable at notice of up to three months, \d{1,2}\.\d%; repurchase agreements, money market fund shares and debt securities of up to two years, \d{1,2}\.\d%\./, "what M3 is made of");
         match(emBody, /Check: in each of the last \d{2} months, M1, M2 and M3 equal the sums of their parts to the million euro/, "the sums check is shown"); match(emBody, /not that they are right/);
-        match(emBody, /Checked: the units are the ones assumed/); match(emBody, /not a market signal or a forecast/); match(emBody, /provisional and is revised later/);
+        match(emBody, /Plain checks: the units are the ones assumed/); match(emBody, /not a market signal or a forecast/); match(emBody, /provisional and is revised later/);
         noMatch(emBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
       }
       await page.locator(V("euromoney-card")).scrollIntoViewIfNeeded().catch(() => undefined);

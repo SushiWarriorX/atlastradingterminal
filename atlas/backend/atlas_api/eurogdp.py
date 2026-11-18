@@ -211,8 +211,7 @@ def summarize(v: dict, units: dict, status: dict[str, str], today: date) -> dict
             "note": ("Eurostat's quarterly national accounts for the euro area of 21 countries (a fixed composition as of 1 January 2026), seasonally and calendar adjusted, published on the ECB Data Portal. "
                      "Real GDP growth (chain-linked volumes) is the ECB's own calculation from Eurostat's real GDP level and comes out about 45 days after a quarter ends; the figures at current prices (billions of euro for the quarter, not annualised) and the contributions to growth come with the full breakdown about 65 days after, so they are usually one quarter behind. "
                      "The ECB keeps a separate series for each composition of the euro area, and the one for 20 countries stopped at Q1 2026, which is why this card reads the 21-country one. Earlier quarters are revised. "
-                     "Checked: the units are the ones assumed, no quarter missing, every figure inside its range and nominal GDP moving by no more than 15% in a quarter (plain checks), the growth rates following from the real level (calculated by the ECB), "
-                     "and two checks that are the source's own arithmetic (nominal GDP equals domestic demand plus exports minus imports, and the contributions of domestic demand, exports and imports add up to real GDP growth, in each of the last 45 quarters), which show the series belong together, not that the figures are right. "
+                     "Plain checks: the units are the ones assumed and no quarter is missing; the ranges and the source's own sums that held are in the Check line. "
                      "This describes growth that already happened: it is not a market signal or a forecast.")}
 
 

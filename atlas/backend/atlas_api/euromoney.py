@@ -182,7 +182,7 @@ def summarize(stocks: dict[str, dict[date, float]], growth: dict[str, dict[date,
                      "Amounts are outstanding at the end of the month, in euro, adjusted for working days and the season, for the euro area as it was at the time (an amount jumps when a country joins). "
                      "The growth rates are the ECB's own annual rates, calculated from an index of notional stocks, so they can differ a little from the growth of the amounts shown. "
                      "The newest month is provisional and is revised later; each figure carries its month. "
-                     "Checked: the units are the ones assumed, no month is missing, no amount or growth rate is outside what the real record allows, M1, M2 and M3 equal the sums of their parts to the million euro (the ECB builds them that way, so this shows the series belong together, not that they are right), and the published growth stays within 4 points of the growth of the amounts. "
+                     "Plain checks: the units are the ones assumed, no month is missing and no amount or growth rate is outside what the real record allows; the sums and the growth comparison are in the Check line. "
                      "This describes what already happened: it is not a market signal or a forecast.")}
 
 

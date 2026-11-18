@@ -156,8 +156,7 @@ def summarize(index: dict, index_unit: dict, parts: dict, parts_units: dict, sta
             "note": ("The ECB builds this index between 0 and 1 from five market segments (the bond market, the equity market, financial intermediaries, the foreign exchange market and the money market); a higher value means more stress. "
                      "The ECB also publishes how much each segment contributes and the contribution of the correlation between the segments, which has been negative on every day since 1999: the index is the five contributions plus that term. "
                      "The area is the euro area with its changing composition; a day arrives one business day later; the ECB's older CISS series ends on 2 May 2025 and is not used. "
-                     "Checked: the units are the ones assumed, no hole of more than 5 days, the index lies between 0 and 1 and moves by no more than 0.25 in a day, each segment contributes between 0 and 1 and the correlation term lies between -1 and 0 (properties, not the ECB's own sum), "
-                     "and one check that is the ECB's own arithmetic (the six contributions add up to the index), which shows the series belong together, not that the figures are right. "
+                     "Plain checks: the units are the ones assumed and no hole is longer than 5 days; the ranges, the properties and the ECB's own sum that held are in the Check line. "
                      "This describes stress that already happened: it is not a market signal or a forecast.")}
 
 

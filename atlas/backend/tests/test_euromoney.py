@@ -81,7 +81,7 @@ def test_latest_amounts_growth_makeup_range_and_checks_by_hand():
     assert s["growth_range"] == {"months": 120, "lowest": {"pct": -1.3, "month": "2023-08"}, "highest": {"pct": 12.5, "month": "2021-01"}, "share_lower_pct": 31}       # 2016-10 to 2026-09; 37 of the 120 months grew slower than 3.504%
     assert s["detail"] == {"months_checked": 24, "sums_checked": 96, "largest_gap_points": 0.78, "largest_gap_month": "2026-09"}      # 4.285% for the amounts over the year against the published 3.504%
     assert all(s["checks"].values()) and s["source"].startswith("European Central Bank") and s["url"] == "https://data-api.ecb.europa.eu/service/data/BSI/M.U2.Y.V.M30.X.1.U2.2300.Z01.E"
-    assert "not a market signal or a forecast" in s["note"] and "provisional" in s["note"] and "not that they are right" in s["note"]
+    assert "not a market signal or a forecast" in s["note"] and "provisional" in s["note"] and "Plain checks: the units are the ones assumed" in s["note"]
 
 
 def test_the_newest_month_is_provisional_only_when_the_ecb_says_so():

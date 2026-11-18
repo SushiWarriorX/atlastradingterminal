@@ -145,7 +145,7 @@ def test_the_real_latest_rates_changes_volumes_ten_year_ranges_recent_months_and
                            "largest_rate_gap_points": 0.009, "largest_rate_gap_month": "2026-06", "largest_rate_gap_series": "household term deposits"}
     assert r["checks"] == {"units_ok": True, "months_in_a_row": True, "range_ok": True, "monthly_move_ok": True, "volume_sums_ok": True, "rates_follow_the_volumes_ok": True, "cost_of_borrowing_ok": True}
     assert r["source"].startswith("European Central Bank") and r["url"] == "https://data-api.ecb.europa.eu/service/data/MIR/M.U2.B.A2I.AM.R.A.2240.EUR.N"
-    assert "not a market signal or a forecast" in r["note"] and "NEW loans and pay on NEW deposits" in r["note"] and "last 36 months" in r["note"] and "(the rate identity in the last 24)" in r["note"] and "to 0.016 million euro" in r["note"] and "to 0.016 points" in r["note"] and "within one point" in r["note"] and "The newest month is provisional and is revised later" in r["note"]
+    assert "not a market signal or a forecast" in r["note"] and "NEW loans and pay on NEW deposits" in r["note"] and "Plain checks: the units are the ones assumed and no month is missing" in r["note"] and "The newest month is provisional and is revised later" in r["note"]
 
 
 def test_the_real_record_by_plain_python_outside_the_module():

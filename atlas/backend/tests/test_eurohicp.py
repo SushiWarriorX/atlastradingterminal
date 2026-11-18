@@ -114,7 +114,7 @@ def test_latest_headline_parts_contributions_range_and_checks_by_hand():
     assert s["range"] == {"months": 120, "lowest": {"pct": -0.3, "month": "2020-09"}, "highest": {"pct": 10.6, "month": "2022-10"}, "share_lower_pct": 79}      # 2016-11 to 2026-10; 95 of the 120 months were under 4.0
     assert s["detail"] == {"months_checked": 24, "largest_rate_gap_points": 0.05, "largest_index_gap": 0.009, "largest_index_gap_month": "2025-11"}    # 0.0500 for processed food in 2026-05; 0.00897 index points in 2025-11
     assert all(s["checks"].values()) and s["source"].startswith("Eurostat") and s["url"] == "https://data-api.ecb.europa.eu/service/data/HICP/M.U2.N.000000.4D0.ANR"
-    assert "not a market signal or a forecast" in s["note"] and "flash" in s["note"] and "not that the figures are right" in s["note"]
+    assert "not a market signal or a forecast" in s["note"] and "flash" in s["note"] and "Plain checks: the units are the ones assumed" in s["note"]
 
 
 def test_the_newest_month_is_an_estimate_only_when_the_source_says_so():

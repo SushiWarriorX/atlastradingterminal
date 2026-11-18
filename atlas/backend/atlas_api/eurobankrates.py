@@ -232,10 +232,8 @@ def summarize(v: dict, units: dict, status: dict[str, str], today: date) -> dict
             "note": ("The interest rates that euro-area banks (monetary financial institutions) charge on NEW loans and pay on NEW deposits: the loans and deposits agreed or renegotiated in the month, not the stock outstanding, so the rates follow the central bank's rates within a few months. "
                      "Rates are annualised agreed rates in percent a year, averaged over the euro area as it was at the time; the volume is the amount of that new business in the month, in euro. Two composite indicators, the ECB's cost of borrowing for firms and for house purchase, weight the rates on loans with different periods of fixed interest by a moving average of their volumes. "
                      "The newest month is provisional and is revised later; each figure carries its month. "
-                     "Checked: the units are the ones assumed, no month is missing, no rate, volume or monthly move is outside what the real record allows (plain checks), and three checks held in each of the last 36 months (the rate identity in the last 24): "
-                     "for six kinds of new business the volume of all of it equals the volume with a floating rate or up to one year of fixed interest plus the volume fixed for over one year (to 0.016 million euro); the rate on all of it equals the average of the two parts' rates weighted by their volumes (to 0.016 points); "
-                     "and each composite lies within one point of the rate on all new loans of the same borrowers. The first two are the ECB's own arithmetic, so they show that the series belong together, not that the figures are right; the third is a loose bound. "
-                     "The four overnight and composite rates have no identity of their own to check. This describes what already happened: it is not a market signal or a forecast.")}
+                     "Plain checks: the units are the ones assumed and no month is missing; the ranges, the volume sums, the weighted-average identity and the bound on the composites are in the Check line. "
+                     "This describes what already happened: it is not a market signal or a forecast.")}
 
 
 class EuroBankRates:
