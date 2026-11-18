@@ -1,0 +1,1 @@
+{"account": "three_down-e7923e48", "after_candle": "2026-11-17T00:00:00Z", "event": "account_opened", "family": "three_down", "params": {"streak": 2}, "recorded_at": "2026-11-18T00:17:18Z", "seq": 1, "spec_hash": "e7923e4837b6f257", "stage": "monitor", "start_equity": 10000.0}

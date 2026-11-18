@@ -1,19 +1,19 @@
 {
   "1d": {
-    "added": 2,
-    "count": 2877,
+    "added": 1,
+    "count": 2878,
     "fatal": [],
-    "fetched_at": "2026-11-17T04:18:54Z",
+    "fetched_at": "2026-11-18T00:17:17Z",
     "first": "2019-01-01T00:00:00Z",
     "flags": [],
     "gap_count": 0,
     "gaps": [],
     "interval_seconds": 86400,
-    "last": "2026-11-16T00:00:00Z",
+    "last": "2026-11-17T00:00:00Z",
     "notes": [],
     "product": "BTC-USD",
     "provider": "coinbase",
-    "sha256": "b4c1003086af7178942c9693bffa8934d10f6a6c40aa4365eb131e900d4d6805"
+    "sha256": "fb62274e1b52eeb5583a49f62e0f9deabb0dc0429f9fbb176bdcbeaef9c83db8"
   },
   "1h": {
     "added": 1,
