@@ -173,7 +173,7 @@ def test_reorder_must_be_a_permutation_of_the_saved_assets(tmp_path):
 def test_watchlist_size_limit(tmp_path):
     st = WatchlistStore(DB(str(tmp_path / "w.db")))
     for i in range(MAX_ITEMS):
-        st.add(A._stock("EQUITY", "NASDAQ", f"T{i}"[:5].replace("T", "TT") if False else f"A{chr(65 + i // 26)}{chr(65 + i % 26)}", None, "supported"))
+        st.add(A._stock("EQUITY", "NASDAQ", f"A{chr(65 + i // 26)}{chr(65 + i % 26)}", None, "supported"))
     with pytest.raises(WatchlistError) as e:
         st.add(A.describe("EQUITY:NASDAQ:AAPL"))
     assert e.value.code == "WATCHLIST_FULL" and len(st.ids()) == MAX_ITEMS

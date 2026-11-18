@@ -479,6 +479,13 @@ export interface EuroGdpData { available: boolean; reason?: string; demo: boolea
   window?: { quarters: number; from: string; years: number; median: number; lowest: { value: number; quarter: string }; highest: { value: number; quarter: string }; share_lower_pct: number } | null;
   breakdown?: { quarter: string; gdp: number; domestic_demand: number; exports: number; imports: number; net_trade: number; growth: number; contributions: { domestic_demand: number; exports: number; imports: number; net_trade: number } };
   detail?: { quarters_checked: number; contribution_quarters_checked: number; largest_growth_gap: number; largest_nominal_gap: number; largest_contribution_gap: number } }
+export interface EuroLendingPart { id: string; label: string; amount_millions: number; flow_millions: number; growth_pct: number; growth_year_earlier_pct: number; share_pct?: number }
+export interface EuroLendingWindow { months: number; lowest: { pct: number; month: string }; highest: { pct: number; month: string }; share_lower_pct: number }
+export interface EuroLendingGroup extends EuroLendingPart { parts: EuroLendingPart[]; window: EuroLendingWindow | null }
+export interface EuroLendingData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
+  firms?: EuroLendingGroup; households?: EuroLendingGroup;
+  recent?: { date: string; month: string; firms_growth_pct: number; households_growth_pct: number }[];
+  detail?: { months_checked: number; sums_checked: number; growth_months_checked: number; largest_growth_gap_points: number; largest_growth_gap_month: string | null; largest_growth_gap_series: string | null } }
 export interface EuroYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
   rates?: EuroYieldRate[]; spreads?: EuroYieldSpread[];
   window?: { days: number; from: string; years: number; median: number; lowest: { value: number; date: string }; highest: { value: number; date: string }; share_lower_pct: number } | null;

@@ -988,6 +988,35 @@ async function healthy(browser) {
       await page.locator(V("euromoney-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07z-euromoney");
 
+      await page.waitForSelector(V("eurolending-card"));
+      await page.waitForSelector(V("eurolending-body") + ", " + V("eurolending-unavailable") + ", " + V("eurolending-error"), { timeout: 60000 });
+      const elTxt = await text(page);
+      match(elTxt, /Euro-area bank lending/); match(elTxt, /European Central Bank/); noMatch(elTxt, FORECASTS, "the euro bank lending card makes no forecasts");
+      if (await liveCard(page, "eurolending-body")) {
+        const elBody = await inner(page, "eurolending-body");
+        const LMONTH = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        const LGROW = "(?:grew \\d{1,2}\\.\\d{2}%|shrank \\d{1,2}\\.\\d{2}%|was unchanged)";
+        const LS = "[+-]?\\d{1,2}\\.\\d{2}%";
+        const LR = "(?:growing \\d{1,2}\\.\\d{2}% a year|shrinking \\d{1,2}\\.\\d{2}% a year|not growing)";
+        const LS1 = "[+-]?\\d{1,2}\\.\\d%";                                                                                  // the ten-year extremes come with one decimal
+        const LRANGE = (who) => new RegExp(`${who}: over the past 10 years \\(\\d{2,3} months\\) the annual growth ran from ${LS1} \\(${LMONTH}\\) to ${LS1} \\(${LMONTH}\\); \\d{1,3}% of those months were slower than now\\.`);
+        const LROW = (label, of) => `${label}: €\\d{1,2}\\.\\d{2} trillion, \\d{1,2}\\.\\d% of ${of}, ${LR}\\.`;
+        match(elBody, new RegExp(`Loans of euro-area banks to firms ${LGROW} over the twelve months to ${LMONTH}, against ${LS} over the twelve months to ${LMONTH}; loans to households ${LGROW}, against ${LS}\\.`), "the growth of loans to firms and to households against a year earlier");
+        match(elBody, LRANGE("Loans to firms"), "the ten-year range of the growth of loans to firms"); match(elBody, LRANGE("Loans to households"), "the ten-year range of the growth of loans to households");
+        match(elBody, new RegExp(`At the end of ${LMONTH} euro-area banks had lent €\\d{1,2}\\.\\d{2} trillion to firms \\(net (?:new lending|repayments) of €[\\d,]+\\.\\d billion in the month\\) and €\\d{1,2}\\.\\d{2} trillion to households \\(net (?:new lending|repayments) of €[\\d,]+\\.\\d billion in the month\\)\\.`), "the amounts lent and the month's net lending");
+        match(await inner(page, "eurolending-households"), new RegExp(`^${LROW("Lending to households for house purchase", "household loans")}\\s*${LROW("Consumer credit", "household loans")}\\s*${LROW("Other lending to households", "household loans")}$`), "the three purposes of household loans");
+        match(await inner(page, "eurolending-firms"), new RegExp(`^${LROW("Loans to firms of up to one year", "loans to firms")}\\s*${LROW("Loans to firms of one to five years", "loans to firms")}\\s*${LROW("Loans to firms of over five years", "loans to firms")}$`), "the three maturities of loans to firms");
+        match(await inner(page, "eurolending-recent"), new RegExp(`^(?:${LMONTH}: firms ${LS}, households ${LS}\\s*){6}$`), "six months with their growth");
+        match(elBody, /Check: in each of the last 36 months every amount, every monthly change and every growth rate lay inside its range \(plain checks\)/, "the checks are shown");
+        match(elBody, /in each of the last 24 months the published annual growth equalled the growth rebuilt from the monthly flows and amounts to within 0\.0625 points/); match(elBody, /not that the figures are right/);
+        match(elBody, /adjusted for loan sales and securitisation/); match(elBody, /not a market signal or a forecast/); match(elBody, /provisional and is revised later/);
+        noMatch(elBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("eurolending-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);      // the top of a tall card, not its nearest edge
+      await shot(page, "07zf-eurolending-top");
+      await page.locator(V("eurolending-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);        // and its bottom: the note and the source link
+      await shot(page, "07zf-eurolending-bottom");
+
       await page.waitForSelector(V("euroinflation-card"));
       await page.waitForSelector(V("euroinflation-body") + ", " + V("euroinflation-unavailable") + ", " + V("euroinflation-error"), { timeout: 45000 });
       const eiTxt = await text(page);

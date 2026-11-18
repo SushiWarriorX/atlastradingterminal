@@ -356,6 +356,11 @@ export function useEuroGdp() {
   return useQuery({ queryKey: keys(baseUrl).euroGdp, queryFn: () => need(api).euroGdp(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
 }
 
+export function useEuroLending() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).euroLending, queryFn: () => need(api).euroLending(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
 export function useEuroYields() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).euroYields, queryFn: () => need(api).euroYields(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });

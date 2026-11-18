@@ -422,7 +422,7 @@ def test_trix_is_zero_on_a_flat_series_and_follows_acceleration():
     assert abs(ST.trix(pd.Series([50.0] * 80), 15).dropna()).max() == 0.0
     st = ST.S["trix_cross"]
     assert st.params == {"n": 15, "signal": 9}
-    c = np.concatenate([np.full(80, 100.0), 100 + np.arange(1, 81, dtype=float) ** 2 / 10, np.full(5, 740.0)[:0]])
+    c = np.concatenate([np.full(80, 100.0), 100 + np.arange(1, 81, dtype=float) ** 2 / 10])
     c = np.concatenate([c, c[-1] - np.arange(1, 121, dtype=float) * 5])
     d = pd.DataFrame({"o": c, "h": c, "l": c, "c": c})
     pos = st.build(d, st.params).to_numpy()
