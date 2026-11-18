@@ -361,6 +361,13 @@ export function useEuroLending() {
   return useQuery({ queryKey: keys(baseUrl).euroLending, queryFn: () => need(api).euroLending(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
 }
 
+export function useEuroBankRates() {
+  const { api, baseUrl } = useConnection();
+  const down = (q: { state: { data?: { available: boolean; demo: boolean } } }) => q.state.data?.available === false && !q.state.data.demo;      // the ECB's rates service is slow at times: an answer of "unavailable" is asked for again in a minute or two, not kept for six hours like a figure
+  return useQuery({ queryKey: keys(baseUrl).euroBankRates, queryFn: () => need(api).euroBankRates(), enabled: !!api, retry: 0,
+    staleTime: (q) => (down(q) ? 60_000 : 6 * 60 * 60_000), refetchInterval: (q) => (down(q) ? 120_000 : 12 * 60 * 60_000) });
+}
+
 export function useEuroYields() {
   const { api, baseUrl } = useConnection();
   return useQuery({ queryKey: keys(baseUrl).euroYields, queryFn: () => need(api).euroYields(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });

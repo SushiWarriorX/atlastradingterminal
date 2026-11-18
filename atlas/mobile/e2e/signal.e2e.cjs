@@ -1017,6 +1017,35 @@ async function healthy(browser) {
       await page.locator(V("eurolending-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);        // and its bottom: the note and the source link
       await shot(page, "07zf-eurolending-bottom");
 
+      await page.waitForSelector(V("eurobankrates-card"));
+      await page.waitForSelector(V("eurobankrates-body") + ", " + V("eurobankrates-unavailable") + ", " + V("eurobankrates-error"), { timeout: 110000 });         // the ECB's MIR service is slow when it has to compute: up to 90 s for one request
+      const ebTxt = await text(page);
+      match(ebTxt, /Euro-area bank interest rates/); match(ebTxt, /European Central Bank/); noMatch(ebTxt, FORECASTS, "the euro bank interest rates card makes no forecasts");
+      if (await liveCard(page, "eurobankrates-body")) {
+        const ebBody = await inner(page, "eurobankrates-body");
+        const BMONTH = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        const BP = "-?\\d{1,2}\\.\\d{2}%";                                                                                 // a rate may be below zero (firms' deposits were)
+        const BMOVE = (vs) => `(?:up \\d{1,2}\\.\\d{2} points on ${vs}|down \\d{1,2}\\.\\d{2} points on ${vs}|unchanged on ${vs})`;
+        const BVOL = (what) => ` ${what} in the month: €[\\d,]+\\.\\d billion\\.`;
+        const BROW = (label, extra = "") => `${label}: ${BP} a year, ${BMOVE("a month earlier")}, ${BMOVE("a year earlier")}\\.${extra}`;
+        const BRANGE = `\\s*Over the past 10 years \\(\\d{2,3} months\\) it ran from ${BP} \\(${BMONTH}\\) to ${BP} \\(${BMONTH}\\); \\d{1,3}% of those months were lower than now\\.`;
+        match(await inner(page, "eurobankrates-loans"), new RegExp(`^${BROW("Loans to firms", BVOL("New loans"))}\\s*${BROW("Loans for house purchase", BVOL("New loans"))}\\s*${BROW("Consumer credit", BVOL("New loans"))}\\s*${BROW("Other loans to households", BVOL("New loans"))}$`), "the four kinds of new loans");
+        match(await inner(page, "eurobankrates-costs"), new RegExp(`^${BROW("The ECB's cost of borrowing for firms")}${BRANGE}\\s*${BROW("The ECB's cost of borrowing for house purchase")}${BRANGE}$`), "the two composites with their ten-year ranges");
+        match(await inner(page, "eurobankrates-deposits"), new RegExp(`^${BROW("Household overnight deposits")}\\s*${BROW("Household term deposits", BVOL("New deposits"))}\\s*${BROW("Firms' overnight deposits")}\\s*${BROW("Firms' term deposits", BVOL("New deposits"))}$`), "the four kinds of new deposits");
+        match(await inner(page, "eurobankrates-recent"), new RegExp(`^(?:${BMONTH}: firms ${BP}, house purchase ${BP}\\s*){6}$`), "six months of the cost of borrowing");
+        match(ebBody, /Check: in each of the last 36 months every rate and volume lay inside its range, no loan, term-deposit or composite rate moved by more than 2 points in a month and no overnight deposit rate by more than 1 point \(plain checks\)/, "the plain checks are shown");
+        match(ebBody, /equalled the volume with a floating rate or up to one year of fixed interest plus the volume fixed for over one year, to 0\.016 million euro/, "the volume sums are shown");
+        match(ebBody, /in each of the last 24 months the rate on all of it equalled the average of the two parts' rates weighted by their volumes, to 0\.016 points/, "the weighted average identity is shown"); match(ebBody, /not that the figures are right/);
+        match(ebBody, /NEW loans and pay on NEW deposits/); match(ebBody, /not a market signal or a forecast/); match(ebBody, /provisional and is revised later/);
+        noMatch(ebBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("eurobankrates-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);      // the top of a tall card, not its nearest edge
+      await shot(page, "07zg-eurobankrates-top");
+      await page.locator(V("eurobankrates-deposits")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);   // the middle: the deposit rows and the monthly cost of borrowing
+      await shot(page, "07zg-eurobankrates-middle");
+      await page.locator(V("eurobankrates-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);        // and its bottom: the note and the source link
+      await shot(page, "07zg-eurobankrates-bottom");
+
       await page.waitForSelector(V("euroinflation-card"));
       await page.waitForSelector(V("euroinflation-body") + ", " + V("euroinflation-unavailable") + ", " + V("euroinflation-error"), { timeout: 45000 });
       const eiTxt = await text(page);

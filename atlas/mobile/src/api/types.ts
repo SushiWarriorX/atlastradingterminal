@@ -486,6 +486,13 @@ export interface EuroLendingData { available: boolean; reason?: string; demo: bo
   firms?: EuroLendingGroup; households?: EuroLendingGroup;
   recent?: { date: string; month: string; firms_growth_pct: number; households_growth_pct: number }[];
   detail?: { months_checked: number; sums_checked: number; growth_months_checked: number; largest_growth_gap_points: number; largest_growth_gap_month: string | null; largest_growth_gap_series: string | null } }
+export interface EuroBankRatesWindow { months: number; lowest: { pct: number; month: string }; highest: { pct: number; month: string }; share_lower_pct: number }
+export interface EuroBankRatesRow { id: string; label: string; rate_pct: number; change_month_points: number; change_year_points: number; volume_millions: number | null; window: EuroBankRatesWindow | null }
+export interface EuroBankRatesData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
+  loans?: EuroBankRatesRow[]; deposits?: EuroBankRatesRow[]; costs?: EuroBankRatesRow[];
+  recent?: { date: string; month: string; firms_cost_pct: number; house_cost_pct: number }[];
+  detail?: { months_checked: number; sums_checked: number; rate_months_checked: number; rates_checked: number; largest_sum_gap_millions: number; largest_sum_gap_month: string | null; largest_sum_gap_series: string | null;
+    largest_rate_gap_points: number; largest_rate_gap_month: string | null; largest_rate_gap_series: string | null } }
 export interface EuroYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
   rates?: EuroYieldRate[]; spreads?: EuroYieldSpread[];
   window?: { days: number; from: string; years: number; median: number; lowest: { value: number; date: string }; highest: { value: number; date: string }; share_lower_pct: number } | null;
