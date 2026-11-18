@@ -20,7 +20,7 @@ Why this exists: the power check of step 14e (`CALIBRATION.md`, "What the proced
 
 Request budget: 300 candles a request. All 141 requests above took about 31 seconds (about 4.5 a second, with a pause of 0.13 seconds between them) and none was rate-limited. Bringing ETH and SOL up to today would add about 3 requests each; the early hourly file is the only large download (120 requests).
 
-Not checked: any price against a second source (Binance, Bitstamp, Kraken and Bitfinex refuse this machine, `DATA_SOURCES.md`), so these are one exchange's candles; any other coin; anything after 2024-12-31 for ETH and SOL.
+Not checked: any price of the extra candles (Bitcoin 2015 to 2018, Ethereum, Solana, the early hourly file) against a second source (Binance, Bitstamp, Kraken and Bitfinex refuse this machine, `DATA_SOURCES.md`), so these are one exchange's candles; any other coin; anything after 2024-12-31 for ETH and SOL. **The stored daily Bitcoin file from 2020-08-19 on was checked against a second venue on 2026-11-18: section 5.**
 
 ## 2. How many trades the six schedules would get
 
@@ -65,10 +65,20 @@ The numbering follows `BUILD_PLAN.md` 14e: (1) lower the bar, (2) add data, whic
 
 **Recommendation.** Option (3) for the daily queue: no amount of the extra daily data makes these slow rules testable at realistic effect sizes, so another family of this kind would add to N and to the chance of a lucky admission while it can hardly add information. If the owner wants the search for a strategy to go on, option (2b) is the only direction with enough trades, and the first piece of work would be an hourly power tool (my estimate: about three strategy hours), before any family is written; I would not start it without the owner's say, because it is a change of scope (rules that trade many times a week, each trade small) and not a continuation of the queue.
 
+## 5. The stored daily Bitcoin candles against a second venue (2026-11-18 01:xx UTC, read-only)
+
+**Why.** Every test, paper account and ledger of `btcquant` rests on one file of Coinbase daily candles, and the list below said "no second source". Binance, Bitstamp, Kraken and Bitfinex refuse this machine; Hyperliquid's public API answers and serves the daily candles of its Bitcoin perpetual (`POST https://api.hyperliquid.xyz/info` with the body `{"type":"candleSnapshot","req":{"coin":"BTC","interval":"1d","startTime":<ms>,"endTime":<ms>}}`, no key: HTTP 200 in 0.7 to 1.0 s; 501 candles from 2020-08-19 to 2021-12-31 and 1,783 from 2022-01-01; its days also start at 00:00 UTC).
+
+**What was compared.** The 2,282 days present in both, 2020-08-19 to 2026-11-17 (today's unfinished candle left out): no day is missing on either side. Nothing about any strategy was computed, only the two venues' prices.
+
+**Result.** Closes: the median difference is 0.055%, 95% of the days are within 0.155% and 99% within 0.272%; the largest is 1.058% (2023-03-12, the USDC depeg and the bank failures); only three days differ by more than 0.5% (2023-03-12 at 1.058%, 2023-03-11 at 0.832%, 2020-10-27 at 0.502%) and none by 2% or more. By period: 2020-08-19 to 2022-12-31 median 0.060% (largest 0.502%), 2023 to 2024 median 0.054% (largest 1.058%), 2025 on median 0.049% (largest 0.272%). Daily close-to-close returns: correlation 0.99976 over 2,281 pairs, the median difference 0.031 percentage points (largest 0.70, on 2023-03-13), the same sign on 2,259 of them. Every stored candle's high and low contain its open and close (all 2,878). **Highs and lows differ more** (compared from 2022-01-01 only): the largest are a low 11.5% lower at Hyperliquid on 2023-04-19, 5.8% lower on 2025-10-10 and 5.1% higher on 2022-05-12, and a high 4.3% higher on 2023-10-23. These look like the perpetual's own wicks (the stored lows are in line with the move of the closes), which was not examined further. The system uses opens and closes for its signals and fills, and a low only to test a protective stop.
+
+**What it does not show.** A perpetual is not spot (its price carries a basis and funding, which is why the median difference is 0.05% and not 0). Two venues cannot prove each other right, only that no single bad candle in the overlap is large enough to make a phantom signal, since the rules' thresholds are percent-sized. The 597 days from 2019-01-01 to 2020-08-18, the hourly file and the extra 14f candles have no second source here. The check was made once, by hand; it is not part of the daily run (a small tool with tests is in the `LOOP.md` backlog). Hyperliquid's own terms were not read.
+
 ## What was not verified
 
 - The square-root rule of section 3 (the power study measured the premiums at 21 to 261 trades only; the extrapolation to hundreds of trades is a rule of thumb).
-- That the extra Coinbase candles are right: one exchange, no second source; early candles come from a thin market.
+- That the extra Coinbase candles are right: one exchange, no second source; early candles come from a thin market. (The stored daily file from 2020-08-19 has one: section 5.)
 - The independence of the extra assets' trades (the correlations and overlaps above say it is partial, nothing more).
 - Any rule's returns on any of this data: none was computed.
 
