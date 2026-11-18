@@ -469,6 +469,13 @@ export interface EuroInflationData { available: boolean; reason?: string; demo: 
   range?: { months: number; lowest: { pct: number; month: string }; highest: { pct: number; month: string }; share_lower_pct: number } | null;
   detail?: { months_checked: number; largest_rate_gap_points: number; largest_index_gap: number; largest_index_gap_month: string | null };
   history?: { date: string; rate_pct: number }[] }
+export interface EuroYieldBefore { date: string; value: number; change: number }
+export interface EuroYieldRate { id: string; label: string; years: number; rate_pct: number; week_ago: EuroYieldBefore | null; month_ago: EuroYieldBefore | null }
+export interface EuroYieldSpread { id: string; label: string; points: number }
+export interface EuroYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
+  rates?: EuroYieldRate[]; spreads?: EuroYieldSpread[];
+  window?: { days: number; from: string; years: number; median: number; lowest: { value: number; date: string }; highest: { value: number; date: string }; share_lower_pct: number } | null;
+  detail?: { days_checked: number; rate_days_checked: number; largest_spread_gap: number; largest_curve_gap: number } }
 export interface EuroStressSegment { id: string; label: string; contribution: number }
 export interface EuroStressBefore { date: string; value: number; change: number }
 export interface EuroStressData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;

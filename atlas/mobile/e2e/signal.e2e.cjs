@@ -1051,6 +1051,30 @@ async function healthy(browser) {
       await page.locator(V("eurostress-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);           // and its bottom: the note and the source link
       await shot(page, "07zc-eurostress-bottom");
 
+      await page.waitForSelector(V("euroyields-card"));
+      await page.waitForSelector(V("euroyields-body") + ", " + V("euroyields-unavailable") + ", " + V("euroyields-error"), { timeout: 45000 });
+      const eyTxt = await text(page);
+      match(eyTxt, /Euro-area government bond yields/); match(eyTxt, /European Central Bank/); noMatch(eyTxt, FORECASTS, "the euro yields card makes no forecasts");
+      if (await liveCard(page, "euroyields-body")) {
+        const eyBody = await inner(page, "euroyields-body");
+        const EYD = "[A-Z][a-z]{2} \\d{1,2}, 20\\d\\d";
+        const EYP = "-?\\d{1,2}\\.\\d{2}%";
+        match(eyBody, new RegExp(`On ${EYD} the ECB's curve for AAA-rated euro-area government bonds gave ${EYP} for 10 years, ${EYP} for 2 years and ${EYP} for 3 months \\(spot rates\\)\\.`), "the 10-year, 2-year and 3-month rates with their day");
+        match(eyBody, new RegExp(`Over the past 10 years \\(\\d,\\d{3} days\\) the 10-year rate was lower than now on \\d{1,3}% of the days; the middle day was ${EYP}, the lowest ${EYP} \\(${EYD}\\) and the highest ${EYP} \\(${EYD}\\)\\.`), "the ten-year comparison");
+        for (const [id, label] of Object.entries({ SR_3M: "3 months", SR_1Y: "1 year", SR_2Y: "2 years", SR_5Y: "5 years", SR_10Y: "10 years", SR_30Y: "30 years" })) {
+          match((await inner(page, `euroyields-rate-${id}`)).trim(), new RegExp(`^${label}: ${EYP} \\(((up|down) \\d\\.\\d{2}|unchanged) on a week ago, ((up|down) \\d\\.\\d{2}|unchanged) on a month ago\\)$`), `the ${label} line has its rate and its changes`);
+        }
+        match(eyBody, /10 years minus 3 months: -?\d\.\d{2} points; minus 1 year: -?\d\.\d{2}; minus 2 years: -?\d\.\d{2}\./, "the ECB's own spreads are shown");
+        match(eyBody, /Check: in each of the last \d,\d{3} days the 10-year rate, and in each of the last 520 days every other rate and spread/, "the checks are shown");
+        match(eyBody, /largest gap within 0\.000001/); match(eyBody, /not that the figures are right/);
+        match(eyBody, /fitted curve, not a market quote/); match(eyBody, /not a market signal or a forecast/);
+        noMatch(eyBody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("euroyields-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);      // the top of a tall card, not its nearest edge
+      await shot(page, "07zd-euroyields-top");
+      await page.locator(V("euroyields-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);           // and its bottom: the note and the source link
+      await shot(page, "07zd-euroyields-bottom");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);
