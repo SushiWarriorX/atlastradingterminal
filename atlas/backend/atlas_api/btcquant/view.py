@@ -224,6 +224,59 @@ def backtest_block(verdict: dict | None, curve: dict | None) -> dict | None:
     return {**v, "run": None if curve is None else {k: curve[k] for k in ("return", "max_drawdown", "trades", "breaker_trips", "sharpe")}, "curve": None if curve is None else curve["curve"]}
 
 
+QUESTION_FILE = "owner_question.json"
+QUESTION_KEYS = ("asked_on", "title", "paragraphs", "options", "how_to_answer")
+OPTION_KEYS = ("id", "text", "recommended")
+
+
+def _text(v, most: int) -> bool:
+    return isinstance(v, str) and bool(v.strip()) and len(v) <= most
+
+
+def _date_ok(v) -> bool:
+    if not (isinstance(v, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", v)):
+        return False
+    try:
+        datetime.strptime(v, "%Y-%m-%d")
+    except ValueError:
+        return False
+    return True
+
+
+def question(root: Path | None = None) -> tuple[dict | None, str | None]:
+    """The question the loop is waiting for the owner to answer, written in `owner_question.json` next to the dashboard: a title, a few plain paragraphs, the options (at most one marked as recommended) and how to answer, which is to say it in the chat. Text only: nothing in the app can answer it.
+    Returns (the question, None); (None, None) when there is no file, which is the normal case once the owner has answered and the file is deleted; or (None, one plain sentence) when the file is there and cannot be used, so that a typo never shows half a card and is never silent either."""
+    path = (Path(root) if root is not None else C.ROOT) / QUESTION_FILE
+
+    def bad(what: str) -> tuple[None, str]:
+        return None, f"{QUESTION_FILE}: {what}, so the question is not shown."
+
+    if not path.exists():
+        return None, None
+    try:
+        q = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None, f"{QUESTION_FILE} cannot be read as JSON, so the question is not shown."
+    if not isinstance(q, dict):
+        return bad("it must hold one JSON object")
+    if set(q) != set(QUESTION_KEYS):
+        return bad("it must have exactly the keys asked_on, title, paragraphs, options and how_to_answer")
+    if not _date_ok(q["asked_on"]):
+        return bad("asked_on must be a date like 2026-11-17")
+    if not _text(q["title"], 90):
+        return bad("the title must be 1 to 90 characters")
+    paragraphs = q["paragraphs"]
+    if not (isinstance(paragraphs, list) and 1 <= len(paragraphs) <= 4 and all(_text(x, 600) for x in paragraphs)):
+        return bad("paragraphs must be 1 to 4 texts of 1 to 600 characters")
+    options = q["options"]
+    if not (isinstance(options, list) and 2 <= len(options) <= 4 and all(isinstance(o, dict) and set(o) == set(OPTION_KEYS) and _text(o["id"], 3) and _text(o["text"], 400) and isinstance(o["recommended"], bool) for o in options)
+            and len({o["id"] for o in options}) == len(options) and sum(o["recommended"] for o in options) <= 1):
+        return bad("options must be 2 to 4 objects with exactly the keys id, text and recommended (an id of 1 to 3 characters, no two the same; a text of 1 to 400 characters; true or false; at most one true)")
+    if not _text(q["how_to_answer"], 300):
+        return bad("how_to_answer must be 1 to 300 characters")
+    return q, None
+
+
 def paper_view(root: Path | None = None, recent: int = 30) -> dict:
     root = Path(root) if root is not None else C.ROOT
     path = root / "dashboard.json"
@@ -251,10 +304,11 @@ def paper_view(root: Path | None = None, recent: int = 30) -> dict:
                     rows.append({"when": when or r["recorded_at"], "recorded_at": r["recorded_at"], "seq": r["seq"], "account": a["id"], "label": label(a), "kind": r["event"], "text": text})
     rows.sort(key=lambda r: (r["when"], r["recorded_at"], r["seq"]))
     research = dash.get("research")
+    asked, asked_problem = question(root)
     return {"available": True, "generated_at": dash["generated_at"], "protocol": dash["protocol"], "real_trading": dash["real_trading"], "status": dash["status"], "headline": headline(dash),
             "data": {"last_candle": dash["data"]["last_candle"], "last_close": dash["data"]["last_close"], "stale": dash["data"]["stale"], "update": dash["data"]["update"]},
             "counts": {"champions": len(dash["champions"]), "challengers": len(dash["challengers"]), "monitors": len(dash.get("monitors", [])),
                        "research_admitted": len(research["admitted"]) if research else None, "research_ran_at": research["ran_at"] if research else None},
             "backtest": None if bt is None else {"from": bt["from"], "to": bt["to"], "step_days": bt["step_days"], "times": bt["times"], "periods": bt["periods"], "note": CURVE_NOTE},
-            "accounts": accounts, "recent": rows[-recent:][::-1], "problems": dash.get("frozen_check", []),
+            "accounts": accounts, "recent": rows[-recent:][::-1], "problems": dash.get("frozen_check", []), "question": asked, "question_problem": asked_problem,
             "note": "These accounts are simulations. A paper profit is not a profit, and no real order is ever placed. Orders are modelled as filled at the 00:00 UTC open although the daily run happens at 00:15."}

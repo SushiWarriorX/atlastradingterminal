@@ -573,6 +573,24 @@ async function healthy(browser) {
       const head = await inner(page, "journey-headline");
       match(head, /strategies passed|No research run yet/i, "the verdict of the research run is the first thing said");
       match(head, /DISABLED|nothing in this system can place an order/i, "real trading is stated as disabled");
+      const qFile = path.join(ROOT, "..", "btcquant", "owner_question.json");          // the question the loop waits for the owner to answer: its card is there exactly when the file is
+      const squash = (s) => String(s).replace(/\s+/g, " ").trim();
+      if (fs.existsSync(qFile)) {
+        const q = JSON.parse(fs.readFileSync(qFile, "utf8"));
+        assert(await present(page, "journey-question"), "the question for the owner is shown on the Journey page");
+        eq(squash(await inner(page, "journey-question-title")), squash(q.title), "the question's title");
+        const qBody = squash(await inner(page, "journey-question"));
+        match(qBody, /^A decision is waiting for you · asked \d{1,2} [A-Z][a-z]{2} 20\d\d /, "when it was asked, in the page's date style");
+        for (const p of q.paragraphs) assert(qBody.includes(squash(p)), `a paragraph of the question is shown: ${p.slice(0, 40)}`);
+        for (const o of q.options) assert(squash(await inner(page, `journey-question-option-${o.id}`)).startsWith(`${o.id} ${squash(o.text)}`), `option ${o.id} is shown with its text`);
+        eq((qBody.match(/Recommended/g) || []).length, q.options.filter((o) => o.recommended).length, "the recommended tag is on the option marked so, and only there");
+        assert(qBody.endsWith(squash(q.how_to_answer)), "how to answer comes last");
+        eq(await page.locator(`${T("journey-question")} [role="button"], ${T("journey-question")} a, ${T("journey-question")} button, ${T("journey-question")} input`).count(), 0, "the question is text only: nothing in it can be tapped");
+        noMatch(qBody, FORECASTS, "the question makes no promise of profit");
+      } else {
+        eq(await page.locator(T("journey-question")).count(), 0, "no question card when no question is waiting");
+      }
+      eq(await page.locator(T("journey-question-problem")).count(), 0, "no problem line while the file is sound");
       assert(await present(page, "journey-cards"), "the paper accounts are shown as cards");
       const ids = await page.$$eval('[data-testid^="journey-row-"]', (els) => els.map((e) => e.getAttribute("data-testid")));
       assert(ids.length >= 1, "at least one strategy row");
@@ -592,6 +610,11 @@ async function healthy(browser) {
       await page.evaluate(() => { const el = document.querySelector('[data-testid="journey-scroll"]'); if (el) el.scrollTop = 0; });      // the top of the page: the verdict card with its label and sentence
       await sleep(300);
       await shot(page, "17a-journey-top");
+      if (fs.existsSync(qFile)) {
+        await page.locator(V("journey-question")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);      // the question card itself, from its top
+        await sleep(300);
+        await shot(page, "17d-journey-question");
+      }
       await page.evaluate(() => { const el = document.querySelector('[data-testid="journey-scroll"]'); if (el) el.scrollTop = 1e6; });
       await sleep(300);
       await shot(page, "17b-journey-feed");

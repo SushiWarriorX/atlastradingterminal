@@ -587,11 +587,13 @@ export interface PaperAccount {
   opened_after: string | null; short: string; name: string; params_text: string; backtest: PaperBacktest | null; forward: number[];
 }
 export interface PaperTrade { when: string; recorded_at: string; seq: number; account: string; label: string; kind: string; text: string }
+export interface OwnerQuestion { asked_on: string; title: string; paragraphs: string[]; options: { id: string; text: string; recommended: boolean }[]; how_to_answer: string }
 export interface PaperLab {
   available: true; generated_at: string; protocol: string; real_trading: string; status: string; headline: string;
   data: { last_candle: string; last_close: number; stale: boolean; update: string };
   counts: { champions: number; challengers: number; monitors: number; research_admitted: number | null; research_ran_at: string | null };
   backtest: { from: string; to: string; step_days: number; times: string[]; periods: { name: "TRAIN" | "VALIDATION" | "TEST"; from: number; to: number }[]; note: string } | null;
   accounts: PaperAccount[]; recent: PaperTrade[]; problems: string[]; note: string;
+  question?: OwnerQuestion | null; question_problem?: string | null;                                                   // a question the loop waits for the owner to answer, text only (older servers send neither)
 }
 export type PaperLabResponse = PaperLab | { available: false; reason: string };

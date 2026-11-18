@@ -310,6 +310,14 @@ describe("readable colours for direction, warnings and buttons", () => {
       for (const [name, c] of Object.entries({ up: color.up, down: color.down, warn: color.warn, demo: color.demo, accent: color.accent, accent3: color.accent3 })) expect(contrast(c, bg), `${name} on ${bg}`).toBeGreaterThanOrEqual(4.5);
     }
   });
+  it("the darker blue text of a tinted chip (the Recommended tag on the Journey question) reaches 4.5:1 on its own 10% tint over every stop of the card gradient; the lighter blue would not (about 4.2:1)", () => {
+    const hex = (n: number) => Math.round(n).toString(16).padStart(2, "0");
+    const mix = (fg: string, bg: string, a: number) => "#" + [1, 3, 5].map((i) => hex(a * parseInt(fg.slice(i, i + 2), 16) + (1 - a) * parseInt(bg.slice(i, i + 2), 16))).join("");
+    for (const stop of grad.card) {
+      expect(contrast(color.accent3, mix(color.accent3, stop, 0x1a / 255)), `accent3 chip on ${stop}`).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(color.accent, mix(color.accent, stop, 0x1a / 255)), `accent chip on ${stop}`).toBeLessThan(4.5);
+    }
+  });
   it("white text on the blue button reaches 4.5:1 at its darkest and 3:1 (large bold text) at its lightest stop", () => {
     expect(contrast(color.onAccent, grad.accent[2])).toBeGreaterThanOrEqual(4.5);
     expect(contrast(color.onAccent, grad.accent[1])).toBeGreaterThanOrEqual(4.5);

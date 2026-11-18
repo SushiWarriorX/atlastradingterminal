@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { PaperAccount, PaperLab, PaperTrade } from "../api/types";
+import type { OwnerQuestion, PaperAccount, PaperLab, PaperTrade } from "../api/types";
 import { spoken } from "../lib/format";
 import { chanceText, dayLabel, forwardLine, money, outcomeTone, paperLine, pctOf, periodLine, sample, split, whenLabel, type Tone } from "../lib/journey";
 import { usePaperLab } from "../state/queries";
@@ -140,6 +140,29 @@ function Cards({ lab, list }: { lab: PaperLab; list: { portfolio: PaperAccount |
   );
 }
 
+/** A question the loop is waiting for the owner to answer (from `btcquant/owner_question.json`). Text only: nothing here can send an answer, the owner replies in the chat. */
+function QuestionCard({ q }: { q: OwnerQuestion }) {
+  return (
+    <GCard style={{ padding: space.lg, gap: space.sm }} testID="journey-question">
+      <Txt variant="label" c={color.accent}>A decision is waiting for you · asked {dayLabel(q.asked_on)}</Txt>
+      <Txt variant="title" style={{ fontSize: 20, lineHeight: 26 }} testID="journey-question-title">{q.title}</Txt>
+      {q.paragraphs.map((p, i) => <Txt key={i} variant="small" c={color.text} style={{ fontSize: 14, lineHeight: 20 }}>{p}</Txt>)}
+      <View style={{ gap: space.sm, paddingTop: space.xs }} testID="journey-question-options">
+        {q.options.map((o) => (
+          <View key={o.id} style={{ flexDirection: "row", gap: space.sm }} testID={`journey-question-option-${o.id}`}>
+            <Txt variant="small" c={color.text} style={{ fontWeight: "700", width: 18 }}>{o.id}</Txt>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Txt variant="small" c={color.text}>{o.text}</Txt>
+              {o.recommended ? <View style={{ flexDirection: "row" }}><Tag label="Recommended" tint={color.accent3} /></View> : null}
+            </View>
+          </View>
+        ))}
+      </View>
+      <Txt variant="tiny">{q.how_to_answer}</Txt>
+    </GCard>
+  );
+}
+
 /** The Journey tab: the paper-trading lab that runs the backtested Bitcoin strategies. At the top the verdict of the research run in plain words, then the paper accounts as cards, each strategy with its backtest and what it would do, and every order recorded the moment a rule signalled it. All simulated; nothing here can place an order. */
 export function JourneyView() {
   const insets = useSafeAreaInsets();
@@ -172,6 +195,8 @@ export function JourneyView() {
             <Txt variant="small" c={color.text} style={{ fontSize: 14, lineHeight: 20 }}>{lab.headline}</Txt>
             <Txt variant="tiny">{lab.real_trading}. Price data to {dayLabel(lab.data.last_candle)}; the daily run is at 00:15 UTC.</Txt>
           </GCard>
+          {lab.question ? <QuestionCard q={lab.question} /> : null}
+          {lab.question_problem ? <Banner tone="info" title="A question for you could not be shown" testID="journey-question-problem">{lab.question_problem}</Banner> : null}
         </View>
 
         <View style={{ gap: space.md }}>

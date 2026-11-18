@@ -2,6 +2,7 @@
 
 > **2026-11-15: the owner's new mission replaces the old search.** Strategy hours build and run `btcquant` (see `btcquant/BUILD_PLAN.md` and `btcquant/PROTOCOL.md`). The old library and its seven experiments are closed history (`EDGE_PLAN.md`, `docs/strategy-search-conclusion.md`); the text below describes that old loop and is not the current job.
 
+> **Asking the owner (2026-11-18):** when a decision is waiting for the owner, write the question in `btcquant/owner_question.json` as well as in the chat (plain words, the options, which one you recommend, how to answer; the keys and limits are in `view.question` and `tests/test_owner_question.py`): the Journey tab of the phone app shows it as a card until the file is deleted, which is done when the owner answers.
 > UPDATE 2026-11-10: the classic families are covered. Strategy hours now follow `EDGE_PLAN.md` (different kinds of ideas, settings fixed first). The queue below is for ChatGPT and the owner.
 
 UPDATE 2026-11-09: the owner wants several rules tested per cycle until one is credibly profitable (see 'Search until profitable' at the end).

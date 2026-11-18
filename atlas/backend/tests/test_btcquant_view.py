@@ -126,6 +126,36 @@ def test_the_route_serves_the_view_and_makes_no_promise(root, tmp_path, monkeypa
         assert c.get("/api/btcquant/paper").json()["data"]["available"] is False
 
 
+QUESTION = {"asked_on": "2026-11-17", "title": "The Bitcoin research queue is on hold until you choose", "paragraphs": ["Three rule ideas are left to test."],
+            "options": [{"id": "3", "text": "Stop the daily queue.", "recommended": True}, {"id": "1", "text": "Lower the bar.", "recommended": False}], "how_to_answer": "Reply in the chat with 1 or 3."}
+
+
+def test_the_paper_view_carries_the_question_for_the_owner_and_changes_nothing_else(root):
+    base = V.paper_view(root)
+    assert base["question"] is None and base["question_problem"] is None                        # no file: nothing to show and nothing said
+    (root / "owner_question.json").write_text(json.dumps(QUESTION), encoding="utf-8")
+    v = V.paper_view(root)
+    assert v["question"] == QUESTION and v["question_problem"] is None
+    rest = lambda d: {k: x for k, x in d.items() if k not in ("question", "question_problem")}
+    assert rest(v) == rest(base)                                                                 # the question touches no other part of the view
+    (root / "owner_question.json").write_text("{", encoding="utf-8")
+    d = V.paper_view(root)
+    assert d["question"] is None and d["question_problem"] == "owner_question.json cannot be read as JSON, so the question is not shown." and rest(d) == rest(base) and d["available"] is True
+
+
+def test_the_route_serves_the_question_and_the_problem(root, tmp_path, monkeypatch):
+    from atlas_api.btcquant import config as C
+    monkeypatch.setattr(C, "ROOT", root)
+    (root / "owner_question.json").write_text(json.dumps(QUESTION), encoding="utf-8")
+    app = create_app(db_path=str(tmp_path / "a.db"), demo=True, alert_loop=False, news_loop=False)
+    with TestClient(app) as c:
+        d = c.get("/api/btcquant/paper").json()["data"]
+        assert d["question"] == QUESTION and d["question_problem"] is None
+        (root / "owner_question.json").write_text("[]", encoding="utf-8")
+        d = c.get("/api/btcquant/paper").json()["data"]
+        assert d["question"] is None and d["question_problem"] == "owner_question.json: it must hold one JSON object, so the question is not shown."
+
+
 def crafted_root(tmp_path, pendings, frozen=()):
     acc = lambda i, pend: {"id": i, "family": "tsmom", "params": {"L": 30}, "stage": "monitor", "equity": 10_000.0, "start_equity": 10_000.0, "return": 0.0, "day_pnl": 0.0, "exposure": 0.0, "drawdown": 0.0, "trades": 0, "days": 0,
                            "halted": False, "breaker_trips": 0, "pending": pend}
