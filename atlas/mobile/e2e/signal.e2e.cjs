@@ -852,6 +852,32 @@ async function healthy(browser) {
       await page.locator(V("jolts-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
       await shot(page, "07zi-jolts-bottom");
 
+      await page.waitForSelector(V("usjobs-card"));
+      await page.waitForSelector(V("usjobs-body") + ", " + V("usjobs-unavailable") + ", " + V("usjobs-error"), { timeout: 45000 });
+      const ujTxt = await text(page);
+      match(ujTxt, /US jobs and unemployment/); match(ujTxt, /Bureau of Labor Statistics/); noMatch(ujTxt, FORECASTS, "the US jobs card makes no forecasts");
+      if (await liveCard(page, "usjobs-body")) {
+        const ujBody = await inner(page, "usjobs-body");
+        const UMONTH = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        const USW = "(?:up [\\d,.]+ thousand|down [\\d,.]+ thousand|unchanged)";
+        const UMV = "(?:added [\\d,.]+ thousand|lost [\\d,.]+ thousand|changed by nothing)";
+        const UBEFORE = "(?:(?:up|down) from \\d{1,2}\\.\\d% the month before|unchanged from the month before|no figure for the month before)";
+        match(await inner(page, "usjobs-payrolls"), new RegExp(`^Employers had \\d{3}\\.\\d{3} million jobs on their payrolls in ${UMONTH}, ${USW} on the month before and ${USW} on a year earlier\\. Of the change on the month, private employers ${UMV} and government ${UMV}\\.$`), "the payrolls with their month, their changes and their parts");
+        match(await inner(page, "usjobs-recent"), new RegExp(`^(?:${UMONTH}: ${USW}\\s*){6}$`), "six months of jobs added");
+        match(await inner(page, "usjobs-unemployment"), new RegExp(`^The unemployment rate was \\d{1,2}\\.\\d% in ${UMONTH}, ${UBEFORE} \\((?:\\d{1,2}\\.\\d% a year earlier|a year earlier: the household survey has no figure for ${UMONTH}|no figure for a year earlier)\\)\\. \\d{1,2}\\.\\d{3} million people were unemployed, out of a labour force of \\d{3}\\.\\d{3} million\\.$`), "the unemployment rate with its comparisons");
+        match(ujBody, new RegExp(`Over the last 10 years \\(\\d{3} months with a figure\\) the unemployment rate ran from \\d{1,2}\\.\\d% \\(${UMONTH}\\) to \\d{1,2}\\.\\d% \\(${UMONTH}\\); \\d{1,3}% of those months were lower than now\\.`), "the ten-year range is explained in months");
+        match(await inner(page, "usjobs-participation"), new RegExp(`^\\d{2}\\.\\d% of the population aged 16 and over was working or looking for work, ${UBEFORE}; \\d{2}\\.\\d% had a job, ${UBEFORE}\\.$`), "participation and the employment ratio");
+        if (await present(page, "usjobs-gaps")) match(await inner(page, "usjobs-gaps"), new RegExp(`^The household survey has no figure for ${UMONTH}(, ${UMONTH})*\\.$`), "the months without a household figure are named");
+        match(ujBody, /Check: in each of the \d{3} months from [A-Z][a-z]+ 20\d\d to [A-Z][a-z]+ 20\d\d the three payroll series covered the same months with none missing and every level lay inside its range, and the seven household series covered the same months \(\d{3} of them with a figure\) \(plain checks, not the source's sums\)/, "the plain checks are shown");
+        match(ujBody, /total payrolls equal private plus government payrolls \(largest gap \d+(\.\d+)? thousand\), the labour force equals the employed plus the unemployed \(largest gap \d+(\.\d+)? thousand, which is rounding\), and each published rate equals its own numerator over its own denominator \(largest gap 0(\.\d+)? points, which is rounding\)/, "the three relations are shown");
+        match(ujBody, /not that the figures are right/); match(ujBody, /do not agree month to month/); match(ujBody, /not looking is not unemployed/); match(ujBody, /not a market signal or a forecast/);
+        noMatch(ujBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("usjobs-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zj-usjobs-top");
+      await page.locator(V("usjobs-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
+      await shot(page, "07zj-usjobs-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);
