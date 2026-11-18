@@ -50,7 +50,7 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 
 ## Research engine and browser-test lessons (from the fundamentals build)
 - Quarterly figures: companies file 3-, 6-, 9- and 12-month cumulative cash-flow totals and never a fourth quarter; derive a quarter as the difference of two cumulative totals and label it "derived". Never sum quarters that are not consecutive.
-- Tests: the first valid bar of any rolling indicator is bar n-1 (a 50-bar average first exists on bar 49); I wrote this off-by-one three times. Build fixtures from hand-checkable numbers and never write `or True` into an assertion.
+- Tests: the first valid bar of any rolling indicator is bar n-1 (a 50-bar average first exists on bar 49); I wrote this off-by-one three times. Build fixtures from hand-checkable numbers and never write `or True` into an assertion (`tests/test_test_hygiene.py` now refuses it and its cousins in every test file).
 - JSON: infinity and NaN are not JSON. "No upper limit" must become null before it reaches an answer, and a test needs a saved result to see it (an empty state hides the bug).
 - Screens: view screenshots, not just assertions. They showed small amounts printed as $0, warnings buried in collapsed sections, invisible inputs and 35px buttons. A formatter must never turn a small non-zero amount into zero.
 - Clipboard and pop-ups: start the copy and open the tab inside the click; report "copied" only after a real success; `window.open` with `noopener` always returns null, so detach with `opener = null` instead; test with permissions granted, refused and the tab blocked.
@@ -71,7 +71,7 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 - Do not merge, keep the PR draft, ask before anything paid or outward-facing.
 
 ## Tooling traps found 2026-11-11
-- Inside a Python script written through a shell heredoc, "\\n" puts a literal backslash-n into the target file (and `rstrip("\\n")` strips backslashes and the letter n). Use real "\n", or the Edit tool, and grep the diff for `\\n` before committing.
+- Inside a Python script written through a shell heredoc, "\\n" puts a literal backslash-n into the target file (and `rstrip("\\n")` strips backslashes and the letter n). Use real "\n", or the Edit tool, and grep the diff for `\\n` before committing. Quote the heredoc delimiter (`<<'EOF'`) whenever the body holds Markdown or code: with an unquoted `<<EOF` the shell runs anything between backticks and expands `$`, so code spans such as `str(x)` vanished from a values file without an error (2026-11-18, and the docs had to be redone); let Python, not `$(...)` inside the body, fill in times.
 - A `sed` line holding `$` and `${` (template strings) made the sandbox refuse the WHOLE command, including later steps, as an unverifiable removal, and a long heredoc mixed with shell edits can be blocked the same way. Make such edits with the Edit tool (write files with the file tools, run small scripts from files) and run build and test commands as separate calls.
 - When a fix is for a whole class of bug (raw dates, missing caveat), put the check for the class into the browser script; the raw-date check found five spots a manual pass missed.
 - A source whose unit is not stated anywhere reachable (per day or per week) is HELD, not shipped, even when its numbers are internally consistent; a self-check proves consistency, not meaning.
