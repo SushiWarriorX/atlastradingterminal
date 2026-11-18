@@ -1075,6 +1075,32 @@ async function healthy(browser) {
       await page.locator(V("euroyields-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);           // and its bottom: the note and the source link
       await shot(page, "07zd-euroyields-bottom");
 
+      await page.waitForSelector(V("eurogdp-card"));
+      await page.waitForSelector(V("eurogdp-body") + ", " + V("eurogdp-unavailable") + ", " + V("eurogdp-error"), { timeout: 60000 });
+      const egTxt = await text(page);
+      match(egTxt, /Euro-area GDP/); match(egTxt, /European Central Bank/); noMatch(egTxt, FORECASTS, "the euro GDP card makes no forecasts");
+      if (await liveCard(page, "eurogdp-body")) {
+        const egBody = await inner(page, "eurogdp-body");
+        const EGQ = "Q[1-4] 20\\d\\d";
+        const EGC = "(?:grew \\d{1,2}\\.\\d{2}%|shrank \\d{1,2}\\.\\d{2}%|was unchanged)";
+        const EGP = "-?\\d{1,2}\\.\\d{2}%";
+        const EGS = "[+-]?\\d{1,2}\\.\\d{2}";
+        match(egBody, new RegExp(`Real GDP ${EGC} from the previous quarter \\(${EGQ}\\) and ${EGC} from the same quarter a year earlier \\(${EGQ}\\)\\.`), "the growth on the quarter and on the year with their quarters");
+        match(egBody, new RegExp(`Over the past 10 years \\(\\d\\d quarters\\) growth on the quarter was lower than now in \\d{1,3}% of the quarters; the middle quarter was ${EGP}, the lowest ${EGP} \\(${EGQ}\\) and the highest ${EGP} \\(${EGQ}\\)\\.`), "the ten-year comparison");
+        match(await inner(page, "eurogdp-recent"), new RegExp(`^(?:${EGQ}: ${EGS}% on the previous quarter, ${EGS}% on a year earlier\\s*){6}$`), "six quarters with their growth");
+        match(egBody, new RegExp(`GDP at current prices in ${EGQ} \\(the newest quarter with a breakdown\\): €[\\d,]+\\.\\d billion for the quarter, seasonally adjusted and not annualised; domestic demand €[\\d,]+\\.\\d billion plus exports €[\\d,]+\\.\\d billion minus imports €[\\d,]+\\.\\d billion\\.`), "the breakdown at current prices");
+        match(egBody, new RegExp(`Contributions to that quarter's real growth of ${EGP}: domestic demand ${EGS} points and net trade ${EGS} points \\(exports ${EGS}, imports ${EGS}\\)\\.`), "the contributions to growth");
+        match(egBody, /Check: in each of the last 45 quarters every figure lay inside its range and nominal GDP moved by no more than 15% in a quarter/, "the checks are shown");
+        match(egBody, /to within 0\.02 million euros/); match(egBody, /to within 0\.000001 points/); match(egBody, /not that the figures are right/);
+        match(egBody, /not a market signal or a forecast/); match(egBody, /stopped at Q1 2026/);
+        noMatch(egBody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
+        noMatch(egBody, /\b20\d\d-Q[1-4]\b/, "no raw quarter codes on screen");
+      }
+      await page.locator(V("eurogdp-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);          // the top of a tall card, not its nearest edge
+      await shot(page, "07ze-eurogdp-top");
+      await page.locator(V("eurogdp-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);           // and its bottom: the note and the source link
+      await shot(page, "07ze-eurogdp-bottom");
+
       await page.waitForSelector(V("customs-card"));
       await page.waitForSelector(V("customs-body") + ", " + V("customs-unavailable") + ", " + V("customs-error"), { timeout: 45000 });
       const cd = await text(page);

@@ -472,6 +472,13 @@ export interface EuroInflationData { available: boolean; reason?: string; demo: 
 export interface EuroYieldBefore { date: string; value: number; change: number }
 export interface EuroYieldRate { id: string; label: string; years: number; rate_pct: number; week_ago: EuroYieldBefore | null; month_ago: EuroYieldBefore | null }
 export interface EuroYieldSpread { id: string; label: string; points: number }
+export interface EuroGdpQuarter { quarter: string; quarter_on_quarter: number; year_on_year: number }
+export interface EuroGdpData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; quarter?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
+  growth?: { quarter: string; quarter_on_quarter: number; year_on_year: number; previous_quarter: string; year_earlier: string };
+  recent?: EuroGdpQuarter[];
+  window?: { quarters: number; from: string; years: number; median: number; lowest: { value: number; quarter: string }; highest: { value: number; quarter: string }; share_lower_pct: number } | null;
+  breakdown?: { quarter: string; gdp: number; domestic_demand: number; exports: number; imports: number; net_trade: number; growth: number; contributions: { domestic_demand: number; exports: number; imports: number; net_trade: number } };
+  detail?: { quarters_checked: number; contribution_quarters_checked: number; largest_growth_gap: number; largest_nominal_gap: number; largest_contribution_gap: number } }
 export interface EuroYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
   rates?: EuroYieldRate[]; spreads?: EuroYieldSpread[];
   window?: { days: number; from: string; years: number; median: number; lowest: { value: number; date: string }; highest: { value: number; date: string }; share_lower_pct: number } | null;

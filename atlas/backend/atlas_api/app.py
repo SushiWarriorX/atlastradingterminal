@@ -61,6 +61,7 @@ from .eurohicp import EuroInflation
 from .eurounemployment import EuroUnemployment
 from .eurostress import EuroStress
 from .euroyields import EuroYields
+from .eurogdp import EuroGdp
 from .reserves import BankReserves
 from .ecbrates import EcbRates
 from .receipts import Receipts
@@ -421,6 +422,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     euro_unemployment = EuroUnemployment(demo=demo)
     euro_stress = EuroStress(demo=demo)
     euro_yields = EuroYields(demo=demo)
+    euro_gdp = EuroGdp(demo=demo)
     bank_reserves = BankReserves(demo=demo)
     ecb_rates = EcbRates(demo=demo)
     commodity_positioning = CftcCommodities(demo=demo)
@@ -555,6 +557,11 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     async def macro_euro_yields():
         """Euro-area government bond yields (the ECB's yield curve for AAA-rated euro-area government bonds, a Svensson curve fitted every business day and published on the ECB Data Portal), daily: the 3-month, 1-, 2-, 5-, 10- and 30-year spot rates with their change over a week and a month, the ECB's spreads of the 10-year rate over the shorter ones, where the 10-year rate sits among the past ten years, checked for units, holes, ranges, one-day moves and the model parameters (plain checks) and for two pieces of the ECB's own arithmetic (the spreads are differences of the rates, and the rates follow from the published curve parameters). Describes yields that already happened: not a signal or a forecast."""
         return ok(await euro_yields.overview())
+
+    @app.get("/api/macro/euro-gdp")
+    async def macro_euro_gdp():
+        """Euro-area GDP (Eurostat's quarterly national accounts for the euro area of 21 countries, seasonally adjusted, published on the ECB Data Portal): real growth on the previous quarter and on a year earlier for the newest quarter with where it sits among the past ten years and the last six quarters, and, for the newest quarter with a breakdown, nominal GDP, domestic demand, exports and imports with their contributions to growth. Calculated figures are labelled as the ECB's own arithmetic; a failed check shows nothing. Demo mode shows nothing."""
+        return ok(await euro_gdp.overview())
 
     @app.get("/api/macro/bank-reserves")
     async def macro_bank_reserves():
@@ -1956,7 +1963,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
                                       "listings": listings_service, "new_to_me": new_to_me,
-                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "euro_money_supply": euro_money_supply, "euro_inflation": euro_inflation, "euro_unemployment": euro_unemployment, "euro_stress": euro_stress, "euro_yields": euro_yields, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "euro_money_supply": euro_money_supply, "euro_inflation": euro_inflation, "euro_unemployment": euro_unemployment, "euro_stress": euro_stress, "euro_yields": euro_yields, "euro_gdp": euro_gdp, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 
