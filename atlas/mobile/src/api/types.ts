@@ -502,6 +502,13 @@ export interface EuroEmploymentData { available: boolean; reason?: string; demo:
   breakdown?: { quarter: string; persons: number; hours: number; hours_per_person: number; hours_change_year: number; employees: EuroEmploymentPart; self_employed: EuroEmploymentPart; sectors: EuroEmploymentSector[] };
   productivity?: { per_person: EuroEmploymentGrowth; per_hour: EuroEmploymentGrowth };
   detail?: { quarters_checked: number; persons_quarters_checked: number; largest_persons_gap: number; largest_hours_gap: number; largest_productivity_gap: number } }
+export interface JoltsRange { months: number; first: string; lowest: { value: number; month: string }; highest: { value: number; month: string }; share_lower_pct: number }
+export interface JoltsFlow { id: string; name: string; level_thousands: number; rate_pct: number; rate_year_ago_pct: number; change_1y_pct: number | null }
+export interface JoltsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  openings?: { level_thousands: number; rate_pct: number; rate_year_ago_pct: number; change_1m_thousands: number; change_1y_pct: number | null; range: JoltsRange };
+  per_unemployed?: { ratio: number; month: string; unemployed_thousands: number; year_ago: number | null; range: JoltsRange };
+  flows?: JoltsFlow[];
+  detail?: { months_checked: number; first_month: string; last_month: string; largest_separations_gap: number; largest_rate_gap: number } }
 export interface EuroYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
   rates?: EuroYieldRate[]; spreads?: EuroYieldSpread[];
   window?: { days: number; from: string; years: number; median: number; lowest: { value: number; date: string }; highest: { value: number; date: string }; share_lower_pct: number } | null;

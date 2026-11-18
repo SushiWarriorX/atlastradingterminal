@@ -805,6 +805,30 @@ async function healthy(browser) {
       await page.locator(V("claims-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07p-claims");
 
+      await page.waitForSelector(V("jolts-card"));
+      await page.waitForSelector(V("jolts-body") + ", " + V("jolts-unavailable") + ", " + V("jolts-error"), { timeout: 45000 });
+      const joTxt = await text(page);
+      match(joTxt, /Job openings and turnover/); match(joTxt, /Bureau of Labor Statistics/); noMatch(joTxt, FORECASTS, "the job openings card makes no forecasts");
+      if (await liveCard(page, "jolts-body")) {
+        const joBody = await inner(page, "jolts-body");
+        const JMONTH = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        const JVS = "(up \\d{1,3}\\.\\d% on a year ago|down \\d{1,3}\\.\\d% on a year ago|the same as a year ago)";
+        const JSTEP = "(up [\\d,.]+ thousand on the month before|down [\\d,.]+ thousand on the month before|unchanged on the month before)";
+        match(await inner(page, "jolts-openings"), new RegExp(`^Employers had \\d{1,2}\\.\\d{3} million job openings at the end of ${JMONTH}, ${JSTEP} and ${JVS}\\. The openings rate, the share of all jobs \\(filled and open\\) that were open, was \\d{1,2}\\.\\d% \\(\\d{1,2}\\.\\d% a year ago\\)\\.$`), "the openings with their month, changes and rate");
+        match(joBody, new RegExp(`Over the last 10 years \\(\\d{3} months\\) it ran from \\d{1,2}\\.\\d% \\(${JMONTH}\\) to \\d{1,2}\\.\\d% \\(${JMONTH}\\); \\d{1,3}% of those months were lower than now\\.`), "the ten-year range of the openings rate is explained in months");
+        match(await inner(page, "jolts-ratio"), new RegExp(`^In ${JMONTH} there were \\d\\.\\d{2} job openings for each unemployed person \\(\\d{1,2}\\.\\d{3} million people were unemployed\\), (against \\d\\.\\d{2} a year earlier|and no figure for a year earlier is available)\\.$`), "openings per unemployed person with their own month");
+        match(joBody, new RegExp(`Over the last 10 years \\(\\d{3} months\\) it ran from \\d\\.\\d{2} \\(${JMONTH}\\) to \\d\\.\\d{2} \\(${JMONTH}\\); \\d{1,3}% of those months were lower than now\\.`), "the ten-year range of the ratio is explained in months");
+        match(await inner(page, "jolts-flows"), new RegExp(`^(?:(Hires|Total separations|Quits|Layoffs and discharges|Other separations): (\\d{1,2}\\.\\d{3} million|\\d{1,3} thousand), \\d{1,2}\\.\\d% of payroll employment \\(\\d{1,2}\\.\\d% a year ago\\), ${JVS}\\.\\s*){5}$`), "the five flows with level, rate and yearly change");
+        match(joBody, /Check: in each of the \d{3} months from [A-Z][a-z]+ 20\d\d to [A-Z][a-z]+ 20\d\d the twelve JOLTS series covered the same months with none missing, every level lay inside its range and payroll employment was there for each month \(plain checks, not the source's sums\)/, "the plain checks are shown");
+        match(joBody, /total separations equal quits plus layoffs plus other separations \(largest gap [\d.]+ thousand, which is rounding\), and each published rate equals its level over payroll employment, job openings over payroll employment plus openings \(largest gap 0\.\d+ points, which is rounding\)/, "the sums are shown");
+        match(joBody, /not that the figures are right/); match(joBody, /last business day of the month/); match(joBody, /preliminary/); match(joBody, /not a market signal or a forecast/);
+        noMatch(joBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("jolts-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zi-jolts-top");
+      await page.locator(V("jolts-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
+      await shot(page, "07zi-jolts-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);

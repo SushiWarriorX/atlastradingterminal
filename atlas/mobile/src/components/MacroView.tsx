@@ -36,6 +36,7 @@ import { EuroStressCard } from "./EuroStressCard";
 import { EuroYieldsCard } from "./EuroYieldsCard";
 import { EuroGdpCard } from "./EuroGdpCard";
 import { EuroEmploymentCard } from "./EuroEmploymentCard";
+import { JoltsCard } from "./JoltsCard";
 import { EuroLendingCard } from "./EuroLendingCard";
 import { EuroBankRatesCard } from "./EuroBankRatesCard";
 import { EuroMoneyCard } from "./EuroMoneyCard";
@@ -120,6 +121,7 @@ export function MacroView() {
             <MoneySupplyCard />
             <BankReservesCard />
             <JoblessClaimsCard />
+            <JoltsCard />
             <RetailSalesCard />
             <HousingStartsCard />
             <IndustrialProductionCard />
