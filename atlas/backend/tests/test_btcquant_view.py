@@ -65,7 +65,7 @@ def test_the_recent_trades_are_the_ledger_rows_newest_first_with_plain_text(root
     fill = next(r for r in bh if r["kind"] == "fill")
     assert fill["text"].startswith("BOUGHT ") and " BTC at $" in fill["text"] and "fee $" in fill["text"] and fill["label"] == "Buy and hold Bitcoin"
     order = next(r for r in bh if r["kind"] == "order")
-    assert order["text"].startswith("Change to 100% in Bitcoin at the next open") and "buy and hold" in order["text"]
+    assert order["text"] == "Start at 100% in Bitcoin at the next open (buy and hold)"                      # the account's first order sets its starting position
     assert all(set(r) == {"when", "recorded_at", "seq", "account", "label", "kind", "text"} for r in rows)
     assert len(V.paper_view(root, recent=3)["recent"]) == 3 and V.paper_view(root, recent=3)["recent"] == rows[:3]
 
@@ -82,6 +82,14 @@ def test_every_kind_of_ledger_row_is_worded_for_a_beginner():
     assert t({"event": "order", "kind": "exit", "signal_time": T0, "reason": "signal"})[1] == "SELL signal (the rule turned off); to be filled at the next open"
     assert t({"event": "order", "kind": "exit", "signal_time": T0, "reason": "circuit_breaker"})[1] == "SELL signal (the 15% circuit breaker); to be filled at the next open"
     assert t({"event": "order", "kind": "rebalance", "signal_time": T0, "weight": 0.45, "reason": "signal"})[1] == "Change to 45% in Bitcoin at the next open (the rule changed its target)"
+    first = {"event": "order", "kind": "rebalance", "signal_time": T0, "order_id": 1}                       # an account's first order sets its starting position: nothing is "changed" and a start at 0% buys nothing
+    assert t({**first, "weight": 0.0, "reason": "signal"})[1] == "Start at 0% in Bitcoin at the next open (nothing to buy yet)"
+    assert t({**first, "weight": 0.45, "reason": "signal"})[1] == "Start at 45% in Bitcoin at the next open (where the rule stands on its first day)"
+    assert t({**first, "weight": 1.0, "reason": "benchmark"})[1] == "Start at 100% in Bitcoin at the next open (buy and hold)"
+    assert t({**first, "order_id": 2, "weight": 0.0, "reason": "signal"})[1] == "Change to 0% in Bitcoin at the next open (the rule changed its target)"          # a later order to 0% is a change
+    assert t({**first, "order_id": 2, "weight": 1.0, "reason": "benchmark"})[1] == "Change to 100% in Bitcoin at the next open (buy and hold)"
+    assert t({"event": "order", "kind": "exit", "signal_time": T0, "reason": "signal", "order_id": 1})[1] == "SELL signal (the rule turned off); to be filled at the next open"   # only a rebalance can be a start
+    assert t({"event": "order", "kind": "enter", "signal_time": T0, "ref_close": 100.0, "stop": 90.0, "est_qty": None, "reason": "signal", "order_id": 1})[1] == "BUY signal at the close ($100.00); protective stop $90.00, to be filled at the next open"
     assert t({"event": "fill", "exec_time": T0 + DAY, "side": "buy", "qty": 0.0127, "price": 64150.0, "fee": 0.81, "slippage_cost": 0.4, "reason": "signal"}) == (
         "2019-01-02T00:00:00Z", "BOUGHT 0.0127 BTC at $64,150.00; fee $0.81, slippage cost $0.40")
     assert t({"event": "fill", "exec_time": T0, "side": "sell", "qty": 1.0, "price": 100.0, "fee": 0.1, "slippage_cost": 0.05, "reason": "stop"})[1].endswith("(stopped out); fee $0.10, slippage cost $0.05") and "SOLD 1.0000 BTC" in t({"event": "fill", "exec_time": T0, "side": "sell", "qty": 1.0, "price": 100.0, "fee": 0.1, "slippage_cost": 0.05, "reason": "stop"})[1]
@@ -125,6 +133,14 @@ def crafted_root(tmp_path, pendings, frozen=()):
             "accounts": [acc(f"a{i}", pend) for i, pend in enumerate(pendings)]}
     (tmp_path / "dashboard.json").write_text(json.dumps(dash))
     return tmp_path
+
+
+def test_the_first_waiting_order_of_an_account_is_a_start_and_a_later_one_is_a_move(tmp_path):
+    root = crafted_root(tmp_path, [{"kind": "rebalance", "weight": 0.0, "id": 1}, {"kind": "rebalance", "weight": 0.45, "id": 1}, {"kind": "rebalance", "weight": 0.0, "id": 2}, {"kind": "rebalance", "weight": 0.45, "id": 3},
+                                   {"kind": "enter", "weight": None, "id": 1}, {"kind": "exit", "weight": None, "id": 1}, {"kind": "rebalance", "weight": 0.0}, {"kind": "cancel", "weight": None, "id": 1}])
+    got = [a["pending"] for a in V.paper_view(root)["accounts"]]
+    assert got == ["start at 0% in Bitcoin at the next open (nothing to buy yet)", "start at 45% in Bitcoin at the next open", "move to 0% in Bitcoin at the next open", "move to 45% in Bitcoin at the next open",
+                   "BUY at the next open", "SELL at the next open", "move to 0% in Bitcoin at the next open", "cancel"]                  # an order without an id keeps the old wording; a kind with no words shows as it is
 
 
 def test_a_waiting_order_is_worded_by_its_kind(tmp_path):

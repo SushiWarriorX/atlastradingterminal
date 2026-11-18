@@ -579,6 +579,9 @@ async function healthy(browser) {
       await page.evaluate(() => { const el = document.querySelector('[data-testid="journey-scroll"]'); if (el) el.scrollTop = 1e6; });
       await sleep(300);
       await shot(page, "17b-journey-feed");
+      await page.locator(V("journey-feed")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);      // the newest orders: where an account's first order and a signal waiting for the next open are worded
+      await sleep(300);
+      await shot(page, "17c-journey-feed-top");
     });
 
     await check("Macro: what matters today, indicators and headlines are labelled, gaps are listed, and a missing FRED key is said plainly", async () => {

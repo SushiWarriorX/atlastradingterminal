@@ -76,7 +76,11 @@ def describe(row: dict) -> tuple:
         if row["kind"] == "exit":
             why = {"signal": "the rule turned off", "circuit_breaker": "the 15% circuit breaker"}.get(row["reason"], row["reason"])
             return when, f"SELL signal ({why}); to be filled at the next open"
-        return when, f"Change to {row['weight']:.0%} in Bitcoin at the next open ({'buy and hold' if row['reason'] == 'benchmark' else 'the rule changed its target'})"
+        first = row.get("order_id") == 1                                                    # an account's first order sets its starting position: nothing is being changed
+        if first and not row["weight"]:
+            return when, "Start at 0% in Bitcoin at the next open (nothing to buy yet)"
+        why = "buy and hold" if row["reason"] == "benchmark" else ("where the rule stands on its first day" if first else "the rule changed its target")
+        return when, f"{'Start at' if first else 'Change to'} {row['weight']:.0%} in Bitcoin at the next open ({why})"
     if ev == "fill":
         when = iso(row["exec_time"])
         side = "BOUGHT" if row["side"] == "buy" else "SOLD"
@@ -91,6 +95,16 @@ def describe(row: dict) -> tuple:
     if ev == "breaker_reset":
         return "", f"Trading resumed ({'30-day cool-off' if row.get('how') == 'cool_off' else 'reset by a person'})"
     return "", f"Account opened with {money(row.get('start_equity'))}"
+
+
+def pending_text(pend: dict) -> str:
+    """An account's waiting order in plain words. The account's first order (id 1) sets its starting position, so a rebalance with id 1 is a start, not a move."""
+    if pend["kind"] == "rebalance":
+        w = pend.get("weight") or 0
+        if pend.get("id") == 1:
+            return f"start at {w:.0%} in Bitcoin at the next open" + ("" if w else " (nothing to buy yet)")
+        return f"move to {w:.0%} in Bitcoin at the next open"
+    return {"enter": "BUY at the next open", "exit": "SELL at the next open"}.get(pend["kind"], pend["kind"])
 
 
 def headline(dash: dict) -> str:
@@ -210,9 +224,7 @@ def paper_view(root: Path | None = None, recent: int = 30) -> dict:
     accounts, rows = [], []
     for a in dash["accounts"]:
         pend = a["pending"]
-        pend_text = None
-        if pend:
-            pend_text = {"enter": "BUY at the next open", "exit": "SELL at the next open", "rebalance": f"move to {(pend.get('weight') or 0):.0%} in Bitcoin at the next open"}.get(pend["kind"], pend["kind"])
+        pend_text = pending_text(pend) if pend else None
         accounts.append({"id": a["id"], "label": label(a), "stage": a["stage"], "family": a["family"], "equity": a["equity"], "start_equity": a["start_equity"], "return": a["return"], "day_pnl": a["day_pnl"],
                          "hold_return": a.get("hold_return"), "matched_hold_return": a.get("matched_hold_return"), "exposure": a["exposure"], "drawdown": a["drawdown"], "trades": a["trades"], "days": a["days"],
                          "halted": a["halted"], "breaker_trips": a["breaker_trips"], "pending": pend_text,
