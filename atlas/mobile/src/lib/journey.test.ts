@@ -46,6 +46,7 @@ describe("times and dates", () => {
   it("writes a calendar day without zone shifting and leaves other text alone", () => {
     expect(dayLabel("2026-11-14")).toBe("14 Nov 2026");
     expect(dayLabel("2020-01-01")).toBe("1 Jan 2020");
+    expect(dayLabel("2026-11-15T10:34:08Z")).toBe("15 Nov 2026");                                                      // the research run's time, as the card label uses it
     expect(dayLabel("soon")).toBe("soon");
   });
 });

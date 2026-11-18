@@ -200,8 +200,8 @@ def test_the_phone_view_keeps_the_old_verdicts_and_adds_the_new_one(world):
         assert by[fam]["backtest"]["outcome"] == a["backtest"]["outcome"] and by[fam]["backtest"]["why"] == a["backtest"]["why"] and by[fam]["backtest"]["train"] == a["backtest"]["train"]
         assert a["backtest"]["train"] is not None
     assert by["toy"]["backtest"]["train"] is not None and by["toy"]["backtest"]["why"] and by["toy"]["name"] == "Toy momentum"           # and the new one from the second
-    assert v["headline"].startswith("None of the 13 strategies passed the admission bar in the research runs up to 2026-11-17") and "research run of" not in v["headline"]
-    assert v1["headline"].startswith("None of the 12 strategies passed the admission bar in the research run of 2026-11-15")
+    assert v["headline"].startswith("None of the 13 strategies passed the admission bar in the research runs up to 17 Nov 2026") and "research run of" not in v["headline"]
+    assert v1["headline"].startswith("None of the 12 strategies passed the admission bar in the research run of 15 Nov 2026")
     assert v["counts"]["research_ran_at"] == "2026-11-17T01:00:00Z" and v["counts"]["research_admitted"] == 0 and v["counts"]["monitors"] == 13
 
 

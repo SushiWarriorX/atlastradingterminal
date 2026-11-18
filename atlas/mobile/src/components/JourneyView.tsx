@@ -167,7 +167,7 @@ export function JourneyView() {
           {lab.data.stale ? <Banner tone="warn" title="The price data is out of date" testID="journey-stale">The last daily candle is {dayLabel(lab.data.last_candle)}. Nothing below is current.</Banner> : null}
           {lab.problems.length ? <Banner tone="warn" title="A check on the frozen rules found a problem" testID="journey-problems">{lab.problems.join(" ")}</Banner> : null}
           <GCard style={{ padding: space.lg, gap: space.sm }} testID="journey-headline">
-            <Txt variant="label">Admission bar, research run{lab.counts.research_ran_at ? ` of ${lab.counts.research_ran_at.slice(0, 10)}` : ""}</Txt>
+            <Txt variant="label">Admission bar, research run{lab.counts.research_ran_at ? ` of ${dayLabel(lab.counts.research_ran_at)}` : ""}</Txt>
             <Txt variant="title" style={{ fontSize: 26, lineHeight: 32 }} testID="journey-verdict">{verdict}</Txt>
             <Txt variant="small" c={color.text} style={{ fontSize: 14, lineHeight: 20 }}>{lab.headline}</Txt>
             <Txt variant="tiny">{lab.real_trading}. Price data to {dayLabel(lab.data.last_candle)}; the daily run is at 00:15 UTC.</Txt>

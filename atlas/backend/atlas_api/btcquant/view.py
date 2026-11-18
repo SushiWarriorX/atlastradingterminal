@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import bisect
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -25,9 +26,18 @@ GATE_WORDS = {"A1": "it made too few trades to judge (at least 10 are needed)",
 GATE_WORDS_ONE_SETTING = {"A4": "its 2020-2022 Sharpe ratio was not above zero (it has one setting, so there was nothing to nudge)"}      # gate A4 for a rule with a single configuration (protocol v1.3)
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 CURVE_STEP_DAYS = 7
-CURVE_NOTE = ("Each line replays one rule on past prices as one continuous run from 2020-01-01 with $10,000, with the same fees and slippage as the paper accounts. The settings were chosen on this same history, "
+CURVE_NOTE = ("Each line replays one rule on past prices as one continuous run from 1 Jan 2020 with $10,000, with the same fees and slippage as the paper accounts. The settings were chosen on this same history, "
               "so a backtest looks better than anything that can be expected from now on. 2025 onward is not a clean test either: earlier experiments in this project already looked at it.")
 PARAM_WORDS = {"fast": "fast", "slow": "slow", "N": "N", "L": "L", "m": "ATR multiple", "n": "n", "enter": "enter", "exit": "exit", "cap": "volatility cap", "k": "k", "hold": "hold days", "adx": "ADX", "target": "target", "window": "window"}
+
+
+MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
+def day_text(when: str) -> str:
+    """"2026-11-17", or a time on that day, written as the page writes every other date: "17 Nov 2026". Anything that does not start with a real date comes back as it was."""
+    m = re.match(r"(\d{4})-(\d{2})-(\d{2})", when)
+    return f"{int(m[3])} {MONTHS[int(m[2]) - 1]} {m[1]}" if m and 1 <= int(m[2]) <= 12 else when
 
 
 def iso(t: int) -> str:
@@ -115,7 +125,7 @@ def headline(dash: dict) -> str:
     if n_ch:
         return f"{n_ch} strategy(ies) passed the admission bar and are being watched in paper trading. None has earned a place in the main portfolio, which stays in cash."
     if r:
-        when = f"the research run of {r['ran_at'][:10]}" if len(r.get("runs") or []) <= 1 else f"the research runs up to {r['ran_at'][:10]}"
+        when = f"the research run of {day_text(r['ran_at'])}" if len(r.get("runs") or []) <= 1 else f"the research runs up to {day_text(r['ran_at'])}"
         return (f"None of the {len(r.get('outcomes', {})) or 12} strategies passed the admission bar in {when}, so no strategy has earned a place in the main portfolio, which stays in cash. "
                 f"All {n_mon} are paper-traded anyway so their trades are recorded and the forward record can show whether rejecting them was right.")
     return "The research run has not been made yet; only the benchmarks are being paper-traded."

@@ -1,6 +1,7 @@
 """btcquant view: what the phone app shows of the paper lab, in plain words, built only from the dashboard and the ledgers the daily run writes."""
 import json
 import os
+import re
 
 import numpy as np
 import pytest
@@ -43,7 +44,7 @@ def test_the_view_has_the_headline_the_accounts_and_the_trades_in_plain_words(ro
     v = V.paper_view(root)
     json.dumps(v)
     assert v["available"] is True and v["protocol"] == C.PROTOCOL_VERSION and v["real_trading"].startswith("DISABLED") and v["status"] == "no champions: the main portfolio is in cash"
-    assert v["headline"].startswith("None of the 2 strategies passed the admission bar in the research run of 2026-11-15") and "stays in cash" in v["headline"] and "All 2 are paper-traded anyway" in v["headline"]
+    assert v["headline"].startswith("None of the 2 strategies passed the admission bar in the research run of 15 Nov 2026") and "stays in cash" in v["headline"] and "All 2 are paper-traded anyway" in v["headline"]
     assert v["counts"] == {"champions": 0, "challengers": 0, "monitors": 2, "research_admitted": 0, "research_ran_at": "2026-11-15T10:34:08Z"}
     by_id = {a["id"]: a for a in v["accounts"]}
     assert set(by_id) == {"buy_hold", "cash", "portfolio"} | {a["id"] for a in v["accounts"] if a["stage"] == "monitor"} and len(v["accounts"]) == 5
@@ -351,3 +352,32 @@ def test_the_view_built_from_the_committed_artifacts_is_complete_and_makes_no_pr
         assert b["outcome"] in ("rejected", "too_thin", "admitted") and b["why"] and b["train"]["trades"] is not None and b["validation"]["return"] is not None
     text = json.dumps(v).lower()
     assert "guaranteed" not in text and "will make money" not in text and "buy now" not in text
+
+
+def test_dates_in_sentences_are_written_the_way_the_phone_writes_them():
+    assert V.day_text("2026-11-17") == "17 Nov 2026" and V.day_text("2026-11-05T10:34:08Z") == "5 Nov 2026"      # the day first, no leading zero, a time left out
+    assert V.day_text("2020-01-01") == "1 Jan 2020" and V.day_text("2026-12-31") == "31 Dec 2026"
+    assert [V.day_text(d) for d in ("2026-02-03", "2026-03-04", "2026-04-05", "2026-05-06", "2026-06-07", "2026-07-08", "2026-08-09", "2026-09-10", "2026-10-11")] == [
+        "3 Feb 2026", "4 Mar 2026", "5 Apr 2026", "6 May 2026", "7 Jun 2026", "8 Jul 2026", "9 Aug 2026", "10 Sep 2026", "11 Oct 2026"]
+    for not_a_date in ("soon", "", "2026-13-01", "2026-00-10", "26-11-17", "x2026-11-17", "2026-1-05", "2026-11-5"):
+        assert V.day_text(not_a_date) == not_a_date                                                              # anything that does not start with a real date comes back as it was
+
+
+def test_no_sentence_of_the_view_carries_a_raw_date(root_with_data):
+    v = V.paper_view(root_with_data)
+    iso = re.compile(r"\b20\d\d-\d\d-\d\d\b")
+
+    def sentences(x, path=""):
+        if isinstance(x, dict):
+            for k, y in x.items():
+                yield from sentences(y, f"{path}.{k}")
+        elif isinstance(x, list):
+            for i, y in enumerate(x):
+                yield from sentences(y, f"{path}[{i}]")
+        elif isinstance(x, str) and " " in x:                                                                    # the dates of the charts and the ledger have no space in them: they are data, not sentences
+            yield path, x
+
+    seen = list(sentences(v))
+    assert any(p == ".headline" for p, s in seen) and any(p == ".backtest.note" for p, s in seen)             # the walk really reaches the two sentences that had one
+    assert [(p, s[:80]) for p, s in seen if iso.search(s)] == []
+    assert "from 1 Jan 2020 with $10,000" in v["backtest"]["note"] and "15 Nov 2026" in v["headline"]

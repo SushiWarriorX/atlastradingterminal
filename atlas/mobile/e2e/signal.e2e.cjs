@@ -180,6 +180,18 @@ async function search(page, q) {
   await sleep(250);
 }
 const addFromSearch = async (page, id) => { await page.click(T(`toggle-${id}`)); await page.waitForSelector(`${T(`toggle-${id}`)}[aria-label^="Remove"]`); };
+// Every piece of text inside the element with this test id that carries a raw ISO date (2026-11-18), with the test ids of the elements around it, so a failure says where it is. Only that screen is searched: an earlier tab stays in the page behind it.
+const rawIsoDates = (page, rootId) => page.evaluate((id) => {
+  const root = document.querySelector(`[data-testid="${id}"]`), re = /\b20\d\d-\d\d-\d\d\b/, out = [];
+  if (!root) return [`no element with the test id ${id}`];
+  const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+    if (!re.test(n.nodeValue)) continue;
+    const ids = []; for (let p = n.parentElement; p && ids.length < 5; p = p.parentElement) ids.push(p.getAttribute("data-testid") || p.tagName.toLowerCase());
+    out.push(`${n.nodeValue.trim().slice(0, 70)}   <- ${ids.join(" < ")}`);
+  }
+  return out;
+}, rootId);
 const clickableNames = (page) => page.evaluate(() => [...document.querySelectorAll('button, [role="button"], a, input, [role="link"]')].map((e) => (e.getAttribute("aria-label") || e.innerText || e.getAttribute("placeholder") || "").trim()).filter(Boolean));
 const TRADING_CONTROL = /^(buy|sell|short|trade|place|order|submit order|go long|go short)\b/i;
 const FORECASTS = /\b(price target of|will (rise|fall|rally|crash|moon)|guaranteed|you should (buy|sell)|buy now|sell now)\b/i;
@@ -576,6 +588,10 @@ async function healthy(browser) {
       const names = await clickableNames(page);
       eq(names.filter((n) => TRADING_CONTROL.test(n)), [], "trading controls on the Journey page");
       noMatch(await text(page), FORECASTS, "no promise of profit");
+      eq(await rawIsoDates(page, "journey-scroll"), [], "no raw ISO date on the Journey page (dates read like 17 Nov 2026)");
+      await page.evaluate(() => { const el = document.querySelector('[data-testid="journey-scroll"]'); if (el) el.scrollTop = 0; });      // the top of the page: the verdict card with its label and sentence
+      await sleep(300);
+      await shot(page, "17a-journey-top");
       await page.evaluate(() => { const el = document.querySelector('[data-testid="journey-scroll"]'); if (el) el.scrollTop = 1e6; });
       await sleep(300);
       await shot(page, "17b-journey-feed");
