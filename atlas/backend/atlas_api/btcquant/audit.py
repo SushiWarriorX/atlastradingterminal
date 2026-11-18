@@ -2,12 +2,15 @@
 
 What it checks, account by account. The files belong together: the account file and its meta carry the id that is the file's name, and every row of the ledger names that account. The ledger: it begins with exactly one `account_opened`, its rows are numbered 1, 2, 3 ... and its start equity is the one in the account file and in the meta. Every fill: a fill that follows an order executes at the next open (on the day the order says, the day after its signal bar), its reference price is the open of that candle and the order's reference close is the close of its signal bar; a stop-out has no order and fills at the stop (or at the open when the open gaps through it), on a candle whose low reached the stop; the fill price is the reference moved by the slippage (0.05%) against the trade, the fee is 0.10% of the notional and the slippage cost is the quantity times the move. The replay: cash and quantity after every fill equal what the ledger says, the account never holds a negative quantity or negative cash (no short, no leverage), and the totals in the account file (cash, quantity, fees, slippage, volume, number of fills) equal the replay. The curve: its days follow each other, start the day after the candle the account opened after and end on the account's last bar, each day's close is the stored close, its cash and quantity are what the ledger had on that day, and its equity is cash plus quantity times the close and its exposure the Bitcoin's share of that equity. The account is no day behind the newest stored candle, a pending order is in the ledger and has not been filled, and the dashboard shows the equity of the curve's last day.
 
+The rules the account was opened under are frozen, and nothing else reads them back: the daily run trades from the family and the parameters in the account's meta, and its own frozen check reads only the challengers and the champions of the registry (there are none). So here: the specification stored in the meta hashes to the fingerprint the meta records (the first 16 hexadecimal characters of the SHA-256 of the specification as JSON with sorted keys, written out again here) and to the one the ledger opened the account under; the family and the parameters that trade are those of that specification and of the opening row, and so is the stage; the specification charges the fee and the slippage that the replay checks; a benchmark or the portfolio is the account of its name, any other account is a monitor, a challenger or a champion whose id is its family and the first 8 characters of its fingerprint; and such an account's specification is in the registry's candidate list, with the same rules, logged no later than the account opened. The registry's own records are not audited here. The rule for the id takes the engine as it is today: it names an account after the hash of its specification (`research.account_id`, pinned to this tool by a test) and every specification is version 1; a protocol amendment that changes either has to change this rule and its tests.
+
 What it cannot say: that the strategy is any good, that a signal was the right signal, or that the stored candles are right (`crosscheck.py` compares them with a second venue). It shows that the paper record is what its own rules say it is.
 """
 from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import sys
 from datetime import datetime, timezone
@@ -20,6 +23,8 @@ SLIPPAGE = 0.0005                              # per side, against the trade
 DAY = 86400
 TOL = 1e-9                                     # relative: the replay does the engine's own arithmetic in the same order, so more than rounding noise is a difference
 TOL_PRICE = 1e-12                              # prices and candle figures are copied, not calculated
+FIXED = {"buy_hold": "benchmark", "cash": "benchmark", "portfolio": "portfolio"}      # the accounts every daily run opens, and the stage of each (daily.py: BENCHMARKS and PORTFOLIO; a test pins the names)
+REGISTERED = ("monitor", "challenger", "champion")                                     # the stages of an account that trades a specification the registry logged first
 
 
 class AuditError(Exception):
@@ -67,7 +72,70 @@ def _ledger(root: Path, account_id: str) -> list[dict]:
         raise AuditError(f"the ledger of {account_id} is not valid JSON lines: {path}") from None
 
 
-def _audit_account(file_id: str, doc: dict, ledger: list[dict], candles: dict, newest: int, dash: dict | None, worst: dict) -> tuple[list[str], int, int]:
+def _fingerprint(spec) -> str:
+    """The fingerprint of a specification: the first 16 hexadecimal characters of the SHA-256 of its JSON with sorted keys (the engine's `hash_spec`, written out here again; a test pins the two together)."""
+    return hashlib.sha256(json.dumps(spec, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def _registry(root: Path) -> dict[str, list[dict]]:
+    """The registry's candidate records by fingerprint; a line that is not a record with a fingerprint is skipped (the registry's own records are not audited here)."""
+    path = root / "registry" / "candidates.jsonl"
+    try:
+        rows = [json.loads(line) for line in path.read_text(encoding="utf-8").split("\n") if line.strip()]
+    except OSError:
+        raise AuditError(f"the registry's candidate list cannot be read, so no specification was compared with it: {path}") from None
+    except ValueError:
+        raise AuditError(f"the registry's candidate list is not valid JSON lines, so no specification was compared with it: {path}") from None
+    index: dict[str, list[dict]] = {}
+    for r in rows:
+        if isinstance(r, dict) and isinstance(r.get("spec_hash"), str):
+            index.setdefault(r["spec_hash"], []).append(r)
+    return index
+
+
+def _identity(aid: str, meta: dict, opening: dict, registry: dict | None) -> list[str]:
+    """What is wrong with the rules an account says it was opened under (the messages without the account's id in front); `registry` is None when the candidate list could not be read, and then it is not consulted."""
+    spec, recorded = meta.get("spec"), meta.get("spec_hash")
+    if not isinstance(spec, dict) or not isinstance(recorded, str):
+        return ["its meta has no frozen specification (a spec and its spec_hash)"]
+    out = []
+    got = _fingerprint(spec)
+    if got != recorded:
+        out.append(f"its stored specification hashes to {got}, not to the recorded fingerprint {recorded}")
+    if opening.get("spec_hash") != recorded:
+        out.append(f"its ledger opened it under the fingerprint {opening.get('spec_hash')}, its meta records {recorded}")
+    family, params, stage = meta.get("family"), meta.get("params"), meta.get("stage")
+    if (spec.get("family"), spec.get("params")) != (family, params):
+        out.append(f"its meta trades family {family} with parameters {params}, but the specification it records says {spec.get('family')} with {spec.get('params')}")
+    if (opening.get("family"), opening.get("params")) != (family, params):
+        out.append(f"its ledger opened it as family {opening.get('family')} with parameters {opening.get('params')}, its meta says {family} with {params}")
+    if opening.get("stage") != stage:
+        out.append(f"its ledger opened it as a {opening.get('stage')} account, its meta says {stage}")
+    if spec.get("fee") != FEE or spec.get("slippage") != SLIPPAGE:
+        out.append(f"its specification charges a fee of {spec.get('fee')} and slippage of {spec.get('slippage')}, but the audit checks {FEE} and {SLIPPAGE}")
+    if aid in FIXED:
+        if stage != FIXED[aid]:
+            out.append(f"it is a {stage} account, but the account of that name is a {FIXED[aid]}")
+    elif stage not in REGISTERED:
+        out.append(f"it is none of the fixed accounts ({', '.join(sorted(FIXED))}) and its stage {stage!r} is not monitor, challenger or champion")
+    else:
+        if aid != f"{family}-{recorded[:8]}":
+            out.append(f"its id should be {family}-{recorded[:8]} (the family and the first 8 characters of its fingerprint)")
+        if registry is not None:
+            records = registry.get(recorded, [])
+            if not records:
+                out.append(f"its fingerprint {recorded} was never logged in the registry's candidate list")
+            elif not any(r.get("spec") == spec for r in records):
+                out.append(f"its stored specification is not the one the registry logged under the fingerprint {recorded}")
+            else:
+                logged = min((r["logged_at"] for r in records if r.get("spec") == spec and isinstance(r.get("logged_at"), str)), default=None)
+                opened = meta.get("opened_at")
+                if not (logged is not None and isinstance(opened, str) and logged <= opened):
+                    out.append(f"its specification was logged in the registry at {logged}, not before the account opened at {opened}")
+    return out
+
+
+def _audit_account(file_id: str, doc: dict, ledger: list[dict], candles: dict, newest: int, dash: dict | None, worst: dict, registry: dict | None) -> tuple[list[str], int, int]:
     """The problems of one account (its files are `<file_id>.json` and `<file_id>.jsonl`), its number of fills and its number of curve days; an account whose ledger cannot be replayed counts none of them."""
     try:
         acc, meta = doc["account"], doc["meta"]
@@ -95,6 +163,8 @@ def _audit_account(file_id: str, doc: dict, ledger: list[dict], candles: dict, n
     start = opened[0]["start_equity"]
     if start != acc["start_equity"] or start != meta["start_equity"]:
         bad(f"the start equity differs: ledger {start}, account {acc['start_equity']}, meta {meta['start_equity']}")
+    for message in _identity(aid, meta, opened[0], registry):
+        bad(message)
     orders = {e["order_id"]: e for e in ledger if e.get("event") == "order"}
     stops = {e["exec_time"]: e for e in ledger if e.get("event") == "stop_hit"}
     fills = [e for e in ledger if e.get("event") == "fill"]
@@ -215,13 +285,18 @@ def audit(root: Path | str | None = None) -> dict:
     newest = max(candles)
     worst = {"cash": 0.0, "qty": 0.0, "equity": 0.0, "price": 0.0, "fee": 0.0}
     problems: list[str] = []
+    try:
+        registry = _registry(root)
+    except AuditError as e:                                                                                # one problem, said once; the accounts are audited all the same, without it
+        registry = None
+        problems.append(str(e))
     fills = days = 0
     ids = []
     for path in files:
         doc = _read_json(path, f"the account file {path.name}")
         aid = path.stem
         try:
-            p, n_fills, n_days = _audit_account(aid, doc, _ledger(root, aid), candles, newest, dash.get(aid), worst)
+            p, n_fills, n_days = _audit_account(aid, doc, _ledger(root, aid), candles, newest, dash.get(aid), worst, registry)
         except (KeyError, TypeError, ValueError, AttributeError):
             p, n_fills, n_days = [f"{aid}: its files are not in the layout the audit reads (a field is missing or has the wrong type)"], 0, 0
         problems += p
