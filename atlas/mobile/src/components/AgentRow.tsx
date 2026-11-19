@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { ActivityIndicator, Linking, Pressable, StyleSheet, View } from "react-native";
 import type { AgentName, Finding, Story } from "../api/types";
 import { AGENT_TITLE, rowKind, STANCE_LABEL } from "../lib/briefing";
-import { countdown, dateOnly, localDateTime, providerName, relativeTime } from "../lib/format";
+import { countdown, dateOnly, localDateTime, providerName, relativeTime, spoken } from "../lib/format";
 import { safeUrl } from "../lib/links";
 import { color, radius, space, stanceColor } from "../theme";
 import { TextButton, Txt } from "./ui";
@@ -19,9 +19,11 @@ export function AgentRow({ first, agent, finding, now, expanded, onToggle, onRef
   const kind = rowKind(finding);
   const f = finding;
   const stance = f?.stance && f.stance !== "insufficient" ? f.stance : null;
+  const updated = f?.analyzed_at && kind !== "pending" ? `Updated ${relativeTime(f.analyzed_at, now)}${f.data_as_of ? ` · data as of ${localDateTime(f.data_as_of)}` : ""}` : null;
+  const label = spoken(AGENT_TITLE[agent], stance ? STANCE_LABEL[stance] : null, f?.demo && "DEMO", kind === "pending" ? "Working on it…" : f?.takeaway, updated);      // the words the row shows, in the order it shows them
   return (
     <View style={[s.wrap, !first && s.sep]} testID={`agent-${agent}`}>
-      <Pressable onPress={onToggle} accessibilityRole="button" accessibilityState={{ expanded }} accessibilityLabel={`${AGENT_TITLE[agent]}. ${f?.takeaway ?? "Loading"}`} style={({ pressed }) => [s.head, pressed && { opacity: 0.75 }]} testID={`agent-toggle-${agent}`}>
+      <Pressable onPress={onToggle} accessibilityRole="button" accessibilityState={{ expanded }} accessibilityLabel={label} style={({ pressed }) => [s.head, pressed && { opacity: 0.75 }]} testID={`agent-toggle-${agent}`}>
         <View style={s.icon}><Ionicons name={ICON[agent]} size={19} color={color.text} /></View>
         <View style={{ flex: 1, minWidth: 0 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
@@ -34,7 +36,7 @@ export function AgentRow({ first, agent, finding, now, expanded, onToggle, onRef
           ) : (
             <Txt variant="small" c={kind === "unavailable" ? color.warn : color.dim} numberOfLines={expanded ? undefined : 2} style={{ marginTop: 3 }} testID={`takeaway-${agent}`}>{f?.takeaway}</Txt>
           )}
-          {f?.analyzed_at && kind !== "pending" ? <Txt variant="tiny" style={{ marginTop: 3 }}>Updated {relativeTime(f.analyzed_at, now)}{f.data_as_of ? ` · data as of ${localDateTime(f.data_as_of)}` : ""}</Txt> : null}
+          {updated ? <Txt variant="tiny" style={{ marginTop: 3 }}>{updated}</Txt> : null}
         </View>
         <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={18} color={color.faint} />
       </Pressable>

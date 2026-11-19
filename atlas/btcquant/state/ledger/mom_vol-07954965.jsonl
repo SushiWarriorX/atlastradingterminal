@@ -1,0 +1,1 @@
+{"account": "mom_vol-07954965", "after_candle": "2026-11-14T00:00:00Z", "event": "account_opened", "family": "mom_vol", "params": {"L": 30, "cap": 1.0}, "recorded_at": "2026-11-15T10:36:08Z", "seq": 1, "spec_hash": "07954965bbaa0586", "stage": "monitor", "start_equity": 10000.0}

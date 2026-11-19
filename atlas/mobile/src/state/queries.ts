@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import type { AgentName, Asset, ChartRange, ResearchResponse, WatchlistResponse } from "../api/types";
+import type { AgentName, Asset, ChartRange, JournalFilters, LabRunBody, ResearchResponse, WatchlistResponse } from "../api/types";
 import { keys } from "../lib/keys";
 import { pushRecent } from "../lib/recents";
 import { applyAdd, applyRemove, applyReorder } from "../lib/watchlist";
@@ -104,4 +104,385 @@ export function useRecents() {
   const add = (a: Asset) => setList((cur) => { const n = pushRecent(cur, a); storage.setRecents(n, baseUrl); return n; });
   const clear = () => { setList([]); storage.setRecents([], baseUrl); };
   return { list, add, clear };
+}
+
+export function useJournal(filters: JournalFilters) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).journal(filters), queryFn: () => need(api).journalLog(filters), enabled: !!api, refetchInterval: 30_000, retry: 1 });
+}
+
+export function useJournalSave() {
+  const { api, baseUrl } = useConnection();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string | null; body: Record<string, string | null> }) => (id ? need(api).journalUpdate(id, body) : need(api).journalCreate(body)),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["journal", baseUrl] }),
+  });
+}
+
+export function useJournalDelete() {
+  const { api, baseUrl } = useConnection();
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (id: string) => need(api).journalDelete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["journal", baseUrl] }) });
+}
+
+export function useMacroBrief() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).macro, queryFn: () => need(api).macroBrief(), enabled: !!api, staleTime: 5 * 60_000, refetchInterval: 10 * 60_000, retry: 1 });
+}
+
+export function useStockResearch(symbol: string, enabled: boolean) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).stock(symbol), queryFn: () => need(api).stockResearch(symbol), enabled: !!api && enabled, staleTime: 10 * 60_000, retry: 0 });
+}
+
+export function useEarnings(days: number, enabled: boolean) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).earnings(days), queryFn: () => need(api).earnings(days), enabled: !!api && enabled, staleTime: 10 * 60_000, retry: 0 });
+}
+
+export function useLabRun() {
+  const { api } = useConnection();
+  return useMutation({ mutationFn: (body: LabRunBody) => need(api).labRun(body) });
+}
+
+export function useCalendar(query: string, enabled = true) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).calendar(query), queryFn: () => need(api).calendar(query), enabled: !!api && enabled, staleTime: 10 * 60_000, retry: 0, placeholderData: (prev) => prev });      // keep the old list on screen while a new filter loads
+}
+
+export function useWhatIf(id: string, amount: number, enabled: boolean) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).whatif(id, amount), queryFn: () => need(api).whatIf(id, amount), enabled: !!api && enabled && amount >= 1, staleTime: 30 * 60_000, retry: 0, placeholderData: (prev) => prev });
+}
+
+export function useDiscover() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).discover, queryFn: () => need(api).discover(false), enabled: !!api, staleTime: 30 * 60_000, retry: 0 });
+}
+
+export function useSentiment() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).sentiment, queryFn: () => need(api).btcSentiment(), enabled: !!api, staleTime: 15 * 60_000, refetchInterval: 30 * 60_000, retry: 0 });
+}
+
+export function useSecFilings(symbol: string, forms: string[], enabled = true) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).filings(symbol, forms.join(",")), queryFn: () => need(api).secFilings(symbol, forms, 365), enabled: !!api && enabled && !!symbol, staleTime: 10 * 60_000, retry: 0, placeholderData: (prev) => prev });
+}
+
+export function useNarrative() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).narrative, queryFn: () => need(api).narrative(false), enabled: !!api, staleTime: 30 * 60_000, retry: 0 });
+}
+
+export function useTreasury() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).treasury, queryFn: () => need(api).treasury(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 60 * 60_000, retry: 0 });
+}
+
+export function usePositioning() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).positioning, queryFn: () => need(api).btcPositioning(), enabled: !!api, staleTime: 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+
+export function useStablecoins() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).stablecoins, queryFn: () => need(api).btcStablecoins(), enabled: !!api, staleTime: 60 * 60_000, refetchInterval: 2 * 60 * 60_000, retry: 0 });
+}
+
+export function useNetwork() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).network, queryFn: () => need(api).btcNetwork(), enabled: !!api, staleTime: 5 * 60_000, refetchInterval: 10 * 60_000, retry: 0 });
+}
+
+export function useFx() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).fx, queryFn: () => need(api).fx(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 60 * 60_000, retry: 0 });
+}
+
+export function useExperiments() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).experiments, queryFn: () => need(api).experiments(), enabled: !!api, staleTime: 60 * 60_000, retry: 0 });
+}
+
+/** The paper-trading lab for the Journey tab. It changes once a day (the daily run is at 00:15 UTC), so it is kept for five minutes and re-read every quarter of an hour. */
+export function usePaperLab() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).paperLab, queryFn: () => need(api).paperLab(), enabled: !!api, staleTime: 5 * 60_000, refetchInterval: 15 * 60_000, retry: 1 });
+}
+
+export function useStrategyTracker() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).tracker, queryFn: () => need(api).strategyTracker(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 2 * 60 * 60_000, retry: 0 });
+}
+
+export function useWorldBank() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).world, queryFn: () => need(api).worldBank(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useCryptoMarket() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).cryptoMarket, queryFn: () => need(api).btcMarket(), enabled: !!api, staleTime: 10 * 60_000, refetchInterval: 15 * 60_000, retry: 0 });
+}
+
+export function useOps() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).ops, queryFn: () => need(api).opsOverview(), enabled: !!api, staleTime: 15_000, refetchInterval: 30_000, retry: 0 });
+}
+
+export function useOpsAction() {
+  const { api, baseUrl } = useConnection();
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: ({ path, body }: { path: string; body?: unknown }) => need(api).opsPost(path, body ?? {}), onSuccess: (d) => qc.setQueryData(keys(baseUrl).ops, d) });
+}
+
+export function useFedOps() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).fedOps, queryFn: () => need(api).fedOps(), enabled: !!api, staleTime: 15 * 60_000, refetchInterval: 30 * 60_000, retry: 0 });
+}
+
+export function useTga() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).tga, queryFn: () => need(api).tga(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 60 * 60_000, retry: 0 });
+}
+
+export function useAuctions() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).auctions, queryFn: () => need(api).auctions(), enabled: !!api, staleTime: 60 * 60_000, refetchInterval: 2 * 60 * 60_000, retry: 0 });
+}
+
+export function useBudget() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).budget, queryFn: () => need(api).budget(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useInterest() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).interest, queryFn: () => need(api).interest(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useBuybacks() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).buybacks, queryFn: () => need(api).buybacks(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useBillAuctions() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).bills, queryFn: () => need(api).bills(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useBorrowing() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).borrowing, queryFn: () => need(api).borrowing(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useOutlays() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).outlays, queryFn: () => need(api).outlays(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useReceipts() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).receipts, queryFn: () => need(api).receipts(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useCustoms() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).customs, queryFn: () => need(api).customs(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useFinConditions() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).finConditions, queryFn: () => need(api).finConditions(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+
+export function useJoblessClaims() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).joblessClaims, queryFn: () => need(api).joblessClaims(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+
+export function useOilPrices() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).oilPrices, queryFn: () => need(api).oilPrices(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+
+export function useGasolinePrices() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).gasolinePrices, queryFn: () => need(api).gasolinePrices(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+export function useNaturalGas() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).naturalGas, queryFn: () => need(api).naturalGas(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+export function useMoneySupply() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).moneySupply, queryFn: () => need(api).moneySupply(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+export function useHousingStarts() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).housingStarts, queryFn: () => need(api).housingStarts(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+export function useIndustrialProduction() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).industrialProduction, queryFn: () => need(api).industrialProduction(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+export function useRetailSales() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).retailSales, queryFn: () => need(api).retailSales(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+export function useBankReserves() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).bankReserves, queryFn: () => need(api).bankReserves(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+export function useEuroInflation() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).euroInflation, queryFn: () => need(api).euroInflation(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+
+export function useEuroUnemployment() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).euroUnemployment, queryFn: () => need(api).euroUnemployment(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+
+export function useEuroStress() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).euroStress, queryFn: () => need(api).euroStress(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+
+export function useEuroGdp() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).euroGdp, queryFn: () => need(api).euroGdp(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useEuroLending() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).euroLending, queryFn: () => need(api).euroLending(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useEuroBankRates() {
+  const { api, baseUrl } = useConnection();
+  const down = (q: { state: { data?: { available: boolean; demo: boolean } } }) => q.state.data?.available === false && !q.state.data.demo;      // the ECB's rates service is slow at times: an answer of "unavailable" is asked for again in a minute or two, not kept for six hours like a figure
+  return useQuery({ queryKey: keys(baseUrl).euroBankRates, queryFn: () => need(api).euroBankRates(), enabled: !!api, retry: 0,
+    staleTime: (q) => (down(q) ? 60_000 : 6 * 60 * 60_000), refetchInterval: (q) => (down(q) ? 120_000 : 12 * 60 * 60_000) });
+}
+
+export function useEuroEmployment() {
+  const { api, baseUrl } = useConnection();
+  const down = (q: { state: { data?: { available: boolean; demo: boolean } } }) => q.state.data?.available === false && !q.state.data.demo;      // the ECB's national accounts service is slow at times: an answer of "unavailable" is asked for again in a minute or two, not kept for six hours like a figure
+  return useQuery({ queryKey: keys(baseUrl).euroEmployment, queryFn: () => need(api).euroEmployment(), enabled: !!api, retry: 0,
+    staleTime: (q) => (down(q) ? 60_000 : 6 * 60 * 60_000), refetchInterval: (q) => (down(q) ? 120_000 : 12 * 60 * 60_000) });
+}
+
+export function useJolts() {
+  const { api, baseUrl } = useConnection();
+  const down = (q: { state: { data?: { available: boolean; demo: boolean } } }) => q.state.data?.available === false && !q.state.data.demo;      // an answer of "unavailable" is asked for again in a minute or two, not kept for six hours like a figure
+  return useQuery({ queryKey: keys(baseUrl).jolts, queryFn: () => need(api).jolts(), enabled: !!api, retry: 0,
+    staleTime: (q) => (down(q) ? 60_000 : 3 * 60 * 60_000), refetchInterval: (q) => (down(q) ? 120_000 : 6 * 60 * 60_000) });
+}
+
+export function useUsJobs() {
+  const { api, baseUrl } = useConnection();
+  const down = (q: { state: { data?: { available: boolean; demo: boolean } } }) => q.state.data?.available === false && !q.state.data.demo;      // an answer of "unavailable" is asked for again in a minute or two, not kept for six hours like a figure
+  return useQuery({ queryKey: keys(baseUrl).usJobs, queryFn: () => need(api).usJobs(), enabled: !!api, retry: 0,
+    staleTime: (q) => (down(q) ? 60_000 : 3 * 60 * 60_000), refetchInterval: (q) => (down(q) ? 120_000 : 6 * 60 * 60_000) });
+}
+
+export function useUsGdp() {
+  const { api, baseUrl } = useConnection();
+  const down = (q: { state: { data?: { available: boolean; demo: boolean } } }) => q.state.data?.available === false && !q.state.data.demo;      // an answer of "unavailable" is asked for again in a minute or two, not kept for six hours like a figure
+  return useQuery({ queryKey: keys(baseUrl).usGdp, queryFn: () => need(api).usGdp(), enabled: !!api, retry: 0,
+    staleTime: (q) => (down(q) ? 60_000 : 3 * 60 * 60_000), refetchInterval: (q) => (down(q) ? 120_000 : 6 * 60 * 60_000) });
+}
+
+export function useUsHousehold() {
+  const { api, baseUrl } = useConnection();
+  const down = (q: { state: { data?: { available: boolean; demo: boolean } } }) => q.state.data?.available === false && !q.state.data.demo;      // an answer of "unavailable" is asked for again in a minute or two, not kept for six hours like a figure
+  return useQuery({ queryKey: keys(baseUrl).usHousehold, queryFn: () => need(api).usHousehold(), enabled: !!api, retry: 0,
+    staleTime: (q) => (down(q) ? 60_000 : 3 * 60 * 60_000), refetchInterval: (q) => (down(q) ? 120_000 : 6 * 60 * 60_000) });
+}
+
+export function useEuroYields() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).euroYields, queryFn: () => need(api).euroYields(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+
+export function useEuroMoneySupply() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).euroMoneySupply, queryFn: () => need(api).euroMoneySupply(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+export function useEcbRates() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).ecbRates, queryFn: () => need(api).ecbRates(), enabled: !!api, staleTime: 30 * 60_000, refetchInterval: 60 * 60_000, retry: 0 });
+}
+
+export function useRealYields() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).realYields, queryFn: () => need(api).realYields(), enabled: !!api, staleTime: 3 * 60 * 60_000, refetchInterval: 6 * 60 * 60_000, retry: 0 });
+}
+
+export function useAgriPositioning() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).agriPositioning, queryFn: () => need(api).agriPositioning(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useCurrencyPositioning() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).currencyPositioning, queryFn: () => need(api).currencyPositioning(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useCommodityPositioning() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).commodityPositioning, queryFn: () => need(api).commodityPositioning(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useFuturesPositioning() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).futuresPositioning, queryFn: () => need(api).futuresPositioning(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useDealers() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).dealers, queryFn: () => need(api).dealers(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useDebtRates() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).debtRates, queryFn: () => need(api).debtRates(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useDebtMix() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).debtMix, queryFn: () => need(api).debtMix(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useFedHoldings() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).fedHoldings, queryFn: () => need(api).fedHoldings(), enabled: !!api, staleTime: 6 * 60 * 60_000, refetchInterval: 12 * 60 * 60_000, retry: 0 });
+}
+
+export function useFedRates() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).fedRates, queryFn: () => need(api).fedRates(), enabled: !!api, staleTime: 15 * 60_000, refetchInterval: 30 * 60_000, retry: 0 });
+}
+
+export function useFundamentalResearch(symbol: string, enabled: boolean) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).fundResearch(symbol), queryFn: () => need(api).fundamentalResearch(symbol), enabled: !!api && enabled, staleTime: 10 * 60_000, retry: 0 });
+}
+
+export function useResearchChanges(symbol: string, enabled: boolean) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).fundChanges(symbol), queryFn: () => need(api).researchChanges(symbol), enabled: !!api && enabled, staleTime: 60_000, retry: 0 });
+}
+
+export function useListings() {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).listings, queryFn: () => need(api).discoverListings(30), enabled: !!api, staleTime: 10 * 60_000, refetchInterval: 30 * 60_000, retry: 0 });
+}
+
+export function useCandidates(qs: string) {
+  const { api, baseUrl } = useConnection();
+  return useQuery({ queryKey: keys(baseUrl).candidates(qs), queryFn: () => need(api).discoverCandidates(qs), enabled: !!api, staleTime: 5 * 60_000, retry: 0 });
 }

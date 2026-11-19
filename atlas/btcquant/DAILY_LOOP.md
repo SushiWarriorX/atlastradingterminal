@@ -1,0 +1,37 @@
+# btcquant daily run (00:15 UTC)
+
+The scheduled task "btcquant daily run" fires at 00:15 UTC every day (the owner's mission of 2026-11-15; `PROTOCOL.md` sections 9 and 10). It is **not** one of the hourly jobs and does not replace one: the hourly cycle at :17 runs its own job as usual, two minutes later.
+
+## What to do (repo `/home/user/atlastradingterminal`, branch `feature/research-modules`)
+
+1. `git pull --ff-only`. Never merge, never force-push.
+2. `cd atlas/backend && python3 -m atlas_api.btcquant.daily`. It prints one status line and exits 0; exit 1 means a step failed and the line says which. If Python lacks the packages: `python3 -m venv /tmp/atlasvenv && /tmp/atlasvenv/bin/pip install -e atlas/backend[dev]`.
+3. Read `atlas/btcquant/reports/latest.md` (the day's report) and check `atlas/btcquant/dashboard.json`: `frozen_check` must be empty, `data.stale` false, and every account's `days` must have gone up by one (by more if earlier days were missed: the run steps every account through each newly completed candle in order, so a missed day is caught up, never skipped).
+4. Commit only what the run writes: `atlas/btcquant/data`, `atlas/btcquant/state`, `atlas/btcquant/reports`, `atlas/btcquant/dashboard.json`. Message `btcquant daily run YYYY-MM-DD`, ending with the usual attribution lines. Push to `feature/research-modules`.
+5. Report in plain English, three to five sentences: the new candle and its close; any order signalled, filled, stopped or halted by the circuit breaker today (they are in the report, worded as the phone shows them); each paper account's return since it opened, against buying and holding; anything that went wrong. Say whether anything passed the "credibly profitable" bar: it stays **not yet** until an admitted challenger completes the forward gates (P5: at least 90 days, at least 5 trades, no circuit-breaker trip, not more than 5 points behind its exposure-matched hold). Nothing is admitted today, so nothing can pass.
+
+## What the daily run never does
+
+- It never re-runs the research (`python -m atlas_api.btcquant.research` refuses a repeat on the same protocol and data), never changes a family, a protocol constant, an account's rules or a registry entry, and never touches an account by hand.
+- It never places an order. Nothing in this system can; every account is a simulation, and the ledger records each order at the moment its rule signals it, and each fill at the next open.
+- A failed download is reported and the stored candles are used. A missing candle stops the affected account and says so; the next run catches up.
+
+## Reading an order's numbers
+
+An order's `info` in `state/ledger/<account>.jsonl` holds the numbers at the signal bar, not the reason the rule is on. A rule that holds a window after an event (`volume_surge`, `vol_breakout`) can therefore place an order on a bar that does not meet the threshold itself, and the line then reads as a contradiction. Example: `volume_surge-9c042d26` opens already long on its first run, because the surge day of 2026-11-15 (volume 1.77 times the mean of the 20 days before it, close up) keeps its ten-candle hold on through the 2026-11-24 candle, while that day's `volume_ratio` can sit below the `required_ratio` of 1.5. A new account starts in whatever state its rule is in on its first bar (the four accounts that bought at the 2026-11-15 open did the same). The phone's wording of an order does not use `info`. An account's first order (`order_id` 1) is worded as a start on the phone ("Start at 0% in Bitcoin at the next open (nothing to buy yet)"), because it sets the starting position and, at 0%, buys nothing; later orders are worded as changes.
+
+## Rehearsing a run without touching the repository
+
+`cd atlas/backend && python3 -m atlas_api.btcquant.rehearse [--candle real|fall|rise] [--move PERCENT]` (`atlas_api/btcquant/rehearse.py`, 54 tests, breakage run 222 of 222, since 2026-11-19; the daily run does not import it). It copies `atlas/btcquant` to a temporary folder, runs `daily.run_daily` there on the stored candles plus one stand-in candle at 00:15 UTC on the day after it, runs it a second time on the same input, and prints what the run would do: the status line, the frozen check, whether the data would be stale, every account (days and equity before and after, its share in Bitcoin, HALTED), the orders waiting for the next open, how many files changed, and whether the repository's own files were left alone (the hash of every file before and after). Exit code 0 = the run behaved, 1 = something did not (the lines say what), 2 = the rehearsal could not be made.
+
+- The stand-in: `real` (the default) is the day's own still-forming Coinbase candle, taken as if it had closed (one request; before 00:00 UTC on the new day Coinbase has none and the tool says so and asks for another kind); `fall` and `rise` are a candle 20% below or above the last close; `--move -5` is any move in percent. The synthetic ones open at the previous close and put the high and low half a percent outside the open and close. A stand-in exercises the code path only; no return from it means anything.
+- Problems it reports: the run or the repeat raised an error; the frozen check is not empty; the data would be stale; an account that was stored is missing afterwards or did not step by a day (an account that caught up several days is a note, not a problem); the repeat changed a state file, a ledger or a report, or changed the dashboard in anything but its run-activity counters; or any file in the repository's `btcquant` folder differs after the rehearsal.
+- What it showed on the real accounts on 2026-11-19 (stored candles up to 2026-11-18): the day's own candle (-0.41% on the previous close) steps all 18 accounts, signals one entry (`three_down-e7923e48`) and halts nothing; the 20% fall trips the circuit breaker of `vol_target-2dbe9ef1`, the one fully invested monitor, and stops out the small positions; the 20% rise signals entries, exits and rebalances; the repeat was identical every time and the repository unchanged.
+
+A repeat on the same input leaves the records alone but not the dashboard: the second run leaves every state file, ledger and report byte-identical and only sets the dashboard's run-activity counters (days processed per account, the events of a step) back to 0. So if a commit or a push fails after a good run, redo the commit or the push; do not run the command again, or `dashboard.json` will say that nothing was processed.
+
+The tool is the same check that four strategy hours (2026-11-17 16:24 UTC and 2026-11-18 04:19, 19:21 and 22:23 UTC) did with a throwaway script of `daily.run_daily(root=<a copy of atlas/btcquant>, now=<the run's time>, candles=<the stored candles plus one stand-in candle>)`, which writes only under `root`. Use it after any change to the modules the daily run imports (the package files and `account`, `backtest`, `config`, `daily`, `data`, `indicators`, `metrics`, `paper`, `registry`, `research`, `strategies`, `validation`), and before a run that follows a new account or a protocol change.
+
+## Where the owner sees it
+
+The Signal phone app, **Journey** tab (`GET /api/btcquant/paper`, built from `dashboard.json`, the research report, the stored candles and the ledgers): the verdict of the research run, the paper accounts as cards, each strategy with its backtest beside holding Bitcoin, and every order recorded on signal. The same facts are in `reports/latest.md`.

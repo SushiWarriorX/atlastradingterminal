@@ -5,7 +5,7 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.example.signalmobile"
@@ -27,7 +27,7 @@
       "name": "Signal"
     },
     "scheme": "signal",
-    "backgroundColor": "#0B0B10",
+    "backgroundColor": "#FFFFFF",
     "plugins": [
       "expo-router",
       "expo-secure-store"

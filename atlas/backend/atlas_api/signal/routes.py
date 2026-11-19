@@ -59,6 +59,10 @@ def register(app, signal: SignalService, ok) -> None:
     async def signal_chart(asset_id: str, range: str = "1M"):
         return ok(await signal.chart(asset_id, range))
 
+    @app.get("/api/signal/whatif/{asset_id}")
+    async def signal_whatif(asset_id: str, amount: float = 1000.0):
+        return ok(await signal.whatif(asset_id, amount))
+
     @app.get("/api/signal/research/{asset_id}")
     async def signal_research(asset_id: str, wait: float = 6.0):
         return ok(await signal.research(asset_id, wait))

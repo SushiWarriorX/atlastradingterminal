@@ -1,0 +1,1 @@
+{"account": "cash", "after_candle": "2026-11-14T00:00:00Z", "event": "account_opened", "family": "cash", "params": {}, "recorded_at": "2026-11-15T10:36:08Z", "seq": 1, "spec_hash": "1e5761cabd51ba39", "stage": "benchmark", "start_equity": 10000.0}

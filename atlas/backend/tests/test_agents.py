@@ -81,14 +81,18 @@ def test_specialist_attaches_real_values_and_records_the_analysis(tmp_path):
 
 
 def test_invented_fact_is_rejected_then_corrected_on_retry(tmp_path):
+    told = []
+
     def h(p, n, m):
         s = snap_of(p)
+        if n == 2:
+            told.append(m[-1]["content"])                                                                       # what the model is told when it is asked again
         return fund_out(s, supporting=[{"fact": "made_up_ratio", "comment": "x"}]) if n == 1 else fund_out(s)
     snap, _, app = fund_snap(tmp_path)
     llm = Script(**{"Fundamental Analysis": h})
     r = run(A.AgentTeam(llm, app.state.db, None, None, None, None).specialist("fundamental", snap))
     assert r["status"] == "completed" and llm.calls.count("Fundamental Analysis") == 2 and r["usage"]["input_tokens"] == 200
-    assert "unknown fact" in " ".join(m["content"] for m in [] ) or True
+    assert told == ["Your previous output was rejected: unknown fact 'made_up_ratio' (cite only keys from snapshot.facts). Return corrected JSON only."]
 
 
 def test_persistent_invention_fails_validation_with_no_report(tmp_path):

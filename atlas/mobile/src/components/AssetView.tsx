@@ -5,20 +5,33 @@ import { RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError } from "../api/client";
 import type { AgentName, ChartRange } from "../api/types";
+import { StockResearchCard } from "./StockResearchCard";
+import { FundamentalResearchCard } from "./FundamentalResearchCard";
+import { WhatIfCard } from "./WhatIfCard";
+import { SentimentCard } from "./SentimentCard";
+import { PositioningCard } from "./PositioningCard";
+import { StablecoinsCard } from "./StablecoinsCard";
+import { NetworkCard } from "./NetworkCard";
+import { StrategyTrackerCard } from "./StrategyTrackerCard";
+import { ExperimentsCard } from "./ExperimentsCard";
+import { CryptoMarketCard } from "./CryptoMarketCard";
+import { SecFilingsCard } from "./SecFilingsCard";
+import { StrategyLabCard } from "./StrategyLabCard";
+import { BTC_ID } from "../state/selection";
 import { AgentRow } from "./AgentRow";
 import { BriefingCard } from "./BriefingCard";
 import { FreshnessLine } from "./FreshnessLine";
 import { PriceChart, type Scrub } from "./PriceChart";
-import { Banner, Chip, ErrorState, IconButton, Skeleton, Tag, TextButton, Txt } from "./ui";
+import { Banner, Chip, ErrorState, RoundButton, Skeleton, Tag, TextButton, Txt } from "./ui";
 import { AGENT_ORDER } from "../lib/briefing";
 import { directionOf, formatPct, formatPrice, localDateTime, providerName, TYPE_LABEL } from "../lib/format";
 import { describeFreshness } from "../lib/freshness";
 import { useAddToWatchlist, useAsset, useChart, useNow, useRefreshAgent, useRemoveFromWatchlist, useResearch } from "../state/queries";
-import { color, dirColor, radius, space } from "../theme";
+import { color, dirColor, font, radius, space } from "../theme";
 
 const RANGES: ChartRange[] = ["1D", "1W", "1M", "3M", "1Y", "5Y"];
 /** The research for one asset: identity, price, chart, briefing and the four agents. A full screen on a phone; the centre pane on a wide screen (`embedded`). */
-export function AssetView({ id, embedded }: { id: string; embedded?: boolean }) {
+export function AssetView({ id, embedded, hideBack }: { id: string; embedded?: boolean; hideBack?: boolean }) {
   const insets = useSafeAreaInsets();
   const now = useNow(20_000);
   const asset = useAsset(id);
@@ -58,11 +71,11 @@ export function AssetView({ id, embedded }: { id: string; embedded?: boolean }) 
   const pullRefresh = () => { asset.refetch(); chart.refetch(); research.refetch(); };
 
   return (
-    <View style={{ flex: 1, backgroundColor: color.bg, paddingTop: embedded ? 0 : insets.top }}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: space.md, paddingVertical: space.sm }}>
-        {embedded ? <View style={{ width: 34 }} /> : <IconButton name="chevron-back" size={26} label="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} testID="back" />}
-        <Txt variant="small" testID="asset-bar-symbol">{a?.symbol ?? ""}</Txt>
-        <IconButton name={saved ? "star" : "star-outline"} size={24} tint={color.text} label={saved ? "Remove from watchlist" : "Add to watchlist"} onPress={toggleSave} testID="watch-toggle" disabled={!a || add.isPending || remove.isPending} />
+    <View style={{ flex: 1, backgroundColor: color.bg, paddingTop: embedded ? 0 : (hideBack ? insets.top : insets.top) }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: space.lg, paddingVertical: space.sm }}>
+        {embedded || hideBack ? <View style={{ width: 40 }} /> : <RoundButton name="chevron-back" label="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} testID="back" />}
+        <Txt variant="h2" style={{ fontSize: font.lg, fontWeight: "700" }} testID="asset-bar-symbol">{a?.symbol ?? ""}</Txt>
+        <RoundButton name={saved ? "star" : "star-outline"} tint={saved ? color.accent : color.text} label={saved ? "Remove from watchlist" : "Add to watchlist"} onPress={toggleSave} testID="watch-toggle" disabled={!a || add.isPending || remove.isPending} />
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + space.xxl }} refreshControl={<RefreshControl refreshing={false} onRefresh={pullRefresh} tintColor={color.accent} />} testID="asset-scroll">
         <View style={{ paddingHorizontal: space.lg, gap: space.md }}>
@@ -121,6 +134,18 @@ export function AssetView({ id, embedded }: { id: string; embedded?: boolean }) 
                 onRefresh={() => refreshAgent(ag)} refreshing={refreshing === ag} refreshMessage={msgs[ag] ?? null} />
             ))}
           </View>
+          {a?.type === "stock" ? <SecFilingsCard symbol={a.symbol} /> : null}
+          {a?.type === "stock" ? <FundamentalResearchCard symbol={a.symbol} /> : null}
+          {a?.type === "stock" ? <StockResearchCard symbol={a.symbol} /> : null}
+          {a ? <WhatIfCard assetId={a.id} symbol={a.symbol} /> : null}
+          {a?.id === BTC_ID ? <SentimentCard /> : null}
+          {a?.id === BTC_ID ? <PositioningCard /> : null}
+          {a?.id === BTC_ID ? <CryptoMarketCard /> : null}
+          {a?.id === BTC_ID ? <StablecoinsCard /> : null}
+          {a?.id === BTC_ID ? <NetworkCard /> : null}
+          {a?.id === BTC_ID ? <StrategyLabCard /> : null}
+          {a?.id === BTC_ID ? <StrategyTrackerCard /> : null}
+          {a?.id === BTC_ID ? <ExperimentsCard /> : null}
           <View style={{ flexDirection: "row", gap: space.sm, alignItems: "flex-start", marginTop: space.md }}>
             <Ionicons name="information-circle-outline" size={16} color={color.faint} />
             <Txt variant="tiny" style={{ flex: 1 }}>Research only. Signal cannot place trades, and nothing here is financial advice. Figures are calculated by the server from the sources shown; written explanations only describe them.</Txt>

@@ -1,0 +1,26 @@
+{
+  "asked_on": "2026-11-17",
+  "title": "The Bitcoin research queue is on hold until you choose",
+  "paragraphs": [
+    "Three rule ideas are left to test: squeeze break, money flow and near high. Before a rule is run, the lab checks that its own test could recognise a rule that really works. On daily Bitcoin candles it cannot: even if a rule really earned about 2% a trade on top of its costs, the test would admit it in only 8.5%, 8.8% and 15.0% of simulated histories (at best, against the lab's own bar of 20%), because these slow rules make too few trades to judge.",
+    "Nothing has been run or changed while this waits. The paper accounts go on as before, and the research hours only check the system and write \"no change\"."
+  ],
+  "options": [
+    {
+      "id": "3",
+      "text": "Stop the daily queue here and keep the fifteen rule families already tested as the research record. On daily candles, more rules of this kind add chances of a lucky pass but almost no information.",
+      "recommended": true
+    },
+    {
+      "id": "2",
+      "text": "Add data so that the tests have more trades to judge (other coins, an earlier start or finer candles). Hourly candles are the only choice that gives enough trades; it widens the scope, so a power check for hourly data would come first.",
+      "recommended": false
+    },
+    {
+      "id": "1",
+      "text": "Lower the bar and run the three rules anyway. Expect a rejection in 85% to 92% of histories even if a real edge were there, and the number of rule settings tried goes from 113 to 143, which raises the chance that one passes by luck.",
+      "recommended": false
+    }
+  ],
+  "how_to_answer": "Reply in the chat with 1, 2 or 3, or ask for more detail. Nothing in the app can send an answer. The numbers are in btcquant/BUILD_PLAN.md (step 14e) and btcquant/DATA_OPTIONS.md."
+}

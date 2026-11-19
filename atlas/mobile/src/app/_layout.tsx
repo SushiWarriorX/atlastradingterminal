@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold, useFonts } from "@expo-google-fonts/figtree";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ConnectScreen } from "../components/ConnectScreen";
 import { Spinner } from "../components/ui";
@@ -16,7 +17,7 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, sta
 
 if (Platform.OS === "web" && typeof document !== "undefined") {
   document.body.style.backgroundColor = color.bg;               // no white flash while the app loads
-  document.documentElement.style.colorScheme = "dark";
+  document.documentElement.style.colorScheme = "light";
 }
 
 function Gate() {
@@ -29,17 +30,20 @@ function Gate() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bg } }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="asset/[id]" />
+      <Stack.Screen name="search" />
       <Stack.Screen name="settings" options={{ presentation: "modal" }} />
     </Stack>
   );
 }
 
 export default function RootLayout() {
+  const [loaded, fontError] = useFonts({ Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold });
+  if (!loaded && !fontError) return <View style={{ flex: 1, backgroundColor: color.bg }} />;      // a blink of white while the font loads; if it fails the system font is used
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <ConnectionProvider>
-          <StatusBar style="light" />
+          <StatusBar style="dark" />
           <SelectionProvider><Gate /></SelectionProvider>
         </ConnectionProvider>
       </QueryClientProvider>

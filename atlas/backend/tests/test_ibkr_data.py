@@ -171,7 +171,7 @@ def test_only_us_stocks_and_etfs_are_routed_to_ibkr():
     ib = FakeMD(live=tick(last=190.0, time=datetime.now(timezone.utc)))
     s, y, _ = svc_with(ib)
     assert [p.name for p in s._chain(AAPL)] == ["ibkr", "yahoo"] and [p.name for p in s._chain(I.by_symbol("SPY"))] == ["ibkr", "yahoo"]
-    assert [p.name for p in s._chain(BTC)] == ["coinbase"] if False else True
+    assert [p.name for p in s._chain(BTC)] == ["yahoo"]                                                       # Bitcoin never goes through IBKR: its one provider here is the fake that stands in for Coinbase, which is named "yahoo"
     spx = I.by_symbol("SPX")
     assert [p.name for p in s._chain(spx)] == ["yahoo"] and not IBKRData.handles(spx) and not IBKRData.handles(BTC)
 

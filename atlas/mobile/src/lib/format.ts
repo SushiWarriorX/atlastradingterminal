@@ -16,6 +16,22 @@ export function formatPct(v: number | null | undefined, digits = 2, signed = tru
   return signed ? `${v < 0 ? "−" : "+"}${s}%` : `${v < 0 ? "−" : ""}${s}%`;
 }
 
+/** A change in price units with a real minus and no currency sign ("+1.52", "−0.0042"), the figure TradingView shows beside the percentage. */
+export function formatChange(v: number | null | undefined): string {
+  if (v === null || v === undefined || !Number.isFinite(v)) return "n/a";
+  const a = Math.abs(v);
+  const s = a >= 1 ? a.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : a >= 0.01 ? a.toFixed(4) : a === 0 ? "0.00" : a.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+  return `${v < 0 ? "−" : "+"}${s}`;
+}
+
+/** "62% of its 255 days were at or below this price.": where a figure sits among the past year's days or weeks, in the same words on every card. Takes the server's share (`rank_in_year`, 0 to 100) and its count;
+ *  null when either is missing or cannot be right, so a card leaves the sentence out instead of printing "n/a". It describes what already happened: it is not a signal. */
+export function atOrBelow(rank: number | null | undefined, count: number | null | undefined, unit: "days" | "weeks", what: "price" | "level"): string | null {
+  if (rank == null || count == null || !Number.isFinite(rank) || rank < 0 || rank > 100 || !Number.isInteger(count) || count < 1) return null;
+  const one = count === 1;
+  return `${Math.round(rank)}% of its ${count} ${one ? unit.slice(0, -1) : unit} ${one ? "was" : "were"} at or below this ${what}.`;
+}
+
 export function directionOf(v: number | null | undefined): "up" | "down" | "flat" {
   if (v === null || v === undefined || !Number.isFinite(v) || v === 0) return "flat";
   return v > 0 ? "up" : "down";
@@ -58,6 +74,16 @@ export function localClock(iso: string | null | undefined, tz?: string, seconds 
 }
 
 /** A calendar date like "2026-12-09" shown as "Dec 9" without timezone shifting. */
+/** "2026-10-31" -> "Oct 31, 2026"; "2026-10" -> "October 2026". Anything else is returned as it came, so nothing is hidden. For a person, not for sorting. */
+export function ymdLabel(ymd: string | null | undefined): string {
+  if (!ymd) return "n/a";
+  const full = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
+  if (full) return new Date(Date.UTC(+full[1], +full[2] - 1, +full[3], 12)).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+  const month = /^(\d{4})-(\d{2})$/.exec(ymd);
+  if (month) return new Date(Date.UTC(+month[1], +month[2] - 1, 15, 12)).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+  return ymd;
+}
+
 export function dateOnly(ymd: string | null | undefined): string {
   if (!ymd) return "n/a";
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd);
@@ -78,6 +104,19 @@ export function hueFor(id: string): number {
 }
 
 export const TYPE_LABEL = { crypto: "Crypto", stock: "Stock", etf: "ETF" } as const;
+
+/** What a screen reader says for a row: the words the row shows, in the order it shows them, with anything empty left out. A person who speaks the words they see to a voice-control app then finds the button (WCAG 2.5.3, "label in name"); whatever only a colour or a dot says is added after, by the caller. */
+export function spoken(...words: Array<string | null | undefined | false>): string {
+  return words.filter((w): w is string => typeof w === "string" && w.trim() !== "").map((w) => w.trim()).join(" ");
+}
+
+/** The closing line of a card that says what it covers and where its data comes from. Nothing at all until the source is known: the new listings card once printed an empty "Source: ." under its loading skeleton (found in a screenshot on 2026-11-17). */
+export function sourceLine(coverage: string | null | undefined, source: string | null | undefined): string {
+  const src = (source ?? "").trim();
+  if (!src) return "";
+  const cov = (coverage ?? "").trim();
+  return `${cov ? `${cov} ` : ""}Source: ${src}.`;
+}
 
 const PROVIDERS: Record<string, string> = { yahoo: "Yahoo Finance", coinbase: "Coinbase", demo: "Demo data", ibkr: "Interactive Brokers", fred: "FRED" };
 export function providerName(p: string | null | undefined): string {

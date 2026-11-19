@@ -1,0 +1,428 @@
+"""The fifteen strategy families of the protocol (section 5: twelve pre-registered under 1.2, one under 1.3, one under 1.4, one under 1.5) plus the two benchmarks, as pure functions of completed daily candles.
+
+A family turns candles and one parameter set into SIGNALS for every candle: at the close of candle i it says
+  - state[i]  (stop kinds): True if the strategy wants to be long from the next open;
+  - weight[i] (weight kinds): the target fraction of equity in Bitcoin from the next open;
+  - stop[i]   (stop kinds): the protective stop level to use if it enters now (and, for trailing stops, the candidate level to ratchet up to).
+Every value at index i uses candles 0..i only; a test changes later candles and checks that nothing at or before i moves. Warm-up values are False / 0 / NaN.
+Families that "stay ON until stopped" (Donchian and the ATR trend filter) replay their own trailing stop on the candles to know when they were stopped, so the state they report matches what the account engine does with the same stop.
+Grids are fixed by the protocol: 113 configurations in all (100 under 1.2, one under 1.3, three under 1.4, nine under 1.5), which is the N used for multiple testing.
+"""
+from __future__ import annotations
+
+import hashlib
+import itertools
+import json
+from dataclasses import dataclass
+from typing import Callable
+
+import numpy as np
+
+from . import config as C
+from . import indicators as I
+
+STOP_K = C.STOP_ATR_MULT
+
+
+class Bars:
+    """Daily candles as numpy arrays plus a small cache of indicators, so the grid does not recompute the same SMA a hundred times."""
+
+    def __init__(self, candles):
+        a = np.asarray(candles, dtype=float)
+        self.t = a[:, 0].astype(np.int64)
+        self.o, self.h, self.l, self.c, self.v = a[:, 1], a[:, 2], a[:, 3], a[:, 4], a[:, 5]
+        self.n = len(a)
+        self._cache: dict = {}
+
+    def ind(self, name: str, *args):
+        key = (name, args)
+        if key not in self._cache:
+            self._cache[key] = {
+                "sma": lambda n: I.sma(self.c, n), "atr": lambda n: I.atr(self.h, self.l, self.c, n), "rsi": lambda n: I.rsi(self.c, n), "adx": lambda n: I.adx(self.h, self.l, self.c, n),
+                "std0": lambda n: I.rolling_std(self.c, n, ddof=0), "vol": lambda n: I.realized_vol(self.c, n), "change": lambda n: I.change(self.c, n),
+                "hhigh_prior": lambda n: I.prior(I.rolling_max(self.h, n), 1), "llow": lambda n: I.rolling_min(self.l, n),
+            }[name](*args)
+        return self._cache[key]
+
+
+@dataclass
+class Signals:
+    state: np.ndarray | None = None
+    weight: np.ndarray | None = None
+    stop: np.ndarray | None = None
+
+
+@dataclass(frozen=True)
+class Family:
+    id: str
+    name: str
+    category: str
+    kind: str                                   # stop | weight | hold | cash
+    trail: bool
+    grid: dict                                  # parameter name -> ordered values
+    build: Callable[[Bars, dict], Signals]
+    explain: Callable[[Bars, dict, int], dict]
+    valid: Callable[[dict], bool] = lambda p: True
+    since: str = "1.2"                          # the protocol version the family was pre-registered under; it goes into the specification hash, so a later version number never changes the hash (and the paper account id) of an older family
+
+
+def _fixed_stop(b: Bars) -> np.ndarray:
+    return b.c - STOP_K * b.ind("atr", C.ATR_N)
+
+
+def _f(x) -> float | None:
+    return None if x is None or not np.isfinite(x) else round(float(x), 6)
+
+
+def _nan_false(cond: np.ndarray, *arrays) -> np.ndarray:
+    ok = np.ones(len(cond), dtype=bool)
+    for a in arrays:
+        ok &= np.isfinite(a)
+    return cond & ok
+
+
+# ---- 1. sma_cross ----
+def _sma_cross(b, p):
+    f, s = b.ind("sma", int(p["fast"])), b.ind("sma", int(p["slow"]))
+    with np.errstate(invalid="ignore"):
+        st = _nan_false(f > s, f, s)
+    return Signals(state=st, stop=_fixed_stop(b))
+
+
+def _sma_cross_x(b, p, i):
+    return {"close": _f(b.c[i]), "sma_fast": _f(b.ind("sma", int(p["fast"]))[i]), "sma_slow": _f(b.ind("sma", int(p["slow"]))[i]), "atr14": _f(b.ind("atr", C.ATR_N)[i])}
+
+
+# ---- 2. donchian (trailing stop: lowest low of the last N/2 candles) ----
+def _donchian(b, p):
+    n = int(p["N"])
+    high_n = b.ind("hhigh_prior", n)                                # highest high of the previous n candles (not including i)
+    cand = b.ind("llow", n // 2)                                    # lowest low of the last n/2 candles including i: the stop candidate
+    with np.errstate(invalid="ignore"):
+        entry = _nan_false(b.c > high_n, high_n, cand)
+    state = np.zeros(b.n, dtype=bool)
+    on, stop = False, np.nan
+    for i in range(b.n):
+        if on:
+            if b.l[i] <= stop:                                      # the stop in force since the previous close was touched during candle i: OFF at this close
+                on = False
+            else:
+                stop = max(stop, cand[i])                           # ratchets up only. It can never actually be lowered here: a new low under the window's lowest low would have hit the stop, and
+                                                                    # dropping the oldest candle can only raise the lowest low. Kept for clarity; a property test checks it
+        elif entry[i]:                                              # a stopped-out state waits at least one candle before it can re-enter (the "armed" rule)
+            on, stop = True, cand[i]
+        state[i] = on
+    return Signals(state=state, stop=cand)
+
+
+def _donchian_x(b, p, i):
+    n = int(p["N"])
+    return {"close": _f(b.c[i]), "highest_high_prior_N": _f(b.ind("hhigh_prior", n)[i]), "trailing_stop_candidate": _f(b.ind("llow", n // 2)[i])}
+
+
+# ---- 3. ma_atr_trend (trailing stop: ratchet of close - m x ATR) ----
+def _ma_atr(b, p):
+    sma, atr = b.ind("sma", int(p["L"])), b.ind("atr", C.ATR_N)
+    m = float(p["m"])
+    cand = b.c - m * atr
+    state = np.zeros(b.n, dtype=bool)
+    on, armed, stop = False, True, np.nan
+    for i in range(b.n):
+        if not np.isfinite(sma[i]) or not np.isfinite(atr[i]):
+            state[i] = False
+            continue
+        if on:
+            if b.l[i] <= stop:
+                on = False
+            else:
+                stop = max(stop, cand[i])
+        if b.c[i] <= sma[i]:
+            armed = True
+        if not on and armed and b.c[i] > sma[i]:
+            on, armed, stop = True, False, cand[i]
+        state[i] = on
+    return Signals(state=state, stop=cand)
+
+
+def _ma_atr_x(b, p, i):
+    return {"close": _f(b.c[i]), "sma": _f(b.ind("sma", int(p["L"]))[i]), "atr14": _f(b.ind("atr", C.ATR_N)[i]), "stop_candidate": _f(b.c[i] - float(p["m"]) * b.ind("atr", C.ATR_N)[i])}
+
+
+# ---- 4. tsmom ----
+def _tsmom(b, p):
+    r = b.ind("change", int(p["L"]))
+    with np.errstate(invalid="ignore"):
+        st = _nan_false(r > 0, r)
+    return Signals(state=st, stop=_fixed_stop(b))
+
+
+def _tsmom_x(b, p, i):
+    return {"close": _f(b.c[i]), "return_over_L": _f(b.ind("change", int(p["L"]))[i])}
+
+
+# ---- 5. rsi_momentum (hysteresis) ----
+def _hyst(on_cond: np.ndarray, off_cond: np.ndarray) -> np.ndarray:
+    st, on = np.zeros(len(on_cond), dtype=bool), False
+    for i in range(len(on_cond)):
+        if on and off_cond[i]:
+            on = False
+        elif not on and on_cond[i]:
+            on = True
+        st[i] = on
+    return st
+
+
+def _rsi_mom(b, p):
+    r = b.ind("rsi", int(p["n"]))
+    with np.errstate(invalid="ignore"):
+        on, off = _nan_false(r > p["enter"], r), _nan_false(r < p["exit"], r)
+    return Signals(state=_hyst(on, off), stop=_fixed_stop(b))
+
+
+def _rsi_x(b, p, i):
+    return {"close": _f(b.c[i]), "rsi": _f(b.ind("rsi", int(p["n"]))[i])}
+
+
+# ---- 6. mom_vol ----
+def _mom_vol(b, p):
+    r, v = b.ind("change", int(p["L"])), b.ind("vol", 20)
+    with np.errstate(invalid="ignore"):
+        st = _nan_false((r > 0) & (v <= p["cap"]), r, v)
+    return Signals(state=st, stop=_fixed_stop(b))
+
+
+def _mom_vol_x(b, p, i):
+    return {"close": _f(b.c[i]), "return_over_L": _f(b.ind("change", int(p["L"]))[i]), "realised_vol_20": _f(b.ind("vol", 20)[i])}
+
+
+# ---- 7. bollinger_mr ----
+def _bollinger(b, p):
+    n, k = int(p["n"]), float(p["k"])
+    mid, sd = b.ind("sma", n), b.ind("std0", n)
+    lower = mid - k * sd
+    with np.errstate(invalid="ignore"):
+        on, off = _nan_false(b.c < lower, lower), _nan_false(b.c >= mid, mid)
+    return Signals(state=_hyst(on, off), stop=_fixed_stop(b))
+
+
+def _bollinger_x(b, p, i):
+    n, k = int(p["n"]), float(p["k"])
+    mid, sd = b.ind("sma", n)[i], b.ind("std0", n)[i]
+    return {"close": _f(b.c[i]), "middle": _f(mid), "lower": _f(mid - k * sd)}
+
+
+# ---- 8. rsi_oversold ----
+def _rsi_os(b, p):
+    r = b.ind("rsi", int(p["n"]))
+    with np.errstate(invalid="ignore"):
+        on, off = _nan_false(r < p["enter"], r), _nan_false(r > p["exit"], r)
+    return Signals(state=_hyst(on, off), stop=_fixed_stop(b))
+
+
+# ---- 9. vol_breakout ----
+def _vol_breakout(b, p):
+    k, hold = float(p["k"]), int(p["hold"])
+    atr = b.ind("atr", C.ATR_N)
+    state = np.zeros(b.n, dtype=bool)
+    on, age = False, 0
+    for i in range(1, b.n):
+        if on:
+            age += 1
+            if age >= hold:
+                on = False
+        elif np.isfinite(atr[i - 1]) and b.c[i] - b.c[i - 1] > k * atr[i - 1]:
+            on, age = True, 0
+        state[i] = on
+    return Signals(state=state, stop=_fixed_stop(b))
+
+
+def _vol_breakout_x(b, p, i):
+    a = b.ind("atr", C.ATR_N)
+    return {"close": _f(b.c[i]), "move": _f(b.c[i] - b.c[i - 1]) if i else None, "k_x_atr14_prev": _f(float(p["k"]) * a[i - 1]) if i else None}
+
+
+# ---- 10. regime_switch ----
+def _regime(b, p):
+    adx, s50, s200 = b.ind("adx", 14), b.ind("sma", 50), b.ind("sma", 200)
+    mid, sd = b.ind("sma", 20), b.ind("std0", 20)
+    with np.errstate(invalid="ignore"):
+        trend = adx > p["adx"]
+        long_trend = _nan_false(trend & (s50 > s200), adx, s50, s200)
+        long_range = _nan_false((~trend) & (b.c < mid - 1.5 * sd), adx, mid, sd)
+    return Signals(state=long_trend | long_range, stop=_fixed_stop(b))
+
+
+def _regime_x(b, p, i):
+    return {"close": _f(b.c[i]), "adx14": _f(b.ind("adx", 14)[i]), "sma50": _f(b.ind("sma", 50)[i]), "sma200": _f(b.ind("sma", 200)[i]), "sma20": _f(b.ind("sma", 20)[i]), "sd20": _f(b.ind("std0", 20)[i])}
+
+
+# ---- 11. vol_target (weight) ----
+def _vol_target(b, p):
+    v = b.ind("vol", int(p["window"]))
+    with np.errstate(divide="ignore", invalid="ignore"):
+        w = np.where(np.isfinite(v) & (v > 0), np.minimum(1.0, p["target"] / v), 0.0)
+    return Signals(weight=w)
+
+
+def _vol_target_x(b, p, i):
+    v = b.ind("vol", int(p["window"]))[i]
+    return {"close": _f(b.c[i]), "realised_vol": _f(v), "target_weight": _f(min(1.0, p["target"] / v)) if np.isfinite(v) and v > 0 else 0.0}
+
+
+# ---- 12. sma_filter (weight) ----
+def _sma_filter(b, p):
+    s = b.ind("sma", int(p["L"]))
+    with np.errstate(invalid="ignore"):
+        w = np.where(np.isfinite(s) & (b.c > s), 1.0, 0.0)
+    return Signals(weight=w)
+
+
+def _sma_filter_x(b, p, i):
+    return {"close": _f(b.c[i]), "sma": _f(b.ind("sma", int(p["L"]))[i])}
+
+
+# ---- 13. monday (weight mode; a calendar rule, pre-registered under protocol 1.3) ----
+def weekday(t) -> np.ndarray:
+    """0 = Monday ... 6 = Sunday, from the candle's UTC open time (the epoch day 0, 1970-01-01, was a Thursday). Used by the calendar rule and by the novelty screen."""
+    return ((np.asarray(t, dtype=np.int64) // C.DAY) + 3) % 7
+
+
+def _monday(b, p):
+    """Fully invested through the candle of one weekday (`day`, 0 = Monday) and in cash otherwise. The rule says so at the close of the candle BEFORE that day, so the order fills at the open of the held day and the
+    opposite order, given at the close of the held day, fills at the open after it. It reads nothing but the candle's own open time."""
+    return Signals(weight=np.where(weekday(b.t) == (int(p["day"]) - 1) % 7, 1.0, 0.0))
+
+
+def _monday_x(b, p, i):
+    return {"close": _f(b.c[i]), "candle_weekday": float(weekday(b.t[i:i + 1])[0]), "held_weekday": float(p["day"])}           # numbers only (floats), as the ledger holds them; 0 = Monday
+
+
+# ---- 14. three_down (stop mode; a short-term reversal rule, pre-registered under protocol 1.4) ----
+def down_streak(c) -> np.ndarray:
+    """The number of lower closes in a row that end at each candle. It is 0 when the close is not lower than the close before it (an EQUAL close is not lower) and at the first candle, which has no close before it."""
+    c = np.asarray(c, dtype=float)
+    n = len(c)
+    down = np.zeros(n, dtype=bool)
+    down[1:] = c[1:] < c[:-1]
+    return np.arange(n) - np.maximum.accumulate(np.where(down, 0, np.arange(n)))                  # distance back to the latest candle that was not a lower close
+
+
+def _three_down(b, p):
+    """Long from the open after the `streak`-th lower close in a row, for as long as the run of lower closes goes on: the first close that is not lower ends it, and the sale fills at the next open. Once the run has
+    reached `streak` it can only end by a close that is not lower, so 'the run is at least `streak` long' is the whole state. The stop is the protocol's fixed close - 3 x ATR(14); it reads closes up to candle i only."""
+    return Signals(state=down_streak(b.c) >= int(p["streak"]), stop=_fixed_stop(b))
+
+
+def _three_down_x(b, p, i):
+    return {"close": _f(b.c[i]), "down_streak": float(down_streak(b.c[:i + 1])[i]), "required_streak": float(p["streak"])}
+
+
+# ---- 15. volume_surge (stop mode; a volume continuation rule, pre-registered under protocol 1.5) ----
+VOLUME_WINDOW = 20                      # the days in the volume baseline: fixed by the protocol, not a setting
+
+
+def volume_baseline(v, n: int = VOLUME_WINDOW) -> np.ndarray:
+    """The mean volume of the `n` candles BEFORE each candle: the candle itself is not in its own baseline. NaN for the first `n` candles, which do not have `n` candles before them."""
+    v = np.asarray(v, dtype=float)
+    out = np.full(len(v), np.nan)
+    if len(v) > n:
+        out[n:] = np.lib.stride_tricks.sliding_window_view(v, n).mean(axis=1)[:len(v) - n]          # window j covers candles j .. j+n-1, which are the n candles before candle j+n
+    return out
+
+
+def _last_any(flag: np.ndarray, k: int) -> np.ndarray:
+    """True at i when `flag` was True at any of the last k candles, i included."""
+    cs = np.cumsum(flag.astype(int))
+    return (cs - np.concatenate([np.zeros(k, dtype=int), cs])[:len(cs)]) > 0
+
+
+def _volume_surge(b, p):
+    """A surge day is a candle whose volume is at least `ratio` times the mean volume of the 20 candles before it AND whose close is above the close before it. The state is ON at candle i when a surge day fell on any of the last
+    `hold` candles, i included: the position is held through `hold` candles after the surge day (it is decided at the surge day's close and filled at the next open), and a new surge day inside the hold starts the count again.
+    A baseline that is not positive (no volume at all in the 20 days) is no baseline. The stop is the protocol's fixed close - 3 x ATR(14); it reads closes up to candle i only."""
+    ratio, hold = float(p["ratio"]), int(p["hold"])
+    base = volume_baseline(b.v)
+    up = np.zeros(b.n, dtype=bool)
+    up[1:] = b.c[1:] > b.c[:-1]
+    with np.errstate(invalid="ignore"):                                    # a warm-up NaN compares False: no surge before there is a baseline
+        surge = (base > 0) & (b.v >= ratio * base) & up
+    return Signals(state=_last_any(surge, hold), stop=_fixed_stop(b))
+
+
+def _volume_surge_x(b, p, i):
+    base = volume_baseline(b.v[:i + 1])[i]
+    return {"close": _f(b.c[i]), "volume": _f(b.v[i]), "volume_mean_20": _f(base), "volume_ratio": _f(b.v[i] / base) if np.isfinite(base) and base > 0 else None, "required_ratio": float(p["ratio"])}
+
+
+# ---- benchmarks ----
+def _none(b, p):
+    return Signals()
+
+
+FAMILIES: dict[str, Family] = {f.id: f for f in [
+    Family("sma_cross", "Moving-average crossover", "trend", "stop", False, {"fast": [10, 20, 30, 50], "slow": [50, 100, 150, 200]}, _sma_cross, _sma_cross_x, lambda p: p["fast"] < p["slow"]),
+    Family("donchian", "Donchian breakout", "trend", "stop", True, {"N": [20, 40, 55, 80]}, _donchian, _donchian_x),
+    Family("ma_atr_trend", "Moving-average trend filter with ATR exit", "trend", "stop", True, {"L": [100, 150, 200], "m": [2, 3, 4]}, _ma_atr, _ma_atr_x),
+    Family("tsmom", "Time-series momentum", "momentum", "stop", False, {"L": [30, 60, 90, 180, 365]}, _tsmom, _tsmom_x),
+    Family("rsi_momentum", "RSI momentum", "momentum", "stop", False, {"n": [14, 21], "enter": [55, 60, 65], "exit": [40, 45, 50]}, _rsi_mom, _rsi_x),
+    Family("mom_vol", "Momentum with a volatility filter", "momentum", "stop", False, {"L": [30, 60, 90], "cap": [0.6, 0.8, 1.0]}, _mom_vol, _mom_vol_x),
+    Family("bollinger_mr", "Bollinger band mean reversion", "mean_reversion", "stop", False, {"n": [20, 30], "k": [1.5, 2.0, 2.5]}, _bollinger, _bollinger_x),
+    Family("rsi_oversold", "RSI oversold reversal", "mean_reversion", "stop", False, {"n": [7, 14], "enter": [20, 25, 30], "exit": [50, 55]}, _rsi_os, _rsi_x),
+    Family("vol_breakout", "Volatility breakout", "volatility", "stop", False, {"k": [1.0, 1.5, 2.0], "hold": [5, 10, 20]}, _vol_breakout, _vol_breakout_x),
+    Family("regime_switch", "Trend versus ranging regime switch", "regime", "stop", False, {"adx": [20, 25, 30]}, _regime, _regime_x),
+    Family("vol_target", "Volatility-targeted exposure", "risk_managed", "weight", False, {"target": [0.30, 0.40, 0.50], "window": [20, 40]}, _vol_target, _vol_target_x),
+    Family("sma_filter", "Simple trend filter exposure", "risk_managed", "weight", False, {"L": [100, 150, 200, 250]}, _sma_filter, _sma_filter_x),
+    Family("monday", "Day-of-week holding", "calendar", "weight", False, {"day": [0]}, _monday, _monday_x, since="1.3"),
+    Family("three_down", "Reversal after a losing streak", "mean_reversion", "stop", False, {"streak": [2, 3, 4]}, _three_down, _three_down_x, since="1.4"),
+    Family("volume_surge", "Volume surge continuation", "volume", "stop", False, {"ratio": [1.5, 2.0, 3.0], "hold": [3, 5, 10]}, _volume_surge, _volume_surge_x, since="1.5"),
+    Family("buy_hold", "Buy and hold (benchmark)", "benchmark", "hold", False, {}, _none, lambda b, p, i: {}),
+    Family("cash", "Cash only (benchmark)", "benchmark", "cash", False, {}, _none, lambda b, p, i: {}),
+]}
+RESEARCH = [f for f in FAMILIES.values() if f.category != "benchmark"]
+
+
+def configs(fam: Family) -> list[dict]:
+    """Every valid parameter set of a family, in a fixed order."""
+    if not fam.grid:
+        return [{}]
+    names = list(fam.grid)
+    out = [dict(zip(names, vals)) for vals in itertools.product(*[fam.grid[n] for n in names])]
+    return [p for p in out if fam.valid(p)]
+
+
+def neighbours(fam: Family, p: dict) -> list[dict]:
+    """Parameter sets one step away in exactly one parameter (grid index distance 1), valid ones only."""
+    out = []
+    for name, values in fam.grid.items():
+        i = values.index(p[name])
+        for j in (i - 1, i + 1):
+            if 0 <= j < len(values):
+                q = dict(p)
+                q[name] = values[j]
+                if fam.valid(q):
+                    out.append(q)
+    return out
+
+
+def n_configurations() -> int:
+    return sum(len(configs(f)) for f in RESEARCH)
+
+
+def spec(fam_id: str, params: dict, version: int = 1) -> dict:
+    """The canonical specification of a candidate: family, version, sorted parameters, the protocol version the family was pre-registered under, and the protocol constants that change its behaviour. This is what is hashed and what a registry stores."""
+    return {"family": fam_id, "version": version, "params": {k: params[k] for k in sorted(params)}, "protocol": FAMILIES[fam_id].since if fam_id in FAMILIES else C.PROTOCOL_VERSION,
+            "fee": C.FEE, "slippage": C.SLIPPAGE, "risk": C.RISK_PER_TRADE, "stop_k": C.STOP_ATR_MULT, "atr_n": C.ATR_N, "breaker": C.CIRCUIT_BREAKER, "cool_off": C.BREAKER_COOL_OFF_DAYS,
+            "band": C.REBALANCE_BAND}
+
+
+def hash_spec(spec_dict: dict) -> str:
+    """The short hash of a stored specification (no reading of today's constants, so an old specification keeps its hash)."""
+    return hashlib.sha256(json.dumps(spec_dict, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def spec_hash(fam_id: str, params: dict, version: int = 1) -> str:
+    return hash_spec(spec(fam_id, params, version))
+
+
+def signals(fam_id: str, candles, params: dict) -> Signals:
+    return FAMILIES[fam_id].build(Bars(candles) if not isinstance(candles, Bars) else candles, params)

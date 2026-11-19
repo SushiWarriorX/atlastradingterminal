@@ -1,0 +1,1 @@
+{"account": "ma_atr_trend-c0011d2a", "after_candle": "2026-11-14T00:00:00Z", "event": "account_opened", "family": "ma_atr_trend", "params": {"L": 100, "m": 3}, "recorded_at": "2026-11-15T10:36:08Z", "seq": 1, "spec_hash": "c0011d2a963512ee", "stage": "monitor", "start_equity": 10000.0}

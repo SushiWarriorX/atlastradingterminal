@@ -1,0 +1,314 @@
+"""What the Signal app shows of the paper lab: the latest dashboard in plain words, and the last trades as the ledger recorded them on signal. Read-only; simulated accounts only, nothing here can place an order."""
+from __future__ import annotations
+
+import bisect
+import json
+import re
+from datetime import datetime, timezone
+from pathlib import Path
+
+from . import backtest as B
+from . import config as C
+from . import data as D
+from . import strategies as S
+
+SHOWN_EVENTS = ("order", "fill", "reject", "stop_hit", "breaker", "breaker_reset")       # the trades as they happened; an account opening is not a trade (its day is in the account's opened_after)
+PORTFOLIO_LABEL = "Main portfolio ($100,000, champions only)"
+BENCHMARK_LABELS = {"buy_hold": "Buy and hold Bitcoin", "cash": "Cash only"}
+SHORT = {"sma_cross": "SMA", "donchian": "DON", "ma_atr_trend": "ATR", "tsmom": "TSM", "rsi_momentum": "RSM", "mom_vol": "MOM", "bollinger_mr": "BOL", "rsi_oversold": "RSO", "vol_breakout": "VBO",
+         "regime_switch": "REG", "vol_target": "VTG", "sma_filter": "FLT", "monday": "MON", "three_down": "REV", "volume_surge": "VSG", "buy_hold": "BTC", "cash": "USD", "portfolio": "MP"}      # the letters on a strategy's round logo
+OUTCOME_WORDS = {"admitted": "Admitted", "rejected": "Rejected", "too_thin": "Too few trades to judge"}
+GATE_WORDS = {"A1": "it made too few trades to judge (at least 10 are needed)",
+              "A2": "it did not beat holding the same average amount of Bitcoin, in both 2020-2022 and 2023-2024",
+              "A3": "its timing was no better than random timing",
+              "A4": "its result was not stable when its settings were nudged",
+              "A5": "it stopped working when the costs were doubled"}
+GATE_WORDS_ONE_SETTING = {"A4": "its 2020-2022 Sharpe ratio was not above zero (it has one setting, so there was nothing to nudge)"}      # gate A4 for a rule with a single configuration (protocol v1.3)
+WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+CURVE_STEP_DAYS = 7
+CURVE_NOTE = ("Each line replays one rule on past prices as one continuous run from 1 Jan 2020 with $10,000, with the same fees and slippage as the paper accounts. The settings were chosen on this same history, "
+              "so a backtest looks better than anything that can be expected from now on. 2025 onward is not a clean test either: earlier experiments in this project already looked at it.")
+PARAM_WORDS = {"fast": "fast", "slow": "slow", "N": "N", "L": "L", "m": "ATR multiple", "n": "n", "enter": "enter", "exit": "exit", "cap": "volatility cap", "k": "k", "hold": "hold days", "adx": "ADX", "target": "target", "window": "window"}
+
+
+MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
+def day_text(when: str) -> str:
+    """"2026-11-17", or a time on that day, written as the page writes every other date: "17 Nov 2026". Anything that does not start with a real date comes back as it was."""
+    m = re.match(r"(\d{4})-(\d{2})-(\d{2})", when)
+    return f"{int(m[3])} {MONTHS[int(m[2]) - 1]} {m[1]}" if m and 1 <= int(m[2]) <= 12 else when
+
+
+def iso(t: int) -> str:
+    return datetime.fromtimestamp(int(t), timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def label(account: dict) -> str:
+    if account["id"] == "portfolio":
+        return PORTFOLIO_LABEL
+    if account["id"] in BENCHMARK_LABELS:
+        return BENCHMARK_LABELS[account["id"]]
+    params = params_text(account)
+    return f"{S.FAMILIES[account['family']].name} ({params})" if params else S.FAMILIES[account["family"]].name
+
+
+def family_name(account: dict) -> str:
+    return "Main portfolio" if account["id"] == "portfolio" else S.FAMILIES[account["family"]].name
+
+
+def _param_text(k: str, v) -> str:
+    if k == "day" and isinstance(v, int) and 0 <= v <= 6:
+        return WEEKDAYS[v]                                                           # a weekday is shown by its name
+    if k == "streak" and isinstance(v, int) and v >= 1:
+        return f"{v} lower close{'' if v == 1 else 's'} in a row"                    # protocol v1.4: the reversal rule's setting
+    if k == "ratio" and isinstance(v, (int, float)) and v > 0:
+        return f"volume {v:g}x its 20-day average"                                    # protocol v1.5: the volume rule's setting
+    return f"{PARAM_WORDS.get(k, k)} {v}"
+
+
+def params_text(account: dict) -> str:
+    return ", ".join(_param_text(k, v) for k, v in account["params"].items())
+
+
+def money(x) -> str:
+    return "n/a" if x is None else (f"-${-x:,.2f}" if x < 0 else f"${x:,.2f}")
+
+
+def describe(row: dict) -> tuple:
+    """(time, text) of one ledger row in plain words; time is when the thing happened (a signal is made at a candle's close, a fill happens at the next open)."""
+    ev = row["event"]
+    if ev == "order":
+        when = iso(row["signal_time"])
+        if row["kind"] == "enter":
+            est = f", about {row['est_qty']:.4f} BTC" if row.get("est_qty") else ""
+            return when, f"BUY signal at the close (${row['ref_close']:,.2f}); protective stop {money(row.get('stop'))}{est}, to be filled at the next open"
+        if row["kind"] == "exit":
+            why = {"signal": "the rule turned off", "circuit_breaker": "the 15% circuit breaker"}.get(row["reason"], row["reason"])
+            return when, f"SELL signal ({why}); to be filled at the next open"
+        first = row.get("order_id") == 1                                                    # an account's first order sets its starting position: nothing is being changed
+        if first and not row["weight"]:
+            return when, "Start at 0% in Bitcoin at the next open (nothing to buy yet)"
+        why = "buy and hold" if row["reason"] == "benchmark" else ("where the rule stands on its first day" if first else "the rule changed its target")
+        return when, f"{'Start at' if first else 'Change to'} {row['weight']:.0%} in Bitcoin at the next open ({why})"
+    if ev == "fill":
+        when = iso(row["exec_time"])
+        side = "BOUGHT" if row["side"] == "buy" else "SOLD"
+        how = {"stop": " (stopped out)", "circuit_breaker": " (circuit breaker)"}.get(row.get("reason"), "")
+        return when, f"{side} {row['qty']:.4f} BTC at {money(row['price'])}{how}; fee {money(row['fee'])}, slippage cost {money(row['slippage_cost'])}"
+    if ev == "reject":
+        return iso(row["exec_time"]) if row.get("exec_time") else iso(row["signal_bar"] + C.DAY), f"Order rejected: {row['reason']}"
+    if ev == "stop_hit":
+        return iso(row["exec_time"]), f"STOP hit at {money(row['stop'])}" + (" (the price gapped through it)" if row.get("gap") else "")
+    if ev == "breaker":
+        return iso(row["signal_bar"] + C.DAY), f"CIRCUIT BREAKER: equity {abs(row['drawdown']):.1%} below its peak; everything is sold at the next open and trading halts"
+    if ev == "breaker_reset":
+        return "", f"Trading resumed ({'30-day cool-off' if row.get('how') == 'cool_off' else 'reset by a person'})"
+    return "", f"Account opened with {money(row.get('start_equity'))}"
+
+
+def pending_text(pend: dict) -> str:
+    """An account's waiting order in plain words. The account's first order (id 1) sets its starting position, so a rebalance with id 1 is a start, not a move."""
+    if pend["kind"] == "rebalance":
+        w = pend.get("weight") or 0
+        if pend.get("id") == 1:
+            return f"start at {w:.0%} in Bitcoin at the next open" + ("" if w else " (nothing to buy yet)")
+        return f"move to {w:.0%} in Bitcoin at the next open"
+    return {"enter": "BUY at the next open", "exit": "SELL at the next open"}.get(pend["kind"], pend["kind"])
+
+
+def headline(dash: dict) -> str:
+    n_ch, n_mon, n_champ = len(dash.get("challengers", [])), len(dash.get("monitors", [])), len(dash.get("champions", []))
+    r = dash.get("research")
+    if n_champ:
+        return f"{n_champ} champion(s) are in the main portfolio. That is a paper result, not a promise."
+    if n_ch:
+        return f"{n_ch} strategy(ies) passed the admission bar and are being watched in paper trading. None has earned a place in the main portfolio, which stays in cash."
+    if r:
+        when = f"the research run of {day_text(r['ran_at'])}" if len(r.get("runs") or []) <= 1 else f"the research runs up to {day_text(r['ran_at'])}"
+        return (f"None of the {len(r.get('outcomes', {})) or 12} strategies passed the admission bar in {when}, so no strategy has earned a place in the main portfolio, which stays in cash. "
+                f"All {n_mon} are paper-traded anyway so their trades are recorded and the forward record can show whether rejecting them was right.")
+    return "The research run has not been made yet; only the benchmarks are being paper-traded."
+
+
+def short(account: dict) -> str:
+    return SHORT.get(account["id"]) or SHORT.get(account["family"]) or account["family"][:3].upper()
+
+
+def _period(m: dict | None) -> dict | None:
+    """One period's figures of the research run (TRAIN or VALIDATION), the ones the pre-registered gates were applied to."""
+    if not m:
+        return None
+    return {k: m.get(src) for k, src in (("return", "total_return"), ("hold_return", "hold_return"), ("matched_hold_return", "matched_hold_return"), ("max_drawdown", "max_drawdown"),
+                                          ("sharpe", "sharpe"), ("trades", "trades"), ("exposure", "exposure"))}
+
+
+def verdicts(root: Path, dash: dict) -> dict:
+    """What the one-off research run decided about each family, in plain words: {family: {outcome, outcome_text, why, train, validation, timing_p}}. The outcome comes from the dashboard; the reasons and the period figures come
+    from the research report when it is there. A missing or damaged report loses only the details."""
+    research = dash.get("research") or {}
+    out = {fam: {"outcome": o, "outcome_text": OUTCOME_WORDS.get(o, o), "why": [], "train": None, "validation": None, "timing_p": None} for fam, o in (research.get("outcomes") or {}).items()}
+    for protocol in dict.fromkeys([r["protocol"] for r in research.get("runs") or []] or [dash.get("protocol", C.PROTOCOL_VERSION)]):       # one report file per protocol version that was run, oldest first; a later run's entry for a family wins
+        try:
+            fams = json.loads((root / "reports" / f"research_{protocol}.json").read_text(encoding="utf-8"))["evaluation"]["families"]
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+        for fam, ev in fams.items():
+            if fam in out:
+                words = {**GATE_WORDS, **(GATE_WORDS_ONE_SETTING if (ev.get("stability") or {}).get("single") else {})}
+                out[fam].update({"why": [words.get(g, g) for g in ev["admission"]["failed"]], "train": _period(ev.get("train")), "validation": _period(ev.get("validation")),
+                                 "timing_p": (ev.get("validation_timing") or {}).get("p")})
+    return out
+
+
+def _day(t: int) -> str:
+    return datetime.fromtimestamp(int(t), timezone.utc).strftime("%Y-%m-%d")
+
+
+_CURVES: dict = {}
+
+
+def backtest_curves(root: Path, accounts: list) -> dict | None:
+    """Every account's rule replayed on the stored daily candles from the first evaluation day to the latest candle (one continuous run, $10,000, protocol costs), sampled every CURVE_STEP_DAYS days:
+    {"times", "periods", "curves": {account id: {...}}}. None when the candle file is missing or damaged. Cached per candle file and per set of rules: a run takes a few hundredths of a second."""
+    path = root / "data" / "btcusd_1d.csv"
+    try:
+        st = path.stat()
+    except OSError:
+        return None
+    stamp = (str(path), st.st_mtime_ns, st.st_size, C.PROTOCOL_VERSION, tuple(sorted((a["id"], a["family"], json.dumps(a["params"], sort_keys=True)) for a in accounts if a["id"] != "portfolio")))
+    if stamp in _CURVES:
+        return _CURVES[stamp]
+    try:
+        prep = B.Prepared(D.load(path))
+        i0, i1 = prep.span(C.EVAL_START, None)
+    except (ValueError, IndexError, D.DataError):
+        return None
+    idx = list(range(i0, i1 + 1, CURVE_STEP_DAYS))
+    if idx[-1] != i1:
+        idx.append(i1)
+    periods = []
+    for name, (first, last) in C.PERIODS.items():
+        k0 = bisect.bisect_left(idx, bisect.bisect_left(prep.times, B.day_ts(first)))
+        k1 = (bisect.bisect_right(idx, bisect.bisect_right(prep.times, B.day_ts(last)) - 1) if last else len(idx)) - 1
+        if k0 <= k1:
+            periods.append({"name": name, "from": k0, "to": k1})
+    curves = {}
+    for a in accounts:
+        if a["id"] == "portfolio" or a["family"] not in S.FAMILIES:
+            continue
+        r = B.run(prep, a["family"], a["params"], i0, i1, keep_account=True)
+        eq = [row[1] for row in r.account.curve]
+        curves[a["id"]] = {"curve": [round(eq[i - i0] / r.account.start_equity, 4) for i in idx], "return": r.metrics["total_return"], "max_drawdown": r.metrics["max_drawdown"],
+                           "trades": r.metrics["trades"], "breaker_trips": r.metrics["breaker_trips"], "sharpe": r.metrics["sharpe"]}
+    out = {"from": _day(prep.times[i0]), "to": _day(prep.times[i1]), "step_days": CURVE_STEP_DAYS, "times": [_day(prep.times[i]) for i in idx], "periods": periods, "curves": curves}
+    _CURVES.clear()                                                    # one entry is enough: a new candle changes the key
+    _CURVES[stamp] = out
+    return out
+
+
+def forward_series(root: Path, aid: str, keep: int = 120) -> list:
+    """The paper account's equity at each daily close since it was opened, as a ratio of its starting equity (the last `keep` days). Empty on the first day or when the file cannot be read."""
+    try:
+        acc = json.loads((root / "state" / "accounts" / f"{aid}.json").read_text(encoding="utf-8"))["account"]
+        return [round(row[1] / acc["start_equity"], 4) for row in acc["curve"]][-keep:]
+    except (OSError, ValueError, KeyError, TypeError, ZeroDivisionError):
+        return []
+
+
+def backtest_block(verdict: dict | None, curve: dict | None) -> dict | None:
+    """What the phone shows of one account's backtest: the research run's verdict (absent for the benchmarks and the main portfolio) and its continuous replay (absent when the candle file is not there)."""
+    if verdict is None and curve is None:
+        return None
+    v = verdict or {"outcome": None, "outcome_text": "Benchmark", "why": [], "train": None, "validation": None, "timing_p": None}
+    return {**v, "run": None if curve is None else {k: curve[k] for k in ("return", "max_drawdown", "trades", "breaker_trips", "sharpe")}, "curve": None if curve is None else curve["curve"]}
+
+
+QUESTION_FILE = "owner_question.json"
+QUESTION_KEYS = ("asked_on", "title", "paragraphs", "options", "how_to_answer")
+OPTION_KEYS = ("id", "text", "recommended")
+
+
+def _text(v, most: int) -> bool:
+    return isinstance(v, str) and bool(v.strip()) and len(v) <= most
+
+
+def _date_ok(v) -> bool:
+    if not (isinstance(v, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", v)):
+        return False
+    try:
+        datetime.strptime(v, "%Y-%m-%d")
+    except ValueError:
+        return False
+    return True
+
+
+def question(root: Path | None = None) -> tuple[dict | None, str | None]:
+    """The question the loop is waiting for the owner to answer, written in `owner_question.json` next to the dashboard: a title, a few plain paragraphs, the options (at most one marked as recommended) and how to answer, which is to say it in the chat. Text only: nothing in the app can answer it.
+    Returns (the question, None); (None, None) when there is no file, which is the normal case once the owner has answered and the file is deleted; or (None, one plain sentence) when the file is there and cannot be used, so that a typo never shows half a card and is never silent either."""
+    path = (Path(root) if root is not None else C.ROOT) / QUESTION_FILE
+
+    def bad(what: str) -> tuple[None, str]:
+        return None, f"{QUESTION_FILE}: {what}, so the question is not shown."
+
+    if not path.exists():
+        return None, None
+    try:
+        q = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None, f"{QUESTION_FILE} cannot be read as JSON, so the question is not shown."
+    if not isinstance(q, dict):
+        return bad("it must hold one JSON object")
+    if set(q) != set(QUESTION_KEYS):
+        return bad("it must have exactly the keys asked_on, title, paragraphs, options and how_to_answer")
+    if not _date_ok(q["asked_on"]):
+        return bad("asked_on must be a date like 2026-11-17")
+    if not _text(q["title"], 90):
+        return bad("the title must be 1 to 90 characters")
+    paragraphs = q["paragraphs"]
+    if not (isinstance(paragraphs, list) and 1 <= len(paragraphs) <= 4 and all(_text(x, 600) for x in paragraphs)):
+        return bad("paragraphs must be 1 to 4 texts of 1 to 600 characters")
+    options = q["options"]
+    if not (isinstance(options, list) and 2 <= len(options) <= 4 and all(isinstance(o, dict) and set(o) == set(OPTION_KEYS) and _text(o["id"], 3) and _text(o["text"], 400) and isinstance(o["recommended"], bool) for o in options)
+            and len({o["id"] for o in options}) == len(options) and sum(o["recommended"] for o in options) <= 1):
+        return bad("options must be 2 to 4 objects with exactly the keys id, text and recommended (an id of 1 to 3 characters, no two the same; a text of 1 to 400 characters; true or false; at most one true)")
+    if not _text(q["how_to_answer"], 300):
+        return bad("how_to_answer must be 1 to 300 characters")
+    return q, None
+
+
+def paper_view(root: Path | None = None, recent: int = 30) -> dict:
+    root = Path(root) if root is not None else C.ROOT
+    path = root / "dashboard.json"
+    if not path.exists():
+        return {"available": False, "reason": "The paper lab's daily run has not been made yet."}
+    dash = json.loads(path.read_text(encoding="utf-8"))
+    verd, bt = verdicts(root, dash), backtest_curves(root, dash["accounts"])
+    accounts, rows = [], []
+    for a in dash["accounts"]:
+        pend = a["pending"]
+        pend_text = pending_text(pend) if pend else None
+        accounts.append({"id": a["id"], "label": label(a), "stage": a["stage"], "family": a["family"], "equity": a["equity"], "start_equity": a["start_equity"], "return": a["return"], "day_pnl": a["day_pnl"],
+                         "hold_return": a.get("hold_return"), "matched_hold_return": a.get("matched_hold_return"), "exposure": a["exposure"], "drawdown": a["drawdown"], "trades": a["trades"], "days": a["days"],
+                         "halted": a["halted"], "breaker_trips": a["breaker_trips"], "pending": pend_text,
+                         "opened_after": a.get("opened_after_candle"), "short": short(a), "name": family_name(a), "params_text": params_text(a), "backtest": backtest_block(verd.get(a["family"]), (bt or {"curves": {}})["curves"].get(a["id"])),
+                         "forward": forward_series(root, a["id"])})
+        lp = root / "state" / "ledger" / f"{a['id']}.jsonl"
+        if lp.exists():
+            for line in lp.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                r = json.loads(line)
+                if r["event"] in SHOWN_EVENTS:
+                    when, text = describe(r)
+                    rows.append({"when": when or r["recorded_at"], "recorded_at": r["recorded_at"], "seq": r["seq"], "account": a["id"], "label": label(a), "kind": r["event"], "text": text})
+    rows.sort(key=lambda r: (r["when"], r["recorded_at"], r["seq"]))
+    research = dash.get("research")
+    asked, asked_problem = question(root)
+    return {"available": True, "generated_at": dash["generated_at"], "protocol": dash["protocol"], "real_trading": dash["real_trading"], "status": dash["status"], "headline": headline(dash),
+            "data": {"last_candle": dash["data"]["last_candle"], "last_close": dash["data"]["last_close"], "stale": dash["data"]["stale"], "update": dash["data"]["update"]},
+            "counts": {"champions": len(dash["champions"]), "challengers": len(dash["challengers"]), "monitors": len(dash.get("monitors", [])),
+                       "research_admitted": len(research["admitted"]) if research else None, "research_ran_at": research["ran_at"] if research else None},
+            "backtest": None if bt is None else {"from": bt["from"], "to": bt["to"], "step_days": bt["step_days"], "times": bt["times"], "periods": bt["periods"], "note": CURVE_NOTE},
+            "accounts": accounts, "recent": rows[-recent:][::-1], "problems": dash.get("frozen_check", []), "question": asked, "question_problem": asked_problem,
+            "note": "These accounts are simulations. A paper profit is not a profit, and no real order is ever placed. Orders are modelled as filled at the 00:00 UTC open although the daily run happens at 00:15."}

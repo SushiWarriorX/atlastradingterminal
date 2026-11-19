@@ -1,5 +1,7 @@
 # Running ATLAS in the cloud
 
+> **Not current (2026-11-14): do not follow this guide as written.** The cloud image was built to serve the desktop web terminal, which was removed on 2026-11-12. The `Dockerfile` still tries to build `atlas/web` and fails at its first step, and step 8 below opens a page that no longer exists. What the cloud should serve now (the API only, for the phone app, or also Signal's web build) is the owner's decision and is still open.
+
 ATLAS runs on one small Linux server so your own PC does not have to stay on. It is protected by a password and HTTPS. Research and paper trading only: live trading stays disabled, and IBKR is not used in the cloud (stocks come from Yahoo, delayed).
 
 **Cost:** a VPS with 2 GB RAM, roughly $6-12 per month (Hetzner, DigitalOcean, Vultr and similar). You need no domain: a free `<ip-with-dashes>.sslip.io` name works.

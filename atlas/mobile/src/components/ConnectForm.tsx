@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Platform, StyleSheet, TextInput, View } from "react-native";
 import { ApiError } from "../api/client";
-import { color, font, radius, space } from "../theme";
+import { color, font, radius, space, fonts } from "../theme";
 import { useConnection } from "../state/connection";
 import { PrimaryButton, Txt } from "./ui";
 
@@ -38,5 +38,5 @@ export function ConnectForm({ initialUrl, submitLabel = "Connect", onDone }: { i
 export const noOutline = Platform.OS === "web" ? ({ outlineStyle: "none" } as object) : {};
 
 const s = StyleSheet.create({
-  input: { backgroundColor: color.surface, borderRadius: 16, color: color.text, paddingHorizontal: space.md, paddingVertical: 14, fontSize: font.md },
+  input: { backgroundColor: color.surface, borderRadius: 16, color: color.text, fontFamily: fonts.regular, paddingHorizontal: space.md, paddingVertical: 14, fontSize: font.md },
 });

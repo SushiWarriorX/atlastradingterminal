@@ -10,3 +10,6 @@ e2e-out/
 local-settings.ps1
 
 .env
+atlas/devtools/skills_backup/
+
+.signal-venv/
