@@ -58,7 +58,7 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 
 ## Mistakes from the shift loops (2026-11-09 and 10)
 - Editing a file from a script: never open it for writing before reading it (`open(p, "w").write(open(p).read() + ...)` empties it first). Read into a variable, then write; check the diff shows only additions.
-- Editing a markdown table by searching for a heading word: the word also appears in the intro, so rows landed in the wrong table. Search for the full heading line, and re-read the result.
+- Editing a markdown table by searching for a heading word: the word also appears in the intro, so rows landed in the wrong table. Search for the full heading line, and re-read the result. The STATE BOARD row and the move to the archive have a tool: `python3 atlas/devtools/board.py add ...` (its cells are read from files, so no shell touches them).
 - A test that depends on the clock or weekday fails at odd hours (three-day-old prices were "the latest session" on a Monday morning). Make fixtures stale by a margin that holds on any day, or fix the clock in the test.
 - Derive a hand-checked number before trusting it (a Hull average on a straight line lags 4/3 bars, not 0). If the code and the expectation disagree, work out which is right first.
 - A rule with a stop fixed at entry can end up as buy-and-hold (the NR7 rule entered in 2015 and never exited). Look at the entry and exit dates of a new backtest, not only the totals, and a rule needs at least one parameter for the robustness check.

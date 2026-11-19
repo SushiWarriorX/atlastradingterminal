@@ -60,3 +60,15 @@ The latest report is `SKILLS_REVIEW.md`; the full history (review dates, finding
 - `/.github/workflows/skills-review.yml` is a supported weekly schedule (Mondays 06:23 UTC) plus a manual "Run workflow" button. GitHub only runs scheduled workflows from the **default branch**, so it starts once this branch is merged. It is read-only, has no secrets, installs nothing, and opens or updates a single issue only when the exit code is 10. A CI run has nowhere to keep the ledger, so it always runs a fresh review; repeat alerts are avoided by updating the one issue in place.
 - To run it on your own computer instead, schedule the manual command with Windows Task Scheduler or cron, for example `0 9 * * 1 cd /path/to/repo && python3 atlas/devtools/skills_review.py run`. The saved `next_run` makes an early run do nothing.
 - Claude Code has its own scheduling feature that needs a claude.ai login; I have not verified that it is available to you, so it is not used.
+
+## Hand-off board chore (`board.py`)
+
+The last step of every cycle is a row on the STATE BOARD in `atlas/HANDOFF.md` and the move of the oldest row to `atlas/HANDOFF_ARCHIVE.md`. `board.py` does both (standard library only):
+
+```bash
+python3 atlas/devtools/board.py add --job data --changed-file CHANGED.txt --next-file NEXT.txt --dry-run
+python3 atlas/devtools/board.py add --job data --changed-file CHANGED.txt --next-file NEXT.txt
+python3 atlas/devtools/board.py check
+```
+
+The texts of the "What changed" and "Next suggestion" cells are read from files (write them with an editor tool, not a shell heredoc); a cell may not hold a pipe or a line break. The time defaults to now (UTC), the archive label to "<hour> UTC <job> job" and the number of rows kept to 20. Nothing is written unless the result passes `check`, and a refusal says why (exit code 1). Tests: `cd atlas/devtools && python3 -m pytest tests -q`.
