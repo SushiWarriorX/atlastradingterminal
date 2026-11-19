@@ -904,6 +904,46 @@ async function healthy(browser) {
       await page.locator(V("usgdp-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
       await shot(page, "07zk-usgdp-bottom");
 
+      await page.waitForSelector(V("ushousehold-card"));
+      await page.waitForSelector(V("ushousehold-body") + ", " + V("ushousehold-unavailable") + ", " + V("ushousehold-error"), { timeout: 45000 });
+      const hhTxt = await text(page);
+      match(hhTxt, /US household income and saving/); match(hhTxt, /Bureau of Economic Analysis/); noMatch(hhTxt, FORECASTS, "the US household card makes no forecasts");
+      if (await liveCard(page, "ushousehold-body")) {
+        const hhBody = await inner(page, "ushousehold-body");
+        const AMT = "-?\\$(?:[\\d,]+\\.\\d billion|\\d+\\.\\d{3} trillion)";
+        const MOVE = "(?:(?:up|down) \\d+\\.\\d{2}%|unchanged)";
+        const HQ = "Q[1-4] (?:19|20)\\d\\d";
+        const HM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
+        match(await inner(page, "ushousehold-headline"), new RegExp(`^Households saved \\d+\\.\\d% of their after-tax income in ${HM}\\. That is (?:up from|down from|unchanged from) -?\\d+\\.\\d% the month before and (?:up from|down from|unchanged from) -?\\d+\\.\\d% a year earlier\\.$`), "the saving rate with the month before and a year earlier");
+        match(hhBody, new RegExp(`Over the last \\d+ years \\(\\d+ months\\) the saving rate ran from -?\\d+\\.\\d% \\(${HM}\\) to -?\\d+\\.\\d% \\(${HM}\\); \\d{1,3}% of those months were lower than now\\.`), "the long range is explained in months");
+        for (const [id, label] of [["income", "Personal income"], ["taxes", "Taxes on it"], ["disposable", "Disposable income"]]) {
+          match(await inner(page, `ushousehold-line-${id}`), new RegExp(`^${label}: ${AMT}, ${MOVE} on the month and ${MOVE} on a year earlier$`), `${label} is its own row`);
+        }
+        match(await inner(page, "ushousehold-outlays"), new RegExp(`^Spent \\(personal outlays\\): ${AMT}, ${MOVE} on the month and ${MOVE} on a year earlier$`), "outlays are their own row");
+        match(await inner(page, "ushousehold-part-spending"), new RegExp(`^Consumer spending: ${AMT}, \\d+\\.\\d% of what was spent, ${MOVE} on the month and ${MOVE} on a year earlier$`), "consumer spending is the first part of outlays");
+        match(await inner(page, "ushousehold-part-interest"), new RegExp(`^Interest payments: ${AMT}, \\d+\\.\\d% of what was spent, ${MOVE} on the month and ${MOVE} on a year earlier$`), "interest payments are the second part");
+        match(await inner(page, "ushousehold-part-other"), new RegExp(`^Everything else: ${AMT}, -?\\d+\\.\\d% of what was spent$`), "the rest is found by subtraction and has no changes");
+        match(await inner(page, "ushousehold-saving"), new RegExp(`^Saved \\(disposable income minus what was spent\\): ${AMT}, (?:(?:up|down) \\$[\\d,]+\\.\\d billion|unchanged) on the month and (?:(?:up|down) \\$[\\d,]+\\.\\d billion|unchanged) on a year earlier$`), "saving in billions");
+        match(await inner(page, "ushousehold-split-total"), new RegExp(`^Consumer spending in total: ${AMT} at an annual rate, ${MOVE} on a year earlier$`), "the quarterly total");
+        for (const [id, label] of [["durable", "Durable goods"], ["nondurable", "Nondurable goods"], ["services", "Services"]]) {
+          match(await inner(page, `ushousehold-type-${id}`), new RegExp(`^${label}: ${AMT}, \\d+\\.\\d% of consumer spending, ${MOVE} on a year earlier$`), `${label} is its own row`);
+        }
+        match(hhBody, new RegExp(`Consumer spending by type, ${HQ} \\(quarterly\\)`), "the quarter of the split is named");
+        match(await inner(page, "ushousehold-recent"), new RegExp(`^(?:${HM}: saving rate -?\\d+\\.\\d%, income after tax [+-]?\\d+\\.\\d{2}%, consumer spending [+-]?\\d+\\.\\d{2}% on the month before\\s*){6}$`), "six months of saving rate and changes");
+        match(await inner(page, "ushousehold-check"), new RegExp(`^Check: in each of the \\d+ months from ${HM} to ${HM} and the \\d+ quarters from ${HQ} to ${HQ} the twelve series covered the same months or quarters with none missing and every figure lay inside its range \\(plain checks, not the source's sums\\); the source's own accounting held, which shows that the series belong to one release, not that the figures are right: personal income minus taxes equalled disposable income and disposable income minus spending equalled saving \\(largest gaps \\d\\.\\d and \\d\\.\\d billion, the rounding of the published tenths\\), the saving rate equalled saving over disposable income \\(largest gap 0\\.\\d{3} points\\), the three types of consumer spending added up to the quarterly total \\(largest gap 0\\.\\d{3} billion\\) and consumer spending plus interest never exceeded outlays \\(the rest was never below ${AMT}\\)\\. One check is between two tables: in \\d+ quarters the quarterly consumer spending equalled the average of its three monthly figures to within 0\\.\\d{3} billion\\.`), "the checks are shown, and what they do not prove");
+        match(hhBody, /not that the figures are right/); match(hhBody, /disposable income/); match(hhBody, /revised in later releases/); match(hhBody, /not a market signal or a forecast/);
+        noMatch(hhBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+        noMatch(hhBody, /\b(?:19|20)\d\d-Q[1-4]\b/, "no raw quarter labels on screen");
+      }
+      await page.locator(V("ushousehold-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zl-ushousehold-top");
+      if (await page.locator(V("ushousehold-split")).count()) {                                                                            // the split of consumer spending by type sits in the middle of the card
+        await page.locator(V("ushousehold-split")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);
+        await shot(page, "07zl-ushousehold-middle");
+      }
+      await page.locator(V("ushousehold-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
+      await shot(page, "07zl-ushousehold-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);

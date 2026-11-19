@@ -525,6 +525,18 @@ export interface UsGdpData { available: boolean; reason?: string; demo: boolean;
   trade?: { exports_billions: number; imports_billions: number };
   recent?: { quarter: string; growth_pct: number }[];
   detail?: { quarters_checked: number; first_quarter: string; last_quarter: string; largest_gdp_gap: number; largest_net_exports_gap: number; largest_contribution_gap: number } }
+export interface UsHouseholdRange { months: number; first: string; lowest: { value: number; month: string }; highest: { value: number; month: string }; share_lower_pct: number }
+export interface UsHouseholdLine { key: string; label: string; level_billions: number; change_pct: number; change_year_pct: number }
+export interface UsHouseholdPart { key: "spending" | "interest" | "other"; label: string; level_billions: number; share_pct: number; change_pct?: number; change_year_pct?: number }
+export interface UsHouseholdType { key: "durable" | "nondurable" | "services"; label: string; level_billions: number; share_pct: number; change_year_pct: number }
+export interface UsHouseholdData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  saving?: { rate_pct: number; month_before_pct: number; year_ago_pct: number; level_billions: number; change_billions: number; change_year_billions: number; range: UsHouseholdRange };
+  income?: UsHouseholdLine[];
+  outlays?: UsHouseholdLine & { parts: UsHouseholdPart[] };
+  split?: { quarter: string; date: string; age_days: number; freshness: "CURRENT" | "OVERDUE"; total_billions: number; total_change_year_pct: number; parts: UsHouseholdType[] };
+  recent?: { month: string; saving_rate_pct: number; income_change_pct: number; spending_change_pct: number }[];
+  detail?: { months_checked: number; first_month: string; last_month: string; quarters_checked: number; first_quarter: string; last_quarter: string; quarters_compared: number;
+    largest_income_gap: number; largest_saving_gap: number; largest_rate_gap: number; largest_split_gap: number; largest_mean_gap: number; smallest_other_outlays: number } }
 export interface EuroYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
   rates?: EuroYieldRate[]; spreads?: EuroYieldSpread[];
   window?: { days: number; from: string; years: number; median: number; lowest: { value: number; date: string }; highest: { value: number; date: string }; share_lower_pct: number } | null;
