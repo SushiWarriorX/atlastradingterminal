@@ -4,12 +4,12 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 
 ## Always
 - Research and paper only. No order tickets, buy/sell controls or brokerage links, anywhere. Tests check this.
-- Every number shows source, date and freshness. A gap is stated as a gap, never filled. Demo data is labelled on every screen and never mixed with live data.
+- Every number shows source, date and freshness. A gap is stated as a gap, never filled. Demo data is labelled on every screen and never mixed with live data. A card turns OVERDUE at the release lag plus one period (a month stays the newest until the next release); check the threshold against today's real age before it ships.
 - The server calculates; the apps display. Written explanations may not introduce figures.
 - Report outcomes as they are: a failing test, an unverified source or a skipped step is said plainly.
 
 ## Before shipping a data source
-- Fetch it live in the same session; keep one real sample as the test fixture. If it cannot be reached, log it as blocked, do not ship it.
+- Fetch it live in the same session; keep one real sample as the test fixture. If it cannot be reached, log it as blocked, do not ship it. Fetch every series id too: ids written from memory were wrong twice in one night (a BEA account code such as `DDURRC` is not a FRED id, and the id made from it answers 404).
 - Free and keyless only. Check terms. The SEC contact and any keys live in environment variables or the untracked `local-settings.ps1`, never in the repo or a request header from the user's account.
 - Show what it is and what it is not (a mood gauge is not a signal). Say "unavailable" with a reason when the source fails.
 - A refused host fails at once (`curl: (56) CONNECT tunnel failed, response 403`); a flaky one gives empty replies or hangs (FRED on 2026-11-15: fine at 08:30, silent at 14:20). Log them differently, ship another source the same cycle, and tell the owner if the same host fails twice running.
@@ -50,7 +50,7 @@ Short, project-specific lessons. Keep under 80 lines; delete anything that stops
 
 ## Research engine and browser-test lessons (from the fundamentals build)
 - Quarterly figures: companies file 3-, 6-, 9- and 12-month cumulative cash-flow totals and never a fourth quarter; derive a quarter as the difference of two cumulative totals and label it "derived". Never sum quarters that are not consecutive.
-- Tests: the first valid bar of any rolling indicator is bar n-1 (a 50-bar average first exists on bar 49); I wrote this off-by-one three times. Build fixtures from hand-checkable numbers and never write `or True` into an assertion (`tests/test_test_hygiene.py` now refuses it and its cousins in every test file). A test of an encoding must put non-ASCII bytes on disk and compare bytes: `json.dumps` escapes to ASCII by default, so a file it writes never reaches the UTF-8 reader (a breakage run found this in the owner-question reader on 2026-11-18; the test now writes with `ensure_ascii=False`).
+- Tests: the first valid bar of any rolling indicator is bar n-1 (a 50-bar average first exists on bar 49); I wrote this off-by-one three times. Build fixtures from hand-checkable numbers and never write `or True` into an assertion (`tests/test_test_hygiene.py` now refuses it and its cousins in every test file). A test of an encoding must put non-ASCII bytes on disk and compare bytes: `json.dumps` escapes to ASCII by default, so a file it writes never reaches the UTF-8 reader (a breakage run found this in the owner-question reader on 2026-11-18; the test now writes with `ensure_ascii=False`). When limits interlock (a value cannot sit at its limit while the sums stay exact), write the edge table as (series, value, expected text): the inside edge expects the message of the check that comes next, the outside edge the range message.
 - JSON: infinity and NaN are not JSON. "No upper limit" must become null before it reaches an answer, and a test needs a saved result to see it (an empty state hides the bug).
 - Screens: view screenshots, not just assertions. They showed small amounts printed as $0, warnings buried in collapsed sections, invisible inputs and 35px buttons. A formatter must never turn a small non-zero amount into zero.
 - Clipboard and pop-ups: start the copy and open the tab inside the click; report "copied" only after a real success; `window.open` with `noopener` always returns null, so detach with `opener = null` instead; test with permissions granted, refused and the tab blocked.
