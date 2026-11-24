@@ -1096,6 +1096,35 @@ async function healthy(browser) {
       await page.locator(V("usinventories-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
       await shot(page, "07zq-usinventories-bottom");
 
+      await page.waitForSelector(V("usconsumercredit-card"));
+      await page.waitForSelector(V("usconsumercredit-body") + ", " + V("usconsumercredit-unavailable") + ", " + V("usconsumercredit-error"), { timeout: 45000 });
+      const ccTxt = await text(page);
+      match(ccTxt, /Consumer credit/); match(ccTxt, /Federal Reserve/); noMatch(ccTxt, FORECASTS, "the consumer credit card makes no forecasts");
+      if (await liveCard(page, "usconsumercredit-body")) {
+        const ccBody = await inner(page, "usconsumercredit-body");
+        const CM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
+        const CA = "\\$(?:\\d\\.\\d{3} trillion|[\\d,]+ billion|[\\d,]+ million)";
+        const CMOVE = "(?:(?:up|down) \\d+\\.\\d%|unchanged|not available)";
+        const CCH = "(?:(?:up|down) \\$(?:\\d+\\.\\d billion|\\d+ million)|unchanged)";
+        const CSIGN = "(?:[+-]\\d+\\.\\d%|0\\.0%)";
+        match(await inner(page, "usconsumercredit-headline"), new RegExp(`^In ${CM} US consumers owed ${CA} in consumer credit at the end of the month \\(mortgages are not counted\\): ${CA} revolving \\(\\d{1,2}\\.\\d% of the total\\) and ${CA} nonrevolving\\.$`), "what was owed and how it splits");
+        match(await inner(page, "usconsumercredit-compare"), new RegExp(`^Against the month before the total is ${CCH} \\(${CMOVE}\\); against a year earlier it is ${CCH} \\(${CMOVE}\\)\\.$`), "the total against the month before and a year earlier");
+        match(await inner(page, "usconsumercredit-range"), new RegExp(`^Over the last 10 years \\(120 months\\) the total's growth on a year earlier ran from ${CSIGN} \\(${CM}\\) to ${CSIGN} \\(${CM}\\); \\d{1,3}% of those months were lower than now\\.$`), "where the growth on a year earlier stands among the last ten years");
+        for (const [k, label] of [["revolving", "Revolving credit \\(credit cards and other revolving plans\\)"], ["nonrevolving", "Nonrevolving credit \\(car, student and other instalment loans\\)"]]) {
+          match(await inner(page, `usconsumercredit-kind-${k}`), new RegExp(`^${label}: ${CA} \\(\\d{1,2}\\.\\d% of the total\\)\\. Against the month before it is ${CCH} \\(${CMOVE}\\); against a year earlier it is ${CCH} \\(${CMOVE}\\)\\.$`), `${k} credit has its own line`);
+        }
+        match(await inner(page, "usconsumercredit-recent"), new RegExp(`^(?:${CM}: total ${CA} \\(revolving ${CA}, nonrevolving ${CA}\\), ${CCH} on the month before\\s*){6}$`), "six months of the total and its two parts");
+        match(await inner(page, "usconsumercredit-check"), new RegExp(`^Check: in each of the \\d[\\d,]* months from ${CM} to ${CM} the 3 series covered the same months with none missing and every figure lay inside its range \\(plain checks, not the source's sum\\)\\. The Federal Reserve's own arithmetic held, which shows that the series belong to one release, not that the figures are right: total consumer credit equalled revolving plus nonrevolving credit \\(the figures are rounded to 0\\.01 million dollars; the largest gap was \\d+(?:\\.\\d+)? million, and 0\\.015 is allowed\\)\\.$`), "what was checked, with the card's own counts");
+        match(ccBody, /preliminary and are revised later/); match(ccBody, /mortgages, home-equity loans/); match(ccBody, /not a market signal or a forecast/);
+        noMatch(ccBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("usconsumercredit-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zr-usconsumercredit-top");
+      await page.locator(V("usconsumercredit-kinds")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);      // the middle: the two kinds of credit
+      await shot(page, "07zr-usconsumercredit-middle");
+      await page.locator(V("usconsumercredit-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
+      await shot(page, "07zr-usconsumercredit-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);
