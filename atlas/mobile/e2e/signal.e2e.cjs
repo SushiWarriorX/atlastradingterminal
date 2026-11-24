@@ -1067,6 +1067,35 @@ async function healthy(browser) {
       await page.locator(V("joltsflows-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
       await shot(page, "07zp-joltsflows-bottom");
 
+      await page.waitForSelector(V("usinventories-card"));
+      await page.waitForSelector(V("usinventories-body") + ", " + V("usinventories-unavailable") + ", " + V("usinventories-error"), { timeout: 45000 });
+      const uiTxt = await text(page);
+      match(uiTxt, /Business inventories and sales/); match(uiTxt, /Census Bureau/); noMatch(uiTxt, FORECASTS, "the business inventories card makes no forecasts");
+      if (await liveCard(page, "usinventories-body")) {
+        const uiBody = await inner(page, "usinventories-body");
+        const IM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
+        const IA = "\\$(?:\\d\\.\\d{3} trillion|[\\d,]+ billion|[\\d,]+ million)";
+        const IMOVE = "(?:(?:up|down) \\d+\\.\\d%|unchanged|not available)";
+        const IR = "\\d\\.\\d{2}";
+        match(await inner(page, "usinventories-headline"), new RegExp(`^In ${IM} US businesses held ${IA} of goods at the end of the month and sold ${IA} during it: ${IR} months of sales on the shelves, against ${IR} a year earlier\\.$`), "what the shelves held, what was sold and the months of sales");
+        match(await inner(page, "usinventories-compare"), new RegExp(`^Against a year earlier inventories are ${IMOVE} and sales ${IMOVE}; against the month before inventories are ${IMOVE} and sales ${IMOVE}\\.$`), "inventories and sales against a year earlier and the month before");
+        match(await inner(page, "usinventories-range"), new RegExp(`^Over the last 10 years \\(120 months\\) the total ratio ran from ${IR} \\(${IM}\\) to ${IR} \\(${IM}\\); \\d{1,3}% of those months were lower than now\\.$`), "where the total ratio stands among the last ten years");
+        for (const [k, label] of [["wholesalers", "Merchant wholesalers"], ["manufacturers", "Manufacturers"], ["retailers", "Retailers"]]) {
+          match(await inner(page, `usinventories-sector-${k}`), new RegExp(`^${label}: ${IA} of inventories \\(\\d{1,2}\\.\\d% of the total\\) and ${IA} of sales: ${IR} months of sales, against ${IR} a year earlier\\. Against a year earlier inventories are ${IMOVE} and sales ${IMOVE}\\.$`), `${label} has its own line`);
+          match(await inner(page, `usinventories-range-${k}`), new RegExp(`^Over the last 10 years \\(120 months\\) its ratio ran from ${IR} \\(${IM}\\) to ${IR} \\(${IM}\\); \\d{1,3}% of those months were lower than now\\.$`), `where the ${label} ratio stands among the last ten years`);
+        }
+        match(await inner(page, "usinventories-recent"), new RegExp(`^(?:${IM}: inventories ${IA}, sales ${IA}, ${IR} months of sales\\s*){6}$`), "six months of inventories, sales and the ratio");
+        match(await inner(page, "usinventories-check"), new RegExp(`^Check: in each of the \\d[\\d,]* months from ${IM} to ${IM} the 12 series covered the same months with none missing and every figure lay inside its range \\(plain checks, not the source's sums\\)\\. The release's own arithmetic held, which shows that the series belong to one release, not that the figures are right: total inventories equalled manufacturers' plus wholesalers' plus retailers' inventories and total sales equalled the sum of the three kinds' sales \\(the figures are rounded to a million; the largest gap was \\d+(?:\\.\\d+)? million, and 2 is allowed\\), and each of the four published ratios matched its inventories over its sales to its two decimals \\(the largest difference was 0\\.\\d+, and 0\\.0051 is allowed\\)\\.$`), "what was checked, with the card's own counts");
+        match(uiBody, /preliminary and are revised later/); match(uiBody, /not corrected for price changes/); match(uiBody, /not a market signal or a forecast/);
+        noMatch(uiBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("usinventories-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zq-usinventories-top");
+      await page.locator(V("usinventories-sectors")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);      // the middle: the three kinds of business
+      await shot(page, "07zq-usinventories-middle");
+      await page.locator(V("usinventories-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
+      await shot(page, "07zq-usinventories-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);

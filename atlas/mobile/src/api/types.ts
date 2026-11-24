@@ -529,6 +529,12 @@ export interface JoltsFlowsMonth { month: string; hires_thousands: number; quits
 export interface JoltsFlowsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   total?: JoltsFlowsTotal; sectors?: JoltsFlowsSector[]; industries?: JoltsFlowsIndustry[]; recent?: JoltsFlowsMonth[];
   detail?: { months_checked: number; first_month: string; last_month: string; largest_sum_gap: number; closest_part_margin: number; smallest_rest_of_private: number } }
+export interface UsInventoriesTotal { inventories_millions: number; sales_millions: number; ratio: number; inventories_change_month_pct: number | null; sales_change_month_pct: number | null; inventories_change_year_pct: number | null; sales_change_year_pct: number | null; ratio_year_ago: number; ratio_range: JoltsRange }
+export interface UsInventoriesSector { key: string; label: string; inventories_millions: number; sales_millions: number; ratio: number; share_pct: number; inventories_change_year_pct: number | null; sales_change_year_pct: number | null; ratio_year_ago: number; ratio_range: JoltsRange }
+export interface UsInventoriesMonth { month: string; inventories_millions: number; sales_millions: number; ratio: number }
+export interface UsInventoriesData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  total?: UsInventoriesTotal; sectors?: UsInventoriesSector[]; recent?: UsInventoriesMonth[];
+  detail?: { months_checked: number; first_month: string; last_month: string; largest_sum_gap: number; largest_ratio_gap: number } }
 export interface UsJobsPart { level_thousands: number; change_thousands: number; change_year_thousands: number }
 export interface UsJobsRate { pct: number; month_before_pct: number | null; year_ago_pct: number | null }
 export interface UsJobsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
