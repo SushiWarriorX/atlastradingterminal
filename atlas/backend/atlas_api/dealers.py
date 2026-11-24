@@ -35,7 +35,9 @@ def _num(x):
 def parse(payload: dict) -> dict[date, float]:
     """{as-of date: millions of dollars}. Weeks the source marks "*" or "N/A" are left out and counted by the caller; an unreadable date refuses the response."""
     out: dict[date, float] = {}
-    for r in (payload.get("pd") or {}).get("timeseries") or []:
+    pd = payload.get("pd") if isinstance(payload, dict) else None
+    rows = pd.get("timeseries") if isinstance(pd, dict) else None
+    for r in rows if isinstance(rows, list) else []:                    # any other shape (a list, a string, a missing key) ends as "not enough weeks", never as an AttributeError
         try:
             d = date.fromisoformat(r["asofdate"])
         except (KeyError, TypeError, ValueError):
@@ -59,9 +61,13 @@ def summarize(level: dict[date, float], change: dict[date, float], today: date) 
     check = None
     if wk is not None and src is not None:
         # Own arithmetic against the source's own "change from previous week" series, over the last 26 weeks.
-        pairs = [(x, y) for x, y in zip(dates[-27:-1], dates[-26:]) if (y - x).days == 7 and y in change]
-        bad = [y for x, y in pairs if abs((level[y] - level[x]) - change[y]) > 1.0]
-        check = {"weeks": len(pairs), "mismatches": len(bad), "match": len(pairs) > 0 and not bad, "latest_ours_billions": b(wk), "latest_source_billions": b(src)}
+        pairs = [(x, y) for x, y in list(zip(dates[:-1], dates[1:]))[-26:] if (y - x).days == 7 and y in change]       # the last 26 neighbouring weeks (the two slices this replaced paired a date with itself when fewer than 27 dates were held)
+        bad = [(x, y) for x, y in pairs if abs((level[y] - level[x]) - change[y]) > 1.0]
+        # The source revises old weeks (found 2026-11-24: it moved one level and a different amount of that week's change figure, so one week no longer fitted): `match` stays false then, `latest_match` says whether the
+        # week this card shows still fits, and `bad_weeks` names up to three disagreeing weeks, newest first, so the card can say which week instead of a bare alarm.
+        check = {"weeks": len(pairs), "mismatches": len(bad), "match": len(pairs) > 0 and not bad, "latest_match": d not in [y for _, y in bad],
+                 "bad_weeks": [{"date": y.isoformat(), "ours_billions": b(level[y] - level[x]), "source_billions": b(change[y])} for x, y in reversed(bad)][:3],
+                 "latest_ours_billions": b(wk), "latest_source_billions": b(src)}
     target = d - timedelta(days=364)
     ya = [x for x in dates if abs((x - target).days) <= 3]
     ya_day = ya[0] if ya else None

@@ -1,13 +1,12 @@
 import React from "react";
 import { View } from "react-native";
 import { safeUrl } from "../lib/links";
+import { billions, dayText, dealerCheck } from "../lib/dealers";
 import { useDealers } from "../state/queries";
 import { color, space } from "../theme";
 import { Banner, Divider, GCard, Skeleton, SourceLink, Txt } from "./ui";
 
-const day = (iso?: string | null) => (iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "");
-const plain = (x: number) => `$${x.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}B`;
-const move = (x: number | null | undefined) => (x == null ? "No change shown (a week is missing in the source)" : x === 0 ? "Unchanged from the week before" : `${x > 0 ? "Up" : "Down"} ${plain(Math.abs(x))} from the week before`);
+const move = (x: number | null | undefined) => (x == null ? "No change shown (a week is missing in the source)" : x === 0 ? "Unchanged from the week before" : `${x > 0 ? "Up" : "Down"} ${billions(Math.abs(x))} from the week before`);
 
 /** Primary dealers' net position in US Treasuries (New York Fed), weekly. Describes what already happened; not a signal. */
 export function DealersCard() {
@@ -22,17 +21,17 @@ export function DealersCard() {
         : !d.available ? <Banner tone={d.demo ? "demo" : "warn"} title={d.demo ? "Demo mode" : "Dealer positions unavailable"} testID="dealers-unavailable">{d.reason}</Banner>
         : (
           <View style={{ gap: space.sm }} testID="dealers-body">
-            <Txt variant="label">Net position in US Treasuries · as of {day(d.date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
-            <Txt variant="hero">{plain(d.net_position_billions!)}</Txt>
+            <Txt variant="label">Net position in US Treasuries · as of {dayText(d.date)}{d.freshness === "OVERDUE" ? " · overdue" : ""}</Txt>
+            <Txt variant="hero">{billions(d.net_position_billions!)}</Txt>
             <Txt variant="small">{move(d.week_change_billions)}.</Txt>
-            <Txt variant="tiny">Same week a year earlier ({day(d.year_ago_date)}): {d.year_ago_billions != null ? plain(d.year_ago_billions) : "not available"}</Txt>
+            <Txt variant="tiny">Same week a year earlier ({dayText(d.year_ago_date)}): {d.year_ago_billions != null ? billions(d.year_ago_billions) : "not available"}</Txt>
             {d.range_52w ? (<>
               <Divider />
               <Txt variant="label">Last {d.range_52w.weeks} weeks</Txt>
-              <Txt variant="small">Low {plain(d.range_52w.low_billions)} ({day(d.range_52w.low_date)}) · high {plain(d.range_52w.high_billions)} ({day(d.range_52w.high_date)})</Txt>
+              <Txt variant="small">Low {billions(d.range_52w.low_billions)} ({dayText(d.range_52w.low_date)}) · high {billions(d.range_52w.high_billions)} ({dayText(d.range_52w.high_date)})</Txt>
               <Txt variant="tiny">Higher than {d.range_52w.weeks_lower_than_now} of those {d.range_52w.weeks} weeks.</Txt>
             </>) : null}
-            {d.check ? <Txt variant="tiny" c={d.check.match ? undefined : color.down}>{d.check.match ? `Checked: the week-to-week changes equal the source's own change figures for the last ${d.check.weeks} weeks.` : "DOES NOT MATCH: the week-to-week changes differ from the source's own change figures."}</Txt> : null}
+            {d.check ? <Txt variant="tiny" c={dealerCheck(d.check).red ? color.down : undefined} testID="dealers-check">{dealerCheck(d.check).text}</Txt> : null}
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
       <SourceLink url={link}>Source: New York Fed, Primary Dealer Statistics</SourceLink>

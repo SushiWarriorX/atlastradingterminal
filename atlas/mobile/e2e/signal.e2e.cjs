@@ -719,7 +719,10 @@ async function healthy(browser) {
         match(dbody, /Net position in US Treasuries · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
         match(dbody, /Same week a year earlier[\s\S]*Last \d+ weeks/, "year-ago and range are shown");
         noMatch(dbody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
-        noMatch(dbody, /DOES NOT MATCH/, "the self-check against the source must pass");
+        noMatch(dbody, /DOES NOT MATCH/, "the week shown must fit the source's own change figure");
+        const dcheck = await inner(page, "dealers-check");
+        match(dcheck, /^Checked: /, "the self-check line is there: either every week fits, or the latest week fits and the older weeks that do not are named");
+        if (!/equal the source's own change figures for the last/.test(dcheck)) match(dcheck, /^Checked: the latest week's change equals the source's own change figure\. In \d+ of the last \d+ weeks the source's own figures do not fit each other \(week of [A-Z][a-z]{2} \d{1,2}, 20\d\d: its levels give -?\$[\d,.]+B, its change figure says -?\$[\d,.]+B/, "an older week the source itself no longer fits is named, with both figures");
       }
       await page.locator(V("dealers-card")).scrollIntoViewIfNeeded().catch(() => undefined);
       await shot(page, "07f-dealers");

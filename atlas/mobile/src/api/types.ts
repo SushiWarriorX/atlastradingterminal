@@ -317,7 +317,7 @@ export interface BorrowingData { available: boolean; reason?: string; demo: bool
 export interface DealersData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   net_position_billions?: number; previous_date?: string; week_change_billions?: number | null; year_ago_date?: string | null; year_ago_billions?: number | null;
   range_52w?: { weeks: number; low_billions: number; low_date: string; high_billions: number; high_date: string; weeks_lower_than_now: number };
-  check?: { weeks: number; mismatches: number; match: boolean; latest_ours_billions: number; latest_source_billions: number } | null; history?: { date: string; net_billions: number }[] }
+  check?: { weeks: number; mismatches: number; match: boolean; latest_match?: boolean; bad_weeks?: { date: string; ours_billions: number; source_billions: number }[]; latest_ours_billions: number; latest_source_billions: number } | null; history?: { date: string; net_billions: number }[] }
 export interface BudgetData { available: boolean; reason?: string; demo: boolean; as_of: string; url: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
   fiscal_year?: number; month?: string; month_receipts_billions?: number; month_outlays_billions?: number; month_deficit_billions?: number;
   ytd_months?: number; ytd_receipts_billions?: number; ytd_outlays_billions?: number; ytd_deficit_billions?: number;
