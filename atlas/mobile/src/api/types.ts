@@ -509,6 +509,12 @@ export interface JoltsData { available: boolean; reason?: string; demo: boolean;
   per_unemployed?: { ratio: number; month: string; unemployed_thousands: number; year_ago: number | null; range: JoltsRange };
   flows?: JoltsFlow[];
   detail?: { months_checked: number; first_month: string; last_month: string; largest_separations_gap: number; largest_rate_gap: number } }
+export interface JoltsIndustryRow { key: string; label: string; derived: boolean; openings_thousands: number; share_pct: number; year_ago_thousands: number; change_year_pct: number | null; range: JoltsRange }
+export interface JoltsIndustryGroup extends JoltsIndustryRow { parts: JoltsIndustryRow[] }
+export interface JoltsIndustriesData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  total?: { openings_thousands: number; year_ago_thousands: number; change_year_pct: number | null; private_thousands: number; private_share_pct: number; government_thousands: number; government_share_pct: number; range: JoltsRange };
+  industries?: JoltsIndustryGroup[];
+  detail?: { months_checked: number; first_month: string; last_month: string; largest_sum_gap: number; closest_part_margin: number; smallest_rest_of_private: number } }
 export interface UsJobsPart { level_thousands: number; change_thousands: number; change_year_thousands: number }
 export interface UsJobsRate { pct: number; month_before_pct: number | null; year_ago_pct: number | null }
 export interface UsJobsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";

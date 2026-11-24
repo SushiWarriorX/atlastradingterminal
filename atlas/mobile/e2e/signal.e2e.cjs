@@ -852,6 +852,41 @@ async function healthy(browser) {
       await page.locator(V("jolts-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
       await shot(page, "07zi-jolts-bottom");
 
+      await page.waitForSelector(V("joltsind-card"));
+      await page.waitForSelector(V("joltsind-body") + ", " + V("joltsind-unavailable") + ", " + V("joltsind-error"), { timeout: 45000 });
+      const jiTxt = await text(page);
+      match(jiTxt, /Job openings by industry/); match(jiTxt, /Bureau of Labor Statistics/); noMatch(jiTxt, FORECASTS, "the job openings by industry card makes no forecasts");
+      if (await liveCard(page, "joltsind-body")) {
+        const jiBody = await inner(page, "joltsind-body");
+        const JIMONTH = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        const JIAMT = "(?:\\d{1,2}\\.\\d{3} million|-?\\d{1,3} thousand)";
+        const JIVS = "(?:up \\d{1,3}\\.\\d% on a year ago|down \\d{1,3}\\.\\d% on a year ago|the same as a year ago|not available against a year ago)";
+        match(await inner(page, "joltsind-headline"), new RegExp(`^Employers had \\d{1,2}\\.\\d{3} million job openings at the end of ${JIMONTH}, ${JIVS}\\. ${JIAMT} \\(\\d{1,2}\\.\\d%\\) were in the private sector and ${JIAMT} \\(\\d{1,2}\\.\\d%\\) in government\\.$`), "the total with its split between private and government");
+        match(jiBody, new RegExp(`Over the last 10 years \\(\\d{3} months\\) total openings ran from ${JIAMT} \\(${JIMONTH}\\) to ${JIAMT} \\(${JIMONTH}\\); \\d{1,3}% of those months were lower than now\\.`), "the ten-year range of the total is explained in months");
+        for (const [id, label] of [["education_health", "Private education and health services"], ["business", "Professional and business services"], ["trade_transport", "Trade, transportation and utilities"], ["government", "Government"], ["leisure", "Leisure and hospitality"], ["manufacturing", "Manufacturing"], ["construction", "Construction"]]) {
+          match(await inner(page, `joltsind-industry-${id}`), new RegExp(`^${label}: ${JIAMT}, \\d{1,2}\\.\\d% of all openings, ${JIVS}\\.$`), `${label} is its own row`);
+        }
+        match(await inner(page, "joltsind-industry-other_private"), new RegExp(`^Everything else in the private sector \\(mining and logging, information, financial activities, other services\\), by subtraction: ${JIAMT}, -?\\d{1,2}\\.\\d% of all openings, ${JIVS}\\.$`), "the remainder says it is found by subtraction");
+        const JIPART = `[A-Z][A-Za-z,' ]+ ${JIAMT} \\(${JIVS}(?:, by subtraction)?\\)`;
+        for (const id of ["education_health", "trade_transport", "government", "leisure", "manufacturing"]) {
+          match(await inner(page, `joltsind-parts-${id}`), new RegExp(`^Of which: ${JIPART}; ${JIPART}\\.$`), `the two parts of ${id}`);
+        }
+        match(await inner(page, "joltsind-parts-education_health"), /Private educational services \d{1,3} thousand \([^)]*, by subtraction\)/, "private education is marked as found by subtraction");
+        match(await inner(page, "joltsind-parts-government"), /Federal government \d{1,3} thousand \([^)]*, by subtraction\)/, "the federal government is marked as found by subtraction");
+        match(await inner(page, "joltsind-parts-trade_transport"), /Wholesale trade, transportation and utilities \d{1,3} thousand \([^)]*, by subtraction\)/, "wholesale trade with transportation and utilities is marked as found by subtraction");
+        match(await inner(page, "joltsind-check"), new RegExp(`^Check: in each of the \\d{3} months from ${JIMONTH} to ${JIMONTH} the sixteen series covered the same months with none missing and every figure lay inside its range \\(plain checks, not the source's sums\\); the survey's own arithmetic held, which shows that the series belong to one release, not that the figures are right: total nonfarm equalled private plus government, manufacturing equalled durable plus nondurable goods and leisure and hospitality equalled arts plus accommodation and food \\(largest gap [\\d.]+ thousand, which is rounding; 1\\.5 is allowed\\), and retail trade, health care and state and local government were never above the industries that contain them \\(the closest was -?[\\d.]+ thousand\\)\\. What is left of private after the six industries was at least -?[\\d.]+ thousand\\.$`), "the checks are shown with their gaps");
+        match(jiBody, /not that the figures are right/); match(jiBody, /worked out by subtraction/); match(jiBody, /preliminary/); match(jiBody, /Smaller samples make industry figures noisier/); match(jiBody, /not a market signal or a forecast/);
+        noMatch(jiBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("joltsind-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zia-joltsind-top");
+      if (await page.locator(V("joltsind-industries")).count()) {                                                                          // the list of industries sits in the middle of the card
+        await page.locator(V("joltsind-industries")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);
+        await shot(page, "07zia-joltsind-middle");
+      }
+      await page.locator(V("joltsind-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
+      await shot(page, "07zia-joltsind-bottom");
+
       await page.waitForSelector(V("usjobs-card"));
       await page.waitForSelector(V("usjobs-body") + ", " + V("usjobs-unavailable") + ", " + V("usjobs-error"), { timeout: 45000 });
       const ujTxt = await text(page);
