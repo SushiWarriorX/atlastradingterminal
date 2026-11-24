@@ -982,6 +982,31 @@ async function healthy(browser) {
       await page.locator(V("ushousehold-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
       await shot(page, "07zl-ushousehold-bottom");
 
+      await page.waitForSelector(V("usrealspending-card"));
+      await page.waitForSelector(V("usrealspending-body") + ", " + V("usrealspending-unavailable") + ", " + V("usrealspending-error"), { timeout: 45000 });
+      const rsTxt = await text(page);
+      match(rsTxt, /US real consumer spending/); match(rsTxt, /Bureau of Economic Analysis/); noMatch(rsTxt, FORECASTS, "the US real spending card makes no forecasts");
+      if (await liveCard(page, "usrealspending-body")) {
+        const rsBody = await inner(page, "usrealspending-body");
+        const RM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
+        const RMOVE = "(?:(?:up|down) \\d+\\.\\d{2}%|unchanged)";
+        const RVERB = "(?:(?:rose|fell) \\d+\\.\\d{2}%|did not change)";
+        const RFACTOR = "1 [+-] \\d+\\.\\d{2}%";
+        match(await inner(page, "usrealspending-headline"), new RegExp(`^Real consumer spending was \\$\\d+\\.\\d{2} trillion a year in ${RM}, measured in 2017 dollars: ${RMOVE} on a year earlier and ${RMOVE} on the month before\\.$`), "real spending in trillions with the year and the month");
+        match(await inner(page, "usrealspending-range"), new RegExp(`^Since ${RM} \\(\\d+ months\\) the year-on-year growth of real spending ran from [+-]?\\d+\\.\\d{2}% \\(${RM}\\) to [+-]?\\d+\\.\\d{2}% \\(${RM}\\); \\d{1,3}% of those months were lower than now\\.$`), "the growth range is explained in months");
+        match(await inner(page, "usrealspending-nominal"), new RegExp(`^Spending in the dollars of the day: \\$\\d+\\.\\d{2} trillion a year, ${RMOVE} on the month and ${RMOVE} on a year earlier$`), "spending in dollars is its own row");
+        match(await inner(page, "usrealspending-prices"), new RegExp(`^Prices \\(the PCE price index, 2017 = 100\\): \\d+\\.\\d{3}, ${RMOVE} on the month and ${RMOVE} on a year earlier; without food and energy: \\d+\\.\\d{3}, ${RMOVE} and ${RMOVE}$`), "the price index with and without food and energy");
+        match(await inner(page, "usrealspending-year"), new RegExp(`^Over the year, spending in dollars ${RVERB}\\. Prices ${RVERB} \\(the PCE price index; ${RMOVE} without food and energy\\), so the amount of goods and services bought ${RVERB}\\. The three figures come from three separate series and fit each other: ${RFACTOR} = \\(${RFACTOR}\\) × \\(${RFACTOR}\\), with a gap of \\d\\.\\d{3} points\\.$`), "the year split into prices and the amount bought, with its identity");
+        match(await inner(page, "usrealspending-recent"), new RegExp(`^(?:${RM}: spending in dollars [+-]?\\d+\\.\\d{2}%, prices [+-]?\\d+\\.\\d{2}%, real spending [+-]?\\d+\\.\\d{2}% on the month before\\s*){6}$`), "six months of the three changes");
+        match(await inner(page, "usrealspending-check"), new RegExp(`^Check: in each of the \\d[\\d,]* months from ${RM} to ${RM} the four series covered the same months with none missing, every figure lay inside its range and no month-on-month move was beyond 25% for spending or 5% for prices \\(plain checks\\)\\. The Bureau's own accounting held, which shows that the series belong to one release, not that the figures are right: real spending times the price index over 100 equalled spending in dollars in every month, to within 0\\.098% of spending \\(the largest gap was \\d+\\.\\d+% in ${RM}\\); the Bureau chain-weights real spending and prices, so the sum is approximate, not exact\\.$`), "the check line has the card's own counts and the largest gap");
+        match(rsBody, /chained 2017 dollars/); match(rsBody, /revised in later releases/); match(rsBody, /not a market signal or a forecast/);
+        noMatch(rsBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("usrealspending-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zn-usrealspending-top");
+      await page.locator(V("usrealspending-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
+      await shot(page, "07zn-usrealspending-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);

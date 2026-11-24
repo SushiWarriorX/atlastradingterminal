@@ -548,6 +548,14 @@ export interface UsHouseholdData { available: boolean; reason?: string; demo: bo
   recent?: { month: string; saving_rate_pct: number; income_change_pct: number; spending_change_pct: number }[];
   detail?: { months_checked: number; first_month: string; last_month: string; quarters_checked: number; first_quarter: string; last_quarter: string; quarters_compared: number;
     largest_income_gap: number; largest_saving_gap: number; largest_rate_gap: number; largest_split_gap: number; largest_mean_gap: number; smallest_other_outlays: number } }
+export interface UsRealSpendingRange { months: number; first: string; lowest: { value: number; month: string }; highest: { value: number; month: string }; share_lower_pct: number }
+export interface UsRealSpendingData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  real?: { level_billions: number; change_pct: number; change_year_pct: number; range: UsRealSpendingRange };
+  nominal?: { level_billions: number; change_pct: number; change_year_pct: number };
+  prices?: { index: number; change_pct: number; change_year_pct: number; core_index: number; core_change_pct: number; core_change_year_pct: number };
+  year?: { nominal_pct: number; real_pct: number; prices_pct: number; core_prices_pct: number; gap_points: number };
+  recent?: { month: string; real_change_pct: number; prices_change_pct: number; nominal_change_pct: number }[];
+  detail?: { months_checked: number; first_month: string; last_month: string; largest_identity_gap_pct: number; largest_identity_gap_month: string } }
 export interface EuroYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
   rates?: EuroYieldRate[]; spreads?: EuroYieldSpread[];
   window?: { days: number; from: string; years: number; median: number; lowest: { value: number; date: string }; highest: { value: number; date: string }; share_lower_pct: number } | null;

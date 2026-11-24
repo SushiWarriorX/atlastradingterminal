@@ -8,7 +8,7 @@ import pytest
 API = Path(__file__).parent.parent / "atlas_api"
 COMPONENTS = Path(__file__).parent.parent.parent / "mobile" / "src" / "components"
 CARDS = {"euromoney": "EuroMoneyCard.tsx", "eurolending": "EuroLendingCard.tsx", "eurohicp": "EuroInflationCard.tsx", "eurounemployment": "EuroUnemploymentCard.tsx",
-         "eurostress": "EuroStressCard.tsx", "euroyields": "EuroYieldsCard.tsx", "eurogdp": "EuroGdpCard.tsx", "eurobankrates": "EuroBankRatesCard.tsx", "eurostockrates": "EuroStockRatesCard.tsx", "euroemployment": "EuroEmploymentCard.tsx", "jolts": "JoltsCard.tsx", "joltsindustries": "JoltsIndustriesCard.tsx", "usjobs": "UsJobsCard.tsx", "usgdp": "UsGdpCard.tsx", "ushousehold": "UsHouseholdCard.tsx"}
+         "eurostress": "EuroStressCard.tsx", "euroyields": "EuroYieldsCard.tsx", "eurogdp": "EuroGdpCard.tsx", "eurobankrates": "EuroBankRatesCard.tsx", "eurostockrates": "EuroStockRatesCard.tsx", "euroemployment": "EuroEmploymentCard.tsx", "jolts": "JoltsCard.tsx", "joltsindustries": "JoltsIndustriesCard.tsx", "usjobs": "UsJobsCard.tsx", "usgdp": "UsGdpCard.tsx", "ushousehold": "UsHouseholdCard.tsx", "usrealspending": "UsRealSpendingCard.tsx"}
 # sentences that belong to the Check line and must not come back in a note (each was in every note before)
 REPEATED = ("not that the figures are right", "not that they are right", "which show the series belong together", "which shows the series belong together", "show the series belong together",
             "two checks that are", "one check that is", "three checks that are", "three checks held", "own arithmetic", "The ECB builds the totals")
@@ -26,7 +26,8 @@ PLAIN = {"euromoney": "Plain checks: the units are the ones assumed, no month is
          "joltsindustries": "Plain checks: the units are the ones assumed and no month is missing; the ranges, the sums and the parts inside their wholes are in the Check line.",
          "usjobs": "Plain checks: the units are the ones assumed and no month is missing; the ranges, the sums and the rates rebuilt from the levels are in the Check line.",
          "usgdp": "Plain checks: the units are the ones assumed and no quarter is missing; the ranges, the sums and the contributions rebuilt from the parts are in the Check line.",
-         "ushousehold": "Plain checks: the units are the ones assumed and no month or quarter is missing; the ranges, the sums and the comparison of the quarter with its months are in the Check line."}
+         "ushousehold": "Plain checks: the units are the ones assumed and no month or quarter is missing; the ranges, the sums and the comparison of the quarter with its months are in the Check line.",
+         "usrealspending": "Plain checks: the units are the ones assumed and no month is missing; the ranges, the monthly moves and the sum of real spending and prices against spending in dollars are in the Check line."}
 LIMIT = 1100                                                                                                                   # characters: the longest note before was 1,824
 
 
@@ -84,5 +85,6 @@ def test_the_notes_keep_what_only_they_say_about_their_source():
     assert "already have on their books" in note_of("eurostockrates") and "An old loan keeps its rate until it is repaid or reset" in note_of("eurostockrates") and "rate component and a weight component" in note_of("eurostockrates") and "The newest month is provisional and is revised later" in note_of("eurostockrates")
     assert "job openings by industry" in note_of("joltsindustries") and "worked out by subtraction and marked as such" in note_of("joltsindustries") and "Smaller samples make industry figures noisier" in note_of("joltsindustries") and "preliminary" in note_of("joltsindustries")
     assert "do not agree month to month" in note_of("usjobs") and "not looking is not unemployed" in note_of("usjobs") and "revised in later releases" in note_of("usjobs") and "private and government" in note_of("usjobs")
+    assert "chained 2017 dollars" in note_of("usrealspending") and "taken out" in note_of("usrealspending") and "more or fewer goods and services bought" in note_of("usrealspending") and "revised in later releases" in note_of("usrealspending") and "not a market signal or a forecast" in note_of("usrealspending")
     assert "disposable income" in note_of("ushousehold") and "found by subtraction" in note_of("ushousehold") and "not adjusted for inflation" in note_of("ushousehold") and "from the GDP release" in note_of("ushousehold") and "revised in later releases" in note_of("ushousehold")
     assert "counted by what it was spent on" in note_of("usgdp") and "below zero when the country buys more from abroad than it sells" in note_of("usgdp") and "prices held fixed" in note_of("usgdp") and "revised in later releases" in note_of("usgdp")
