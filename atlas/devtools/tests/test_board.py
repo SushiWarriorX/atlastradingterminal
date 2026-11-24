@@ -1,4 +1,5 @@
 """The board chore as a tool (`devtools/board.py`): a row on top of the STATE BOARD, the oldest rows moved unchanged to the archive with one "Moved on" line, nothing else touched, and a refusal, with the reason, for anything that would leave the files in a form the hygiene test (`backend/tests/test_docs_hygiene.py`) would not accept. It replaces a scratch script that was written again every hour (thirteen times in a row, 2026-11-18)."""
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -93,6 +94,50 @@ def test_a_board_that_is_too_long_loses_the_extra_rows_in_one_move_newest_of_the
     nal = new_a.split("\n")
     head_at = next(i for i, l in enumerate(nal) if l.startswith("| When"))
     assert nal[head_at + 2:head_at + 5] == old_rows[19:] and nal[head_at + 5].startswith("| 2026-11-10 09:00")
+
+
+def size_of(text: str) -> int:
+    return len(text.encode("utf-8"))
+
+
+def test_a_board_over_its_byte_budget_loses_more_rows_than_the_row_count_alone_would_move():
+    h, a = handoff(20), archive(1)
+    full_h, _a, moved = B.add(h, a, NEW, "label")
+    fits = size_of(full_h)
+    assert len(board_of(full_h)) == 20 and len(moved) == 1                                  # 20 rows is the rule when the file is small
+    same_h, _a, same_moved = B.add(h, a, NEW, "label", max_bytes=fits)
+    assert same_h == full_h and same_moved == moved                                        # exactly at the budget is fine
+    short_h, short_a, short_moved = B.add(h, a, NEW, "label", max_bytes=fits - 1)
+    old_rows = board_of(h)
+    assert len(board_of(short_h)) == 19 and size_of(short_h) <= fits - 1
+    assert short_moved == old_rows[18:] and len(short_moved) == 2                         # the two oldest rows, newest of them first, as the row count would have moved them
+    assert f"Moved on 2026-11-19 (label): 2 rows, from {stamp(18)} back to {stamp(19)}." in short_a
+    least_h, _a, least_moved = B.add(h, a, NEW, "label", max_bytes=size_of(NEW) + size_of(handoff(0)) + 5)
+    assert board_of(least_h) == [NEW] and len(least_moved) == 20                          # a tiny budget keeps the new row and nothing else
+
+
+def test_the_byte_budget_counts_bytes_not_characters():
+    h = handoff(20).replace("what changed 3 |", "what changed é |")                          # one letter that is two bytes in UTF-8
+    base_h, _a, _m = B.add(h, archive(1), NEW, "label")
+    assert size_of(base_h) == len(base_h) + 1
+    short_h, _a, moved = B.add(h, archive(1), NEW, "label", max_bytes=len(base_h))        # as many characters as the budget, but one byte more
+    assert len(board_of(short_h)) == 19 and len(moved) == 2
+
+
+def test_a_budget_the_new_row_alone_cannot_meet_is_refused_in_words_and_changes_nothing():
+    with pytest.raises(B.BoardError, match=r"^the result would not pass the checks: HANDOFF.md is [\d,]+ bytes, more than 10$"):
+        B.add(handoff(3), archive(1), NEW, "label", max_bytes=10)
+
+
+def test_the_checks_name_a_file_over_its_byte_budget():
+    h = handoff(3)
+    assert B.problems(h, archive()) == []
+    assert B.problems(h, archive(), max_bytes=size_of(h)) == [] and B.problems(h, archive(), max_bytes=size_of(h) - 1) == [f"HANDOFF.md is {size_of(h):,} bytes, more than {size_of(h) - 1:,}"]
+
+
+def test_the_byte_budget_is_the_one_the_hand_off_hygiene_test_enforces():
+    text = (ATLAS / "backend" / "tests" / "test_docs_hygiene.py").read_text(encoding="utf-8")
+    assert int(re.search(r"^MAX_BYTES = ([\d_]+)", text, re.M).group(1).replace("_", "")) == B.MAX_BYTES == 60_000
 
 
 def test_a_board_with_room_takes_the_row_and_moves_nothing():

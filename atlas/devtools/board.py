@@ -14,6 +14,7 @@ from pathlib import Path
 
 ATLAS = Path(__file__).resolve().parent.parent
 KEEP = 20
+MAX_BYTES = 60_000                                                                     # the size backend/tests/test_docs_hygiene.py allows HANDOFF.md (found 2026-11-24: twenty long rows were 60,859 bytes while this tool said all was well)
 STAMP = re.compile(r"^\d{4}-\d\d-\d\d \d\d:\d\d$")
 ROW = re.compile(r"^\| (\d{4}-\d\d-\d\d \d\d:\d\d) \|")
 
@@ -52,7 +53,7 @@ def make_row(when: str, who: str, job: str, changed: str, nxt: str) -> str:
     return f"| {when} | {' | '.join(cells)} |"
 
 
-def problems(handoff: str, archive: str, keep: int = KEEP) -> list[str]:
+def problems(handoff: str, archive: str, keep: int = KEEP, max_bytes: int = MAX_BYTES) -> list[str]:
     """What is wrong with the board and the archive as they stand (empty = fine)."""
     out: list[str] = []
     try:
@@ -62,6 +63,9 @@ def problems(handoff: str, archive: str, keep: int = KEEP) -> list[str]:
     rows = handoff.split("\n")[a:b + 1]
     if len(rows) > keep:
         out.append(f"the board has {len(rows)} rows, more than {keep}")
+    size = len(handoff.encode("utf-8"))
+    if size > max_bytes:
+        out.append(f"HANDOFF.md is {size:,} bytes, more than {max_bytes:,}")
     stamps = []
     for r in rows:
         if r.count("|") != 6:
@@ -83,7 +87,7 @@ def problems(handoff: str, archive: str, keep: int = KEEP) -> list[str]:
     return out
 
 
-def add(handoff: str, archive: str, row: str, label: str, keep: int = KEEP) -> tuple[str, str, list[str]]:
+def add(handoff: str, archive: str, row: str, label: str, keep: int = KEEP, max_bytes: int = MAX_BYTES) -> tuple[str, str, list[str]]:
     """(new HANDOFF.md text, new archive text, the rows moved) after adding `row` on top of the board."""
     if keep < 1:
         raise BoardError("--keep must be at least 1")
@@ -99,6 +103,8 @@ def add(handoff: str, archive: str, row: str, label: str, keep: int = KEEP) -> t
         raise BoardError("this row is already on the board")
     new = [row] + rows
     board, moved = new[:keep], new[keep:]
+    while len(board) > 1 and len("\n".join(hl[:first] + board + hl[last + 1:]).encode("utf-8")) > max_bytes:
+        moved.insert(0, board.pop())                                                   # still over the byte budget: the oldest row left on the board goes too
     hl[first:last + 1] = board
     if moved:
         head = next((i for i, l in enumerate(al) if l.startswith("| When (UTC)")), None)
@@ -113,7 +119,7 @@ def add(handoff: str, archive: str, row: str, label: str, keep: int = KEEP) -> t
         al[head + 2:head + 2] = moved                                                  # the rows first (the later position), then the line above the earlier ones
         al.insert(first_note, f"Moved on {stamp[:10]} ({label}): {count}, {span_text}.")
     out_h, out_a = "\n".join(hl), "\n".join(al)
-    found = problems(out_h, out_a, keep)
+    found = problems(out_h, out_a, keep, max_bytes)
     if found:
         raise BoardError("the result would not pass the checks: " + "; ".join(found))
     return out_h, out_a, moved
