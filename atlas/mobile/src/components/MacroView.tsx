@@ -42,6 +42,7 @@ import { UsJobsCard } from "./UsJobsCard";
 import { UsGdpCard } from "./UsGdpCard";
 import { UsHouseholdCard } from "./UsHouseholdCard";
 import { UsRealSpendingCard } from "./UsRealSpendingCard";
+import { UsTradeCard } from "./UsTradeCard";
 import { EuroLendingCard } from "./EuroLendingCard";
 import { EuroBankRatesCard } from "./EuroBankRatesCard";
 import { EuroStockRatesCard } from "./EuroStockRatesCard";
@@ -134,6 +135,7 @@ export function MacroView() {
             <UsGdpCard />
             <UsHouseholdCard />
             <UsRealSpendingCard />
+            <UsTradeCard />
             <RetailSalesCard />
             <HousingStartsCard />
             <IndustrialProductionCard />

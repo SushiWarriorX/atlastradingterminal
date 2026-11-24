@@ -846,7 +846,7 @@ def test_route_is_served_and_labelled(tmp_path):
 def test_the_card_is_refreshed_with_the_other_macro_sources():
     jobs = (Path(__file__).parent.parent / "atlas_api" / "sched" / "jobs.py").read_text(encoding="utf-8")
     app = (Path(__file__).parent.parent / "atlas_api" / "app.py").read_text(encoding="utf-8")
-    assert '"us_gdp", "us_household", "us_real_spending", "bank_reserves"' in jobs and '"us_household": us_household' in app and "us_household = UsHousehold(demo=demo)" in app
+    assert '"us_gdp", "us_household", "us_real_spending", "us_trade", "bank_reserves"' in jobs and '"us_household": us_household' in app and "us_household = UsHousehold(demo=demo)" in app
 
 
 def test_the_age_and_the_freshness_are_worked_from_the_time_of_the_question_not_from_the_clock():

@@ -556,6 +556,12 @@ export interface UsRealSpendingData { available: boolean; reason?: string; demo:
   year?: { nominal_pct: number; real_pct: number; prices_pct: number; core_prices_pct: number; gap_points: number };
   recent?: { month: string; real_change_pct: number; prices_change_pct: number; nominal_change_pct: number }[];
   detail?: { months_checked: number; first_month: string; last_month: string; largest_identity_gap_pct: number; largest_identity_gap_month: string } }
+export interface UsTradeRange { months: number; first: string; lowest: { value: number; month: string }; highest: { value: number; month: string }; share_lower_pct: number }
+export interface UsTradeGroup { exports: number; imports: number; balance: number; balance_change: number; balance_year_ago: number; exports_change_year_pct: number; imports_change_year_pct: number }
+export interface UsTradeData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  total?: UsTradeGroup & { range: UsTradeRange }; goods?: UsTradeGroup; services?: UsTradeGroup;
+  recent?: { month: string; exports: number; imports: number; balance: number }[];
+  detail?: { months_checked: number; first_month: string; last_month: string; largest_gap_million: number; largest_gap_month: string } }
 export interface EuroYieldsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
   rates?: EuroYieldRate[]; spreads?: EuroYieldSpread[];
   window?: { days: number; from: string; years: number; median: number; lowest: { value: number; date: string }; highest: { value: number; date: string }; share_lower_pct: number } | null;

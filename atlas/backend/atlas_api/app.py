@@ -71,6 +71,7 @@ from .usjobs import UsJobs
 from .usgdp import UsGdp
 from .ushousehold import UsHousehold
 from .usrealspending import UsRealSpending
+from .ustrade import UsTrade
 from .eurolending import EuroLending
 from .reserves import BankReserves
 from .ecbrates import EcbRates
@@ -443,6 +444,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     us_gdp = UsGdp(demo=demo)
     us_household = UsHousehold(demo=demo)
     us_real_spending = UsRealSpending(demo=demo)
+    us_trade = UsTrade(demo=demo)
     bank_reserves = BankReserves(demo=demo)
     ecb_rates = EcbRates(demo=demo)
     commodity_positioning = CftcCommodities(demo=demo)
@@ -632,6 +634,11 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     async def macro_us_real_spending():
         """US real consumer spending (Bureau of Economic Analysis Personal Income and Outlays via FRED): spending with the effect of price changes taken out (chained 2017 dollars), spending in the dollars of the day and the PCE price index with and without food and energy, with the year's change split into more goods and services bought and higher prices, the last six months, and the checks the figures passed (ranges, monthly moves, real spending times prices against spending in dollars). Free, no key; research only."""
         return ok(await us_real_spending.overview())
+
+    @app.get("/api/macro/us-trade")
+    async def macro_us_trade():
+        """US international trade in goods and services (Census Bureau and Bureau of Economic Analysis via FRED): exports, imports and the balance for the total, for goods and for services, the change in the balance over a month and a year, the last six months and the checks the figures passed (six sums, each within 1.5 million dollars). Read-only research data, never a trading signal."""
+        return ok(await us_trade.overview())
 
     @app.get("/api/macro/bank-reserves")
     async def macro_bank_reserves():
@@ -2033,7 +2040,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
                                       "listings": listings_service, "new_to_me": new_to_me,
-                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "euro_money_supply": euro_money_supply, "euro_inflation": euro_inflation, "euro_unemployment": euro_unemployment, "euro_stress": euro_stress, "euro_yields": euro_yields, "euro_gdp": euro_gdp, "euro_lending": euro_lending, "euro_bank_rates": euro_bank_rates, "euro_stock_rates": euro_stock_rates, "euro_employment": euro_employment, "jolts": jolts, "jolts_industries": jolts_industries, "us_jobs": us_jobs, "us_gdp": us_gdp, "us_household": us_household, "us_real_spending": us_real_spending, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "euro_money_supply": euro_money_supply, "euro_inflation": euro_inflation, "euro_unemployment": euro_unemployment, "euro_stress": euro_stress, "euro_yields": euro_yields, "euro_gdp": euro_gdp, "euro_lending": euro_lending, "euro_bank_rates": euro_bank_rates, "euro_stock_rates": euro_stock_rates, "euro_employment": euro_employment, "jolts": jolts, "jolts_industries": jolts_industries, "us_jobs": us_jobs, "us_gdp": us_gdp, "us_household": us_household, "us_real_spending": us_real_spending, "us_trade": us_trade, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

@@ -1006,6 +1006,32 @@ async function healthy(browser) {
       await page.locator(V("usrealspending-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
       await shot(page, "07zn-usrealspending-bottom");
 
+      await page.waitForSelector(V("ustrade-card"));
+      await page.waitForSelector(V("ustrade-body") + ", " + V("ustrade-unavailable") + ", " + V("ustrade-error"), { timeout: 45000 });
+      const trTxt = await text(page);
+      match(trTxt, /US international trade/); match(trTxt, /Census Bureau and the Bureau of Economic Analysis/); noMatch(trTxt, FORECASTS, "the US trade card makes no forecasts");
+      if (await liveCard(page, "ustrade-body")) {
+        const trBody = await inner(page, "ustrade-body");
+        const TM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
+        const TB = "\\$\\d+\\.\\d billion";
+        const TSB = "[+-]?\\$\\d+\\.\\d billion";
+        const TBAL = `(?:a (?:deficit|surplus) of ${TB}|a balance of \\$0\\.0 billion)`;
+        const TMOVE = "(?:(?:up|down) \\d+\\.\\d{2}%|unchanged)";
+        match(await inner(page, "ustrade-headline"), new RegExp(`^In ${TM} the US sold ${TB} of goods and services to the rest of the world and bought ${TB}: ${TBAL}\\.$`), "what the country sold and bought in the month, and the balance");
+        match(await inner(page, "ustrade-compare"), new RegExp(`^A month earlier it was ${TBAL}; a year earlier, ${TBAL}\\. Over the year exports are ${TMOVE} and imports ${TMOVE}\\.$`), "the balance a month and a year earlier");
+        match(await inner(page, "ustrade-range"), new RegExp(`^Since ${TM} \\(\\d+ months\\) the monthly balance ran from ${TSB} \\(${TM}\\) to ${TSB} \\(${TM}\\); it was lower than now in \\d{1,3}% of those months \\(a lower balance is a bigger deficit or a smaller surplus\\)\\.$`), "the balance range is explained in months");
+        match(await inner(page, "ustrade-goods"), new RegExp(`^Goods: sold ${TB}, bought ${TB}: ${TBAL}; exports ${TMOVE} and imports ${TMOVE} on a year earlier\\.$`), "goods have their own line");
+        match(await inner(page, "ustrade-services"), new RegExp(`^Services: sold ${TB}, bought ${TB}: ${TBAL}; exports ${TMOVE} and imports ${TMOVE} on a year earlier\\.$`), "services have their own line");
+        match(await inner(page, "ustrade-recent"), new RegExp(`^(?:${TM}: sold ${TB}, bought ${TB}, ${TBAL}\\s*){6}$`), "six months of what was sold, bought and the balance");
+        match(await inner(page, "ustrade-check"), new RegExp(`^Check: in each of the \\d[\\d,]* months from ${TM} to ${TM} the nine series covered the same months with none missing, every figure lay inside its range and no month-on-month move of an export or import series was beyond 50% \\(plain checks\\)\\. The agencies' own accounting held, which shows that the series belong to one release, not that the figures are right: each balance equalled its exports minus its imports, total exports and total imports equalled goods plus services, and the total balance equalled the goods balance plus the services balance, in every month, to within 1\\.5 million dollars \\(the published figures are each rounded to a million; the largest gap was \\d+(?:\\.\\d+)? million dollars in ${TM}\\)\\.$`), "the check line has the card's own counts and the largest gap");
+        match(trBody, /balance-of-payments basis/); match(trBody, /revised in later releases/); match(trBody, /not a market signal or a forecast/);
+        noMatch(trBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("ustrade-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zo-ustrade-top");
+      await page.locator(V("ustrade-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
+      await shot(page, "07zo-ustrade-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);
