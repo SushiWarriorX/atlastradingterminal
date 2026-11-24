@@ -8,7 +8,7 @@ import pytest
 API = Path(__file__).parent.parent / "atlas_api"
 COMPONENTS = Path(__file__).parent.parent.parent / "mobile" / "src" / "components"
 CARDS = {"euromoney": "EuroMoneyCard.tsx", "eurolending": "EuroLendingCard.tsx", "eurohicp": "EuroInflationCard.tsx", "eurounemployment": "EuroUnemploymentCard.tsx",
-         "eurostress": "EuroStressCard.tsx", "euroyields": "EuroYieldsCard.tsx", "eurogdp": "EuroGdpCard.tsx", "eurobankrates": "EuroBankRatesCard.tsx", "euroemployment": "EuroEmploymentCard.tsx", "jolts": "JoltsCard.tsx", "joltsindustries": "JoltsIndustriesCard.tsx", "usjobs": "UsJobsCard.tsx", "usgdp": "UsGdpCard.tsx", "ushousehold": "UsHouseholdCard.tsx"}
+         "eurostress": "EuroStressCard.tsx", "euroyields": "EuroYieldsCard.tsx", "eurogdp": "EuroGdpCard.tsx", "eurobankrates": "EuroBankRatesCard.tsx", "eurostockrates": "EuroStockRatesCard.tsx", "euroemployment": "EuroEmploymentCard.tsx", "jolts": "JoltsCard.tsx", "joltsindustries": "JoltsIndustriesCard.tsx", "usjobs": "UsJobsCard.tsx", "usgdp": "UsGdpCard.tsx", "ushousehold": "UsHouseholdCard.tsx"}
 # sentences that belong to the Check line and must not come back in a note (each was in every note before)
 REPEATED = ("not that the figures are right", "not that they are right", "which show the series belong together", "which shows the series belong together", "show the series belong together",
             "two checks that are", "one check that is", "three checks that are", "three checks held", "own arithmetic", "The ECB builds the totals")
@@ -20,6 +20,7 @@ PLAIN = {"euromoney": "Plain checks: the units are the ones assumed, no month is
          "euroyields": "Plain checks: the units are the ones assumed and no hole is longer than 8 days; the ranges and the ECB's own sums that held are in the Check line.",
          "eurogdp": "Plain checks: the units are the ones assumed and no quarter is missing; the ranges and the source's own sums that held are in the Check line.",
          "eurobankrates": "Plain checks: the units are the ones assumed and no month is missing; the ranges, the volume sums, the weighted-average identity and the bound on the composites are in the Check line.",
+         "eurostockrates": "Plain checks: the units are the ones assumed and no month is missing; the ranges, the ECB's rate and weight components and the totals inside their parts are in the Check line.",
          "euroemployment": "Plain checks: the units are the ones assumed and no quarter is missing; the ranges, the sums and the growth rebuilt from GDP and jobs are in the Check line.",
          "jolts": "Plain checks: the units are the ones assumed and no month is missing; the ranges, the sums and the rates rebuilt from the levels are in the Check line.",
          "joltsindustries": "Plain checks: the units are the ones assumed and no month is missing; the ranges, the sums and the parts inside their wholes are in the Check line.",
@@ -67,6 +68,10 @@ def test_the_card_prints_the_check_line_and_says_it_does_not_prove_the_figures(n
     if not path.exists():
         pytest.skip("the phone app is not in this checkout")
     text = path.read_text(encoding="utf-8")
+    for m in re.finditer(r'from "\.\./lib/(\w+)"', text):                                                                     # a card may keep its wording in a pure helper of the phone app (a unit test covers it there)
+        helper = COMPONENTS.parent / "lib" / f"{m.group(1)}.ts"
+        if helper.exists():
+            text += helper.read_text(encoding="utf-8")
     assert "Check:" in text and re.search(r"not that (the figures|they) are right", text), card                              # the sentence taken out of the note must live on the card
 
 
@@ -76,6 +81,7 @@ def test_the_notes_keep_what_only_they_say_about_their_source():
     assert "stopped at Q1 2026" in note_of("eurogdp") and "about 45 days" in note_of("eurogdp") and "about 65 days" in note_of("eurogdp") and "NEW loans and pay on NEW deposits" in note_of("eurobankrates")
     assert "about 45 days" in note_of("euroemployment") and "about 65 days" in note_of("euroemployment") and "usually one quarter behind" in note_of("euroemployment") and "real GDP divided by the persons employed or by the hours they worked" in note_of("euroemployment")
     assert "last business day of the month" in note_of("jolts") and "removed without filling positions" in note_of("jolts") and "payroll employment plus openings" in note_of("jolts") and "preliminary" in note_of("jolts") and "household survey" in note_of("jolts")
+    assert "already have on their books" in note_of("eurostockrates") and "An old loan keeps its rate until it is repaid or reset" in note_of("eurostockrates") and "rate component and a weight component" in note_of("eurostockrates") and "The newest month is provisional and is revised later" in note_of("eurostockrates")
     assert "job openings by industry" in note_of("joltsindustries") and "worked out by subtraction and marked as such" in note_of("joltsindustries") and "Smaller samples make industry figures noisier" in note_of("joltsindustries") and "preliminary" in note_of("joltsindustries")
     assert "do not agree month to month" in note_of("usjobs") and "not looking is not unemployed" in note_of("usjobs") and "revised in later releases" in note_of("usjobs") and "private and government" in note_of("usjobs")
     assert "disposable income" in note_of("ushousehold") and "found by subtraction" in note_of("ushousehold") and "not adjusted for inflation" in note_of("ushousehold") and "from the GDP release" in note_of("ushousehold") and "revised in later releases" in note_of("ushousehold")

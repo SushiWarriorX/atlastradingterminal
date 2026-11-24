@@ -368,6 +368,13 @@ export function useEuroBankRates() {
     staleTime: (q) => (down(q) ? 60_000 : 6 * 60 * 60_000), refetchInterval: (q) => (down(q) ? 120_000 : 12 * 60 * 60_000) });
 }
 
+export function useEuroStockRates() {
+  const { api, baseUrl } = useConnection();
+  const down = (q: { state: { data?: { available: boolean; demo: boolean } } }) => q.state.data?.available === false && !q.state.data.demo;      // the ECB's rates service is slow at times: an answer of "unavailable" is asked for again in a minute or two, not kept for six hours like a figure
+  return useQuery({ queryKey: keys(baseUrl).euroStockRates, queryFn: () => need(api).euroStockRates(), enabled: !!api, retry: 0,
+    staleTime: (q) => (down(q) ? 60_000 : 6 * 60 * 60_000), refetchInterval: (q) => (down(q) ? 120_000 : 12 * 60 * 60_000) });
+}
+
 export function useEuroEmployment() {
   const { api, baseUrl } = useConnection();
   const down = (q: { state: { data?: { available: boolean; demo: boolean } } }) => q.state.data?.available === false && !q.state.data.demo;      // the ECB's national accounts service is slow at times: an answer of "unavailable" is asked for again in a minute or two, not kept for six hours like a figure

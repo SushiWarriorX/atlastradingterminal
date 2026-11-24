@@ -1223,6 +1223,39 @@ async function healthy(browser) {
       await page.locator(V("eurobankrates-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);        // and its bottom: the note and the source link
       await shot(page, "07zg-eurobankrates-bottom");
 
+      await page.waitForSelector(V("eurostock-card"));
+      await page.waitForSelector(V("eurostock-body") + ", " + V("eurostock-unavailable") + ", " + V("eurostock-error"), { timeout: 110000 });          // the ECB's MIR service is slow when it has to compute: up to 90 s for one request
+      const skTxt = await text(page);
+      match(skTxt, /Euro-area rates on existing loans and deposits/); match(skTxt, /European Central Bank/); noMatch(skTxt, FORECASTS, "the euro stock rates card makes no forecasts");
+      if (await liveCard(page, "eurostock-body")) {
+        const skBody = await inner(page, "eurostock-body");
+        const SMONTH = "(January|February|March|April|May|June|July|August|September|October|November|December) 20\\d\\d";
+        const SP = "-?\\d{1,2}\\.\\d{2}%";                                                                                  // a rate may be below zero (firms' deposits were)
+        const SN = "(?:[+-]\\d{1,2}\\.\\d{2}|0\\.00)";                                                                       // a figure in points: a sign, or plain zero
+        const SMOVE = (vs) => `(?:up \\d{1,2}\\.\\d{2} points on ${vs}|down \\d{1,2}\\.\\d{2} points on ${vs}|unchanged on ${vs})`;
+        const SROW = (label) => `${label}: ${SP} a year, ${SMOVE("a month earlier")}, ${SMOVE("a year earlier")}\\.`;
+        const SSPLIT = `The ECB splits the change over the year into a rate part of ${SN} points and a weight part of ${SN}, and this month's change into ${SN} and ${SN}\\.`;
+        const SRANGE = `Over the past 10 years \\(\\d{2,3} months\\) it ran from ${SP} \\(${SMONTH}\\) to ${SP} \\(${SMONTH}\\); \\d{1,3}% of those months were lower than now\\.`;
+        const SLOAN = (what) => `By ${what}: up to 1 year ${SP}, 1 to 5 years ${SP}, over 5 years ${SP}\\.`;
+        const SDEP = `By agreed maturity: up to 2 years ${SP}, over 2 years ${SP}\\.`;
+        match(skBody, new RegExp(`^${SMONTH} · monthly · loans and deposits outstanding · percent a year(?: · provisional)?(?: · overdue)?`), "the month is written out and the rates are said to be on the stock");
+        const LOANWHAT = "original maturity of the loan";
+        match(await inner(page, "eurostock-loans"), new RegExp(`^${SROW("Loans to firms")}\\s*${SSPLIT}\\s*${SLOAN(LOANWHAT)}\\s*${SRANGE}\\s*${SROW("Loans to households")}\\s*${SRANGE}\\s*${SROW("Loans for house purchase")}\\s*${SSPLIT}\\s*${SLOAN(LOANWHAT)}\\s*${SRANGE}\\s*${SROW("Loans for consumption and other purposes")}\\s*${SSPLIT}\\s*${SLOAN(LOANWHAT)}\\s*${SRANGE}$`),
+              "four loan rows: the three with the ECB's split and maturities, loans to households with its range only");
+        match(await inner(page, "eurostock-deposits"), new RegExp(`^${SROW("Firms' deposits with an agreed maturity")}\\s*${SSPLIT}\\s*${SDEP}\\s*${SRANGE}\\s*${SROW("Households' deposits with an agreed maturity")}\\s*${SSPLIT}\\s*${SDEP}\\s*${SRANGE}$`), "two deposit rows with the split and the maturities");
+        match(skBody, /Check: in each of the last 120 months every rate and every component lay inside its range and no rate moved by more than 1\.5 points in a month \(plain checks\)\./, "the plain checks are shown");
+        match(skBody, /For the five rates the ECB splits, [\d,]+ comparisons of its own figures held to 0\.016 points: the month's change in the rate equalled its rate part plus its weight part, the running totals grew by each month's parts, the accumulated change equalled the two running totals, and over the whole window the rate moved as far as the accumulated change did(?: \(the largest gap: [\d.]+ points for [a-z' ]+ in [A-Z][a-z]+ 20\d\d\))?\./, "the identities are shown with their count");
+        match(skBody, /Each total rate also lay inside the range of its parts' rates, to 0\.016 points \(720 comparisons\)\./, "the totals inside their parts are shown");
+        match(skBody, /not that the figures are right/); match(skBody, /already have on their books/); match(skBody, /An old loan keeps its rate until it is repaid or reset/); match(skBody, /not a market signal or a forecast/); match(skBody, /provisional and is revised later/);
+        noMatch(skBody, /\b20\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("eurostock-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);          // the top of a tall card, not its nearest edge
+      await shot(page, "07zm-eurostock-top");
+      await page.locator(V("eurostock-deposits")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);       // the middle: the deposit rows
+      await shot(page, "07zm-eurostock-middle");
+      await page.locator(V("eurostock-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);            // and its bottom: the check, the note and the source link
+      await shot(page, "07zm-eurostock-bottom");
+
       await page.waitForSelector(V("euroemployment-card"));
       await page.waitForSelector(V("euroemployment-body") + ", " + V("euroemployment-unavailable") + ", " + V("euroemployment-error"), { timeout: 110000 });         // the ECB's national accounts service takes 5 to 35 s per request when it has to compute, and the card asks for four at once
       const eeTxt = await text(page);

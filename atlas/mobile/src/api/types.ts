@@ -493,6 +493,11 @@ export interface EuroBankRatesData { available: boolean; reason?: string; demo: 
   recent?: { date: string; month: string; firms_cost_pct: number; house_cost_pct: number }[];
   detail?: { months_checked: number; sums_checked: number; rate_months_checked: number; rates_checked: number; largest_sum_gap_millions: number; largest_sum_gap_month: string | null; largest_sum_gap_series: string | null;
     largest_rate_gap_points: number; largest_rate_gap_month: string | null; largest_rate_gap_series: string | null } }
+export interface EuroStockRatesRow { id: string; label: string; rate_pct: number; change_month_points: number; change_year_points: number; window: EuroBankRatesWindow | null;
+  month_split: { rates_points: number; mix_points: number } | null; year_split: { rates_points: number; mix_points: number } | null; parts: { id: string; label: string; rate_pct: number }[] }
+export interface EuroStockRatesData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; provisional?: boolean;
+  loans?: EuroStockRatesRow[]; deposits?: EuroStockRatesRow[];
+  detail?: { months_checked: number; identities_checked: number; largest_identity_gap_points: number; largest_identity_gap_month: string | null; largest_identity_gap_series: string | null; between_checked: number } }
 export interface EuroEmploymentSector { id: string; name: string; persons: number; share: number; change_year_thousands: number; change_year: number }
 export interface EuroEmploymentPart { persons: number; share: number; hours_share: number }
 export interface EuroEmploymentGrowth { quarter: string; quarter_on_quarter: number; year_on_year: number }
