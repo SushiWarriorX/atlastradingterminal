@@ -174,6 +174,20 @@ def test_a_missing_crude_price_means_the_check_cannot_be_made_and_the_card_says_
         G.summarize(d, TODAY)
 
 
+def test_the_refusals_that_name_a_week_write_it_in_words_because_the_phone_shows_them():
+    d = _data()
+    for day in list(d["DCOILWTICO"]):
+        if day >= date(2026, 11, 4):
+            del d["DCOILWTICO"][day]
+    with pytest.raises(ValueError) as e:
+        G.summarize(d, TODAY)
+    assert str(e.value) == "there is no WTI crude price near November 9, 2026 to check the gasoline price against"          # the live card said "near 2026-11-23" on 2026-11-24 and the Macro browser test refused a raw date
+    third = sorted(_data()["GASREGW"])[-3]
+    with pytest.raises(ValueError) as e:
+        G.summarize(_with_margin([-3], 9.5), TODAY)
+    assert str(e.value) == f"gasoline per barrel minus WTI crude is 9.5 on {third:%B} {third.day}, {third.year}, outside 10 to 130" and "2026-" not in str(e.value)
+
+
 def test_missing_values_are_skipped_never_filled():
     s = G.parse("observation_date,GASREGW\n2026-11-02,4.153\n2026-11-09,.\n2026-11-16,\n", "GASREGW")
     assert s == {date(2026, 11, 2): 4.153}

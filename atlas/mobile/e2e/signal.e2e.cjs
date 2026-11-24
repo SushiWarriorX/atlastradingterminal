@@ -1032,6 +1032,41 @@ async function healthy(browser) {
       await page.locator(V("ustrade-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
       await shot(page, "07zo-ustrade-bottom");
 
+      await page.waitForSelector(V("joltsflows-card"));
+      await page.waitForSelector(V("joltsflows-body") + ", " + V("joltsflows-unavailable") + ", " + V("joltsflows-error"), { timeout: 45000 });
+      const jfTxt = await text(page);
+      match(jfTxt, /Hires, quits and layoffs by industry/); match(jfTxt, /Bureau of Labor Statistics/); noMatch(jfTxt, FORECASTS, "the hires and quits card makes no forecasts");
+      if (await liveCard(page, "joltsflows-body")) {
+        const jfBody = await inner(page, "joltsflows-body");
+        const JM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
+        const JA = "(?:\\d{1,2}\\.\\d{3} million|\\d[\\d,]* thousand)";
+        const JMOVE = "(?:(?:up|down) \\d+\\.\\d%|unchanged)";
+        const JNET = `(?:as many hires as separations|${JA} (?:more|fewer) hires than separations)`;
+        match(await inner(page, "joltsflows-headline"), new RegExp(`^In ${JM} US employers hired ${JA} people and ${JA} left their jobs: ${JA} quit, ${JA} were laid off or discharged and ${JA} left for other reasons\\. Net, that is ${JNET}\\.$`), "how many were hired, how many left and in which of three ways");
+        match(await inner(page, "joltsflows-compare"), new RegExp(`^Against a year earlier hires are ${JMOVE}, quits ${JMOVE}, layoffs and discharges ${JMOVE} and total separations ${JMOVE}\\. Quits were \\d{1,2}\\.\\d% of all separations\\.$`), "the four flows against a year earlier and the quits share");
+        for (const [k, label] of [["hires", "hires"], ["quits", "quits"], ["layoffs", "layoffs and discharges"]]) {
+          match(await inner(page, `joltsflows-range-${k}`), new RegExp(`^Over the last 10 years \\(120 months\\) ${label} ran from ${JA} \\(${JM}\\) to ${JA} \\(${JM}\\); \\d{1,3}% of those months were lower than now\\.$`), `where ${label} stand among the last ten years`);
+        }
+        for (const [k, label] of [["private", "Private sector"], ["government", "Government"]]) {
+          match(await inner(page, `joltsflows-sector-${k}`), new RegExp(`^${label}: hired ${JA}; ${JA} left \\(${JA} quit, ${JA} laid off or discharged, ${JA} other\\), ${JNET}\\. Against a year earlier hires are ${JMOVE} and quits ${JMOVE}\\.$`), `${label} has its own line`);
+        }
+        const JTAIL = `hired ${JA}; ${JA} left, ${JA} of them by quitting(?: \\(\\d{1,2}\\.\\d%\\))?: ${JNET}\\. Against a year earlier hires are ${JMOVE} and quits ${JMOVE}\\.$`;
+        for (const [k, label] of [["trade_transport", "Trade, transportation and utilities"], ["leisure", "Leisure and hospitality"], ["professional", "Professional and business services"], ["education_health", "Private education and health services"],
+          ["construction", "Construction"], ["manufacturing", "Manufacturing"], ["other_private", "Everything else in the private sector \\(mining and logging, information, financial activities, other services\\), by subtraction"]]) {
+          match(await inner(page, `joltsflows-industry-${k}`), new RegExp(`^${label}: ${JTAIL}`), `${label} has its own line`);
+        }
+        match(await inner(page, "joltsflows-recent"), new RegExp(`^(?:${JM}: hired ${JA}, ${JA} quit, ${JA} laid off or discharged, ${JA} left in all: ${JNET}\\s*){6}$`), "six months of hires, quits, layoffs and separations");
+        match(await inner(page, "joltsflows-check"), new RegExp(`^Check: in each of the \\d[\\d,]* months from ${JM} to ${JM} the 33 series covered the same months with none missing and every figure lay inside its range \\(plain checks, not the source's sums\\)\\. The survey's own arithmetic held, which shows that the series belong to one release, not that the figures are right: total nonfarm equalled private plus government for hires, quits, layoffs, other separations and total separations, and in each of the three totals separations equalled quits plus layoffs plus other \\(the figures are each rounded to a thousand; the largest gap was \\d+(?:\\.\\d+)? thousand, and 1\\.5 and 2 are allowed\\)\\. In each of the six industries the quits were never more than the separations \\(the closest margin was \\d+(?:\\.\\d+)? thousand\\), and what is left of private after the six industries was at least \\d+(?:\\.\\d+)? thousand in hires, in quits and in separations\\.$`), "what was checked, with the card's own counts");
+        match(jfBody, /preliminary and are revised later/); match(jfBody, /by subtraction/); match(jfBody, /not a market signal or a forecast/);
+        noMatch(jfBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("joltsflows-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zp-joltsflows-top");
+      await page.locator(V("joltsflows-industries")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);      // the middle: the industries
+      await shot(page, "07zp-joltsflows-middle");
+      await page.locator(V("joltsflows-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
+      await shot(page, "07zp-joltsflows-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);

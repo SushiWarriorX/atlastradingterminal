@@ -732,7 +732,7 @@ def test_route_is_served_and_labelled(tmp_path):
 def test_the_card_is_refreshed_with_the_other_macro_sources():
     jobs = (Path(__file__).parent.parent / "atlas_api" / "sched" / "jobs.py").read_text(encoding="utf-8")
     app = (Path(__file__).parent.parent / "atlas_api" / "app.py").read_text(encoding="utf-8")
-    assert '"jolts", "jolts_industries", "us_jobs"' in jobs and '"jolts_industries": jolts_industries' in app and "jolts_industries = JoltsIndustries(demo=demo)" in app and '"/api/macro/jolts-industries"' in app
+    assert '"jolts", "jolts_industries", "jolts_flows", "us_jobs"' in jobs and '"jolts_industries": jolts_industries' in app and "jolts_industries = JoltsIndustries(demo=demo)" in app and '"/api/macro/jolts-industries"' in app
 
 
 def test_the_age_and_the_freshness_are_worked_from_the_time_of_the_question_not_from_the_clock():

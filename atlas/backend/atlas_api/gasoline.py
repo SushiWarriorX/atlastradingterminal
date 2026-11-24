@@ -39,6 +39,11 @@ def _wti_on_or_before(wti: dict[date, float], day: date) -> float | None:
     return None
 
 
+def _words(d: date) -> str:
+    """A day as a person reads it ("November 23, 2026"): a refusal is shown on the phone, which writes dates in words (the Macro browser test fails on a raw 2026-11-23)."""
+    return f"{d:%B} {d.day}, {d.year}"
+
+
 def summarize(data: dict[str, dict[date, float]], today: date) -> dict:
     g, w = data["GASREGW"], data["DCOILWTICO"]
     if any(d.weekday() != 0 for d in g):
@@ -56,11 +61,11 @@ def summarize(data: dict[str, dict[date, float]], today: date) -> dict:
     for d in weeks[-8:]:
         x = _wti_on_or_before(w, d)
         if x is None:
-            raise ValueError(f"there is no WTI crude price near {d} to check the gasoline price against")
+            raise ValueError(f"there is no WTI crude price near {_words(d)} to check the gasoline price against")
         margins[d] = g[d] * GALLONS_PER_BARREL - x
     if any(not (MARGIN_LIMITS[0] <= m <= MARGIN_LIMITS[1]) for m in margins.values()):
         bad = next(d for d, m in margins.items() if not (MARGIN_LIMITS[0] <= m <= MARGIN_LIMITS[1]))
-        raise ValueError(f"gasoline per barrel minus WTI crude is {margins[bad]:.1f} on {bad}, outside {MARGIN_LIMITS[0]:g} to {MARGIN_LIMITS[1]:g}")
+        raise ValueError(f"gasoline per barrel minus WTI crude is {margins[bad]:.1f} on {_words(bad)}, outside {MARGIN_LIMITS[0]:g} to {MARGIN_LIMITS[1]:g}")
     v = g[last]
     year = [d for d in weeks if 0 <= (last - d).days <= 52 * WEEK]
     vals = [g[d] for d in year]

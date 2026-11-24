@@ -520,6 +520,15 @@ export interface JoltsIndustriesData { available: boolean; reason?: string; demo
   total?: { openings_thousands: number; year_ago_thousands: number; change_year_pct: number | null; private_thousands: number; private_share_pct: number; government_thousands: number; government_share_pct: number; range: JoltsRange };
   industries?: JoltsIndustryGroup[];
   detail?: { months_checked: number; first_month: string; last_month: string; largest_sum_gap: number; closest_part_margin: number; smallest_rest_of_private: number } }
+export interface JoltsFlowsTotal { hires_thousands: number; quits_thousands: number; layoffs_thousands: number; other_thousands: number; separations_thousands: number; net_thousands: number; quits_share_pct: number | null;
+  hires_change_year_pct: number | null; quits_change_year_pct: number | null; layoffs_change_year_pct: number | null; separations_change_year_pct: number | null; hires_range: JoltsRange; quits_range: JoltsRange; layoffs_range: JoltsRange }
+export interface JoltsFlowsSector { key: string; label: string; hires_thousands: number; quits_thousands: number; layoffs_thousands: number; other_thousands: number; separations_thousands: number; net_thousands: number; quits_share_pct: number | null;
+  hires_change_year_pct: number | null; quits_change_year_pct: number | null }
+export interface JoltsFlowsIndustry { key: string; label: string; derived: boolean; hires_thousands: number; quits_thousands: number; separations_thousands: number; net_thousands: number; quits_share_pct: number | null; hires_change_year_pct: number | null; quits_change_year_pct: number | null }
+export interface JoltsFlowsMonth { month: string; hires_thousands: number; quits_thousands: number; layoffs_thousands: number; separations_thousands: number; net_thousands: number }
+export interface JoltsFlowsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  total?: JoltsFlowsTotal; sectors?: JoltsFlowsSector[]; industries?: JoltsFlowsIndustry[]; recent?: JoltsFlowsMonth[];
+  detail?: { months_checked: number; first_month: string; last_month: string; largest_sum_gap: number; closest_part_margin: number; smallest_rest_of_private: number } }
 export interface UsJobsPart { level_thousands: number; change_thousands: number; change_year_thousands: number }
 export interface UsJobsRate { pct: number; month_before_pct: number | null; year_ago_pct: number | null }
 export interface UsJobsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";

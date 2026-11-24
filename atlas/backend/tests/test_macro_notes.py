@@ -8,7 +8,7 @@ import pytest
 API = Path(__file__).parent.parent / "atlas_api"
 COMPONENTS = Path(__file__).parent.parent.parent / "mobile" / "src" / "components"
 CARDS = {"euromoney": "EuroMoneyCard.tsx", "eurolending": "EuroLendingCard.tsx", "eurohicp": "EuroInflationCard.tsx", "eurounemployment": "EuroUnemploymentCard.tsx",
-         "eurostress": "EuroStressCard.tsx", "euroyields": "EuroYieldsCard.tsx", "eurogdp": "EuroGdpCard.tsx", "eurobankrates": "EuroBankRatesCard.tsx", "eurostockrates": "EuroStockRatesCard.tsx", "euroemployment": "EuroEmploymentCard.tsx", "jolts": "JoltsCard.tsx", "joltsindustries": "JoltsIndustriesCard.tsx", "usjobs": "UsJobsCard.tsx", "usgdp": "UsGdpCard.tsx", "ushousehold": "UsHouseholdCard.tsx", "usrealspending": "UsRealSpendingCard.tsx", "ustrade": "UsTradeCard.tsx"}
+         "eurostress": "EuroStressCard.tsx", "euroyields": "EuroYieldsCard.tsx", "eurogdp": "EuroGdpCard.tsx", "eurobankrates": "EuroBankRatesCard.tsx", "eurostockrates": "EuroStockRatesCard.tsx", "euroemployment": "EuroEmploymentCard.tsx", "jolts": "JoltsCard.tsx", "joltsindustries": "JoltsIndustriesCard.tsx", "usjobs": "UsJobsCard.tsx", "usgdp": "UsGdpCard.tsx", "ushousehold": "UsHouseholdCard.tsx", "usrealspending": "UsRealSpendingCard.tsx", "ustrade": "UsTradeCard.tsx", "joltsflows": "JoltsFlowsCard.tsx"}
 # sentences that belong to the Check line and must not come back in a note (each was in every note before)
 REPEATED = ("not that the figures are right", "not that they are right", "which show the series belong together", "which shows the series belong together", "show the series belong together",
             "two checks that are", "one check that is", "three checks that are", "three checks held", "own arithmetic", "The ECB builds the totals")
@@ -28,8 +28,9 @@ PLAIN = {"euromoney": "Plain checks: the units are the ones assumed, no month is
          "usgdp": "Plain checks: the units are the ones assumed and no quarter is missing; the ranges, the sums and the contributions rebuilt from the parts are in the Check line.",
          "ushousehold": "Plain checks: the units are the ones assumed and no month or quarter is missing; the ranges, the sums and the comparison of the quarter with its months are in the Check line.",
          "usrealspending": "Plain checks: the units are the ones assumed and no month is missing; the ranges, the monthly moves and the sum of real spending and prices against spending in dollars are in the Check line.",
-         "ustrade": "Plain checks: the units are the ones assumed and no month is missing; the ranges, the monthly moves and the six sums (each balance against its exports and imports, and the totals against goods plus services) are in the Check line."}
-LIMIT = 1100                                                                                                                   # characters: the longest note before was 1,824
+         "ustrade": "Plain checks: the units are the ones assumed and no month is missing; the ranges, the monthly moves and the six sums (each balance against its exports and imports, and the totals against goods plus services) are in the Check line.",
+         "joltsflows": "Plain checks: the units are the ones assumed and no month is missing; the ranges, the sums and the quits inside the separations are in the Check line."}
+LIMIT = 1100                                                                                                                  # characters: the longest note before was 1,824
 
 
 def note_of(name):
@@ -88,5 +89,6 @@ def test_the_notes_keep_what_only_they_say_about_their_source():
     assert "do not agree month to month" in note_of("usjobs") and "not looking is not unemployed" in note_of("usjobs") and "revised in later releases" in note_of("usjobs") and "private and government" in note_of("usjobs")
     assert "chained 2017 dollars" in note_of("usrealspending") and "taken out" in note_of("usrealspending") and "more or fewer goods and services bought" in note_of("usrealspending") and "revised in later releases" in note_of("usrealspending") and "not a market signal or a forecast" in note_of("usrealspending")
     assert "balance-of-payments basis" in note_of("ustrade") and "A negative balance is a deficit" in note_of("ustrade") and "Goods are physical products" in note_of("ustrade") and "revised in later releases" in note_of("ustrade") and "not a market signal or a forecast" in note_of("ustrade")
+    assert "Hires are all additions to the payroll" in note_of("joltsflows") and "the net of a month is hires minus total separations" in note_of("joltsflows") and "only for total nonfarm, the private sector and government" in note_of("joltsflows") and "worked out by subtraction and marked as such" in note_of("joltsflows") and "not a market signal or a forecast" in note_of("joltsflows")
     assert "disposable income" in note_of("ushousehold") and "found by subtraction" in note_of("ushousehold") and "not adjusted for inflation" in note_of("ushousehold") and "from the GDP release" in note_of("ushousehold") and "revised in later releases" in note_of("ushousehold")
     assert "counted by what it was spent on" in note_of("usgdp") and "below zero when the country buys more from abroad than it sells" in note_of("usgdp") and "prices held fixed" in note_of("usgdp") and "revised in later releases" in note_of("usgdp")
