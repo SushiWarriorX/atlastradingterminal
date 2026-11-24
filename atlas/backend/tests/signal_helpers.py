@@ -19,6 +19,19 @@ SEC = {"1m": 60, "5m": 300, "15m": 900, "1h": 3600, "1d": 86400, "1w": 7 * 86400
 ORDER_WORDS = re.compile(r"\b(buy now|sell now|you should (buy|sell)|go long|go short|price target of|take profit|stop[- ]loss|guaranteed|will (rise|fall|crash|moon|rally))\b", re.I)
 
 
+def freeze_demo_clock(monkeypatch, iso: str) -> None:
+    """Make the demo provider (synthetic candles and quotes) read `iso` as 'now'. A test that counts demo bars otherwise depends on the time of day it runs:
+    the demo candles end at the last finished 5-minute bar, so at 05:05 to 05:09 UTC (00:05 to 00:09 in New York in winter) the 1D chart holds one bar."""
+    fixed = datetime.fromisoformat(iso)
+
+    class Frozen(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return fixed.astimezone(tz) if tz else fixed.replace(tzinfo=None)
+
+    monkeypatch.setattr("atlas_api.providers.demo.datetime", Frozen)
+
+
 def bars(interval: str, n: int, *, start: float = 100.0, drift: float = 0.002, vol: float = 1_000_000.0, now: float | None = None, age: int = 0) -> list[Candle]:
     """n candles ending at the CURRENT (still forming) bar like a real provider, with a drift and a deterministic wiggle. `age` shifts everything into the past (stale data)."""
     sec = SEC[interval]
