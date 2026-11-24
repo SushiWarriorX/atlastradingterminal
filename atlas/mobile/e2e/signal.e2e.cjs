@@ -36,8 +36,7 @@ let livePage = null;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const assert = (c, m) => { if (!c) throw new Error(m || "assertion failed"); };
 const eq = (a, b, m) => { const x = JSON.stringify(a), y = JSON.stringify(b); if (x !== y) throw new Error(`${m || "values differ"}\n    expected: ${y}\n    actual:   ${x}`); };
-const match = (t, re, m) => { if (!re.test(t)) throw new Error(`${m || `expected text to match ${re}`}\n    text: ${String(t).replace(/\s+/g, " ").slice(0, 500)}`); };
-const noMatch = (t, re, m) => { const r = re.exec(t); if (r) throw new Error(`${m || `text must not match ${re}`}\n    found: "${r[0]}"`); };
+const { match, noMatch, softly } = require("./soft.cjs");                  // wording checks: they throw at once, or inside `softly` are collected so that one failing card does not hide the next (e2e/soft.cjs, self-tested by `npm test`)
 
 async function check(name, fn) {
   const t0 = Date.now();
@@ -623,7 +622,7 @@ async function healthy(browser) {
       await shot(page, "17c-journey-feed-top");
     });
 
-    await check("Macro: what matters today, indicators and headlines are labelled, gaps are listed, and a missing FRED key is said plainly", async () => {
+    await check("Macro: what matters today, indicators and headlines are labelled, gaps are listed, and a missing FRED key is said plainly", () => softly(async () => {
       await page.click(T("tab-macro"));
       await page.waitForSelector(V("macro-brief"));
       await page.waitForSelector(V("treasury-card"));
@@ -1531,7 +1530,7 @@ async function healthy(browser) {
       match(await inner(page, "calendar-card"), /CPI \(inflation\)/, "the Economy filter keeps the CPI release");
       eq((await clickableNames(page)).filter((n) => TRADING_CONTROL.test(n)), [], "trading controls on the calendar");
       await shot(page, "13-macro");
-    });
+    }));
 
     await check("Stock deep-dive: collapsed by default, then filings status, valuation, earnings, rule-based points and the gaps are labelled", async () => {
       await toStocks(page);

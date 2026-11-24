@@ -71,7 +71,7 @@ Your PC's address is the "IPv4 Address" shown by `ipconfig` (Windows) or `ifconf
 
 ```bash
 npm run typecheck      # TypeScript
-npm test               # 29 unit tests (formatting, freshness wording, watchlist edits, per-server query keys, the API client)
+npm test               # the unit tests (formatting, freshness wording, watchlist edits, per-server query keys, the API client, the card wording helpers), then the self-test of the browser script's wording checks (e2e/soft.test.cjs)
 ```
 
 Browser tests drive the real app (web export, phone-sized) against the real backend with scripted prices, news and directory data. No network or accounts are needed:
@@ -83,6 +83,8 @@ export SIGNAL_E2E_PYTHON=/path/to/atlas/backend/.venv/bin/python     # a Python 
 node e2e/signal.e2e.cjs                              # all scenarios; or name some: healthy stale partial missing login demo
 SIGNAL_E2E_SHOTS=/tmp/shots node e2e/signal.e2e.cjs  # also save screenshots
 ```
+
+The wording checks of the browser script (`match`, `noMatch`) live in `e2e/soft.cjs`. Inside `softly(...)`, which wraps the whole Macro test, a failed one is recorded and the test goes on, then fails once at the end naming every failed check, so one changed live card does not hide the cards after it; a missing element still ends the test at once. `npm test` runs the self-test of that file.
 
 | Scenario | What it proves |
 | --- | --- |
