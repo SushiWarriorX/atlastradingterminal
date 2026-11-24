@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from atlas_api import ushousehold as H
 from atlas_api.app import create_app
-from atlas_api.failreason import fail_reason
+from atlas_api.failreason import dates_in_words, fail_reason
 
 F = json.loads((Path(__file__).parent / "fixtures" / "fred_ushousehold.json").read_text())
 TODAY = date(2026, 11, 19)
@@ -724,7 +724,7 @@ def test_the_module_says_why_each_series_is_asked_for_alone_and_what_it_does_not
 def test_every_refusal_fits_in_the_visible_110_characters_so_the_figure_is_not_cut_off():
     for _sid, _v, text in EDGES:
         assert len(text) <= 110, text
-        assert fail_reason(ValueError(text)) == f"the data failed a check: {text}"
+        assert fail_reason(ValueError(text)) == f"the data failed a check: {dates_in_words(text)}"
 
 
 # ---------------------------------------------------------------- the class: requests, cache, failures, demo, route
@@ -803,11 +803,11 @@ def test_a_failed_check_shows_nothing_and_says_which():
     bad = dict(F)
     bad["PSAVERT"] = F["PSAVERT"].replace("2026-09-01,3.8", "2026-09-01,38")           # a decimal slip in the newest rate that stays inside the range
     r = asyncio.run(H.UsHousehold(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))
-    assert r["available"] is False and r["reason"] == "US household figures could not be read right now (the data failed a check: the saving rate is 38% in 2026-09 but 3.75% from the levels, over 0.0703125)" and "saving" not in r
+    assert r["available"] is False and r["reason"] == "US household figures could not be read right now (the data failed a check: the saving rate is 38% in September 2026 but 3.75% from the levels, over 0.0703125)" and "saving" not in r
     bad = dict(F)
     bad["PI"] = F["PI"].replace("2026-09-01,27707.8", "2026-09-01,277078.0")
     r = asyncio.run(H.UsHousehold(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))
-    assert r["available"] is False and r["reason"] == "US household figures could not be read right now (the data failed a check: the personal income of 277,078 billion in 2026-09 is outside 200 to 100,000)"
+    assert r["available"] is False and r["reason"] == "US household figures could not be read right now (the data failed a check: the personal income of 277,078 billion in September 2026 is outside 200 to 100,000)"
     bad = dict(F)
     bad["PCE"] = F["PCE"].replace("2026-09-01,22452.8", "2026-09-01,x")
     r = asyncio.run(H.UsHousehold(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))

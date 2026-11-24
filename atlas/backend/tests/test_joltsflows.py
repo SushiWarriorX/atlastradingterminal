@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 
 from atlas_api import joltsflows as J
 from atlas_api.app import create_app
-from atlas_api.failreason import fail_reason
+from atlas_api.failreason import dates_in_words, fail_reason
 
 F = json.loads((Path(__file__).parent / "fixtures" / "fred_joltsflows.json").read_text())
 TODAY = date(2026, 11, 24)
@@ -574,7 +574,7 @@ def test_every_refusal_fits_in_the_visible_110_characters_so_the_figure_is_not_c
     texts += ["the JOLTS flows cover 119 months, fewer than the 120 expected", "the JOLTS flow months skip a month after 2024-12", "the JOLTS flow series end in different months", "a JOLTS flow date is not the 1st of a month"]
     for text in texts:
         assert len(text) <= 110, (len(text), text)
-        assert fail_reason(ValueError(text)) == f"the data failed a check: {text}"
+        assert fail_reason(ValueError(text)) == f"the data failed a check: {dates_in_words(text)}"
 
 
 # ---------------------------------------------------------------- the class: requests, cache, failures, demo, route
@@ -670,9 +670,9 @@ def test_a_failed_check_shows_nothing_and_says_which():
         return asyncio.run(J.JoltsFlows(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))
 
     r = answer({"JTS1000HIL": ("2026-09-01,5078", "2026-09-01,50780")})               # a decimal slip beyond the range
-    assert r["available"] is False and r["reason"] == "US hires, quits and layoffs by industry could not be read right now (the data failed a check: private hires of 50,780 thousand in 2026-09 is outside 1,500 to 20,000)" and "total" not in r
+    assert r["available"] is False and r["reason"] == "US hires, quits and layoffs by industry could not be read right now (the data failed a check: private hires of 50,780 thousand in September 2026 is outside 1,500 to 20,000)" and "total" not in r
     r = answer({"JTSQUL": ("2026-09-01,3365", "2026-09-01,3465")})                    # a digit slip that stays inside every range: only the sum finds it
-    assert r["available"] is False and r["reason"] == "US hires, quits and layoffs by industry could not be read right now (the data failed a check: nonfarm quits differ from private plus government by 100 thousand in 2026-09, over 1.5)"
+    assert r["available"] is False and r["reason"] == "US hires, quits and layoffs by industry could not be read right now (the data failed a check: nonfarm quits differ from private plus government by 100 thousand in September 2026, over 1.5)"
     r = answer({"JTS7000QUL": ("2026-09-01,752", "2026-09-01,x")})
     assert r["available"] is False and "a JTS7000QUL row was unreadable" in r["reason"]
 

@@ -627,7 +627,7 @@ def test_failure_says_so_and_shows_no_numbers():
     bad = F["rates"].replace("NRGY00,2026-10,20.8", "NRGY00,2026-10,208")                                    # a decimal slip in the newest energy rate: a check failing shows nothing either
     assert bad != F["rates"]
     r = asyncio.run(H.EuroInflation(client=_transport(lambda req: httpx.Response(200, text=bad if req.url.path.endswith(H.RATE_KEY) else F["indices"] if req.url.path.endswith(H.INDEX_KEY) else F["weights"]))).overview(NOW))
-    assert r["available"] is False and "the annual rate of energy is +208.0% in 2026-10" in r["reason"] and "headline" not in r
+    assert r["available"] is False and "the annual rate of energy is +208.0% in October 2026" in r["reason"] and "headline" not in r
 
 
 def test_a_dropped_connection_reads_plainly():

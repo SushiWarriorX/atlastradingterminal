@@ -639,7 +639,7 @@ def test_failure_says_so_and_shows_no_numbers():
     slip = (f"{last!r}", f"{last * 100!r}")                                                                                      # a decimal slip in the newest growth rate: a check failing shows nothing either
     assert slip[0] in _text(("firms.growth",)) and slip[1] not in _text(("firms.growth",))
     r = asyncio.run(S.EuroLending(client=_transport(lambda req: _handler(req, slip))).overview(NOW))
-    assert r["available"] is False and "loans to firms (annual growth) is +424.5% in 2026-09, outside -10% to +25%" in r["reason"] and "firms" not in r
+    assert r["available"] is False and "loans to firms (annual growth) is +424.5% in September 2026, outside -10% to +25%" in r["reason"] and "firms" not in r
 
 
 def test_a_response_in_other_units_is_refused_and_shows_nothing():

@@ -540,7 +540,7 @@ def test_failure_says_so_and_shows_no_numbers():
     slip = (f"{OK},2026-11-16,3.4224059614,", f"{OK},2026-11-16,34.224059614,")                          # a decimal slip in the newest 10-year rate: a check failing shows nothing either
     assert slip[0] in _ten_text() and slip[1] in _ten_text(slip)
     r = asyncio.run(S.EuroYields(client=_transport(lambda req: _handler(req, slip))).overview(NOW))
-    assert r["available"] is False and "the 10-year rate is 34.2241 on 2026-11-16, outside -3 to 10" in r["reason"] and "rates" not in r
+    assert r["available"] is False and "the 10-year rate is 34.2241 on November 16, 2026, outside -3 to 10" in r["reason"] and "rates" not in r
 
 
 def test_a_response_in_other_units_is_refused_and_shows_nothing():

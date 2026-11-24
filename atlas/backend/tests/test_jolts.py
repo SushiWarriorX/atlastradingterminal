@@ -567,7 +567,7 @@ def test_a_failed_check_shows_nothing_and_says_which():
     bad = dict(F)
     bad["JTSJOL"] = F["JTSJOL"].replace("2026-09-01,7523", "2026-09-01,75230")      # a decimal slip in the newest value
     r = asyncio.run(J.Jolts(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))
-    assert r["available"] is False and r["reason"] == "US job openings could not be read right now (the data failed a check: job openings of 75,230 thousand in 2026-09 is outside 100 to 50,000)" and "openings" not in r
+    assert r["available"] is False and r["reason"] == "US job openings could not be read right now (the data failed a check: job openings of 75,230 thousand in September 2026 is outside 100 to 50,000)" and "openings" not in r
     bad = dict(F)
     bad["PAYEMS"] = F["PAYEMS"].replace("2026-09-01,159128", "2026-09-01,x")
     r = asyncio.run(J.Jolts(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))

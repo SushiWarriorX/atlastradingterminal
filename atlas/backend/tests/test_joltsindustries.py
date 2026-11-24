@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from atlas_api import joltsindustries as J
 from atlas_api.app import create_app
-from atlas_api.failreason import fail_reason
+from atlas_api.failreason import dates_in_words, fail_reason
 
 F = json.loads((Path(__file__).parent / "fixtures" / "fred_joltsindustries.json").read_text())
 TODAY = date(2026, 11, 19)
@@ -607,10 +607,10 @@ def test_the_module_says_why_each_series_is_asked_for_alone_and_what_it_does_not
 def test_every_refusal_fits_in_the_visible_110_characters_so_the_figure_is_not_cut_off():
     for _sid, _v, text in EDGES:
         assert len(text) <= 110, text
-        assert fail_reason(ValueError(text)) == f"the data failed a check: {text}"
+        assert fail_reason(ValueError(text)) == f"the data failed a check: {dates_in_words(text)}"
     for text in ("the six industries add up to more than private by 3.75 thousand in 2019-05, over 3.5", "manufacturing differs from durable goods plus nondurable goods by 1400 thousand in 2019-05, over 1.5",
                  "health care openings exceed education and health by 1300 thousand in 2019-05, over 1", "the JOLTS industries cover 119 months, fewer than the 120 expected"):
-        assert len(text) <= 110 and fail_reason(ValueError(text)) == f"the data failed a check: {text}"
+        assert len(text) <= 110 and fail_reason(ValueError(text)) == f"the data failed a check: {dates_in_words(text)}"
 
 
 # ---------------------------------------------------------------- the class: requests, cache, failures, demo, route
@@ -689,11 +689,11 @@ def test_a_failed_check_shows_nothing_and_says_which():
     bad = dict(F)
     bad["JTSJOL"] = F["JTSJOL"].replace("2026-09-01,7523", "2026-09-01,7253")          # two digits swapped in the newest total: inside its range, but the first sum no longer holds
     r = asyncio.run(J.JoltsIndustries(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))
-    assert r["available"] is False and r["reason"] == "US job openings by industry could not be read right now (the data failed a check: total nonfarm differs from private plus government by 271 thousand in 2026-09, over 1.5)" and "total" not in r
+    assert r["available"] is False and r["reason"] == "US job openings by industry could not be read right now (the data failed a check: total nonfarm differs from private plus government by 271 thousand in September 2026, over 1.5)" and "total" not in r
     bad = dict(F)
     bad["JTS1000JOL"] = F["JTS1000JOL"].replace("2026-09-01,6644", "2026-09-01,66440")
     r = asyncio.run(J.JoltsIndustries(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))
-    assert r["available"] is False and r["reason"] == "US job openings by industry could not be read right now (the data failed a check: private openings of 66,440 thousand in 2026-09 is outside 1,000 to 25,000)"
+    assert r["available"] is False and r["reason"] == "US job openings by industry could not be read right now (the data failed a check: private openings of 66,440 thousand in September 2026 is outside 1,000 to 25,000)"
     bad = dict(F)
     bad["JTS7100JOL"] = F["JTS7100JOL"].replace("2026-09-01,120", "2026-09-01,x")
     r = asyncio.run(J.JoltsIndustries(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))

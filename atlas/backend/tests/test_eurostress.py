@@ -478,7 +478,7 @@ def test_failure_says_so_and_shows_no_numbers():
     slip = (f"{OK},2026-11-16,0.00538154,", f"{OK},2026-11-16,0.538154,")                                # a decimal slip in the newest value: a check failing shows nothing either
     assert slip[0] in _index_text() and slip[1] in _index_text(slip)
     r = asyncio.run(S.EuroStress(client=_transport(lambda req: _handler(req, slip))).overview(NOW))
-    assert r["available"] is False and "the stress index moved by +0.5329 on 2026-11-16, outside -0.25 to +0.25" in r["reason"] and "index" not in r
+    assert r["available"] is False and "the stress index moved by +0.5329 on November 16, 2026, outside -0.25 to +0.25" in r["reason"] and "index" not in r
 
 
 def test_a_response_in_other_units_is_refused_and_shows_nothing():

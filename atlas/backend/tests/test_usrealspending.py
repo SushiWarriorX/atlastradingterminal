@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 
 from atlas_api import usrealspending as R
 from atlas_api.app import create_app
-from atlas_api.failreason import fail_reason
+from atlas_api.failreason import dates_in_words, fail_reason
 
 F = json.loads((Path(__file__).parent / "fixtures" / "fred_usrealspending.json").read_text())
 TODAY = date(2026, 11, 24)
@@ -517,7 +517,7 @@ def test_every_refusal_fits_in_the_visible_110_characters_so_the_figure_is_not_c
               "the real spending record covers 119 months, fewer than the 120 expected", "the real spending months skip a month after 2024-12"]
     for text in texts:
         assert len(text) <= 110, text
-        assert fail_reason(ValueError(text)) == f"the data failed a check: {text}"
+        assert fail_reason(ValueError(text)) == f"the data failed a check: {dates_in_words(text)}"
 
 
 # ---------------------------------------------------------------- the class: requests, cache, failures, demo, route
@@ -596,11 +596,11 @@ def test_a_failed_check_shows_nothing_and_says_which():
     bad = dict(F)
     bad[PRICE] = F[PRICE].replace("2026-09-01,132.257", "2026-09-01,1322.57")        # a decimal slip that stays inside the 5 to 500 range? no: it is outside, so the range names it
     r = asyncio.run(R.UsRealSpending(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))
-    assert r["available"] is False and r["reason"] == "US real consumer spending could not be read right now (the data failed a check: the PCE price index of 1,322.6 in 2026-09 is outside 5 to 500)" and "real" not in r
+    assert r["available"] is False and r["reason"] == "US real consumer spending could not be read right now (the data failed a check: the PCE price index of 1,322.6 in September 2026 is outside 5 to 500)" and "real" not in r
     bad = dict(F)
     bad[REAL] = F[REAL].replace("2026-09-01,16977.6", "2026-09-01,17977.6")            # a digit slip that stays inside every range and move: only the sum finds it
     r = asyncio.run(R.UsRealSpending(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))
-    assert r["available"] is False and r["reason"] == "US real consumer spending could not be read right now (the data failed a check: real spending times prices is 5.896% off spending in dollars in 2026-09, over 0.098%)"
+    assert r["available"] is False and r["reason"] == "US real consumer spending could not be read right now (the data failed a check: real spending times prices is 5.896% off spending in dollars in September 2026, over 0.098%)"
     bad = dict(F)
     bad[NOMINAL] = F[NOMINAL].replace("2026-09-01,22452.8", "2026-09-01,x")
     r = asyncio.run(R.UsRealSpending(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))

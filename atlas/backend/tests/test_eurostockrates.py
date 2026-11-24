@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 
 from atlas_api import eurostockrates as S
 from atlas_api.app import create_app
-from atlas_api.failreason import fail_reason
+from atlas_api.failreason import dates_in_words, fail_reason
 
 F = json.loads((Path(__file__).parent / "fixtures" / "ecb_euro_stock_rates.json").read_text())
 TODAY = date(2026, 11, 24)
@@ -898,7 +898,7 @@ def test_a_failed_check_names_the_series_and_the_figure_first_so_the_message_is_
     w = _world()
     w[0]["consumer.A.rate_cum"][_back(LAST, 3)] = -10.5
     msg = _err(w)
-    assert len(msg) <= 110 and msg == fail_reason(ValueError(msg))[len("the data failed a check: "):]                          # fail_reason keeps 110 characters of a check's message: none of ours is longer
+    assert len(msg) <= 110 and dates_in_words(msg) == fail_reason(ValueError(msg))[len("the data failed a check: "):]                          # fail_reason keeps 110 characters of a check's message: none of ours is longer
     longest = max(len(NAMES[sid]) for sid in NAMES)
     assert longest + len(" moved by +1.60 points in 2026-09, more than 1.5") <= 110 and longest + len(" is -12.34 in 2026-09, outside -10 to 10 points") <= 110
     assert max(len(_a_msg(b, LAST, 0.05, 0.03, 0.031)) for b in SPLIT) <= 110 and max(len(_d_msg(b, LAST, 0.06, 0.09, -0.03, 0.031)) for b in SPLIT) <= 110

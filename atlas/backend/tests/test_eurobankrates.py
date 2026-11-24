@@ -798,7 +798,7 @@ def test_failure_says_so_and_shows_no_numbers():
     slip = (f"{key},M,2026-09,3.9,A,", f"{key},M,2026-09,39.0,A,")                                                               # a decimal slip in the newest composite: a check failing shows nothing either
     assert slip[0] in _text(("firms_cost.rate",)) and slip[1] not in _text(("firms_cost.rate",))
     r = asyncio.run(S.EuroBankRates(client=_transport(lambda req: _handler(req, slip))).overview(NOW))
-    assert r["available"] is False and "the ECB's cost of borrowing for firms is 39.00% in 2026-09, outside -1% to 12%" in r["reason"] and "loans" not in r
+    assert r["available"] is False and "the ECB's cost of borrowing for firms is 39.00% in September 2026, outside -1% to 12%" in r["reason"] and "loans" not in r
 
 
 def test_a_response_in_other_units_is_refused_and_shows_nothing():

@@ -529,7 +529,7 @@ def test_failure_says_so_and_shows_no_numbers():
     bad = F["rates"].replace("LFSI.M.I9.S.UNEHRT.TOTAL0.15_74.T,15_74,T,2026-09,6.6", "LFSI.M.I9.S.UNEHRT.TOTAL0.15_74.T,15_74,T,2026-09,66")      # a decimal slip in the newest rate: a check failing shows nothing either
     assert bad != F["rates"]
     r = asyncio.run(U.EuroUnemployment(client=_transport(lambda req: httpx.Response(200, text=bad if "UNEHRT" in req.url.path else F["levels"]))).overview(NOW))
-    assert r["available"] is False and "the unemployment rate of everybody aged 15 to 74 is 66.0% in 2026-09" in r["reason"] and "headline" not in r
+    assert r["available"] is False and "the unemployment rate of everybody aged 15 to 74 is 66.0% in September 2026" in r["reason"] and "headline" not in r
 
 
 def test_a_dropped_connection_reads_plainly():

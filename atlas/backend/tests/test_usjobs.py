@@ -625,7 +625,7 @@ def test_a_failed_check_shows_nothing_and_says_which():
     bad = dict(F)
     bad["PAYEMS"] = F["PAYEMS"].replace("2026-10-01,159293", "2026-10-01,1592930")      # a decimal slip in the newest value
     r = asyncio.run(U.UsJobs(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))
-    assert r["available"] is False and r["reason"] == "US jobs figures could not be read right now (the data failed a check: the total nonfarm payrolls of 1,592,930 thousand in 2026-10 is outside 100,000 to 250,000)" and "payrolls" not in r
+    assert r["available"] is False and r["reason"] == "US jobs figures could not be read right now (the data failed a check: the total nonfarm payrolls of 1,592,930 thousand in October 2026 is outside 100,000 to 250,000)" and "payrolls" not in r
     bad = dict(F)
     bad["UNRATE"] = F["UNRATE"].replace("2026-10-01,4.1", "2026-10-01,x")
     r = asyncio.run(U.UsJobs(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))

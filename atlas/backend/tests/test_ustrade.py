@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 
 from atlas_api import ustrade as T
 from atlas_api.app import create_app
-from atlas_api.failreason import fail_reason
+from atlas_api.failreason import dates_in_words, fail_reason
 
 F = json.loads((Path(__file__).parent / "fixtures" / "fred_ustrade.json").read_text())
 TODAY = date(2026, 11, 24)
@@ -601,7 +601,7 @@ def test_every_refusal_fits_in_the_visible_110_characters_so_the_figure_is_not_c
     texts += ["the trade record covers 119 months, fewer than the 120 expected", "the trade months skip a month after 2024-12", "the trade series end in different months", "a trade date is not the 1st of a month"]
     for text in texts:
         assert len(text) <= 110, (len(text), text)
-        assert fail_reason(ValueError(text)) == f"the data failed a check: {text}"
+        assert fail_reason(ValueError(text)) == f"the data failed a check: {dates_in_words(text)}"
 
 
 # ---------------------------------------------------------------- the class: requests, cache, failures, demo, route
@@ -692,9 +692,9 @@ def test_a_failed_check_shows_nothing_and_says_which():
         return asyncio.run(T.UsTrade(client=_client(lambda req: httpx.Response(200, text=bad[req.url.params["id"]]))).overview(NOW))
 
     r = answer({TIMP: ("2026-09-01,426558", "2026-09-01,4265580")})                  # a decimal slip beyond the range
-    assert r["available"] is False and r["reason"] == "US international trade could not be read right now (the data failed a check: the total imports of 4,265,580 million in 2026-09 is outside 3,000 to 1,500,000)" and "total" not in r
+    assert r["available"] is False and r["reason"] == "US international trade could not be read right now (the data failed a check: the total imports of 4,265,580 million in September 2026 is outside 3,000 to 1,500,000)" and "total" not in r
     r = answer({TBAL: ("2026-09-01,-105047", "2026-09-01,-115047")})                  # a digit slip that stays inside every range and move: only the sum finds it
-    assert r["available"] is False and r["reason"] == "US international trade could not be read right now (the data failed a check: the total balance is 10000 million off exports minus imports in 2026-09, over 1.5)"
+    assert r["available"] is False and r["reason"] == "US international trade could not be read right now (the data failed a check: the total balance is 10000 million off exports minus imports in September 2026, over 1.5)"
     r = answer({SEXP: ("2026-09-01,110543", "2026-09-01,x")})
     assert r["available"] is False and "a BOPSEXP row was unreadable" in r["reason"]
 
