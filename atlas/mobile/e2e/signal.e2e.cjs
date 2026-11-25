@@ -1303,6 +1303,45 @@ async function healthy(browser) {
       await page.locator(V("usnewhomes-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
       await shot(page, "07zw-usnewhomes-bottom");
 
+      await page.waitForSelector(V("usfactoryorders-card"));
+      await page.waitForSelector(V("usfactoryorders-body") + ", " + V("usfactoryorders-unavailable") + ", " + V("usfactoryorders-error"), { timeout: 45000 });
+      const foTxt = await text(page);
+      match(foTxt, /Factory orders/); match(foTxt, /Census Bureau/); noMatch(foTxt, FORECASTS, "the factory orders card makes no forecasts");
+      if (await liveCard(page, "usfactoryorders-body")) {
+        const foBody = await inner(page, "usfactoryorders-body");
+        const FOM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
+        const FOD = "(?:\\$\\d\\.\\d{3} trillion|\\$\\d{1,3}\\.\\d billion)";
+        const FOCH = `(?:(?:up|down) ${FOD}|unchanged)`;
+        const FOMOVE = "(?:(?:up|down) \\d+\\.\\d%|under 0\\.1%|unchanged|not available)";
+        const FOSHARE = "\\d{1,3}\\.\\d%";
+        const FOMIL = "\\$\\d{1,3}(?:,\\d{3})*(?:\\.\\d)? million";
+        const FOGAP = `(?:${FOMIL} (?:above|below)|equal to)`;
+        match(await inner(page, "usfactoryorders-headline"), new RegExp(`^In ${FOM} US manufacturers took new orders of ${FOD}, shipped ${FOD}, held ${FOD} of inventories at the month end and were still owed ${FOD} of unfilled orders\\.$`), "what the four totals were");
+        for (const [k, label] of [["orders", "New orders"], ["shipments", "Shipments"], ["inventories", "Inventories"], ["unfilled", "Unfilled orders"]]) {
+          match(await inner(page, `usfactoryorders-full-${k}`), new RegExp(`^${label}: ${FOD}; on the month ${FOCH} \\(${FOMOVE}\\), on a year earlier ${FOCH} \\(${FOMOVE}\\)\\.$`), `the total ${k} has its own line`);
+        }
+        for (const [k, label, of] of [["orders", "Nondurable goods orders and shipments", "all new orders"], ["inventories", "Nondurable goods inventories", "all inventories"]]) {
+          match(await inner(page, `usfactoryorders-nondurable-${k}`), new RegExp(`^${label}: ${FOD} \\(${FOSHARE} of ${of}\\); on the month ${FOCH} \\(${FOMOVE}\\), on a year earlier ${FOCH} \\(${FOMOVE}\\)\\.$`), `the nondurable ${k} has its own line`);
+        }
+        match(await inner(page, "usfactoryorders-durable-month"), new RegExp(`^The durable goods figures are for ${FOM}, (?:a month later than the rest: they come from the advance report, which is out before the full report for that month|the same month as the rest)\\.$`), "which month the durable goods are for");
+        for (const [k, label] of [["orders", "Durable goods orders"], ["ex_transport", "Orders excluding transportation"], ["core_capital", "Core capital goods orders"], ["shipments", "Durable goods shipments"], ["inventories", "Durable goods inventories"], ["unfilled", "Durable goods unfilled orders"]]) {
+          match(await inner(page, `usfactoryorders-durable-${k}`), new RegExp(`^${label}: ${FOD}; on the month ${FOCH} \\(${FOMOVE}\\), on a year earlier ${FOCH} \\(${FOMOVE}\\)\\.$`), `the durable ${k} has its own line`);
+        }
+        match(await inner(page, "usfactoryorders-gaps"), new RegExp(`^In ${FOM}, the newest month both reports cover, (?:total new orders were ${FOGAP} the durable and nondurable orders added up, total shipments ${FOGAP} the durable and nondurable shipments added up, total inventories ${FOGAP} the durable and nondurable inventories added up and total unfilled orders ${FOGAP} the durable ones\\. The durable figures come from the later advance report, so this is a difference of date and not an error; these gaps are not part of the checks|the totals equalled the durable and nondurable figures added up and total unfilled orders equalled the durable ones)\\.$`), "the gaps in the newest month both reports cover");
+        match(await inner(page, "usfactoryorders-recent"), new RegExp(`^(?:${FOM}: new orders ${FOD} \\(${FOCH} on the month before\\), shipments ${FOD}\\s*){6}$`), "six months of orders and shipments");
+        match(await inner(page, "usfactoryorders-check"), new RegExp(`^Check: in each of the \\d[\\d,]* months from ${FOM} to ${FOM} the 7 series of the full report covered the same months with none missing, the 6 durable series the same months(?: and ${FOM} as well)?, and every figure lay inside its range \\(plain checks, not the source's sums\\)\\. The Census Bureau's own arithmetic held to within the rounding, which shows that the series belong to one survey, not that the figures are right: total new orders, shipments and inventories each equalled their durable plus nondurable figure \\(the largest gap was \\d+(?:\\.\\d+)? million, and 1\\.5 is allowed\\), nondurable goods orders equalled their shipments and total unfilled orders equalled the durable ones \\(the largest gap was \\d+(?:\\.\\d+)? million, and 1 is allowed\\), and orders excluding transportation and core capital goods orders never exceeded durable goods orders\\. The newest month both reports cover is left out of the sums and the unfilled orders comparison \\(its gaps are shown above\\)\\.$`), "the check line with its own counts");
+        match(foBody, /the full report of a month/); match(foBody, /The newest months are revised later/); match(foBody, /not a market signal or a forecast/);
+        noMatch(foBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("usfactoryorders-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zx-usfactoryorders-top");
+      await page.locator(V("usfactoryorders-durable-month")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);      // the middle: the nondurable and durable goods
+      await shot(page, "07zx-usfactoryorders-middle");
+      await page.locator(V("usfactoryorders-gaps")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);       // the gaps where the two reports meet, with the end of the durable goods and the first months
+      await shot(page, "07zx-usfactoryorders-gaps");
+      await page.locator(V("usfactoryorders-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
+      await shot(page, "07zx-usfactoryorders-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);
