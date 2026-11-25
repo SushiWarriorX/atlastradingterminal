@@ -588,6 +588,12 @@ export interface UsIndustryJobsData { available: boolean; reason?: string; demo:
   recent?: { month: string; thousands: number; change: number }[];
   detail?: { months_checked: number; first_month: string; last_month: string; largest_sum_gap: number };
   checks?: { months_in_a_row: boolean; range_ok: boolean; sums_ok: boolean } }
+export interface UsJobsDetailItem { key: string; label: string; thousands: number; change_month: number; change_month_pct: number | null; change_year: number; change_year_pct: number | null; share_pct?: number }
+export interface UsJobsDetailGroup { key: string; label: string; parent: UsJobsDetailItem; children: UsJobsDetailItem[] }
+export interface UsJobsDetailData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  groups?: UsJobsDetailGroup[];
+  detail?: { months_checked: number; first_month: string; last_month: string; largest_sum_gap: number };
+  checks?: { months_in_a_row: boolean; range_ok: boolean; sums_ok: boolean } }
 export interface UsJobsPart { level_thousands: number; change_thousands: number; change_year_thousands: number }
 export interface UsJobsRate { pct: number; month_before_pct: number | null; year_ago_pct: number | null }
 export interface UsJobsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";

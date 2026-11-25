@@ -1379,6 +1379,43 @@ async function healthy(browser) {
       await page.locator(V("usindustryjobs-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
       await shot(page, "07zy-usindustryjobs-bottom");
 
+      await page.waitForSelector(V("usjobsdetail-card"));
+      await page.waitForSelector(V("usjobsdetail-body") + ", " + V("usjobsdetail-unavailable") + ", " + V("usjobsdetail-error"), { timeout: 45000 });
+      const jdTxt = await text(page);
+      match(jdTxt, /Jobs in detail/); match(jdTxt, /Bureau of Labor Statistics/); noMatch(jdTxt, FORECASTS, "the jobs in detail card makes no forecasts");
+      if (await liveCard(page, "usjobsdetail-body")) {
+        const jdBody = await inner(page, "usjobsdetail-body");
+        const JDM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
+        const JDN = "\\d{1,3}(?:,\\d{3})*";
+        const JDCH = `(?:(?:up|down) ${JDN}|unchanged)`;
+        const JDMOVE = "(?:(?:up|down) \\d+\\.\\d%|under 0\\.1%|unchanged|not available)";
+        const JDSHARE = "\\d{1,3}\\.\\d%";
+        const JDGROUPS = [["trade", "Trade, transportation and utilities", [["wholesale", "Wholesale trade"], ["retail", "Retail trade"], ["transport", "Transportation and warehousing"], ["utilities", "Utilities"]]],
+          ["construction", "Construction", [["buildings", "Construction of buildings"], ["heavy", "Heavy and civil engineering construction"], ["specialty", "Specialty trade contractors"]]],
+          ["financial", "Financial activities", [["finance", "Finance and insurance"], ["realestate", "Real estate and rental and leasing"]]],
+          ["professional", "Professional and business services", [["technical", "Professional, scientific and technical services"], ["management", "Management of companies and enterprises"], ["administrative", "Administrative, support and waste services"]]],
+          ["education_health", "Education and health services", [["education", "Private educational services"], ["health", "Health care and social assistance"]]],
+          ["leisure", "Leisure and hospitality", [["arts", "Arts, entertainment and recreation"], ["food", "Accommodation and food services"]]],
+          ["government", "Government", [["federal", "Federal government"], ["state", "State government"], ["local", "Local government"]]]];
+        for (const [gk, glabel, kids] of JDGROUPS) {
+          match(await inner(page, `usjobsdetail-parent-${gk}`), new RegExp(`^${glabel}: ${JDN}; on the month ${JDCH} \\(${JDMOVE}\\), on a year earlier ${JDCH} \\(${JDMOVE}\\)\\.$`), `the industry ${gk} has its own line`);
+          for (const [ck, clabel] of kids) {
+            match(await inner(page, `usjobsdetail-child-${ck}`), new RegExp(`^${clabel}: ${JDN} \\(${JDSHARE} of ${glabel.toLowerCase()}\\); on the month ${JDCH} \\(${JDMOVE}\\), on a year earlier ${JDCH} \\(${JDMOVE}\\)\\.$`), `the part ${ck} has its own line`);
+          }
+        }
+        match(await inner(page, "usjobsdetail-check"), new RegExp(`^Check: in each of the \\d[\\d,]* months from ${JDM} to ${JDM} the 26 series covered the same months with none missing and every figure lay inside its range \\(plain checks, not the source's sums\\)\\. The Bureau's own arithmetic held to within the rounding, which shows that the series belong to one release, not that the figures are right: each of the seven industries equalled the sum of its parts \\(the largest gap in any month was \\d+(?:\\.\\d+)? thousand; 0\\.75 is allowed for the six private industries, whose parts are given to a tenth of a thousand, and 2 for government, whose figures are whole thousands\\)\\.$`), "the check line says what was checked");
+        match(jdBody, /A job is a position on a payroll, not a person/); match(jdBody, /government counts civilian employees only/); match(jdBody, /The newest months are revised twice and again every year/); match(jdBody, /not a market signal or a forecast/);
+        noMatch(jdBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("usjobsdetail-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zz-usjobsdetail-top");
+      await page.locator(V("usjobsdetail-group-professional")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);      // the middle: construction, financial activities and the professional services
+      await shot(page, "07zz-usjobsdetail-middle");
+      await page.locator(V("usjobsdetail-group-government")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);        // the end of the industries, with government
+      await shot(page, "07zz-usjobsdetail-government");
+      await page.locator(V("usjobsdetail-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
+      await shot(page, "07zz-usjobsdetail-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);
