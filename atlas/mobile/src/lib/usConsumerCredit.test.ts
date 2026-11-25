@@ -29,13 +29,26 @@ describe("amounts, changes and growth rates", () => {
     expect(moveMillions(0)).toBe("unchanged");
   });
   it("words a percentage change with one decimal and its direction, and nothing to compare with as not available", () => {
-    expect(move(3.0)).toBe("up 3.0%");
-    expect(move(-1.1)).toBe("down 1.1%");
-    expect(move(0)).toBe("unchanged");
-    expect(move(0.04)).toBe("unchanged");
-    expect(move(-0.04)).toBe("unchanged");
-    expect(move(null)).toBe("not available");
-    expect(move(undefined)).toBe("not available");
+    expect(move(3.0, 152452.56)).toBe("up 3.0%");
+    expect(move(-1.1, -4100)).toBe("down 1.1%");
+    expect(move(0.1, 1266.19)).toBe("up 0.1%");
+    expect(move(-0.1, -1266.19)).toBe("down 0.1%");
+    expect(move(null, 5)).toBe("not available");
+    expect(move(undefined, 5)).toBe("not available");
+    expect(move(null, 0)).toBe("not available");
+  });
+  it("calls a percentage that rounds to nothing under 0.1% while the dollars moved, and unchanged only when they did not", () => {
+    // the real month of 2024-04: the total owed rose $1,266.19 million, 0.025%, which the server prints as 0.0
+    expect(move(0, 1266.19)).toBe("under 0.1%");
+    expect(move(0, -702.35)).toBe("under 0.1%");
+    expect(move(-0, -373.65)).toBe("under 0.1%");
+    expect(move(0.04, 0.5)).toBe("under 0.1%");
+    expect(move(-0.04, -0.5)).toBe("under 0.1%");
+    expect(move(0, 0.49)).toBe("unchanged");
+    expect(move(0, -0.49)).toBe("unchanged");
+    expect(move(0, 0)).toBe("unchanged");
+    expect(move(0.04, 0.2)).toBe("unchanged");
+    expect(move(-0.04, -0.2)).toBe("unchanged");
   });
   it("writes a growth rate with its sign and no sign for a figure that shows as zero", () => {
     expect(signedPct(10.1)).toBe("+10.1%");
@@ -53,6 +66,22 @@ describe("the sentences of the card", () => {
   it("compares the total with the month before and with a year earlier", () => {
     expect(compareText(total)).toBe("Against the month before the total is up $27.8 billion (up 0.5%); against a year earlier it is up $152.5 billion (up 3.0%).");
     expect(compareText({ ...total, change_month_millions: -4100, change_month_pct: -0.1, change_year_millions: 0, change_year_pct: null })).toBe("Against the month before the total is down $4.1 billion (down 0.1%); against a year earlier it is unchanged (not available).");
+  });
+  it("never writes unchanged beside a dollar move: the real months where the dollars moved and the server printed 0.0%", () => {
+    // 2024-04: the month +1,266.19 million (0.0%), the year +96,041.07 (2.0%); 2020-07: the year -82.36 (0.0%), the month +16,317.55 (0.4%)
+    expect(compareText({ ...total, change_month_millions: 1266.19, change_month_pct: 0.0, change_year_millions: 96041.07, change_year_pct: 2.0 })).toBe("Against the month before the total is up $1.3 billion (under 0.1%); against a year earlier it is up $96.0 billion (up 2.0%).");
+    expect(compareText({ ...total, change_month_millions: 16317.55, change_month_pct: 0.4, change_year_millions: -82.36, change_year_pct: 0.0 })).toBe("Against the month before the total is up $16.3 billion (up 0.4%); against a year earlier it is down $82 million (under 0.1%).");
+    const nonrevolving = { key: "nonrevolving", label: "Nonrevolving credit (car, student and other instalment loans)", millions: 3693276.73, share_pct: 73.6, change_month_millions: -702.35, change_month_pct: 0.0, change_year_millions: 5696.49, change_year_pct: 0.2 };
+    expect(kindText(nonrevolving)).toBe("Nonrevolving credit (car, student and other instalment loans): $3.693 trillion (73.6% of the total). Against the month before it is down $702 million (under 0.1%); against a year earlier it is up $5.7 billion (up 0.2%).");
+    expect(kindText({ ...nonrevolving, change_month_millions: 1691.39, change_month_pct: 0.0, change_year_millions: -300.2, change_year_pct: 0.0 })).toContain("Against the month before it is up $1.7 billion (under 0.1%); against a year earlier it is down $300 million (under 0.1%).");
+    expect(kindText({ ...nonrevolving, change_month_millions: 0.2, change_month_pct: 0.0, change_year_millions: 0, change_year_pct: 0.0 })).toContain("Against the month before it is unchanged (unchanged); against a year earlier it is unchanged (unchanged).");
+  });
+  it("puts each percentage beside its own dollar figure, the month's with the month's and the year's with the year's", () => {
+    expect(compareText({ ...total, change_month_millions: 0.2, change_month_pct: 0.0, change_year_millions: 1266.19, change_year_pct: 0.0 })).toBe("Against the month before the total is unchanged (unchanged); against a year earlier it is up $1.3 billion (under 0.1%).");
+    expect(compareText({ ...total, change_month_millions: 1266.19, change_month_pct: 0.0, change_year_millions: 0.2, change_year_pct: 0.0 })).toBe("Against the month before the total is up $1.3 billion (under 0.1%); against a year earlier it is unchanged (unchanged).");
+    const kind = { key: "revolving", label: "Revolving credit (credit cards and other revolving plans)", millions: 1322889.21, share_pct: 26.4, change_month_millions: 0, change_month_pct: 0.0, change_year_millions: 0, change_year_pct: 0.0 };
+    expect(kindText({ ...kind, change_month_millions: 0.2, change_year_millions: -300.2 })).toContain("Against the month before it is unchanged (unchanged); against a year earlier it is down $300 million (under 0.1%).");
+    expect(kindText({ ...kind, change_month_millions: -300.2, change_year_millions: 0.2 })).toContain("Against the month before it is down $300 million (under 0.1%); against a year earlier it is unchanged (unchanged).");
   });
   it("says where the growth on a year earlier stands among the last ten years, with signs and the months as a person reads them", () => {
     expect(rangeText(range)).toBe("Over the last 10 years (120 months) the total's growth on a year earlier ran from -1.1% (February 2025) to +10.1% (April 2022); 38% of those months were lower than now.");

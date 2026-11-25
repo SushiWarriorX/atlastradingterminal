@@ -15,8 +15,9 @@ export const moveMillions = (m: number) => {
   if (a < 0.5) return "unchanged";
   return `${m > 0 ? "up" : "down"} ${a >= 999.5 ? `$${(a / 1000).toFixed(1)} billion` : `$${Math.round(a)} million`}`;
 };
-/** A change with one decimal, as the server rounds it: "up 3.0%", "down 1.1%", "unchanged"; a figure with nothing to compare with is "not available". */
-export const move = (x: number | null | undefined) => (x == null ? "not available" : Number(Math.abs(x).toFixed(1)) === 0 ? "unchanged" : `${x > 0 ? "up" : "down"} ${Math.abs(x).toFixed(1)}%`);
+/** A change in per cent that goes with a change in millions, one decimal as the server rounds it: "up 3.0%", "down 1.1%". A change that rounds to nothing while the dollars did move is "under 0.1%" (so a line never reads "up $1.3 billion (unchanged)"), and "unchanged" only when the dollars read unchanged too; a figure with nothing to compare with is "not available". */
+export const move = (x: number | null | undefined, millions: number) =>
+  x == null ? "not available" : Number(Math.abs(x).toFixed(1)) !== 0 ? `${x > 0 ? "up" : "down"} ${Math.abs(x).toFixed(1)}%` : moveMillions(millions) === "unchanged" ? "unchanged" : "under 0.1%";
 /** A growth rate with its sign and one decimal: "+10.1%", "-1.1%"; a figure that shows as zero has no sign. */
 export const signedPct = (x: number) => (Number(Math.abs(x).toFixed(1)) === 0 ? "0.0%" : `${x > 0 ? "+" : "-"}${Math.abs(x).toFixed(1)}%`);
 
@@ -26,7 +27,7 @@ export const headlineText = (t: Total, month: string) =>
 
 /** The total against the month before and against a year earlier. */
 export const compareText = (t: Total) =>
-  `Against the month before the total is ${moveMillions(t.change_month_millions)} (${move(t.change_month_pct)}); against a year earlier it is ${moveMillions(t.change_year_millions)} (${move(t.change_year_pct)}).`;
+  `Against the month before the total is ${moveMillions(t.change_month_millions)} (${move(t.change_month_pct, t.change_month_millions)}); against a year earlier it is ${moveMillions(t.change_year_millions)} (${move(t.change_year_pct, t.change_year_millions)}).`;
 
 /** Where the total's growth on a year earlier stands among the last ten years (the server counts only strictly lower months). */
 export const rangeText = (r: JoltsRange) =>
@@ -34,7 +35,7 @@ export const rangeText = (r: JoltsRange) =>
 
 /** One kind of credit in a line: what is owed, its share of the total and the two changes. */
 export const kindText = (k: Kind) =>
-  `${k.label}: ${level(k.millions)} (${k.share_pct.toFixed(1)}% of the total). Against the month before it is ${moveMillions(k.change_month_millions)} (${move(k.change_month_pct)}); against a year earlier it is ${moveMillions(k.change_year_millions)} (${move(k.change_year_pct)}).`;
+  `${k.label}: ${level(k.millions)} (${k.share_pct.toFixed(1)}% of the total). Against the month before it is ${moveMillions(k.change_month_millions)} (${move(k.change_month_pct, k.change_month_millions)}); against a year earlier it is ${moveMillions(k.change_year_millions)} (${move(k.change_year_pct, k.change_year_millions)}).`;
 
 /** One of the last months. `label` is the month as a person reads it. */
 export const monthText = (m: Month, label: string) =>

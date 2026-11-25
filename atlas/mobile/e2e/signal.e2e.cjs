@@ -776,7 +776,9 @@ async function healthy(browser) {
       match(ag, /Silver and farm positioning/); match(ag, /CFTC/); noMatch(ag, FORECASTS, "the silver and farm positioning card makes no forecasts");
       if (await liveCard(page, "agripos-body")) {
         const abody = await inner(page, "agripos-body");
-        match(abody, /Silver futures · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
+        // a contract the CFTC had no readable report for is a state the card words plainly (it failed the whole run on 2026-11-18 and on 2026-11-25): accept it, say so in the run's summary, and still require the date in words for a contract that has one
+        if (/Silver futures no readable reports came back for this contract/.test(abody)) SKIPPED.add("agripos, Silver futures only (no readable report came back for that contract)");
+        else match(abody, /Silver futures · as of [A-Z][a-z]{2} \d{1,2}, 20\d\d/, "the date is written out");
         match(abody, /Managed money: net/); match(abody, /Corn futures/); match(abody, /Sugar futures/);
         match(abody, /checked against the report's own totals/); match(abody, /not a market signal or a forecast/);
         noMatch(abody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
@@ -1104,7 +1106,7 @@ async function healthy(browser) {
         const ccBody = await inner(page, "usconsumercredit-body");
         const CM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
         const CA = "\\$(?:\\d\\.\\d{3} trillion|[\\d,]+ billion|[\\d,]+ million)";
-        const CMOVE = "(?:(?:up|down) \\d+\\.\\d%|unchanged|not available)";
+        const CMOVE = "(?:(?:up|down) \\d+\\.\\d%|under 0\\.1%|unchanged|not available)";
         const CCH = "(?:(?:up|down) \\$(?:\\d+\\.\\d billion|\\d+ million)|unchanged)";
         const CSIGN = "(?:[+-]\\d+\\.\\d%|0\\.0%)";
         match(await inner(page, "usconsumercredit-headline"), new RegExp(`^In ${CM} US consumers owed ${CA} in consumer credit at the end of the month \\(mortgages are not counted\\): ${CA} revolving \\(\\d{1,2}\\.\\d% of the total\\) and ${CA} nonrevolving\\.$`), "what was owed and how it splits");
@@ -2243,7 +2245,7 @@ const SCENARIOS = { healthy, a11y, stale, partial, missing, login, demo };
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length} of ${results.length} checks passed${failed.length ? `, ${failed.length} failed:` : "."}`);
   for (const f of failed) console.log(`  ✗ [${f.scenario}] ${f.name}`);
-  if (SKIPPED.size) console.log(`Not checked this run (the live card was unavailable, so its content checks were skipped): ${[...SKIPPED].join(", ")}.`);
+  if (SKIPPED.size) console.log(`Not checked this run (a live card, or one contract in it, was unavailable, so its content checks were skipped): ${[...SKIPPED].join(", ")}.`);
   else if (wanted.includes("healthy")) console.log("Every live card had data this run, so every content check ran.");
   process.exit(failed.length ? 1 : 0);
 })();
