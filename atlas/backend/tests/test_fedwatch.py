@@ -353,7 +353,8 @@ def test_demo_and_real_payloads_have_the_same_keys():
     assert set(real) - set(demo) == set() and set(demo) - set(real) == {"notice"}               # the screen can rely on every list being present
 
 
-def test_api_routes(tmp_path):
+def test_api_routes(tmp_path, monkeypatch):
+    from signal_helpers import freeze_fed_clock
     from atlas_api.providers.fred import FredProvider
     from atlas_api.providers.http import Http
 
@@ -363,6 +364,7 @@ def test_api_routes(tmp_path):
         return httpx.Response(200, text="observation_date,X\n" + "\n".join(f"{d},{v}" for d, v in pts))
     fred = FredProvider(Http("https://fred.test", "fred", min_interval=0, retries=1, client=httpx.AsyncClient(transport=httpx.MockTransport(h), base_url="https://fred.test")))
     net = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(200, content=b"<html>not a feed</html>")))
+    freeze_fed_clock(monkeypatch, NOW.isoformat())                                        # the built-in FOMC table ends on 30 Dec 2026: with the real clock this test fails from then on
     with TestClient(create_app(db_path=str(tmp_path / "f.db"), demo=False, providers={"fred": fred}, alert_loop=False, news_loop=False, news_client=net)) as c:
         d = c.get("/api/macro/fed").json()["data"]
         assert d["upcoming"] and len(d["releases"]) == 9 and d["decisions"] and all(not s["ok"] for s in d["feed_status"])

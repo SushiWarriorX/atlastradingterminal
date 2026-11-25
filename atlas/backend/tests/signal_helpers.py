@@ -32,6 +32,20 @@ def freeze_demo_clock(monkeypatch, iso: str) -> None:
     monkeypatch.setattr("atlas_api.providers.demo.datetime", Frozen)
 
 
+def freeze_fed_clock(monkeypatch, iso: str) -> None:
+    """Make Fed Watch and the macro brief read `iso` as 'now' when a test goes through the app. Both calendars end: the built-in FOMC table stops with the 9 Dec 2026 meeting and its
+    minutes on 30 Dec 2026, after which `upcoming` is empty (a test that asked for it failed under a fake clock at any instant after that, found 2026-11-25: it would have turned CI red on 2026-12-30)."""
+    fixed = datetime.fromisoformat(iso)
+
+    class Frozen(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return fixed.astimezone(tz) if tz else fixed.replace(tzinfo=None)
+
+    monkeypatch.setattr("atlas_api.fedwatch.datetime", Frozen)
+    monkeypatch.setattr("atlas_api.macro_brief.datetime", Frozen)
+
+
 def bars(interval: str, n: int, *, start: float = 100.0, drift: float = 0.002, vol: float = 1_000_000.0, now: float | None = None, age: int = 0) -> list[Candle]:
     """n candles ending at the CURRENT (still forming) bar like a real provider, with a drift and a deterministic wiggle. `age` shifts everything into the past (stale data)."""
     sec = SEC[interval]

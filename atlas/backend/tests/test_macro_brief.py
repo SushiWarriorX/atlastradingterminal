@@ -80,7 +80,9 @@ def test_build_dedupes_headlines_and_sorts_newest_first():
     assert [x["title"] for x in h] == ["Tariffs on steel announced", "Fed holds rates"]
 
 
-def test_route_works_in_demo_mode_without_fred_and_labels_it(tmp_path):
+def test_route_works_in_demo_mode_without_fred_and_labels_it(tmp_path, monkeypatch):
+    from signal_helpers import freeze_fed_clock
+    freeze_fed_clock(monkeypatch, NOW.isoformat())                                        # the built-in FOMC table ends on 30 Dec 2026: with the real clock `upcoming` is empty from then on
     with TestClient(create_app(db_path=str(tmp_path / "b.db"), demo=True, alert_loop=False, news_loop=False)) as c:
         r = c.get("/api/macro/brief")
         assert r.status_code == 200

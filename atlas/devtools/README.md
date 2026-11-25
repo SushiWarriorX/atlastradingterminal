@@ -72,3 +72,18 @@ python3 atlas/devtools/board.py check
 ```
 
 The texts of the "What changed" and "Next suggestion" cells are read from files (write them with an editor tool, not a shell heredoc); a cell may not hold a pipe or a line break. The time defaults to now (UTC), the archive label to "<hour> UTC <job> job" and the number of rows kept to 20. Nothing is written unless the result passes `check`, and a refusal says why (exit code 1). Tests: `cd atlas/devtools && python3 -m pytest tests -q`.
+
+## Test runs under a fake clock (`clockrun.py`)
+
+A test that reads the real clock passes on nearly every day and fails on one (found 2026-11-24: one CI run was red for five minutes after midnight in New York). `clockrun.py` runs pytest as if the clock stood somewhere else (standard library only; nothing is installed and nothing in the repository imports it):
+
+```bash
+cd atlas/backend
+python3 ../devtools/clockrun.py --at 2026-11-25T05:07:00+00:00 -- -q -p no:cacheprovider          # five minutes after midnight in New York, in winter
+python3 ../devtools/clockrun.py --at 2026-11-30T23:59:30+00:00 -- -q -p no:cacheprovider          # a month end: the clock crosses midnight during the run
+python3 ../devtools/clockrun.py --at 2027-01-15T12:00:00+00:00 --no-tick -- -q tests/test_fedwatch.py   # frozen instead of running on
+```
+
+The instant needs an offset (`+00:00` or `Z`). The plugin replaces `datetime.datetime`, `datetime.date`, `time.time` and `time.time_ns` before any test or application module is imported; the clock starts at the instant and keeps ticking in real time (so timeouts and cache lifetimes behave) unless `--no-tick` freezes it; `time.monotonic` and `time.perf_counter` stay real. numpy, pandas and pydantic are imported first so that they keep the real classes (pandas ends the interpreter and pydantic v1 stops with a metaclass conflict otherwise).
+
+Limits, so that a result is read and not trusted: a file's own times (`os.stat`) stay real, so a test that compares a cache file's age with `time.time()` fails at any instant more than a day from now (`test_directory_is_cached_on_disk_between_runs` does, and says nothing about the code); time zones are applied to the fake instant, not changed; code that asks the operating system for the time through a C library is not covered. A failure under a fake clock is a place to look, not a bug in itself: read it first (a test that compares with a date written into it fails on every other day).
