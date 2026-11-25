@@ -5,7 +5,7 @@
 
 Standard library only; nothing is installed and nothing in the repository imports this file. It starts pytest with this file loaded as a plugin (`-p clockrun`, before any test or application module is imported), and the plugin replaces `datetime.datetime`, `datetime.date`, `time.time` and `time.time_ns` with versions that start at the chosen instant. The clock then keeps ticking in real time (so a timeout, a sleep or a cache lifetime behaves as usual) unless `--no-tick` freezes it. `time.monotonic` and `time.perf_counter` stay real, so asyncio and pytest's own timings are not touched. `--at` must carry an offset (`+00:00` or `Z`): a time without one means nothing here.
 
-What it does NOT cover: a module that imported `datetime` before the plugin did (none can, the plugin is loaded first), code that asks the operating system for the time through a C library, and the time zone database (a daylight-saving date is chosen by its instant, not by changing zones). A run under a fake clock is a search, not a proof: a failure is read first, because a test that compares with a date written into it fails on any other day and says nothing about the code.
+What it does NOT cover: a module that imported `datetime` before the plugin did (none can, the plugin is loaded first), code that asks the operating system for the time through a C library (pandas' `Timestamp.now()` and NumPy's `datetime64('now')` do: the README says what that costs), and the time zone database (a daylight-saving date is chosen by its instant, not by changing zones). A run under a fake clock is a search, not a proof: a failure is read first, because a test that compares with a date written into it fails on any other day and says nothing about the code.
 """
 from __future__ import annotations
 
