@@ -1,23 +1,23 @@
-# BTC paper trading report, 2026-11-24
+# BTC paper trading report, 2026-11-25
 
 Protocol 1.5. **Real trading is disabled**: every trade below is a line in a file. Prices are Coinbase BTC-USD daily candles; a candle counts only once it is complete (UTC).
 
 ## Data
 
-- Latest complete candle: **2026-11-23** (close $61,189.97); 2,884 daily candles stored; 0 gap(s); hash `65e92f0400baad56`.
-- Update: 5 new candle(s) added.
+- Latest complete candle: **2026-11-24** (close $59,740.87); 2,885 daily candles stored; 0 gap(s); hash `3faf53ca5f6913e0`.
+- Update: 1 new candle(s) added.
 
 ## Accounts
 
 | account | stage | equity | today | since start | in Bitcoin | drawdown | trades | breaker | pending order |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `bollinger_mr-c251886b` | monitor | $9,898.13 | $0.00 | -1.02% | 0% | 1.2% | 1 | ok | none |
-| `buy_hold` | benchmark | $9,528.91 | $4.20 | -4.71% | 100% | 6.3% | 0 | ok | none |
+| `buy_hold` | benchmark | $9,303.25 | -$225.66 | -6.97% | 100% | 8.5% | 0 | ok | none |
 | `cash` | benchmark | $10,000.00 | $0.00 | 0.00% | 0% | 0.0% | 0 | ok | none |
 | `donchian-4a2e999e` | monitor | $10,000.00 | $0.00 | 0.00% | 0% | 0.0% | 0 | ok | none |
 | `ma_atr_trend-c0011d2a` | monitor | $10,000.00 | $0.00 | 0.00% | 0% | 0.0% | 0 | ok | none |
 | `mom_vol-07954965` | monitor | $10,000.00 | $0.00 | 0.00% | 0% | 0.0% | 0 | ok | none |
-| `monday-9db66957` | monitor | $9,989.42 | -$10.58 | -0.11% | 100% | 0.1% | 0 | ok | rebalance (signal) at the next open |
+| `monday-9db66957` | monitor | $9,974.58 | -$14.84 | -0.25% | 0% | 0.3% | 1 | ok | none |
 | `portfolio` | portfolio | $100,000.00 | $0.00 | 0.00% | 0% | 0.0% | 0 | ok | none |
 | `regime_switch-9c030efe` | monitor | $9,898.13 | $0.00 | -1.02% | 0% | 1.2% | 1 | ok | none |
 | `rsi_momentum-a41fee0c` | monitor | $10,000.00 | $0.00 | 0.00% | 0% | 0.0% | 0 | ok | none |
@@ -27,7 +27,7 @@ Protocol 1.5. **Real trading is disabled**: every trade below is a line in a fil
 | `three_down-e7923e48` | monitor | $9,974.89 | $0.00 | -0.25% | 0% | 0.3% | 1 | ok | none |
 | `tsmom-39fed1cb` | monitor | $10,000.00 | $0.00 | 0.00% | 0% | 0.0% | 0 | ok | none |
 | `vol_breakout-a1fdbb9e` | monitor | $10,000.00 | $0.00 | 0.00% | 0% | 0.0% | 0 | ok | none |
-| `vol_target-2dbe9ef1` | monitor | $9,528.91 | $4.20 | -4.71% | 100% | 6.3% | 0 | ok | none |
+| `vol_target-2dbe9ef1` | monitor | $9,303.25 | -$225.66 | -6.97% | 100% | 8.5% | 0 | ok | none |
 | `volume_surge-9c042d26` | monitor | $9,898.11 | $0.00 | -1.02% | 0% | 1.0% | 1 | ok | none |
 
 ## Challengers against holding
@@ -40,21 +40,21 @@ These strategies did not pass the admission gates in the research run. Each stil
 
 | strategy | days | return | buy and hold | exposure-matched hold | in Bitcoin | trades | pending order |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `bollinger_mr-c251886b` | 9 | -1.02% | -4.71% | -0.24% | 0% | 1 | none |
-| `donchian-4a2e999e` | 9 | 0.00% | -4.71% | 0.00% | 0% | 0 | none |
-| `ma_atr_trend-c0011d2a` | 9 | 0.00% | -4.71% | 0.00% | 0% | 0 | none |
-| `mom_vol-07954965` | 9 | 0.00% | -4.71% | 0.00% | 0% | 0 | none |
-| `monday-9db66957` | 7 | -0.11% | -5.74% | -0.82% | 100% | 0 | rebalance (signal) |
-| `regime_switch-9c030efe` | 9 | -1.02% | -4.71% | -0.24% | 0% | 1 | none |
-| `rsi_momentum-a41fee0c` | 9 | 0.00% | -4.71% | 0.00% | 0% | 0 | none |
-| `rsi_oversold-a8d8143b` | 9 | -1.02% | -4.71% | -0.24% | 0% | 1 | none |
-| `sma_cross-c0f76650` | 9 | 0.00% | -4.71% | 0.00% | 0% | 0 | none |
-| `sma_filter-4df990f4` | 9 | 0.00% | -4.71% | 0.00% | 0% | 0 | none |
-| `three_down-e7923e48` | 6 | -0.25% | -5.82% | -0.14% | 0% | 1 | none |
-| `tsmom-39fed1cb` | 9 | 0.00% | -4.71% | 0.00% | 0% | 0 | none |
-| `vol_breakout-a1fdbb9e` | 9 | 0.00% | -4.71% | 0.00% | 0% | 0 | none |
-| `vol_target-2dbe9ef1` | 9 | -4.71% | -4.71% | -4.71% | 100% | 0 | none |
-| `volume_surge-9c042d26` | 6 | -1.02% | -5.82% | -0.22% | 0% | 1 | none |
+| `bollinger_mr-c251886b` | 10 | -1.02% | -6.97% | -0.33% | 0% | 1 | none |
+| `donchian-4a2e999e` | 10 | 0.00% | -6.97% | 0.00% | 0% | 0 | none |
+| `ma_atr_trend-c0011d2a` | 10 | 0.00% | -6.97% | 0.00% | 0% | 0 | none |
+| `mom_vol-07954965` | 10 | 0.00% | -6.97% | 0.00% | 0% | 0 | none |
+| `monday-9db66957` | 8 | -0.25% | -7.97% | -1.01% | 0% | 1 | none |
+| `regime_switch-9c030efe` | 10 | -1.02% | -6.97% | -0.33% | 0% | 1 | none |
+| `rsi_momentum-a41fee0c` | 10 | 0.00% | -6.97% | 0.00% | 0% | 0 | none |
+| `rsi_oversold-a8d8143b` | 10 | -1.02% | -6.97% | -0.33% | 0% | 1 | none |
+| `sma_cross-c0f76650` | 10 | 0.00% | -6.97% | 0.00% | 0% | 0 | none |
+| `sma_filter-4df990f4` | 10 | 0.00% | -6.97% | 0.00% | 0% | 0 | none |
+| `three_down-e7923e48` | 7 | -0.25% | -8.05% | -0.17% | 0% | 1 | none |
+| `tsmom-39fed1cb` | 10 | 0.00% | -6.97% | 0.00% | 0% | 0 | none |
+| `vol_breakout-a1fdbb9e` | 10 | 0.00% | -6.97% | 0.00% | 0% | 0 | none |
+| `vol_target-2dbe9ef1` | 10 | -6.97% | -6.97% | -6.97% | 100% | 0 | none |
+| `volume_surge-9c042d26` | 7 | -1.02% | -8.05% | -0.27% | 0% | 1 | none |
 
 ## Champions and the main portfolio
 
