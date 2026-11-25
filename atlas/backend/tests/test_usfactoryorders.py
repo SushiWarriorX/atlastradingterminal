@@ -210,6 +210,16 @@ def test_the_durable_series_end_with_the_full_report_or_one_month_after_it_and_n
     refused(d, "the durable goods series end in a month that is neither the full report's nor the one after it")
 
 
+@pytest.mark.parametrize("last", [date(2026, 11, 1), date(2026, 12, 1), date(2027, 1, 1), date(2027, 12, 1)])
+def test_the_durable_series_may_be_a_month_ahead_in_every_month_of_the_year_the_december_included(last):
+    r = run(world(last=last, ahead=True), today=last + timedelta(days=60))
+    assert r["available"] is True and r["month"] == label(last) and r["durable_month"] == label(mback(last, -1)) and r["durable_advance"] is True
+    d = world(last=last, ahead=True)
+    for sid in DUR:
+        d[sid][mback(last, -2)] = d[sid][mback(last, -1)]
+    refused(d, "the durable goods series end in a month that is neither the full report's nor the one after it")           # two months ahead is still refused, in December too
+
+
 def test_the_full_report_is_checked_before_the_durable_series():
     d = world()
     del d[ORD_T][LAST]

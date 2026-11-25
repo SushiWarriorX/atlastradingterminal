@@ -76,6 +76,7 @@ from .usbuildingpermits import UsBuildingPermits
 from .usconstruction import UsConstruction
 from .usnewhomes import UsNewHomes
 from .usfactoryorders import UsFactoryOrders
+from .usindustryjobs import UsIndustryJobs
 from .usjobs import UsJobs
 from .usgdp import UsGdp
 from .ushousehold import UsHousehold
@@ -458,6 +459,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     us_construction = UsConstruction(demo=demo)
     us_new_homes = UsNewHomes(demo=demo)
     us_factory_orders = UsFactoryOrders(demo=demo)
+    us_industry_jobs = UsIndustryJobs(demo=demo)
     us_jobs = UsJobs(demo=demo)
     us_gdp = UsGdp(demo=demo)
     us_household = UsHousehold(demo=demo)
@@ -677,6 +679,11 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     async def macro_us_factory_orders():
         """US factory orders (U.S. Census Bureau, Manufacturers' Shipments, Inventories, and Orders, the M3 survey, via FRED, 13 monthly series): what US manufacturers were ordered, shipped, held in stock and still owed in a month, in millions of dollars seasonally adjusted, as totals, for nondurable goods and for durable goods (with orders excluding transportation and core capital goods), the changes on a month and on a year and the last six months, with the checks it passed (the months in a row, the ranges, three sums, two published equalities and the order of the durable parts; the newest month the two reports share is left out of the sums and its gaps are shown). Research only: it describes factory activity that already happened."""
         return ok(await us_factory_orders.overview())
+
+    @app.get("/api/macro/us-jobs-by-industry")
+    async def macro_us_jobs_by_industry():
+        """US jobs by industry (U.S. Bureau of Labor Statistics, Current Employment Statistics payrolls, via FRED, 17 monthly series): how many jobs employers had on their payrolls in thousands, seasonally adjusted, in total, for goods-producing, private service-providing and government jobs, for the eleven industries and inside manufacturing, with each one's share of the total, the changes on a month and on a year and the last six months of the total, and the checks it passed (the months in a row, the ranges, and six sums that hold to the thousand). Research only: it describes jobs that already existed."""
+        return ok(await us_industry_jobs.overview())
 
     @app.get("/api/macro/us-jobs")
     async def macro_us_jobs():
@@ -2103,7 +2110,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
                                       "listings": listings_service, "new_to_me": new_to_me,
-                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "euro_money_supply": euro_money_supply, "euro_inflation": euro_inflation, "euro_unemployment": euro_unemployment, "euro_stress": euro_stress, "euro_yields": euro_yields, "euro_gdp": euro_gdp, "euro_lending": euro_lending, "euro_bank_rates": euro_bank_rates, "euro_stock_rates": euro_stock_rates, "euro_employment": euro_employment, "jolts": jolts, "jolts_industries": jolts_industries, "jolts_flows": jolts_flows, "us_inventories": us_inventories, "us_consumer_credit": us_consumer_credit, "us_bank_loans": us_bank_loans, "us_bank_balance": us_bank_balance, "us_building_permits": us_building_permits, "us_construction": us_construction, "us_new_homes": us_new_homes, "us_factory_orders": us_factory_orders, "us_jobs": us_jobs, "us_gdp": us_gdp, "us_household": us_household, "us_real_spending": us_real_spending, "us_trade": us_trade, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "euro_money_supply": euro_money_supply, "euro_inflation": euro_inflation, "euro_unemployment": euro_unemployment, "euro_stress": euro_stress, "euro_yields": euro_yields, "euro_gdp": euro_gdp, "euro_lending": euro_lending, "euro_bank_rates": euro_bank_rates, "euro_stock_rates": euro_stock_rates, "euro_employment": euro_employment, "jolts": jolts, "jolts_industries": jolts_industries, "jolts_flows": jolts_flows, "us_inventories": us_inventories, "us_consumer_credit": us_consumer_credit, "us_bank_loans": us_bank_loans, "us_bank_balance": us_bank_balance, "us_building_permits": us_building_permits, "us_construction": us_construction, "us_new_homes": us_new_homes, "us_factory_orders": us_factory_orders, "us_industry_jobs": us_industry_jobs, "us_jobs": us_jobs, "us_gdp": us_gdp, "us_household": us_household, "us_real_spending": us_real_spending, "us_trade": us_trade, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

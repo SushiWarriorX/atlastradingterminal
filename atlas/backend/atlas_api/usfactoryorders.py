@@ -47,6 +47,10 @@ FAIL_TTL = 120.0
 CONCURRENCY = 6
 
 
+def _month_after(d: date) -> date:
+    return date(d.year + d.month // 12, d.month % 12 + 1, 1)         # December is followed by January of the next year (`_months_back(d, -1)` raises for December)
+
+
 def _check_ranges(data: dict[str, dict[date, float]], months: dict[str, list[date]]) -> None:
     for sid in SERIES:
         lo, hi = LIMITS[sid]
@@ -64,7 +68,7 @@ def _check(data: dict[str, dict[date, float]]) -> tuple[list[date], list[date], 
     if any(d.day != 1 for sid in SERIES for d in data[sid]):          # before the month arithmetic below: "the month after" means nothing for a date that is not the 1st
         raise ValueError("a factory orders date is not the 1st of a month")
     full_end, dur_end = max(data[ORD_T]), max(data[ORD_D])
-    if dur_end != full_end and dur_end != _months_back(full_end, -1):
+    if dur_end != full_end and dur_end != _month_after(full_end):
         raise ValueError("the durable goods series end in a month that is neither the full report's nor the one after it")
     for sid in FULL[1:]:
         if set(data[sid]) != set(data[ORD_T]):

@@ -1342,6 +1342,43 @@ async function healthy(browser) {
       await page.locator(V("usfactoryorders-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
       await shot(page, "07zx-usfactoryorders-bottom");
 
+      await page.waitForSelector(V("usindustryjobs-card"));
+      await page.waitForSelector(V("usindustryjobs-body") + ", " + V("usindustryjobs-unavailable") + ", " + V("usindustryjobs-error"), { timeout: 45000 });
+      const ijTxt = await text(page);
+      match(ijTxt, /Jobs by industry/); match(ijTxt, /Bureau of Labor Statistics/); noMatch(ijTxt, FORECASTS, "the jobs by industry card makes no forecasts");
+      if (await liveCard(page, "usindustryjobs-body")) {
+        const ijBody = await inner(page, "usindustryjobs-body");
+        const IJM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
+        const IJN = "\\d{1,3}(?:,\\d{3})*";
+        const IJCH = `(?:(?:up|down) ${IJN}|unchanged)`;
+        const IJMOVE = "(?:(?:up|down) \\d+\\.\\d%|under 0\\.1%|unchanged|not available)";
+        const IJSHARE = "\\d{1,3}\\.\\d%";
+        match(await inner(page, "usindustryjobs-headline"), new RegExp(`^In ${IJM} US employers had ${IJN} jobs on their payrolls: ${IJN} in goods-producing industries \\(${IJSHARE}\\), ${IJN} in private service-providing industries \\(${IJSHARE}\\) and ${IJN} in government \\(${IJSHARE}\\)\\.$`), "what total payrolls were and how they split");
+        match(await inner(page, "usindustryjobs-compare"), new RegExp(`^Against the month before payrolls are ${IJCH} \\(${IJMOVE}\\); against a year earlier they are ${IJCH} \\(${IJMOVE}\\)\\.$`), "total payrolls against the month before and a year earlier");
+        for (const [k, label] of [["goods", "Goods-producing"], ["services", "Private service-providing"], ["government", "Government"]]) {
+          match(await inner(page, `usindustryjobs-group-${k}`), new RegExp(`^${label}: ${IJN} \\(${IJSHARE} of all payroll jobs\\); on the month ${IJCH} \\(${IJMOVE}\\), on a year earlier ${IJCH} \\(${IJMOVE}\\)\\.$`), `the group ${k} has its own line`);
+        }
+        for (const [k, label] of [["mining", "Mining and logging"], ["construction", "Construction"], ["manufacturing", "Manufacturing"], ["trade", "Trade, transportation and utilities"], ["information", "Information"], ["financial", "Financial activities"],
+          ["professional", "Professional and business services"], ["education_health", "Education and health services"], ["leisure", "Leisure and hospitality"], ["other", "Other services"]]) {
+          match(await inner(page, `usindustryjobs-industry-${k}`), new RegExp(`^${label}: ${IJN} \\(${IJSHARE} of all payroll jobs\\); on the month ${IJCH} \\(${IJMOVE}\\), on a year earlier ${IJCH} \\(${IJMOVE}\\)\\.$`), `the industry ${k} has its own line`);
+        }
+        for (const [k, label] of [["durable", "Durable goods manufacturing"], ["nondurable", "Nondurable goods manufacturing"]]) {
+          match(await inner(page, `usindustryjobs-manufacturing-${k}`), new RegExp(`^${label}: ${IJN} \\(${IJSHARE} of manufacturing\\); on the month ${IJCH} \\(${IJMOVE}\\), on a year earlier ${IJCH} \\(${IJMOVE}\\)\\.$`), `the manufacturing split ${k} has its own line`);
+        }
+        match(await inner(page, "usindustryjobs-recent"), new RegExp(`^(?:${IJM}: ${IJN} jobs, ${IJCH} on the month before\\s*){6}$`), "six months of payrolls");
+        match(await inner(page, "usindustryjobs-check"), new RegExp(`^Check: in each of the \\d[\\d,]* months from ${IJM} to ${IJM} the 17 series covered the same months with none missing and every figure lay inside its range \\(plain checks, not the source's sums\\)\\. The Bureau's own arithmetic held to within the rounding, which shows that the series belong to one release, not that the figures are right: total payrolls equalled private plus government, private equalled goods-producing plus private service-providing, goods-producing equalled mining, construction and manufacturing, manufacturing equalled durable plus nondurable, the seven private service industries added up to the private service total and the eleven industries added up to the total \\(the largest gap in any month was \\d+(?:\\.\\d+)? thousand, and 1\\.5, 1\\.5, 2, 1\\.5, 4 and 6 are allowed for the six sums\\)\\.$`), "the check line says what was checked");
+        match(ijBody, /A job is a position on a payroll, not a person/); match(ijBody, /The newest months are revised twice and again every year/); match(ijBody, /not a market signal or a forecast/);
+        noMatch(ijBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("usindustryjobs-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zy-usindustryjobs-top");
+      await page.locator(V("usindustryjobs-industries")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);      // the middle: the ten private industries
+      await shot(page, "07zy-usindustryjobs-middle");
+      await page.locator(V("usindustryjobs-manufacturing")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);   // inside manufacturing, with the end of the industries and the first months
+      await shot(page, "07zy-usindustryjobs-manufacturing");
+      await page.locator(V("usindustryjobs-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
+      await shot(page, "07zy-usindustryjobs-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);
