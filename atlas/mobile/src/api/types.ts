@@ -562,6 +562,11 @@ export interface UsBuildingPermitsData { available: boolean; reason?: string; de
   total?: { thousands: number; change_month_thousands: number; change_month_pct: number | null; change_year_thousands: number; change_year_pct: number | null; growth_range: JoltsRange };
   types?: UsBuildingPermitsItem[]; regions?: UsBuildingPermitsItem[]; recent?: { month: string; thousands: number; change_thousands: number }[];
   detail?: { months_checked: number; first_month: string; last_month: string; largest_sum_gap: number } }
+export interface UsConstructionItem { key: string; label: string; millions: number; share_pct: number; change_month_millions: number; change_month_pct: number | null; change_year_millions: number; change_year_pct: number | null }
+export interface UsConstructionData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  total?: { millions: number; change_month_millions: number; change_month_pct: number | null; change_year_millions: number; change_year_pct: number | null; growth_range: JoltsRange };
+  owners?: UsConstructionItem[]; uses?: UsConstructionItem[]; parts?: UsConstructionItem[]; recent?: { month: string; millions: number; change_millions: number }[];
+  detail?: { months_checked: number; first_month: string; last_month: string; largest_sum_gap: number } }
 export interface UsJobsPart { level_thousands: number; change_thousands: number; change_year_thousands: number }
 export interface UsJobsRate { pct: number; month_before_pct: number | null; year_ago_pct: number | null }
 export interface UsJobsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";

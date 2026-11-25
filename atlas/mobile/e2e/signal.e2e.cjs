@@ -1230,6 +1230,42 @@ async function healthy(browser) {
       await page.locator(V("usbuildingpermits-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
       await shot(page, "07zu-usbuildingpermits-bottom");
 
+      await page.waitForSelector(V("usconstruction-card"));
+      await page.waitForSelector(V("usconstruction-body") + ", " + V("usconstruction-unavailable") + ", " + V("usconstruction-error"), { timeout: 45000 });
+      const cnTxt = await text(page);
+      match(cnTxt, /Construction spending/); match(cnTxt, /Census Bureau/); noMatch(cnTxt, FORECASTS, "the construction spending card makes no forecasts");
+      if (await liveCard(page, "usconstruction-body")) {
+        const cnBody = await inner(page, "usconstruction-body");
+        const CNM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
+        const CND = "(?:\\$\\d\\.\\d{3} trillion|\\$\\d{1,3}\\.\\d billion)";
+        const CNCH = `(?:(?:up|down) ${CND}|unchanged)`;
+        const CNMOVE = "(?:(?:up|down) \\d+\\.\\d%|under 0\\.1%|unchanged|not available)";
+        const CNSIGN = "(?:[+-]\\d+\\.\\d%|0\\.0%)";
+        const CNSHARE = "\\d{1,3}\\.\\d%";
+        match(await inner(page, "usconstruction-headline"), new RegExp(`^In ${CNM} construction work in the US was done at a seasonally adjusted annual rate of ${CND}: ${CND} private \\(${CNSHARE}\\) and ${CND} public \\(${CNSHARE}\\)\\.$`), "how much construction work was done and how it splits between private and public owners");
+        match(await inner(page, "usconstruction-compare"), new RegExp(`^Against the month before spending is ${CNCH} \\(${CNMOVE}\\); against a year earlier it is ${CNCH} \\(${CNMOVE}\\)\\.$`), "spending against the month before and a year earlier");
+        match(await inner(page, "usconstruction-range"), new RegExp(`^Over the last 10 years \\(120 months\\) the growth of spending on a year earlier ran from ${CNSIGN} \\(${CNM}\\) to ${CNSIGN} \\(${CNM}\\); \\d{1,3}% of those months were lower than now\\.$`), "where the growth stands among the last ten years");
+        for (const [k, label] of [["private", "Private"], ["public", "Public"]]) {
+          match(await inner(page, `usconstruction-owner-${k}`), new RegExp(`^${label}: ${CND} \\(${CNSHARE} of all spending\\); on the month ${CNCH} \\(${CNMOVE}\\), on a year earlier ${CNCH} \\(${CNMOVE}\\)\\.$`), `${k} spending has its own line`);
+        }
+        for (const [k, label] of [["residential", "Residential"], ["nonresidential", "Nonresidential"]]) {
+          match(await inner(page, `usconstruction-use-${k}`), new RegExp(`^${label}: ${CND} \\(${CNSHARE} of all spending\\); on the month ${CNCH} \\(${CNMOVE}\\), on a year earlier ${CNCH} \\(${CNMOVE}\\)\\.$`), `${k} spending has its own line`);
+        }
+        for (const [k, label] of [["private_residential", "Private residential"], ["private_nonresidential", "Private nonresidential"], ["public_residential", "Public residential"], ["public_nonresidential", "Public nonresidential"]]) {
+          match(await inner(page, `usconstruction-part-${k}`), new RegExp(`^${label}: ${CND} \\(${CNSHARE} of all spending\\); on the month ${CNCH} \\(${CNMOVE}\\), on a year earlier ${CNCH} \\(${CNMOVE}\\)\\.$`), `the part ${k} has its own line`);
+        }
+        match(await inner(page, "usconstruction-recent"), new RegExp(`^(?:${CNM}: ${CND}, ${CNCH} on the month before\\s*){6}$`), "six months of spending");
+        match(await inner(page, "usconstruction-check"), new RegExp(`^Check: in each of the \\d[\\d,]* months from ${CNM} to ${CNM} the 9 series covered the same months with none missing and every figure lay inside its range \\(plain checks, not the source's sums\\)\\. The Census Bureau's own arithmetic held to within the rounding, which shows that the series belong to one release, not that the figures are right: total spending equalled private plus public and residential plus nonresidential spending, private and public spending each equalled their residential plus nonresidential parts, and residential and nonresidential spending each equalled their private plus public parts \\(the figures are whole millions of dollars, each rounded on its own; the largest gap was [\\d.]+ million, and 1\\.5 is allowed\\)\\.$`), "the check line with the card's own counts");
+        match(cnBody, /not new orders and not buildings finished/); match(cnBody, /the newest months are revised later/); match(cnBody, /not a market signal or a forecast/);
+        noMatch(cnBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("usconstruction-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zv-usconstruction-top");
+      await page.locator(V("usconstruction-uses")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);      // the middle: the use and the four parts
+      await shot(page, "07zv-usconstruction-middle");
+      await page.locator(V("usconstruction-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
+      await shot(page, "07zv-usconstruction-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);
