@@ -1125,6 +1125,39 @@ async function healthy(browser) {
       await page.locator(V("usconsumercredit-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
       await shot(page, "07zr-usconsumercredit-bottom");
 
+      await page.waitForSelector(V("usbankloans-card"));
+      await page.waitForSelector(V("usbankloans-body") + ", " + V("usbankloans-unavailable") + ", " + V("usbankloans-error"), { timeout: 45000 });
+      const blTxt = await text(page);
+      match(blTxt, /Bank loans/); match(blTxt, /Federal Reserve/); noMatch(blTxt, FORECASTS, "the bank loans card makes no forecasts");
+      if (await liveCard(page, "usbankloans-body")) {
+        const blBody = await inner(page, "usbankloans-body");
+        const BD = "[A-Z][a-z]{2} \\d{1,2}, (?:19|20)\\d\\d";
+        const BA = "\\$(?:\\d{1,2}\\.\\d{3} trillion|[\\d,]+ billion)";
+        const BMOVE = "(?:(?:up|down) \\d+\\.\\d%|under 0\\.1%|unchanged|not available)";
+        const BCH = "(?:(?:up|down) \\$(?:\\d\\.\\d{3} trillion|\\d+\\.\\d billion)|unchanged)";
+        const BSIGN = "(?:[+-]\\d+\\.\\d%|0\\.0%)";
+        match(await inner(page, "usbankloans-headline"), new RegExp(`^In the week ending ${BD} US commercial banks held ${BA} in loans and leases: ${BA} of business loans \\(\\d{1,2}\\.\\d%\\), ${BA} of real estate loans \\(\\d{1,2}\\.\\d%\\), ${BA} of consumer loans \\(\\d{1,2}\\.\\d%\\) and ${BA} of other loans \\(\\d{1,2}\\.\\d%\\)\\.$`), "what the banks held and how it splits into the four kinds");
+        match(await inner(page, "usbankloans-compare"), new RegExp(`^Against the week before the total is ${BCH} \\(${BMOVE}\\); against a year earlier it is ${BCH} \\(${BMOVE}\\)\\.$`), "the total against the week before and a year earlier");
+        match(await inner(page, "usbankloans-range"), new RegExp(`^Over the last 10 years \\(520 weeks\\) the total's growth on a year earlier ran from ${BSIGN} \\(${BD}\\) to ${BSIGN} \\(${BD}\\); \\d{1,3}% of those weeks were lower than now\\.$`), "where the growth on a year earlier stands among the last ten years");
+        for (const [k, label] of [["business", "Business loans \\(commercial and industrial\\)"], ["real_estate", "Real estate loans"], ["consumer", "Consumer loans"], ["other", "All other loans and leases"]]) {
+          match(await inner(page, `usbankloans-kind-${k}`), new RegExp(`^${label}: ${BA} \\(\\d{1,2}\\.\\d% of the total\\); on the week ${BCH} \\(${BMOVE}\\), on a year earlier ${BCH} \\(${BMOVE}\\)\\.$`), `${k} loans have their own line`);
+        }
+        for (const [k, label, parts] of [["residential", "Residential real estate", `closed-end residential loans ${BA}, home equity lines of credit ${BA}`], ["commercial", "Commercial real estate", `office, retail and other nonfarm nonresidential ${BA}, multifamily housing ${BA}, construction and land development ${BA}, farmland ${BA}`]]) {
+          match(await inner(page, `usbankloans-estate-${k}`), new RegExp(`^${label}: ${BA} \\(\\d{1,2}\\.\\d% of real estate loans\\): ${parts}\\.$`), `${k} real estate has its own line with its parts`);
+        }
+        match(await inner(page, "usbankloans-other"), new RegExp(`^Of the other loans, ${BA} \\(\\d{1,2}\\.\\d%\\) are loans to nondepository financial institutions, financial companies that do not take deposits\\.$`), "the loans to nondepository financial institutions inside the other loans");
+        match(await inner(page, "usbankloans-recent"), new RegExp(`^(?:${BD}: total ${BA}, ${BCH} on the week before\\s*){6}$`), "six weeks of the total");
+        match(await inner(page, "usbankloans-check"), new RegExp(`^Check: in each of the \\d[\\d,]* weeks from ${BD} to ${BD} the 14 series covered the same Wednesdays with none missing and every figure lay inside its range \\(plain checks, not the source's sums\\)\\. The Federal Reserve's own arithmetic held, which shows that the series belong to one release, not that the figures are right: total loans equalled the four kinds, real estate loans equalled residential plus commercial, residential equalled closed-end loans plus home equity lines, and commercial real estate equalled its four parts \\(the figures are kept to 0\\.0001 billion dollars, so a sum may be off by up to 0\\.00005 for each figure in it; the largest gap was \\d+(?:\\.\\d+)? billion\\), and loans to nondepository financial institutions never exceeded all other loans\\.$`), "what was checked, with the card's own counts");
+        match(blBody, /not corrected for reclassifications between kinds/); match(blBody, /The newest weeks are revised later/); match(blBody, /not a market signal or a forecast/);
+        noMatch(blBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("usbankloans-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zs-usbankloans-top");
+      await page.locator(V("usbankloans-estate")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);      // the middle: real estate in more detail
+      await shot(page, "07zs-usbankloans-middle");
+      await page.locator(V("usbankloans-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last weeks, the check line, the note and the source link
+      await shot(page, "07zs-usbankloans-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);

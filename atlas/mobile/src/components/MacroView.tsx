@@ -40,6 +40,7 @@ import { JoltsCard } from "./JoltsCard";
 import { JoltsFlowsCard } from "./JoltsFlowsCard";
 import { UsInventoriesCard } from "./UsInventoriesCard";
 import { UsConsumerCreditCard } from "./UsConsumerCreditCard";
+import { UsBankLoansCard } from "./UsBankLoansCard";
 import { JoltsIndustriesCard } from "./JoltsIndustriesCard";
 import { UsJobsCard } from "./UsJobsCard";
 import { UsGdpCard } from "./UsGdpCard";
@@ -142,6 +143,7 @@ export function MacroView() {
             <UsTradeCard />
             <UsInventoriesCard />
             <UsConsumerCreditCard />
+            <UsBankLoansCard />
             <RetailSalesCard />
             <HousingStartsCard />
             <IndustrialProductionCard />
