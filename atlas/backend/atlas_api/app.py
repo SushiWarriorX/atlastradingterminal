@@ -72,6 +72,7 @@ from .usinventories import UsInventories
 from .usconsumercredit import UsConsumerCredit
 from .usbankloans import UsBankLoans
 from .usbankbalance import UsBankBalance
+from .usbuildingpermits import UsBuildingPermits
 from .usjobs import UsJobs
 from .usgdp import UsGdp
 from .ushousehold import UsHousehold
@@ -450,6 +451,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     us_consumer_credit = UsConsumerCredit(demo=demo)
     us_bank_loans = UsBankLoans(demo=demo)
     us_bank_balance = UsBankBalance(demo=demo)
+    us_building_permits = UsBuildingPermits(demo=demo)
     us_jobs = UsJobs(demo=demo)
     us_gdp = UsGdp(demo=demo)
     us_household = UsHousehold(demo=demo)
@@ -649,6 +651,11 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     async def macro_us_bank_balance_sheet():
         """US bank balance sheet (Board of Governors of the Federal Reserve System, H.8 Assets and Liabilities of Commercial Banks via FRED, 10 weekly series): what all US commercial banks held (total assets: loans and leases, securities, cash assets, everything else) and owed (deposits, everything else) on a Wednesday, the residual, the changes on a week and on a year, where the growth of total assets stands against its last ten years, the last six weeks and what was checked (three sums, two orders). Describes what already happened: not a signal or a forecast."""
         return ok(await us_bank_balance.overview())
+
+    @app.get("/api/macro/us-building-permits")
+    async def macro_us_building_permits():
+        """US building permits (U.S. Census Bureau and U.S. Department of Housing and Urban Development, New Residential Construction via FRED, 8 monthly series): how many new homes local governments gave permission to build in a month, as a seasonally adjusted annual rate in thousands of homes, split by type (single-family, 2-4 units, 5 or more) and by Census region, the changes on a month and on a year, where the growth of the total on a year earlier stands among the last ten years and the last six months, with the checks it passed (the months in a row, the ranges, and two sums that hold exactly). Research only: a plain record of permission already given, no forecast."""
+        return ok(await us_building_permits.overview())
 
     @app.get("/api/macro/us-jobs")
     async def macro_us_jobs():
@@ -2075,7 +2082,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
                                       "listings": listings_service, "new_to_me": new_to_me,
-                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "euro_money_supply": euro_money_supply, "euro_inflation": euro_inflation, "euro_unemployment": euro_unemployment, "euro_stress": euro_stress, "euro_yields": euro_yields, "euro_gdp": euro_gdp, "euro_lending": euro_lending, "euro_bank_rates": euro_bank_rates, "euro_stock_rates": euro_stock_rates, "euro_employment": euro_employment, "jolts": jolts, "jolts_industries": jolts_industries, "jolts_flows": jolts_flows, "us_inventories": us_inventories, "us_consumer_credit": us_consumer_credit, "us_bank_loans": us_bank_loans, "us_bank_balance": us_bank_balance, "us_jobs": us_jobs, "us_gdp": us_gdp, "us_household": us_household, "us_real_spending": us_real_spending, "us_trade": us_trade, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "euro_money_supply": euro_money_supply, "euro_inflation": euro_inflation, "euro_unemployment": euro_unemployment, "euro_stress": euro_stress, "euro_yields": euro_yields, "euro_gdp": euro_gdp, "euro_lending": euro_lending, "euro_bank_rates": euro_bank_rates, "euro_stock_rates": euro_stock_rates, "euro_employment": euro_employment, "jolts": jolts, "jolts_industries": jolts_industries, "jolts_flows": jolts_flows, "us_inventories": us_inventories, "us_consumer_credit": us_consumer_credit, "us_bank_loans": us_bank_loans, "us_bank_balance": us_bank_balance, "us_building_permits": us_building_permits, "us_jobs": us_jobs, "us_gdp": us_gdp, "us_household": us_household, "us_real_spending": us_real_spending, "us_trade": us_trade, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

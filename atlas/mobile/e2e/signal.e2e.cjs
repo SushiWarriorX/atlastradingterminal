@@ -1197,6 +1197,39 @@ async function healthy(browser) {
       await page.locator(V("usbankbalance-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last weeks, the check line, the note and the source link
       await shot(page, "07zt-usbankbalance-bottom");
 
+      await page.waitForSelector(V("usbuildingpermits-card"));
+      await page.waitForSelector(V("usbuildingpermits-body") + ", " + V("usbuildingpermits-unavailable") + ", " + V("usbuildingpermits-error"), { timeout: 45000 });
+      const bpTxt = await text(page);
+      match(bpTxt, /Building permits/); match(bpTxt, /Census Bureau/); noMatch(bpTxt, FORECASTS, "the building permits card makes no forecasts");
+      if (await liveCard(page, "usbuildingpermits-body")) {
+        const bpBody = await inner(page, "usbuildingpermits-body");
+        const BPM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
+        const BPH = "(?:\\d\\.\\d{3} million|[\\d,]+ thousand)";
+        const BPCH = `(?:(?:up|down) ${BPH}|unchanged)`;
+        const BPMOVE = "(?:(?:up|down) \\d+\\.\\d%|under 0\\.1%|unchanged|not available)";
+        const BPSIGN = "(?:[+-]\\d+\\.\\d%|0\\.0%)";
+        const BPSHARE = "\\d{1,3}\\.\\d%";
+        match(await inner(page, "usbuildingpermits-headline"), new RegExp(`^In ${BPM} local governments in the US gave permission to build ${BPH} homes at a seasonally adjusted annual rate: ${BPH} single-family homes \\(${BPSHARE}\\), ${BPH} homes in buildings of 2 to 4 units \\(${BPSHARE}\\) and ${BPH} homes in buildings of 5 or more units \\(${BPSHARE}\\)\\.$`), "how many homes were given permission and how they split by type");
+        match(await inner(page, "usbuildingpermits-compare"), new RegExp(`^Against the month before permits are ${BPCH} \\(${BPMOVE}\\); against a year earlier they are ${BPCH} \\(${BPMOVE}\\)\\.$`), "permits against the month before and a year earlier");
+        match(await inner(page, "usbuildingpermits-range"), new RegExp(`^Over the last 10 years \\(120 months\\) the growth of permits on a year earlier ran from ${BPSIGN} \\(${BPM}\\) to ${BPSIGN} \\(${BPM}\\); \\d{1,3}% of those months were lower than now\\.$`), "where the growth stands among the last ten years");
+        for (const [k, label] of [["single_family", "Single-family homes"], ["two_to_four", "Homes in buildings of 2 to 4 units"], ["five_or_more", "Homes in buildings of 5 or more units"]]) {
+          match(await inner(page, `usbuildingpermits-type-${k}`), new RegExp(`^${label}: ${BPH} \\(${BPSHARE} of all permits\\); on the month ${BPCH} \\(${BPMOVE}\\), on a year earlier ${BPCH} \\(${BPMOVE}\\)\\.$`), `${k} have their own line`);
+        }
+        for (const [k, label] of [["northeast", "Northeast"], ["midwest", "Midwest"], ["south", "South"], ["west", "West"]]) {
+          match(await inner(page, `usbuildingpermits-region-${k}`), new RegExp(`^${label}: ${BPH} \\(${BPSHARE} of all permits\\); on the month ${BPCH} \\(${BPMOVE}\\), on a year earlier ${BPCH} \\(${BPMOVE}\\)\\.$`), `the ${k} has its own line`);
+        }
+        match(await inner(page, "usbuildingpermits-recent"), new RegExp(`^(?:${BPM}: ${BPH} homes, ${BPCH} on the month before\\s*){6}$`), "six months of permits");
+        match(await inner(page, "usbuildingpermits-check"), new RegExp(`^Check: in each of the \\d[\\d,]* months from ${BPM} to ${BPM} the 8 series covered the same months with none missing and every figure lay inside its range \\(plain checks, not the source's sums\\)\\. The Census Bureau's own arithmetic held, which shows that the series belong to one release, not that the figures are right: total permits equalled single-family plus 2-4 unit plus 5\\+ unit permits, and equalled the four regions added up \\(the figures are whole thousands; the largest gap was [\\d.]+ thousand, and 2 and 2\\.5 are allowed\\)\\.$`), "the check line with the card's own counts");
+        match(bpBody, /A permit is permission to build, not a home built/); match(bpBody, /permits usually come before starts/); match(bpBody, /the newest months are revised later/); match(bpBody, /not a market signal or a forecast/);
+        noMatch(bpBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("usbuildingpermits-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zu-usbuildingpermits-top");
+      await page.locator(V("usbuildingpermits-regions")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);      // the middle: the four regions
+      await shot(page, "07zu-usbuildingpermits-middle");
+      await page.locator(V("usbuildingpermits-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
+      await shot(page, "07zu-usbuildingpermits-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);
