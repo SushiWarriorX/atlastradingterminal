@@ -71,6 +71,7 @@ from .joltsflows import JoltsFlows
 from .usinventories import UsInventories
 from .usconsumercredit import UsConsumerCredit
 from .usbankloans import UsBankLoans
+from .usbankbalance import UsBankBalance
 from .usjobs import UsJobs
 from .usgdp import UsGdp
 from .ushousehold import UsHousehold
@@ -448,6 +449,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     us_inventories = UsInventories(demo=demo)
     us_consumer_credit = UsConsumerCredit(demo=demo)
     us_bank_loans = UsBankLoans(demo=demo)
+    us_bank_balance = UsBankBalance(demo=demo)
     us_jobs = UsJobs(demo=demo)
     us_gdp = UsGdp(demo=demo)
     us_household = UsHousehold(demo=demo)
@@ -642,6 +644,11 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     async def macro_us_bank_loans():
         """US bank loans and leases (Board of Governors of the Federal Reserve System, H.8 Assets and Liabilities of Commercial Banks via FRED, 14 weekly series): the loans and leases of all US commercial banks on a Wednesday in all and by kind (business, real estate, consumer, all other), real estate split into residential and commercial, loans to nondepository financial institutions, the change on the week and on a year ago and the last six weeks; checked for weeks in a row, ranges, four sums to the rounding of the figures and that the loans to nondepository institutions are within the other loans; nothing is shown when a check fails."""
         return ok(await us_bank_loans.overview())
+
+    @app.get("/api/macro/us-bank-balance-sheet")
+    async def macro_us_bank_balance_sheet():
+        """US bank balance sheet (Board of Governors of the Federal Reserve System, H.8 Assets and Liabilities of Commercial Banks via FRED, 10 weekly series): what all US commercial banks held (total assets: loans and leases, securities, cash assets, everything else) and owed (deposits, everything else) on a Wednesday, the residual, the changes on a week and on a year, where the growth of total assets stands against its last ten years, the last six weeks and what was checked (three sums, two orders). Describes what already happened: not a signal or a forecast."""
+        return ok(await us_bank_balance.overview())
 
     @app.get("/api/macro/us-jobs")
     async def macro_us_jobs():
@@ -2068,7 +2075,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     scheduler = Scheduler(db, notify=sched_notify)
     register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
                                       "listings": listings_service, "new_to_me": new_to_me,
-                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "euro_money_supply": euro_money_supply, "euro_inflation": euro_inflation, "euro_unemployment": euro_unemployment, "euro_stress": euro_stress, "euro_yields": euro_yields, "euro_gdp": euro_gdp, "euro_lending": euro_lending, "euro_bank_rates": euro_bank_rates, "euro_stock_rates": euro_stock_rates, "euro_employment": euro_employment, "jolts": jolts, "jolts_industries": jolts_industries, "jolts_flows": jolts_flows, "us_inventories": us_inventories, "us_consumer_credit": us_consumer_credit, "us_bank_loans": us_bank_loans, "us_jobs": us_jobs, "us_gdp": us_gdp, "us_household": us_household, "us_real_spending": us_real_spending, "us_trade": us_trade, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "euro_money_supply": euro_money_supply, "euro_inflation": euro_inflation, "euro_unemployment": euro_unemployment, "euro_stress": euro_stress, "euro_yields": euro_yields, "euro_gdp": euro_gdp, "euro_lending": euro_lending, "euro_bank_rates": euro_bank_rates, "euro_stock_rates": euro_stock_rates, "euro_employment": euro_employment, "jolts": jolts, "jolts_industries": jolts_industries, "jolts_flows": jolts_flows, "us_inventories": us_inventories, "us_consumer_credit": us_consumer_credit, "us_bank_loans": us_bank_loans, "us_bank_balance": us_bank_balance, "us_jobs": us_jobs, "us_gdp": us_gdp, "us_household": us_household, "us_real_spending": us_real_spending, "us_trade": us_trade, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
                                                  "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
     app.state.scheduler = scheduler
 

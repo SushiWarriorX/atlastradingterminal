@@ -1158,6 +1158,43 @@ async function healthy(browser) {
       await page.locator(V("usbankloans-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last weeks, the check line, the note and the source link
       await shot(page, "07zs-usbankloans-bottom");
 
+      await page.waitForSelector(V("usbankbalance-card"));
+      await page.waitForSelector(V("usbankbalance-body") + ", " + V("usbankbalance-unavailable") + ", " + V("usbankbalance-error"), { timeout: 45000 });
+      const bbTxt = await text(page);
+      match(bbTxt, /Bank balance sheet/); match(bbTxt, /Federal Reserve/); noMatch(bbTxt, FORECASTS, "the bank balance sheet card makes no forecasts");
+      if (await liveCard(page, "usbankbalance-body")) {
+        const bbBody = await inner(page, "usbankbalance-body");
+        const BBD = "[A-Z][a-z]{2} \\d{1,2}, (?:19|20)\\d\\d";
+        const BBA = "\\$(?:\\d{1,2}\\.\\d{3} trillion|[\\d,]+ billion)";
+        const BBMOVE = "(?:(?:up|down) \\d+\\.\\d%|under 0\\.1%|unchanged|not available)";
+        const BBCH = "(?:(?:up|down) \\$(?:\\d\\.\\d{3} trillion|\\d+\\.\\d billion)|unchanged)";
+        const BBSIGN = "(?:[+-]\\d+\\.\\d%|0\\.0%)";
+        const BBSHARE = "\\d{1,3}\\.\\d%";
+        match(await inner(page, "usbankbalance-headline"), new RegExp(`^In the week ending ${BBD} US commercial banks held ${BBA} in assets: ${BBA} of loans and leases \\(${BBSHARE}\\), ${BBA} of securities \\(${BBSHARE}\\), ${BBA} of cash assets \\(${BBSHARE}\\) and ${BBA} of everything else \\(${BBSHARE}\\)\\.$`), "what the banks held and how it splits");
+        match(await inner(page, "usbankbalance-owed"), new RegExp(`^They owed ${BBA}: ${BBA} of deposits \\(${BBSHARE}\\) and ${BBA} of everything else \\(${BBSHARE}\\)\\. What is left, assets less liabilities, is ${BBA} \\(${BBSHARE} of assets\\)\\.$`), "what they owed and what is left");
+        match(await inner(page, "usbankbalance-compare"), new RegExp(`^Against the week before total assets are ${BBCH} \\(${BBMOVE}\\); against a year earlier they are ${BBCH} \\(${BBMOVE}\\)\\.$`), "total assets against the week before and a year earlier");
+        match(await inner(page, "usbankbalance-range"), new RegExp(`^Over the last 10 years \\(520 weeks\\) the growth of total assets on a year earlier ran from ${BBSIGN} \\(${BBD}\\) to ${BBSIGN} \\(${BBD}\\); \\d{1,3}% of those weeks were lower than now\\.$`), "where the growth stands among the last ten years");
+        for (const [k, label] of [["loans", "Loans and leases"], ["securities", "Securities"], ["cash", "Cash assets"], ["rest", "Everything else"]]) {
+          match(await inner(page, `usbankbalance-asset-${k}`), new RegExp(`^${label}: ${BBA} \\(${BBSHARE} of total assets\\); on the week ${BBCH} \\(${BBMOVE}\\), on a year earlier ${BBCH} \\(${BBMOVE}\\)\\.$`), `${k} have their own line`);
+        }
+        match(await inner(page, "usbankbalance-securities"), new RegExp(`^Of the securities, ${BBA} \\(${BBSHARE}\\) are Treasury and agency securities and ${BBA} \\(${BBSHARE}\\) are other securities\\.$`), "the securities split");
+        match(await inner(page, "usbankbalance-liability-total"), new RegExp(`^Total liabilities: ${BBA}; on the week ${BBCH} \\(${BBMOVE}\\), on a year earlier ${BBCH} \\(${BBMOVE}\\)\\.$`), "total liabilities have their own line");
+        for (const [k, label] of [["deposits", "Deposits"], ["other", "Everything else"]]) {
+          match(await inner(page, `usbankbalance-liability-${k}`), new RegExp(`^${label}: ${BBA} \\(${BBSHARE} of total liabilities\\); on the week ${BBCH} \\(${BBMOVE}\\), on a year earlier ${BBCH} \\(${BBMOVE}\\)\\.$`), `${k} liabilities have their own line`);
+        }
+        match(await inner(page, "usbankbalance-residual"), new RegExp(`^Assets less liabilities \\(the residual\\): ${BBA} \\(${BBSHARE} of total assets\\); on a year earlier ${BBCH} \\(${BBMOVE}\\)\\.$`), "the residual has its own line");
+        match(await inner(page, "usbankbalance-recent"), new RegExp(`^(?:${BBD}: total assets ${BBA}, ${BBCH} on the week before\\s*){6}$`), "six weeks of total assets");
+        match(await inner(page, "usbankbalance-check"), new RegExp(`^Check: in each of the \\d[\\d,]* weeks from ${BBD} to ${BBD} the 10 series covered the same Wednesdays with none missing and every figure lay inside its range \\(plain checks, not the source's sums\\)\\. The Federal Reserve's own arithmetic held, which shows that the series belong to one release, not that the figures are right: bank credit equalled loans and leases plus securities, securities equalled Treasury and agency securities plus other securities, and total assets equalled total liabilities plus the residual \\(the figures are kept to 0\\.0001 billion dollars, so a sum may be off by up to 0\\.00005 for each figure in it; the largest gap was \\d+(?:\\.\\d+)? billion; the residual is the Fed's own difference, so that last sum only shows that the weeks line up\\), and total assets never fell below bank credit plus cash assets, nor total liabilities below deposits\\.$`), "what was checked, with the card's own counts");
+        match(bbBody, /roughly what the banks own rather than owe/); match(bbBody, /not corrected for changes in the group of banks counted or for reclassifications/); match(bbBody, /and the newest weeks are revised later/); match(bbBody, /not a market signal or a forecast/);
+        noMatch(bbBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("usbankbalance-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zt-usbankbalance-top");
+      await page.locator(V("usbankbalance-liabilities")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);      // the middle: what the banks owe
+      await shot(page, "07zt-usbankbalance-middle");
+      await page.locator(V("usbankbalance-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last weeks, the check line, the note and the source link
+      await shot(page, "07zt-usbankbalance-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);
