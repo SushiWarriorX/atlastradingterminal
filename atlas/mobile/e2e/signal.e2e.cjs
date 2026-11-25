@@ -1266,6 +1266,43 @@ async function healthy(browser) {
       await page.locator(V("usconstruction-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
       await shot(page, "07zv-usconstruction-bottom");
 
+      await page.waitForSelector(V("usnewhomes-card"));
+      await page.waitForSelector(V("usnewhomes-body") + ", " + V("usnewhomes-unavailable") + ", " + V("usnewhomes-error"), { timeout: 45000 });
+      const nhTxt = await text(page);
+      match(nhTxt, /New home sales/); match(nhTxt, /Census Bureau/); noMatch(nhTxt, FORECASTS, "the new home sales card makes no forecasts");
+      if (await liveCard(page, "usnewhomes-body")) {
+        const nhBody = await inner(page, "usnewhomes-body");
+        const NHM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
+        const NHH = "\\d{1,3}(?:,\\d{3})*";
+        const NHCH = `(?:(?:up|down) ${NHH}|unchanged)`;
+        const NHMOVE = "(?:(?:up|down) \\d+\\.\\d%|under 0\\.1%|unchanged|not available)";
+        const NHSIGN = "(?:[+-]\\d+\\.\\d%|0\\.0%)";
+        const NHSHARE = "\\d{1,3}\\.\\d%";
+        const NHMO = "(?:(?:up|down) \\d{1,2}\\.\\d|unchanged)";
+        const NHD = "\\$\\d{1,3}(?:,\\d{3})*";
+        const NHDCH = `(?:(?:up|down) ${NHD}|unchanged)`;
+        match(await inner(page, "usnewhomes-headline"), new RegExp(`^In ${NHM} new houses were being sold at a seasonally adjusted annual rate of ${NHH}: ${NHH} in the Northeast \\(${NHSHARE}\\), ${NHH} in the Midwest \\(${NHSHARE}\\), ${NHH} in the South \\(${NHSHARE}\\) and ${NHH} in the West \\(${NHSHARE}\\)\\.$`), "how fast new houses were sold and how that splits over the four regions");
+        match(await inner(page, "usnewhomes-compare"), new RegExp(`^Against the month before sales are ${NHCH} \\(${NHMOVE}\\); against a year earlier they are ${NHCH} \\(${NHMOVE}\\)\\.$`), "sales against the month before and a year earlier");
+        match(await inner(page, "usnewhomes-range"), new RegExp(`^Over the last 10 years \\(120 months\\) the growth of sales on a year earlier ran from ${NHSIGN} \\(${NHM}\\) to ${NHSIGN} \\(${NHM}\\); \\d{1,3}% of those months were lower than now\\.$`), "where the growth of sales stands among the last ten years");
+        for (const [k, label] of [["northeast", "Northeast"], ["midwest", "Midwest"], ["south", "South"], ["west", "West"]]) {
+          match(await inner(page, `usnewhomes-region-${k}`), new RegExp(`^${label}: ${NHH} \\(${NHSHARE} of all sales\\); on the month ${NHCH} \\(${NHMOVE}\\), on a year earlier ${NHCH} \\(${NHMOVE}\\)\\.$`), `the ${k} has its own line`);
+        }
+        match(await inner(page, "usnewhomes-stock"), new RegExp(`^For sale at the end of the month: ${NHH} new houses \\(${NHCH} on the month, ${NHCH} on a year earlier\\)\\. That is \\d{1,2}\\.\\d months' supply at the pace of sales \\(${NHMO} on the month, ${NHMO} on a year earlier\\)\\.$`), "the houses for sale and the months' supply");
+        match(await inner(page, "usnewhomes-supply-range"), new RegExp(`^Over the last 10 years \\(120 months\\) the months' supply ran from \\d{1,2}\\.\\d \\(${NHM}\\) to \\d{1,2}\\.\\d \\(${NHM}\\); \\d{1,3}% of those months were lower than now\\.$`), "where the months' supply stands among the last ten years");
+        match(await inner(page, "usnewhomes-prices"), new RegExp(`^The median price of a new house sold was ${NHD} \\(${NHDCH}, ${NHMOVE}, on a year earlier\\) and the average price ${NHD} \\(${NHDCH}, ${NHMOVE}, on a year earlier\\)\\.$`), "both prices against a year earlier");
+        match(await inner(page, "usnewhomes-price-range"), new RegExp(`^Over the last 10 years \\(120 months\\) the median price ran from ${NHD} \\(${NHM}\\) to ${NHD} \\(${NHM}\\); \\d{1,3}% of those months were lower than now\\.$`), "where the median price stands among the last ten years");
+        match(await inner(page, "usnewhomes-recent"), new RegExp(`^(?:${NHM}: ${NHH}, ${NHCH} on the month before, with \\d{1,2}\\.\\d months' supply\\s*){6}$`), "six months of sales");
+        match(await inner(page, "usnewhomes-check"), new RegExp(`^Check: in each of the \\d[\\d,]* months from ${NHM} to ${NHM} the 9 series covered the same months with none missing and every figure lay inside its range \\(plain checks, not the source's sums\\)\\. The Census Bureau's own arithmetic held to within the rounding, which shows that the series belong to one release, not that the figures are right: the four regions added up to the sales total \\(the largest gap was \\d+(?:\\.\\d+)? thousand, and 2\\.5 is allowed\\), the months' supply agreed with 12 times the houses for sale divided by the sales rate \\(the largest gap was \\d+(?:\\.\\d+)? of a month, and 0\\.1 is allowed\\), and the average price was never below the median price \\(the smallest gap was ${NHD}\\)\\.$`), "the check line with its own counts");
+        match(nhBody, /sales of existing homes are another measure/); match(nhBody, /The newest months are revised later/); match(nhBody, /not a market signal or a forecast/);
+        noMatch(nhBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("usnewhomes-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zw-usnewhomes-top");
+      await page.locator(V("usnewhomes-stock")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);      // the middle: the regions, the houses for sale and the prices
+      await shot(page, "07zw-usnewhomes-middle");
+      await page.locator(V("usnewhomes-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the last months, the check line, the note and the source link
+      await shot(page, "07zw-usnewhomes-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);
