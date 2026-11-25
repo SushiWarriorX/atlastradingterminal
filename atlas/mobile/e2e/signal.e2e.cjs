@@ -1151,7 +1151,7 @@ async function healthy(browser) {
         noMatch(gasBody, /Week starting/i, "it is the Monday price, not a week starting on it");
         match(gasBody, /Regular gasoline \$\d\.\d{3} a gallon: (toward the low end|toward the high end|in the middle) of the past year's range\./, "the price with a plain reading");
         match(gasBody, /Past year: low \$\d\.\d{3}, high \$\d\.\d{3}; \d{1,3}% of its \d{2} weeks were at or below this price\./, "the reading is explained in weeks, so a spike-stretched range cannot be misread");
-        match(gasBody, /That is \$\d{2,3}\.\d{2} a barrel-equivalent .* against WTI crude at \$\d{2,3}\.\d{2} a barrel: a gap of \$\d{2,3}\.\d{2}/, "the gap to crude");
+        match(gasBody, /That is \$\d{2,3}\.\d{2} a barrel-equivalent .* against WTI crude at \$\d{2,3}\.\d{2} a barrel(?: \(the price of [A-Z][a-z]{2} \d{1,2}, 20\d\d, the newest there is: crude prices come once a week, after the gasoline price\))?: a gap of \$\d{2,3}\.\d{2}/, "the gap to crude, with the day of the crude price when it is not the Monday");
         match(gasBody, /Checked: every date is a Monday/); match(gasBody, /not a market signal or a forecast/);
         noMatch(gasBody, /\b20\d\d-\d\d-\d\d\b/, "no raw ISO dates on screen");
       }

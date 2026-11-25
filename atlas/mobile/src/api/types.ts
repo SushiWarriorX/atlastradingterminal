@@ -440,7 +440,7 @@ export interface OilSeries { value: number; date: string; age_days: number; fres
 export interface OilPricesData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; wti?: OilSeries; brent?: OilSeries; spread?: { value: number; date: string }; history?: { date: string; wti: number }[] }
 export interface GasolinePricesData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; price?: number;
   change_1w?: number | null; change_4w_pct?: number | null; change_1y_pct?: number | null; year_low?: number; year_high?: number; weeks_in_year?: number; rank_in_year?: number; reading?: string;
-  crude?: { wti: number; per_barrel: number; gap: number }; history?: { date: string; price: number }[] }
+  crude?: { wti: number; date?: string; per_barrel: number; gap: number }; history?: { date: string; price: number }[] }
 export interface NaturalGasData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE"; price?: number;
   change_1d?: number | null; change_1m_pct?: number | null; change_1y_pct?: number | null; year_low?: number; year_high?: number; days_in_year?: number; rank_in_year?: number; reading?: string;
   monthly?: { month: string; average_of_daily: number; published: number; days: number }; months_checked?: { month: string; average_of_daily: number; published: number; days: number }[]; history?: { date: string; price: number }[] }

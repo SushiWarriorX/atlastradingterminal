@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { atOrBelow, ymdLabel } from "../lib/format";
+import { crudeText } from "../lib/gasoline";
 import { safeUrl } from "../lib/links";
 import { useGasolinePrices } from "../state/queries";
 import { space } from "../theme";
@@ -29,7 +30,7 @@ export function GasolinePricesCard() {
             <Txt variant="small">Regular gasoline {usd3(d.price)} a gallon: {d.reading}.</Txt>
             <Txt variant="tiny">{cents(d.change_1w)}, {vs(d.change_4w_pct, "four weeks ago")}, {vs(d.change_1y_pct, "a year ago")}. Past year: low {usd3(d.year_low)}, high {usd3(d.year_high)}{where ? `; ${where}` : "."}</Txt>
             <Divider />
-            <Txt variant="small">That is {usd2(d.crude.per_barrel)} a barrel-equivalent (the price times 42 gallons) against WTI crude at {usd2(d.crude.wti)} a barrel: a gap of {usd2(d.crude.gap)} for refining, distribution, marketing and taxes.</Txt>
+            <Txt variant="small" testID="gasoline-crude">{crudeText(d.crude, d.date)}</Txt>
             <Txt variant="tiny">{d.note}</Txt>
           </View>)}
       <SourceLink url={link}>Source: US Energy Information Administration, via FRED</SourceLink>

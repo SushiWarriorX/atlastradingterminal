@@ -1,7 +1,8 @@
 """US retail gasoline price: the weekly national average for regular grade, in dollars a gallon, from the US Energy Information Administration (public-domain US government data) via FRED, the St. Louis Fed. Free, no key.
 
 How to read it: it is the national average pump price on the Monday shown (the EIA samples about 900 retail outlets at 8:00AM that Monday; FRED lists the series as weekly, ending Monday). It follows crude oil with a delay and adds refining, distribution, marketing and taxes. EIA data reach FRED within a day or two, so the newest figure is normally 1 to 8 days old and carries its own date.
-Checks: every date is a Monday, the last 12 weeks are exactly one week apart, the last 60 prices are between $0.50 and $10 a gallon, no weekly move over 25% in the last 60 weeks, and the price is consistent with crude oil: gasoline per barrel (price x 42 gallons) minus the WTI crude price of the same week is between $10 and $130 a barrel (it has been $40 to $113 since 2018; a unit slip in either series would break it). A missing value ('.') is left out, never filled in.
+Checks: every date is a Monday, the last 12 weeks are exactly one week apart, the last 60 prices are between $0.50 and $10 a gallon, no weekly move over 25% in the last 60 weeks, and the price is consistent with crude oil: gasoline per barrel (price x 42 gallons) minus the WTI crude price on or before that Monday is between $10 and $130 a barrel (it has been $40 to $113 since 2018; a unit slip in either series would break it). A missing value ('.') is left out, never filled in.
+The crude price: for each of the last 8 Mondays the nearest WTI price on the Monday or up to 5 days before it (after a Monday holiday it is the Friday, 3 days back; measured 2026-11-25 on the record from 2018-01-01: of 465 Mondays 412 have crude on the day and 51 three days back, and of the other two one is the newest, below, and one is the first of the window, which has no earlier crude in it). The newest Monday alone may use a price up to 8 days before it: EIA posts the Monday gasoline price on Tuesday morning and the crude prices only once a week, on Wednesday, through the Tuesday before, so for about 27 hours every week the newest Monday has its crude price 6 days back (read 2026-11-25: GASREGW to 2026-11-23, DCOILWTICO to 2026-11-17). Before 2026-11-25 the card refused itself in that window (found 2026-11-24); now it shows the newest price and the day of the crude price it was checked against.
 It describes what already happened: it is not a market signal or a forecast. A failure says so and shows nothing.
 """
 from __future__ import annotations
@@ -28,14 +29,17 @@ OVERDUE_AFTER_DAYS = 14
 TTL = 6 * 3600.0
 FAIL_TTL = 120.0
 WEEK = 7
-LOOKUP_DAYS = 5
+LOOKUP_DAYS = 5                      # a settled Monday: its crude price is on the Monday or, after a holiday, 3 days back
+NEWEST_LOOKUP_DAYS = 8               # the newest Monday only: it waits for the weekly crude release (6 days back for about 27 hours a week); 8 leaves two days for a delayed or holiday-shifted release
 
 
-def _wti_on_or_before(wti: dict[date, float], day: date) -> float | None:
-    for back in range(LOOKUP_DAYS + 1):
-        v = wti.get(day - timedelta(days=back))
+def _wti_near(wti: dict[date, float], day: date, lookup: int) -> tuple[date, float] | None:
+    """The day and price of the nearest WTI price on `day` or up to `lookup` days before it."""
+    for back in range(lookup + 1):
+        d = day - timedelta(days=back)
+        v = wti.get(d)
         if v is not None:
-            return v
+            return d, v
     return None
 
 
@@ -57,12 +61,13 @@ def summarize(data: dict[str, dict[date, float]], today: date) -> dict:
         raise ValueError("a gasoline price is outside the plausible range")
     if any(abs(g[b] / g[a] - 1) > MAX_WEEK_MOVE for a, b in zip(recent, recent[1:])):
         raise ValueError(f"gasoline moved more than {MAX_WEEK_MOVE:.0%} in a week")
-    margins = {}
+    margins, crude_day = {}, {}
     for d in weeks[-8:]:
-        x = _wti_on_or_before(w, d)
-        if x is None:
+        near = _wti_near(w, d, NEWEST_LOOKUP_DAYS if d == last else LOOKUP_DAYS)
+        if near is None:
             raise ValueError(f"there is no WTI crude price near {_words(d)} to check the gasoline price against")
-        margins[d] = g[d] * GALLONS_PER_BARREL - x
+        crude_day[d] = near[0]
+        margins[d] = g[d] * GALLONS_PER_BARREL - near[1]
     if any(not (MARGIN_LIMITS[0] <= m <= MARGIN_LIMITS[1]) for m in margins.values()):
         bad = next(d for d, m in margins.items() if not (MARGIN_LIMITS[0] <= m <= MARGIN_LIMITS[1]))
         raise ValueError(f"gasoline per barrel minus WTI crude is {margins[bad]:.1f} on {_words(bad)}, outside {MARGIN_LIMITS[0]:g} to {MARGIN_LIMITS[1]:g}")
@@ -71,16 +76,16 @@ def summarize(data: dict[str, dict[date, float]], today: date) -> dict:
     vals = [g[d] for d in year]
     rank = round(100 * sum(1 for x in vals if x <= v) / len(vals))
     prev, four, yago = g.get(last - timedelta(days=WEEK)), g.get(last - timedelta(days=4 * WEEK)), g.get(last - timedelta(days=52 * WEEK))
-    wti_last = _wti_on_or_before(w, last)
+    wti_last = w[crude_day[last]]
     age = (today - last).days
     return {"available": True, "source": SOURCE, "url": PAGE, "date": last.isoformat(), "age_days": age, "freshness": "CURRENT" if age <= OVERDUE_AFTER_DAYS else "OVERDUE",
             "price": round(v, 3), "change_1w": None if prev is None else round(v - prev, 3), "change_4w_pct": _pct(v, four), "change_1y_pct": _pct(v, yago),
             "year_low": round(min(vals), 3), "year_high": round(max(vals), 3), "weeks_in_year": len(vals), "rank_in_year": rank, "reading": reading(rank),
-            "crude": {"wti": round(wti_last, 2), "per_barrel": round(v * GALLONS_PER_BARREL, 2), "gap": round(margins[last], 2)},
+            "crude": {"wti": round(wti_last, 2), "date": crude_day[last].isoformat(), "per_barrel": round(v * GALLONS_PER_BARREL, 2), "gap": round(margins[last], 2)},
             "history": [{"date": d.isoformat(), "price": round(g[d], 3)} for d in weeks[-52:]],
             "checks": {"mondays_ok": True, "weekly_spacing_ok": True, "range_ok": True, "weekly_move_ok": True, "consistent_with_crude": True},
             "note": ("This is the national average price of regular gasoline at the pump in dollars a gallon, on the Monday shown (a sample of about 900 retail outlets at 8:00AM that Monday), from the US Energy Information Administration. It follows crude oil with a delay and adds refining, distribution, marketing and taxes. "
-                     "Checked: every date is a Monday, the last 12 weeks are one week apart, recent prices are between $0.50 and $10, no weekly move is over 25%, and gasoline per barrel minus WTI crude is inside the range it has really had. "
+                     "Checked: every date is a Monday, the last 12 weeks are one week apart, recent prices are between $0.50 and $10, no weekly move is over 25%, and gasoline per barrel minus WTI crude is inside the range it has really had (crude prices come once a week, after the gasoline price, so the newest Monday is checked against the latest crude price, which can be a few days older). "
                      "This describes what already happened: it is not a market signal or a forecast.")}
 
 
