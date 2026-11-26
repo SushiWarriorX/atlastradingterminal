@@ -114,7 +114,7 @@ def summarize(data: dict[str, dict[date, float]], today: date) -> dict:
             "detail": detail,
             "checks": {"months_in_a_row": True, "range_ok": True, "sums_ok": True},
             "note": ("Payrolls by industry from the Bureau of Labor Statistics (the Current Employment Statistics survey of employers, the payroll half of the monthly Employment Situation), in thousands of jobs, seasonally adjusted, for the pay period that includes the 12th. "
-                     "A job is a position on a payroll, not a person: someone with two jobs counts twice. Only non-farm employers are counted, so farm work and the self-employed are not in it. The newest months are revised twice and again every year. "
+                     "A job is a position on a payroll, not a person: someone with two jobs counts twice. Only non-farm employers are counted, so farm work and the self-employed are not in it, and government counts civilian employees only. The newest months are revised twice and again every year. "
                      "Plain checks: the units are the ones assumed and no month is missing; the ranges and the six sums are in the Check line. "
                      "This describes employment that already happened: it is not a market signal or a forecast.")}
 

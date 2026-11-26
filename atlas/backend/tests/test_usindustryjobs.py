@@ -465,7 +465,7 @@ def test_a_release_that_is_late_is_marked_overdue_after_70_days_from_the_first_o
 def test_the_note_says_what_the_figures_are_and_are_not_and_points_to_the_check_line():
     note = run(world())["note"]
     assert note.startswith("Payrolls by industry from the Bureau of Labor Statistics (the Current Employment Statistics survey of employers, the payroll half of the monthly Employment Situation), in thousands of jobs, seasonally adjusted, for the pay period that includes the 12th. ")
-    assert ". A job is a position on a payroll, not a person: someone with two jobs counts twice. Only non-farm employers are counted, so farm work and the self-employed are not in it. The newest months are revised twice and again every year. " in note
+    assert ". A job is a position on a payroll, not a person: someone with two jobs counts twice. Only non-farm employers are counted, so farm work and the self-employed are not in it, and government counts civilian employees only. The newest months are revised twice and again every year. " in note
     assert "Plain checks: the units are the ones assumed and no month is missing; the ranges and the six sums are in the Check line. " in note and note.count("the Check line") == 1
     assert note.endswith("This describes employment that already happened: it is not a market signal or a forecast.") and len(note) <= 1100
 
