@@ -1,0 +1,450 @@
+{
+ "hashrates": [
+  {
+   "timestamp": 1231006505,
+   "avgHashrate": 9273.324192503673
+  },
+  {
+   "timestamp": 1231027200,
+   "avgHashrate": 0
+  },
+  {
+   "timestamp": 1231113600,
+   "avgHashrate": 0
+  },
+  {
+   "timestamp": 1231200000,
+   "avgHashrate": 0
+  },
+  {
+   "timestamp": 1231286400,
+   "avgHashrate": 0
+  },
+  {
+   "timestamp": 1231372800,
+   "avgHashrate": 0
+  },
+  {
+   "timestamp": 1231459200,
+   "avgHashrate": 0
+  },
+  {
+   "timestamp": 1231545600,
+   "avgHashrate": 128186.9764519788
+  },
+  {
+   "timestamp": 1231632000,
+   "avgHashrate": 1676963.271607151
+  },
+  {
+   "timestamp": 1231718400,
+   "avgHashrate": 4679507.181070537
+  },
+  {
+   "timestamp": 1231804800,
+   "avgHashrate": 4653125.490422516
+  },
+  {
+   "timestamp": 1231891200,
+   "avgHashrate": 6070682.905197477
+  },
+  {
+   "timestamp": 1708387200,
+   "avgHashrate": 552226211265444900000
+  },
+  {
+   "timestamp": 1708473600,
+   "avgHashrate": 573916199417476000000
+  },
+  {
+   "timestamp": 1708560000,
+   "avgHashrate": 569169891089905900000
+  },
+  {
+   "timestamp": 1708646400,
+   "avgHashrate": 551515161753589900000
+  },
+  {
+   "timestamp": 1708732800,
+   "avgHashrate": 631825507087599300000
+  },
+  {
+   "timestamp": 1708819200,
+   "avgHashrate": 557014813629493800000
+  },
+  {
+   "timestamp": 1708905600,
+   "avgHashrate": 667951994565994900000
+  },
+  {
+   "timestamp": 1708992000,
+   "avgHashrate": 540908241657613600000
+  },
+  {
+   "timestamp": 1709078400,
+   "avgHashrate": 529635496489759800000
+  },
+  {
+   "timestamp": 1709164800,
+   "avgHashrate": 596919743173142900000
+  },
+  {
+   "timestamp": 1709251200,
+   "avgHashrate": 544682166853171300000
+  },
+  {
+   "timestamp": 1709337600,
+   "avgHashrate": 603197212582134300000
+  },
+  {
+   "timestamp": 1709424000,
+   "avgHashrate": 508286539182060900000
+  },
+  {
+   "timestamp": 1709510400,
+   "avgHashrate": 606991843905855200000
+  },
+  {
+   "timestamp": 1709596800,
+   "avgHashrate": 504999779358049500000
+  },
+  {
+   "timestamp": 1709683200,
+   "avgHashrate": 661294485024304700000
+  },
+  {
+   "timestamp": 1709769600,
+   "avgHashrate": 549773107452499300000
+  },
+  {
+   "timestamp": 1709856000,
+   "avgHashrate": 711103551978430900000
+  },
+  {
+   "timestamp": 1709942400,
+   "avgHashrate": 607782713939557900000
+  },
+  {
+   "timestamp": 1710028800,
+   "avgHashrate": 649340516597003300000
+  },
+  {
+   "timestamp": 1710115200,
+   "avgHashrate": 558132712785942400000
+  },
+  {
+   "timestamp": 1710201600,
+   "avgHashrate": 678797283434575200000
+  },
+  {
+   "timestamp": 1710288000,
+   "avgHashrate": 551406475649536100000
+  },
+  {
+   "timestamp": 1710374400,
+   "avgHashrate": 630389475809360300000
+  },
+  {
+   "timestamp": 1710460800,
+   "avgHashrate": 578310100377149400000
+  },
+  {
+   "timestamp": 1710547200,
+   "avgHashrate": 530295292515627000000
+  },
+  {
+   "timestamp": 1710633600,
+   "avgHashrate": 602871533941532900000
+  },
+  {
+   "timestamp": 1710720000,
+   "avgHashrate": 607688457655487400000
+  },
+  {
+   "timestamp": 1710806400,
+   "avgHashrate": 605204595478641900000
+  },
+  {
+   "timestamp": 1710892800,
+   "avgHashrate": 654198194961260500000
+  },
+  {
+   "timestamp": 1710979200,
+   "avgHashrate": 617629852534306800000
+  },
+  {
+   "timestamp": 1711065600,
+   "avgHashrate": 501449691774766000000
+  },
+  {
+   "timestamp": 1711152000,
+   "avgHashrate": 563869501595508200000
+  },
+  {
+   "timestamp": 1711238400,
+   "avgHashrate": 651627826949443800000
+  },
+  {
+   "timestamp": 1711324800,
+   "avgHashrate": 711607659676361000000
+  },
+  {
+   "timestamp": 1711411200,
+   "avgHashrate": 547457827891820400000
+  },
+  {
+   "timestamp": 1711497600,
+   "avgHashrate": 562043109388398100000
+  },
+  {
+   "timestamp": 1711584000,
+   "avgHashrate": 565054907169846300000
+  },
+  {
+   "timestamp": 1711670400,
+   "avgHashrate": 633647762795480600000
+  },
+  {
+   "timestamp": 1711756800,
+   "avgHashrate": 593016809524111900000
+  },
+  {
+   "timestamp": 1711843200,
+   "avgHashrate": 642862127073987500000
+  },
+  {
+   "timestamp": 1711929600,
+   "avgHashrate": 566988675597528100000
+  },
+  {
+   "timestamp": 1712016000,
+   "avgHashrate": 619003877026937700000
+  },
+  {
+   "timestamp": 1712102400,
+   "avgHashrate": 612165609338126200000
+  },
+  {
+   "timestamp": 1712188800,
+   "avgHashrate": 586105501318409200000
+  },
+  {
+   "timestamp": 1712275200,
+   "avgHashrate": 567398074968990600000
+  },
+  {
+   "timestamp": 1712361600,
+   "avgHashrate": 610919960538862600000
+  },
+  {
+   "timestamp": 1712448000,
+   "avgHashrate": 643190880370027300000
+  },
+  {
+   "timestamp": 1712534400,
+   "avgHashrate": 704894445106018300000
+  },
+  {
+   "timestamp": 1712620800,
+   "avgHashrate": 648352924427798700000
+  },
+  {
+   "timestamp": 1712707200,
+   "avgHashrate": 603984064666938800000
+  },
+  {
+   "timestamp": 1712793600,
+   "avgHashrate": 625573747363800200000
+  },
+  {
+   "timestamp": 1712880000,
+   "avgHashrate": 570620561110657000000
+  },
+  {
+   "timestamp": 1712966400,
+   "avgHashrate": 582032904522158000000
+  },
+  {
+   "timestamp": 1713052800,
+   "avgHashrate": 708012453221595300000
+  },
+  {
+   "timestamp": 1713139200,
+   "avgHashrate": 673070127046286600000
+  },
+  {
+   "timestamp": 1713225600,
+   "avgHashrate": 606586579098209900000
+  },
+  {
+   "timestamp": 1713312000,
+   "avgHashrate": 703279419215668700000
+  },
+  {
+   "timestamp": 1713398400,
+   "avgHashrate": 595642334706011600000
+  },
+  {
+   "timestamp": 1713484800,
+   "avgHashrate": 620657169281286800000
+  },
+  {
+   "timestamp": 1713571200,
+   "avgHashrate": 642271803604760400000
+  },
+  {
+   "timestamp": 1713657600,
+   "avgHashrate": 562952051250441600000
+  },
+  {
+   "timestamp": 1713744000,
+   "avgHashrate": 599421158286213300000
+  },
+  {
+   "timestamp": 1713830400,
+   "avgHashrate": 648913129842061300000
+  },
+  {
+   "timestamp": 1713916800,
+   "avgHashrate": 721670430356810800000
+  },
+  {
+   "timestamp": 1714003200,
+   "avgHashrate": 674938476057488400000
+  },
+  {
+   "timestamp": 1714089600,
+   "avgHashrate": 652022921269012300000
+  },
+  {
+   "timestamp": 1714176000,
+   "avgHashrate": 561001675875653500000
+  },
+  {
+   "timestamp": 1714262400,
+   "avgHashrate": 609475686541162800000
+  },
+  {
+   "timestamp": 1714348800,
+   "avgHashrate": 620810151650153500000
+  },
+  {
+   "timestamp": 1714435200,
+   "avgHashrate": 569306125353106200000
+  },
+  {
+   "timestamp": 1794268800,
+   "avgHashrate": 824956594219126200000
+  },
+  {
+   "timestamp": 1794355200,
+   "avgHashrate": 984472256655275700000
+  },
+  {
+   "timestamp": 1794441600,
+   "avgHashrate": 982418957655495700000
+  },
+  {
+   "timestamp": 1794528000,
+   "avgHashrate": 900941552978139700000
+  },
+  {
+   "timestamp": 1794614400,
+   "avgHashrate": 810872104980435000000
+  }
+ ],
+ "difficulty": [
+  {
+   "time": 1231006505,
+   "height": 0,
+   "difficulty": 1,
+   "adjustment": 0
+  },
+  {
+   "time": 1702180644,
+   "height": 820512,
+   "difficulty": 67305906902031.39,
+   "adjustment": 0.9904080033302307
+  },
+  {
+   "time": 1703311464,
+   "height": 822528,
+   "difficulty": 72006146478567.1,
+   "adjustment": 1.0698299407958984
+  },
+  {
+   "time": 1704501692,
+   "height": 824544,
+   "difficulty": 73197634206448.34,
+   "adjustment": 1.0165499448776245
+  },
+  {
+   "time": 1705761155,
+   "height": 826560,
+   "difficulty": 70343519904866.8,
+   "adjustment": 0.9610080122947693
+  },
+  {
+   "time": 1706888526,
+   "height": 828576,
+   "difficulty": 75502165623893.72,
+   "adjustment": 1.0733400583267212
+  },
+  {
+   "time": 1708008110,
+   "height": 830592,
+   "difficulty": 81725299822043.22,
+   "adjustment": 1.082419991493225
+  },
+  {
+   "time": 1709253937,
+   "height": 832608,
+   "difficulty": 79351228131136.77,
+   "adjustment": 0.9709510207176208
+  },
+  {
+   "time": 1710397689,
+   "height": 834624,
+   "difficulty": 83947913181361.55,
+   "adjustment": 1.0579299926757812
+  },
+  {
+   "time": 1711619463,
+   "height": 836640,
+   "difficulty": 83126997340024.61,
+   "adjustment": 0.9902210235595703
+  },
+  {
+   "time": 1712783853,
+   "height": 838656,
+   "difficulty": 86388558925171.02,
+   "adjustment": 1.0392400026321411
+  },
+  {
+   "time": 1713970312,
+   "height": 840672,
+   "difficulty": 88104191118793.16,
+   "adjustment": 1.019860029220581
+  },
+  {
+   "time": 1715252414,
+   "height": 842688,
+   "difficulty": 83148355189239.77,
+   "adjustment": 0.9437500238418579
+  },
+  {
+   "time": 1716445130,
+   "height": 844704,
+   "difficulty": 84381461788831.34,
+   "adjustment": 1.0148299932479858
+  },
+  {
+   "time": 1794632570,
+   "height": 975744,
+   "difficulty": 134823837323272.7,
+   "adjustment": 0.9087330102920532
+  }
+ ],
+ "currentHashrate": 904262831737960000000,
+ "currentDifficulty": 134823837323272.7
+}

@@ -1,11 +1,16 @@
 # Signal Mobile
 
+**Windows, desktop icon:** double-click `Create-Signal-Shortcut.bat` once. A **Signal** icon appears on your desktop; open it, press **Start**, wait for **Running**, press **Open**.
+
+**Windows, one command:** double-click `start-signal-windows.bat` in the project folder (or run `.\start-signal-windows.bat` in PowerShell). It starts the backend and Signal for you; when Signal asks for a server, type `http://localhost:8000`.
+
 A simple, fast phone app for researching **Bitcoin, crypto tokens, US stocks and ETFs**, built on your ATLAS server. Four research agents (News, Technical, Macro, Fundamentals) are folded into one screen per asset.
 
 **Research and paper trading only.** The app cannot place trades, connect to a brokerage or hold money, and the backend has no route that could. Nothing in it is financial advice.
 
 - On a wide screen (a desktop browser, 1000px or more) it shows three panes side by side: watchlist or search on the left, the research in the middle, the News agent's stories on the right, with a ticker strip on top. On a phone it stays one screen at a time.
-- Two tabs: **Watchlist** (home) and **Search**. Settings sit behind the small profile icon.
+- The look follows TradingView's phone app: white screens, round header buttons, a floating pill tab bar, a small Bitcoin quote above it, and a watchlist of round logos with price and change on the right.
+- Six tabs: **BTC**, **Journey**, **Stocks** (your watchlist, with a search button), **Macro**, **Discover** and **Journal**. Journey is the paper-trading lab that runs the backtested Bitcoin strategies (`GET /api/btcquant/paper`): what the research run decided and why, each strategy's backtest beside simply holding Bitcoin, the paper accounts as cards, and every order recorded on signal. It is simulated money only and cannot place an order. Macro shows what matters today, key indicators, upcoming events and labelled headlines. The BTC tab has a Strategy Lab card that compares tested BTC rules after costs. Discover shows a daily shortlist of five US stocks to research, with reasons, risks, evidence and dates. Settings sit behind the small profile icon. The Journal is a simple list of your own trades and notes: a symbol is enough, and P&L is calculated when size, entry and exit are filled in.
 - Tap an asset for one continuous research screen: price and freshness, a chart, a **What matters now** briefing, and four expandable agent rows.
 - Every market number shows where it came from, when, and an honest label: *Live, Delayed, Market closed, Stale, Demo* or *Unavailable*.
 - Numbers are calculated by the server. The app only displays them.
@@ -66,7 +71,7 @@ Your PC's address is the "IPv4 Address" shown by `ipconfig` (Windows) or `ifconf
 
 ```bash
 npm run typecheck      # TypeScript
-npm test               # 29 unit tests (formatting, freshness wording, watchlist edits, per-server query keys, the API client)
+npm test               # the unit tests (formatting, freshness wording, watchlist edits, per-server query keys, the API client, the card wording helpers), then the self-test of the browser script's wording checks (e2e/soft.test.cjs)
 ```
 
 Browser tests drive the real app (web export, phone-sized) against the real backend with scripted prices, news and directory data. No network or accounts are needed:
@@ -79,9 +84,11 @@ node e2e/signal.e2e.cjs                              # all scenarios; or name so
 SIGNAL_E2E_SHOTS=/tmp/shots node e2e/signal.e2e.cjs  # also save screenshots
 ```
 
+The wording checks of the browser script (`match`, `noMatch`) live in `e2e/soft.cjs`. Inside `softly(...)`, which wraps the whole Macro test, a failed one is recorded and the test goes on, then fails once at the end naming every failed check, so one changed live card does not hide the cards after it; a missing element still ends the test at once. `npm test` runs the self-test of that file.
+
 | Scenario | What it proves |
 | --- | --- |
-| `healthy` | Connect flow; two tabs only; search tells **Bitcoin the coin from the Bitcoin ETF** (and SOL the token from SOL the stock); the watchlist survives a reload, a brand-new browser profile, reordering and removal because it lives on the server; asset identity; chart ranges; briefing; each agent's evidence, sources and "not available" list; hostile headlines stay inert; disagreeing agents are both shown; no trading controls and no provider requests from the app; offline mode keeps the saved list and says so. |
+| `healthy` | Connect flow; six tabs; the Journey tab (verdict, strategy rows with their verdicts, backtest chart, paper record, no trading controls); search tells **Bitcoin the coin from the Bitcoin ETF** (and SOL the token from SOL the stock); the watchlist survives a reload, a brand-new browser profile, reordering and removal because it lives on the server; asset identity; chart ranges; briefing; each agent's evidence, sources and "not available" list; hostile headlines stay inert; disagreeing agents are both shown; no trading controls and no provider requests from the app; offline mode keeps the saved list and says so. |
 | `stale` | Three-day-old prices are labelled stale on the list, the asset screen and in the Technical agent, which declines to give a current reading. |
 | `partial` | With News, Fundamentals and Macro down, price, chart and Technical still work and the screen says "Based on 1 of 4 agents". |
 | `missing` | With no prices and no charts, rows say *Unavailable*, the chart offers a retry, and research that does not need prices still loads. |

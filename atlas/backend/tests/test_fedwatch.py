@@ -169,6 +169,7 @@ def P(**over):
     base = {
         "CPIAUCSL": months(D(2025, 1, 1), [100 + i * 0.3 for i in range(17)]), "CPILFESL": months(D(2025, 1, 1), [100 + i * 0.25 for i in range(17)]),
         "PCEPI": months(D(2025, 1, 1), [100 + i * 0.2 for i in range(17)]), "PCEPILFE": months(D(2025, 1, 1), [100 + i * 0.2 for i in range(17)]),
+        "WPSFD49207": months(D(2025, 1, 1), [100 + i * 0.4 for i in range(17)]), "WPSFD4131": months(D(2025, 1, 1), [100 + i * 0.3 for i in range(17)]),
         "PAYEMS": months(D(2026, 1, 1), [159000, 159100, 159250, 159300, 159500, 159560, 159700, 159850, 159900]),
         "UNRATE": months(D(2026, 1, 1), [4.0, 4.1, 4.1, 4.2, 4.3, 4.3, 4.4, 4.4, 4.5]),
         "A191RL1Q225SBEA": [(D(2026, 1, 1), 2.0), (D(2026, 4, 1), 1.0), (D(2026, 7, 1), 3.0)],
@@ -180,10 +181,12 @@ def P(**over):
 
 def test_release_facts_have_values_units_dates_relevance_and_no_consensus():
     facts = {f["id"]: f for f in F.release_facts(P(), TODAY)}
-    assert set(facts) == {"cpi", "core_cpi", "pce", "core_pce", "payrolls", "unemployment", "gdp"}
+    assert set(facts) == {"cpi", "core_cpi", "pce", "core_pce", "ppi", "core_ppi", "payrolls", "unemployment", "gdp"}
     assert facts["payrolls"]["value"] == 50 and "thousand jobs" in facts["payrolls"]["unit"] and facts["payrolls"]["obs_date"] == "2026-09-01"
     assert facts["unemployment"]["value"] == 4.5 and facts["unemployment"]["changes"][0]["value"] == pytest.approx(0.1)
     assert facts["gdp"]["value"] == 3.0 and facts["gdp"]["changes"][0]["value"] == pytest.approx(2.0) and facts["gdp"]["changes"][0]["ref_date"] == "2026-04-01"
+    assert facts["ppi"]["unit"] == "% year-over-year" and facts["ppi"]["series"] == "WPSFD49207" and facts["core_ppi"]["series"] == "WPSFD4131" and facts["ppi"]["label"] == "PPI final demand (producer prices)"
+    assert facts["ppi"]["value"] > 0 and "wholesale" in facts["ppi"]["relevance"]
     assert facts["core_pce"]["unit"] == "% year-over-year" and facts["cpi"]["freshness"]["state"] in ("CURRENT", "OVERDUE")
     for f in facts.values():
         assert f["relevance"] and "Consensus: not shown" in f["consensus_note"] and not ORDER.search(f["relevance"])
@@ -272,7 +275,7 @@ def test_overview_assembles_all_sections_and_labels_kinds():
     o = run(svc.overview(NOW))
     assert o["errors"] == [] and [d["meeting_end"] for d in o["decisions"]][:2] == ["2026-10-28", "2026-09-16"] and o["decisions"][1]["outcome"] == "cut"
     assert [c["type"] for c in o["communications"]] == ["statement", "speech"] and all(c["kind"] == "published_fact" for c in o["communications"])
-    assert o["upcoming"] and all(e["kind"] == "scheduled" for e in o["upcoming"]) and len(o["releases"]) == 7 and o["balance_sheet"]["series"] == "WALCL"
+    assert o["upcoming"] and all(e["kind"] == "scheduled" for e in o["upcoming"]) and len(o["releases"]) == 9 and o["balance_sheet"]["series"] == "WALCL"
     assert [e["series"] for e in o["release_schedule"]] == ["jobs", "cpi", "cpi"] and "PCE and GDP release dates are not loaded" in o["schedule_note"]
     assert all(f["ok"] for f in o["feed_status"]) and "not predictions" in o["scenario_note"] and set(o["links"]) == {"fomc_calendar", "bls_schedule", "bea_schedule"}
 
@@ -350,7 +353,8 @@ def test_demo_and_real_payloads_have_the_same_keys():
     assert set(real) - set(demo) == set() and set(demo) - set(real) == {"notice"}               # the screen can rely on every list being present
 
 
-def test_api_routes(tmp_path):
+def test_api_routes(tmp_path, monkeypatch):
+    from signal_helpers import freeze_fed_clock
     from atlas_api.providers.fred import FredProvider
     from atlas_api.providers.http import Http
 
@@ -360,9 +364,10 @@ def test_api_routes(tmp_path):
         return httpx.Response(200, text="observation_date,X\n" + "\n".join(f"{d},{v}" for d, v in pts))
     fred = FredProvider(Http("https://fred.test", "fred", min_interval=0, retries=1, client=httpx.AsyncClient(transport=httpx.MockTransport(h), base_url="https://fred.test")))
     net = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(200, content=b"<html>not a feed</html>")))
+    freeze_fed_clock(monkeypatch, NOW.isoformat())                                        # the built-in FOMC table ends on 30 Dec 2026: with the real clock this test fails from then on
     with TestClient(create_app(db_path=str(tmp_path / "f.db"), demo=False, providers={"fred": fred}, alert_loop=False, news_loop=False, news_client=net)) as c:
         d = c.get("/api/macro/fed").json()["data"]
-        assert d["upcoming"] and len(d["releases"]) == 7 and d["decisions"] and all(not s["ok"] for s in d["feed_status"])
+        assert d["upcoming"] and len(d["releases"]) == 9 and d["decisions"] and all(not s["ok"] for s in d["feed_status"])
     with TestClient(create_app(db_path=str(tmp_path / "f2.db"), demo=True, alert_loop=False)) as c:
         assert c.get("/api/macro/fed").json()["data"]["demo"] is True
     with TestClient(create_app(db_path=str(tmp_path / "f3.db"), demo=False, providers={}, alert_loop=False)) as c:
@@ -425,3 +430,8 @@ def test_decision_announcement_is_kept_apart_from_the_fred_effective_date():
     hold = F.decision(D(2026, 4, 29), lo, hi)
     assert hold["effective_obs_date"] is None and hold["announced_date"] == "2026-04-29"
     assert F.decision(D(2025, 10, 28), lo, hi).get("effective_obs_date") is None                  # unavailable decision: no dates implied
+
+
+def test_ppi_failing_does_not_hide_cpi_and_pce():
+    facts = {f["id"]: f for f in F.release_facts(P(WPSFD49207=None), TODAY)}
+    assert "error" in facts["ppi"] and "WPSFD49207" in facts["ppi"]["error"] and "value" in facts["cpi"] and "value" in facts["pce"] and "value" in facts["core_ppi"]

@@ -1,15 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Tabs } from "expo-router/js-tabs";
 import React from "react";
-import { Platform } from "react-native";
+import { PillTabBar } from "../../components/PillTabBar";
 import { color } from "../../theme";
 
-/** Exactly two tabs. Settings is behind the profile icon; there is no tab or screen per agent. */
+type IconName = React.ComponentProps<typeof Ionicons>["name"];
+const icon = (on: IconName, off: IconName) => ({ color: c, focused }: { color: unknown; focused: boolean }) => <Ionicons name={focused ? on : off} size={22} color={c as string} />;
+
+/** Six tabs: BTC, Journey (the paper-trading lab running the backtested strategies), Stocks, Macro, Discover, Journal. Search is a screen opened from Stocks; Settings is behind the profile button. The bar is TradingView's floating pill. */
 export default function TabsLayout() {
   return (
-    <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: color.text, tabBarInactiveTintColor: color.faint, tabBarStyle: { backgroundColor: color.bg, borderTopWidth: 0, ...Platform.select({ web: { height: 78, paddingBottom: 12, paddingTop: 6 }, default: {} }) }, tabBarLabelStyle: { fontSize: 11, lineHeight: 15, fontWeight: "600" }, tabBarItemStyle: { paddingTop: 2 }, sceneStyle: { backgroundColor: color.bg } }}>
-      <Tabs.Screen name="index" options={{ title: "Watchlist", tabBarButtonTestID: "tab-watchlist", tabBarIcon: ({ color: c, focused }) => <Ionicons name={focused ? "star" : "star-outline"} size={22} color={c as string} /> }} />
-      <Tabs.Screen name="search" options={{ title: "Search", tabBarButtonTestID: "tab-search", tabBarIcon: ({ color: c, focused }) => <Ionicons name={focused ? "search" : "search-outline"} size={22} color={c as string} /> }} />
+    <Tabs tabBar={(p) => <PillTabBar {...p} />} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: color.bg } }}>
+      <Tabs.Screen name="btc" options={{ title: "BTC", tabBarButtonTestID: "tab-btc", tabBarIcon: icon("logo-bitcoin", "logo-bitcoin") }} />
+      <Tabs.Screen name="journey" options={{ title: "Journey", tabBarButtonTestID: "tab-journey", tabBarIcon: icon("trail-sign", "trail-sign-outline") }} />
+      <Tabs.Screen name="index" options={{ title: "Stocks", tabBarButtonTestID: "tab-stocks", tabBarIcon: icon("stats-chart", "stats-chart-outline") }} />
+      <Tabs.Screen name="macro" options={{ title: "Macro", tabBarButtonTestID: "tab-macro", tabBarIcon: icon("globe", "globe-outline") }} />
+      <Tabs.Screen name="discover" options={{ title: "Discover", tabBarButtonTestID: "tab-discover", tabBarIcon: icon("compass", "compass-outline") }} />
+      <Tabs.Screen name="journal" options={{ title: "Journal", tabBarButtonTestID: "tab-journal", tabBarIcon: icon("book", "book-outline") }} />
     </Tabs>
   );
 }

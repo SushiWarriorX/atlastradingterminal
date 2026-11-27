@@ -1,0 +1,79 @@
+# Notes for Claude working on ATLAS and Signal
+
+Short, project-specific lessons. Keep under 80 lines; delete anything that stops being true.
+
+## Always
+- Research and paper only. No order tickets, buy/sell controls or brokerage links, anywhere. Tests check this.
+- Every number shows source, date and freshness. A gap is stated as a gap, never filled. Demo data is labelled on every screen and never mixed with live data. A card turns OVERDUE at the release lag plus one period (a month stays the newest until the next release); check the threshold against today's real age before it ships.
+- The server calculates; the apps display. Written explanations may not introduce figures.
+- Report outcomes as they are: a failing test, an unverified source or a skipped step is said plainly.
+
+## Before shipping a data source
+- Fetch it live in the same session; keep one real sample as the test fixture. If it cannot be reached, log it as blocked, do not ship it. Fetch every series id too: ids written from memory were wrong twice in one night (a BEA account code such as `DDURRC` is not a FRED id, and the id made from it answers 404).
+- Free and keyless only. Check terms. The SEC contact and any keys live in environment variables or the untracked `local-settings.ps1`, never in the repo or a request header from the user's account.
+- Show what it is and what it is not (a mood gauge is not a signal). Say "unavailable" with a reason when the source fails.
+- A refused host fails at once (`curl: (56) CONNECT tunnel failed, response 403`); a flaky one gives empty replies or hangs (FRED on 2026-11-15: fine at 08:30, silent at 14:20). Log them differently, ship another source the same cycle, and tell the owner if the same host fails twice running.
+- Accept a date only as exactly `YYYY-MM-DD` (a regex before `date.fromisoformat`): from Python 3.11 `fromisoformat` also reads `2026-W46` and `20261113` as days, so a weekly or differently dated series would slip in silently (a test written to refuse one found this on 2026-11-15).
+
+## Numbers that went wrong once
+- Bars per year: about 252 for stocks, 365 for crypto. Derive it from the dates, never hard-code.
+- Backtests: decide on a design period only; keep the last 30% sealed until the end; raise the bar for every extra variant tried; a win on a handful of trades is "inconclusive".
+- Year-over-year price indexes (CPI, PCE, PPI) need the same month a year earlier; a missing month means "unavailable", not a guess.
+
+## Tooling traps in this repo
+- Phone app tokens are `color.up` and `color.down` (not good/bad); `Txt` variants are hero, title, h2, body, small, tiny, label.
+- React Native accessibility props must not reach an SVG on web (the browser warns); the browser test fails on console warnings.
+- Browser tests: Playwright selectors from the helper `V()` contain `:visible`, which is not valid inside `page.waitForFunction`; use a plain attribute selector there.
+- The cloud machine only reaches hosts on the environment's allowed list; a timeout (no HTTP code) usually means "host not allowed", not "site down".
+- Before finishing: backend `pytest`, `npm run typecheck && npm test` in `mobile`, then `npm run export:web` and `node e2e/signal.e2e.cjs` after UI changes; export again after any later edit under `src` (the browser reads `dist`: a stale export failed a pattern the source already met).
+- Breakage run (`devtools/breakage.py`, README there; it was a script copied for every module until 2026-11-25): `python3 atlas/devtools/breakage.py <module> --cwd atlas/backend --table <file> --tests <test files>`, where the table is a Python file with `CHANGES` and `EQUIVALENT` lists of (name, pattern, replacement) one-line changes, each pattern occurring exactly once (refused otherwise, like a change that changes nothing). It works on a COPY (the original is never written, so nothing else can run a broken module) with bytecode off, runs the CLEAN copy first (a copy that fails before any change makes every change look caught), names the survivors and writes the file back after every change; `--only NAME` runs survivors again after a test was added and `--equiv` runs the changes thought equivalent, which must all survive. A survivor is a missing test or dead code: close it, or list it as equivalent (loop-rules items 11, 15 and 17). Do not write changes that print the same text (a date with `str` instead of `isoformat()`, a number with `str` instead of `:g`): four of the 16 survivors of the first bank loans table were of that kind; list them as equivalent and run them alone to see them survive.
+- A browser script that scrolls a React Native Web ScrollView must set `el.scrollTop = n`: RN Web puts its own `scrollTo(options)` on the node, so `el.scrollTo(0, n)` silently does nothing.
+- This sandbox blocks `sleep`. Wait for a background job with a Monitor until-loop, or block on its process with `tail --pid=<pid> -f /dev/null`; a foreground call is cut off after 10 minutes, so start long suites in the background.
+- All phone colours are tokens in `src/theme.ts` (the app is light since 2026-11-15; `onAccent` is the text on blue). The contrast test must list every gradient that hosts text: a red tint added without it sat at 4.41:1 against the 4.5 bar.
+- Anything that puts the protocol version into an identifier (here the specification hash, and from it every paper account's id) breaks when the version is bumped. Pin the version per family before an amendment adds a family, and test that every old hash is unchanged.
+
+## When code fetches something from the internet
+- Timeout on every request, a short cache, and a labelled "unavailable" result on failure; one failing half must not hide the other.
+- Parse untrusted XML defensively (refuse a DOCTYPE or entities); never build a link from a field without checking its characters; show only https links.
+- Keep a trimmed real response as the test fixture, and test the failure, stale and demo paths, not only the happy one.
+
+## Treasury FiscalData (the source behind many Macro cards)
+- Missing values arrive as the text "null", not as nulls; amounts are strings, usually in millions of dollars (a few are in dollars). Convert once, state the unit on screen.
+- Read the field the source really fills: in the cash-balance table the closing balance sits in `open_today_bal`. Prove it with two live rows that must agree (one day's closing equals the next day's opening) before trusting it.
+- Mixed-type tables hide look-alikes (inflation-protected and floating-rate notes inside "Note"): filter with the source's own flag fields, never by guessing from a name or a yield.
+- A page-size limit can cut the oldest month in half; count what is really there before promising "N months", and show "no comparison" when a month is missing.
+- Check your own arithmetic against a total the source publishes (a deficit, a year-to-date row) in a test.
+- A source can be behind: the bill-auction table stopped 26 days before "today". Show OVERDUE with the real gap and list what is pending; never fill the gap or call it current. Keep a test that uses the real fetch date.
+- Daily Treasury Statement amounts are in millions and the month and fiscal-year totals are columns on each row: fetch the newest day, the month's days and the same day a year earlier as three small queries (`filter=record_date:gte:` / `lte:`, `sort=-record_date`), and test that the days add up to the source's own month-to-date figure.
+- Rows that look like part of a total may not be: trust-fund (Government Account Series) rows are trillions of government-to-government debt, and the inflation adjustment on TIPS is an "issue" with no cash. Leave them out or label them on their own line, and say so in the note.
+- Read the phone screenshot for sentence grammar, not only numbers: a phrase reused mid-line and as a sentence start produced "this month. a year earlier". Write phrases that work in both places.
+
+## Research engine and browser-test lessons (from the fundamentals build)
+- Quarterly figures: companies file 3-, 6-, 9- and 12-month cumulative cash-flow totals and never a fourth quarter; derive a quarter as the difference of two cumulative totals and label it "derived". Never sum quarters that are not consecutive.
+- Tests: the first valid bar of any rolling indicator is bar n-1 (a 50-bar average first exists on bar 49); I wrote this off-by-one three times. Build fixtures from hand-checkable numbers and never write `or True` into an assertion (`tests/test_test_hygiene.py` now refuses it and its cousins in every test file). A test of an encoding must put non-ASCII bytes on disk and compare bytes: `json.dumps` escapes to ASCII by default, so a file it writes never reaches the UTF-8 reader (a breakage run found this in the owner-question reader on 2026-11-18; the test now writes with `ensure_ascii=False`). When limits interlock (a value cannot sit at its limit while the sums stay exact), write the edge table as (series, value, expected text): the inside edge expects the message of the check that comes next, the outside edge the range message.
+- JSON: infinity and NaN are not JSON. "No upper limit" must become null before it reaches an answer, and a test needs a saved result to see it (an empty state hides the bug).
+- Screens: view screenshots, not just assertions. They showed small amounts printed as $0, warnings buried in collapsed sections, invisible inputs and 35px buttons. A formatter must never turn a small non-zero amount into zero.
+- Clipboard and pop-ups: start the copy and open the tab inside the click; report "copied" only after a real success; `window.open` with `noopener` always returns null, so detach with `opener = null` instead; test with permissions granted, refused and the tab blocked.
+- Test text that denies something (a disclaimer saying "not a price target") will trip a naive advice detector: strip the app's own disclaimers before scanning.
+
+## Mistakes from the shift loops (2026-11-09 and 10)
+- Editing a file from a script: never open it for writing before reading it (`open(p, "w").write(open(p).read() + ...)` empties it first). Read into a variable, then write; check the diff shows only additions.
+- Editing a markdown table by searching for a heading word: the word also appears in the intro, so rows landed in the wrong table. Search for the full heading line, and re-read the result. The STATE BOARD row and the move to the archive have a tool: `python3 atlas/devtools/board.py add ...` (its cells are read from files, so no shell touches them).
+- A test that depends on the clock or weekday fails at odd hours (three-day-old prices were "the latest session" on a Monday morning; a demo 1D chart held one bar for five minutes after New York midnight and turned one CI run red on 2026-11-24). Anything built from `now` counts, even through a provider: set the clock in the test (`freeze_demo_clock` in `tests/signal_helpers.py` for the demo provider) or make fixtures stale by a margin that holds on any day. A CI run that is red while the test passes locally is a clock, order or network dependence: reproduce it with the clock at the failing second of the log (`python3 atlas/devtools/clockrun.py --at <instant with offset> --cwd atlas/backend -- -q`: standard library only, a file's own times stay real, and the clocks of pandas and NumPy stay real too, so an instant more than a year ahead fails the exchange-calendars tests on its own: see `devtools/README.md`), never rerun until green. After a push read the push AND the pull-request run of the head commit (one was red and the other green for the same commit) and the failed job's log.
+- Derive a hand-checked number before trusting it (a Hull average on a straight line lags 4/3 bars, not 0). If the code and the expectation disagree, work out which is right first.
+- A rule with a stop fixed at entry can end up as buy-and-hold (the NR7 rule entered in 2015 and never exited). Look at the entry and exit dates of a new backtest, not only the totals, and a rule needs at least one parameter for the robustness check.
+
+## Phone lists
+- Signal's screens render lists with a scroll view and `map`. That is fine while the server caps the rows (calendar 40 a day over at most 21 days, filings 40, watchlist 100). Any new list that could pass about 100 rows should use `FlatList`, or the server should cap it.
+
+## Working style the user prefers
+- Short, plain-English reports for a beginner: what changed, what was checked, what was not, what is needed from them.
+- Do not merge, keep the PR draft, ask before anything paid or outward-facing.
+
+## Tooling traps found 2026-11-11
+- Inside a Python script written through a shell heredoc, "\\n" puts a literal backslash-n into the target file (and `rstrip("\\n")` strips backslashes and the letter n). Use real "\n", or the Edit tool, and grep the diff for `\\n` before committing. Quote the heredoc delimiter (`<<'EOF'`) whenever the body holds Markdown or code: with an unquoted `<<EOF` the shell runs anything between backticks and expands `$`, so code spans such as `str(x)` vanished from a values file without an error (2026-11-18, and the docs had to be redone); let Python, not `$(...)` inside the body, fill in times.
+- A `sed` line holding `$` and `${` (template strings) made the sandbox refuse the WHOLE command, including later steps, as an unverifiable removal, and a long heredoc mixed with shell edits can be blocked the same way. Make such edits with the Edit tool (write files with the file tools, run small scripts from files) and run build and test commands as separate calls.
+- When a fix is for a whole class of bug (raw dates, missing caveat), put the check for the class into the browser script; the raw-date check found five spots a manual pass missed.
+- A source whose unit is not stated anywhere reachable (per day or per week) is HELD, not shipped, even when its numbers are internally consistent; a self-check proves consistency, not meaning.
+- Browser scripts go stale silently when the UI is restyled (the old terminal scripts expected old nav labels, an AI panel and a toolbar button, and had not been run for days). Run the Signal browser script (`node e2e/signal.e2e.cjs` in `mobile`, all scenarios) after any UI change; it starts its own backend and database for each scenario.
+- Test layouts with the worst real content, not the sample content: a five-digit price and the longest status word ("UNAVAILABLE") broke a Watchlist that passed with "169.78" and "DELAYED". When a layout depends on text length, add worst-case text to the Signal browser script.

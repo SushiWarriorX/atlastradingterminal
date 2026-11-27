@@ -1,0 +1,1 @@
+{"account": "vol_breakout-a1fdbb9e", "after_candle": "2026-11-14T00:00:00Z", "event": "account_opened", "family": "vol_breakout", "params": {"hold": 20, "k": 2.0}, "recorded_at": "2026-11-15T10:36:08Z", "seq": 1, "spec_hash": "a1fdbb9ea67b782b", "stage": "monitor", "start_equity": 10000.0}

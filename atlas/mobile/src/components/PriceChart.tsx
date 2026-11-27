@@ -1,12 +1,13 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useId, useMemo, useRef, useState } from "react";
 import { PanResponder, View, type LayoutChangeEvent } from "react-native";
-import Svg, { Circle, Line, Path } from "react-native-svg";
+import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from "react-native-svg";
 import { color } from "../theme";
 
 export interface Scrub { t: number; v: number; i: number }
 
-/** A clean single-line chart, no fill. Touch or drag to read any point; the parent shows that point's price and time in place of the headline price. */
+/** A clean line chart with a soft fade under it, as on TradingView. Touch or drag to read any point; the parent shows that point's price and time in place of the headline price. */
 export function PriceChart({ points, tint, height = 210, onScrub }: { points: [number, number][]; tint: string; height?: number; onScrub?: (s: Scrub | null) => void }) {
+  const gid = "p" + useId().replace(/[^a-zA-Z0-9]/g, "");
   const [w, setW] = useState(0);
   const [at, setAt] = useState<number | null>(null);
   const n = points.length;
@@ -43,6 +44,8 @@ export function PriceChart({ points, tint, height = 210, onScrub }: { points: [n
     <View style={{ height }} onLayout={onLayout} {...pan.panHandlers} testID="price-chart" accessibilityLabel="Price chart. Touch and drag to read prices." accessibilityRole="image">
       {geo && (
         <Svg width={w} height={height}>
+          <Defs><LinearGradient id={gid} x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={tint} stopOpacity={0.2} /><Stop offset="1" stopColor={tint} stopOpacity={0} /></LinearGradient></Defs>
+          <Path d={`${geo.line} L${w} ${height} L0 ${height} Z`} fill={`url(#${gid})`} />
           <Path d={geo.line} stroke={tint} strokeWidth={2.5} fill="none" strokeLinejoin="round" strokeLinecap="round" />
           {at !== null && (
             <>

@@ -1,0 +1,1 @@
+{"account": "sma_cross-c0f76650", "after_candle": "2026-11-14T00:00:00Z", "event": "account_opened", "family": "sma_cross", "params": {"fast": 10, "slow": 50}, "recorded_at": "2026-11-15T10:36:08Z", "seq": 1, "spec_hash": "c0f76650213f0d13", "stage": "monitor", "start_equity": 10000.0}

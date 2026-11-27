@@ -1,3 +1,4 @@
+import { OpsCard } from "./OpsCard";
 import Constants from "expo-constants";
 import React, { useState } from "react";
 import { ScrollView, View } from "react-native";
@@ -54,6 +55,7 @@ export function SettingsView({ onClose }: { onClose: () => void }) {
           <Txt variant="small" style={{ marginTop: space.sm }}>Signal Mobile {Constants.expoConfig?.version ?? ""}. Research only: it cannot place trades, connect to a brokerage, or hold your money. Nothing in the app is financial advice.</Txt>
           {m?.notes.map((n, i) => <Txt key={i} variant="tiny" style={{ marginTop: 4 }}>{n}</Txt>)}
         </Card>
+        <OpsCard />
       </ScrollView>
     </View>
   );

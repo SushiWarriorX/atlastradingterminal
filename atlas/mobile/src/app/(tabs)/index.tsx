@@ -2,9 +2,11 @@ import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { FlatList, RefreshControl, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { EarningsCard } from "../../components/EarningsCard";
 import { ScreenHeader } from "../../components/ScreenHeader";
+import { AddSymbolPill } from "../../components/AddSymbolPill";
 import { WatchRowItem } from "../../components/WatchRowItem";
-import { Banner, Divider, EmptyState, ErrorState, PrimaryButton, Skeleton, TextButton, Txt } from "../../components/ui";
+import { Banner, Divider, EmptyState, ErrorState, PrimaryButton, RoundButton, Skeleton, TextButton, Txt } from "../../components/ui";
 import { localClock, relativeTime } from "../../lib/format";
 import { describeFreshness, summarizeTones } from "../../lib/freshness";
 import { idsOf, moveId, settledRows } from "../../lib/watchlist";
@@ -36,6 +38,7 @@ export default function WatchlistScreen() {
 
   const header = (
     <View style={{ gap: space.sm, paddingHorizontal: space.lg, paddingBottom: space.sm }}>
+      {items.length > 0 && <EarningsCard />}
       {demo && <Banner tone="demo" title="Demo data" testID="demo-banner">Prices and research here are synthetic, for trying the app. They are not real market data.</Banner>}
       {offline && <Banner tone="warn" title="Can't reach the server" testID="offline-banner" action={<TextButton label="Retry" onPress={() => { void wl.refetch(); }} testID="offline-retry" />}>Showing your last list{updated ? ` from ${relativeTime(new Date(updated).toISOString(), now)}` : ""}. Prices may be out of date.</Banner>}
       {!offline && problems ? <Banner tone="warn" title={problems} testID="stale-banner">Some prices are not current. Check the dot next to each price.</Banner> : null}
@@ -45,7 +48,7 @@ export default function WatchlistScreen() {
 
   let body: React.ReactNode;
   if (!wl.cacheLoaded || (wl.isLoading && !wl.data)) {
-    body = <View style={{ paddingHorizontal: space.lg, gap: space.lg, paddingTop: space.md }} testID="watchlist-loading">{[0, 1, 2, 3, 4].map((i) => <View key={i} style={{ flexDirection: "row", gap: space.md, alignItems: "center" }}><Skeleton w={44} h={44} r={22} /><View style={{ flex: 1, gap: 8 }}><Skeleton w="55%" h={15} /><Skeleton w="35%" h={11} /></View><Skeleton w={70} h={28} /></View>)}</View>;
+    body = <View style={{ paddingHorizontal: space.lg, gap: space.lg, paddingTop: space.md }} testID="watchlist-loading">{[0, 1, 2, 3, 4].map((i) => <View key={i} style={{ flexDirection: "row", gap: space.md, alignItems: "center" }}><Skeleton w={40} h={40} r={20} /><View style={{ flex: 1, gap: 8 }}><Skeleton w="55%" h={15} /><Skeleton w="35%" h={11} /></View><Skeleton w={70} h={28} /></View>)}</View>;
   } else if (wl.isError && !wl.data) {
     body = <ErrorState testID="watchlist-error" title="Can't reach your Signal server" body={wl.error instanceof Error ? wl.error.message : "Something went wrong."} onRetry={() => wl.refetch()} extra={wide ? undefined : <TextButton label="Check connection settings" onPress={() => router.push("/settings")} />} />;
   } else if (items.length === 0) {
@@ -54,8 +57,8 @@ export default function WatchlistScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: color.bg, paddingTop: insets.top }}>
-      <ScreenHeader title="Watchlist" subtitle={updated ? `${items.length} asset${items.length === 1 ? "" : "s"} · updated ${localClock(new Date(updated).toISOString())}` : undefined}
-        right={items.length > 0 ? <TextButton label={editing ? "Done" : "Edit"} onPress={() => setEditing((e) => !e)} testID="edit-toggle" /> : undefined} />
+      <ScreenHeader title="Stocks" subtitle={updated ? `${items.length} asset${items.length === 1 ? "" : "s"} · updated ${localClock(new Date(updated).toISOString())}` : undefined}
+        right={<>{items.length > 0 ? <RoundButton name={editing ? "checkmark" : "create-outline"} label={editing ? "Done" : "Edit"} onPress={() => setEditing((e) => !e)} testID="edit-toggle" /> : null}{wide ? null : <RoundButton name="search" label="Search assets" onPress={goSearch} testID="open-search" />}</>} />
       <FlatList
         data={body ? [] : items}
         keyExtractor={(r) => r.asset.id}
@@ -63,6 +66,7 @@ export default function WatchlistScreen() {
         ListEmptyComponent={body ? (body as React.ReactElement) : undefined}
         ItemSeparatorComponent={Divider}
         refreshControl={<RefreshControl refreshing={wl.isRefetching && !wl.isLoading} onRefresh={() => { void wl.refetch(); }} tintColor={color.accent} />}
+        ListFooterComponent={items.length > 0 && !editing ? <View style={{ alignItems: "center", paddingTop: space.lg }}><AddSymbolPill onPress={goSearch} /></View> : undefined}
         contentContainerStyle={{ paddingBottom: space.xxl }}
         renderItem={({ item, index }) => (
           <WatchRowItem row={item} now={now} editing={editing} canUp={index > 0} canDown={index < items.length - 1}

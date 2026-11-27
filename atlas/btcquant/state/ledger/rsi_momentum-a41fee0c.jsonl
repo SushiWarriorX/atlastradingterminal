@@ -1,0 +1,1 @@
+{"account": "rsi_momentum-a41fee0c", "after_candle": "2026-11-14T00:00:00Z", "event": "account_opened", "family": "rsi_momentum", "params": {"enter": 55, "exit": 45, "n": 14}, "recorded_at": "2026-11-15T10:36:08Z", "seq": 1, "spec_hash": "a41fee0c68637875", "stage": "monitor", "start_equity": 10000.0}

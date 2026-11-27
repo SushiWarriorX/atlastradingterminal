@@ -1,12 +1,20 @@
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Asset, Briefing, Finding, Prov, WatchlistResponse, WatchRow } from "../api/types";
 import { AGENT_ORDER, briefingSections, coverageNote, lineText, rowKind } from "./briefing";
-import { countdown, dateOnly, directionOf, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime } from "./format";
+import { atOrBelow, countdown, dateOnly, directionOf, formatChange, formatPct, formatPrice, hueFor, initials, localClock, localDateTime, relativeTime, sourceLine, spoken, ymdLabel } from "./format";
 import { describeFreshness, isOutdated, summarizeTones, worstTone } from "./freshness";
 import { keys } from "./keys";
 import { safeUrl } from "./links";
 import { MAX_RECENTS, parseRecents, pushRecent } from "./recents";
 import { applyAdd, applyRemove, applyReorder, idsOf, moveId, settledRows } from "./watchlist";
+import { busyText } from "./lab";
+import { SEC_OFF_POINTER, isSecOff, withoutSecOff } from "./secOff";
+import { dayLabel, detailLine, groupByDay } from "./calendar";
+import { contrast } from "./contrast";
+import { color, grad } from "../theme";
+import { blankForm, fromEntry, missingText, resultText, sideLabel, signed, toBody } from "./journal";
 
 const NOW = Date.parse("2026-12-01T12:00:00Z");
 const asset = (id: string, symbol: string, type: Asset["type"] = "stock", venue = "Nasdaq"): Asset => ({ id, symbol, name: symbol + " Inc", type, venue, support: "supported", note: null });
@@ -53,6 +61,11 @@ describe("formatting", () => {
     expect(localDateTime("nope")).toBe("n/a");
     expect(dateOnly("2026-12-09")).toBe("Dec 9");
     expect(dateOnly(null)).toBe("n/a");
+    expect(ymdLabel("2026-10-31")).toBe("Oct 31, 2026");                                           // a date a person can read
+    expect(ymdLabel("2026-01-05")).toBe("Jan 5, 2026");
+    expect(ymdLabel("2026-10")).toBe("October 2026");
+    expect(ymdLabel("2026-10-31T12:00:00Z")).toBe("2026-10-31T12:00:00Z");                          // other shapes are shown as they came, never hidden or guessed
+    expect(ymdLabel(null)).toBe("n/a");
   });
   it("gives each asset id its own avatar colour and short initials", () => {
     expect(hueFor("EQUITY:NASDAQ:AAPL")).toBe(hueFor("EQUITY:NASDAQ:AAPL"));
@@ -60,6 +73,36 @@ describe("formatting", () => {
     expect(initials("AAPL")).toBe("AA");
     expect(initials("BTC")).toBe("BTC");
     expect(initials("")).toBe("?");
+  });
+});
+
+describe("where a figure sits among the past year's days or weeks", () => {
+  it("says what share of them were at or below it, in the same words on every card", () => {
+    expect(atOrBelow(62, 255, "days", "price")).toBe("62% of its 255 days were at or below this price.");
+    expect(atOrBelow(25, 53, "weeks", "level")).toBe("25% of its 53 weeks were at or below this level.");
+    expect(atOrBelow(100, 53, "weeks", "price")).toBe("100% of its 53 weeks were at or below this price.");
+    expect(atOrBelow(0, 53, "weeks", "level")).toBe("0% of its 53 weeks were at or below this level.");                      // a share of zero is a real answer, not a missing one
+  });
+  it("rounds to a whole percent and agrees with a single day", () => {
+    expect(atOrBelow(61.6, 255, "days", "price")).toBe("62% of its 255 days were at or below this price.");
+    expect(atOrBelow(61.4, 255, "days", "price")).toBe("61% of its 255 days were at or below this price.");
+    expect(atOrBelow(100, 1, "days", "price")).toBe("100% of its 1 day was at or below this price.");
+  });
+  it("leaves the sentence out when a number is missing, instead of printing n/a", () => {
+    expect(atOrBelow(null, 255, "days", "price")).toBeNull();
+    expect(atOrBelow(62, undefined, "days", "price")).toBeNull();
+    expect(atOrBelow(Number.NaN, 255, "days", "price")).toBeNull();
+    expect(atOrBelow(62, Number.POSITIVE_INFINITY, "days", "price")).toBeNull();
+    expect(atOrBelow(62, 0, "days", "price")).toBeNull();
+    expect(atOrBelow(62, 12.5, "days", "price")).toBeNull();                                                                // a count is a whole number
+    expect(atOrBelow(-1, 255, "days", "price")).toBeNull();
+    expect(atOrBelow(101, 255, "days", "price")).toBeNull();                                                                // a share cannot be over 100
+  });
+  it("is used by the cards that show a past-year range, and none prints a missing figure as n/a", () => {
+    const dir = join(__dirname, "..", "components");
+    for (const f of ["NaturalGasCard.tsx", "OilPricesCard.tsx", "GasolinePricesCard.tsx", "JoblessClaimsCard.tsx"]) expect(readFileSync(join(dir, f), "utf8"), f).toMatch(/atOrBelow\(/);
+    const bad = readdirSync(dir).filter((f) => f.endsWith(".tsx") && /\?\? "n\/a"\}% of/.test(readFileSync(join(dir, f), "utf8")));
+    expect(bad).toEqual([]);
   });
 });
 
@@ -208,5 +251,201 @@ describe("wide layout", () => {
     expect(WIDE_MIN).toBe(1000);
     expect([390, 768, 999].map(isWide)).toEqual([false, false, false]);
     expect([1000, 1440].map(isWide)).toEqual([true, true]);
+  });
+});
+
+describe("journal form helpers", () => {
+  const entry = (o: Partial<import("../api/types").JournalEntry> = {}) => ({ id: "e:1", origin: "manual", editable: true, symbol: "AAPL", direction: "long", status: "closed", size: "10", entry_price: "100", exit_price: "110", entry_at: "2026-01-02T00:00:00Z", exit_at: null, fees: "0", planned_stop: null, note: null, thesis: null, risk_plan: null, outcome: null, screenshot: null, net_pnl_num: 100, return_pct: 10, pnl_missing: [], ...o }) as import("../api/types").JournalEntry;
+  it("a new entry sends only what was filled in", () => {
+    const f = { ...blankForm("2026-03-01"), symbol: " btc ", note: "idea" };
+    expect(toBody(f, false)).toEqual({ symbol: "btc", direction: "long", entry_at: "2026-03-01", note: "idea" });
+  });
+  it("an edit sends emptied optional fields as null so they are cleared, but never clears the symbol or date", () => {
+    const f = { ...fromEntry(entry({ note: "x" })), note: "", symbol: "" };
+    const b = toBody(f, true);
+    expect(b.note).toBeNull();
+    expect(b.exit_price).toBe("110");
+    expect("symbol" in b).toBe(false);
+  });
+  it("round-trips an entry through the form", () => {
+    expect(fromEntry(entry({ fees: "0" })).fees).toBe("");
+    expect(fromEntry(entry()).entry_at).toBe("2026-01-02");
+  });
+  it("signed uses a real minus and shows a dash for missing", () => {
+    expect(signed(5)).toBe("+5.00");
+    expect(signed(-5)).toBe("−5.00");
+    expect(signed(null)).toBe("—");
+  });
+  it("result and missing text", () => {
+    expect(resultText(entry())).toBe("+100.00");
+    expect(resultText(entry({ status: "open", net_pnl_num: null }))).toBe("Open");
+    expect(resultText(entry({ status: "note" }))).toBe("");
+    expect(missingText(entry({ status: "open", pnl_missing: ["exit price"] }))).toBe("P&L needs the exit price.");
+    expect(missingText(entry({ status: "note", pnl_missing: ["size"] }))).toBeNull();
+  });
+  it("a plain note never shows a side, but a trade does", () => {
+    expect(sideLabel(entry({ status: "note", direction: "long" }))).toBe("Note");
+    expect(sideLabel(entry({ status: "open", direction: "long" }))).toBe("Long");
+    expect(sideLabel(entry({ status: "closed", direction: "short" }))).toBe("Short");
+  });
+});
+
+describe("readable text on every card", () => {
+  it("measures contrast correctly", () => {
+    expect(contrast("#000000", "#FFFFFF")).toBeCloseTo(21, 0);
+    expect(contrast("#777777", "#777777")).toBeCloseTo(1, 5);
+  });
+  it("small captions (faint) and body-small text (dim) reach 4.5:1 on every stop of every card gradient and on the screen background", () => {
+    const stops = [color.bg, color.surface, ...grad.card, ...grad.hot, ...grad.good, ...grad.warn, ...grad.bad];
+    for (const bg of stops) {
+      expect(contrast(color.faint, bg), `faint on ${bg}`).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(color.dim, bg), `dim on ${bg}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});
+
+describe("readable colours for direction, warnings and buttons", () => {
+  it("green, red, amber and the two blues are readable as text on white and on the light card background", () => {
+    for (const bg of [color.bg, color.surface]) {
+      for (const [name, c] of Object.entries({ up: color.up, down: color.down, warn: color.warn, demo: color.demo, accent: color.accent, accent3: color.accent3 })) expect(contrast(c, bg), `${name} on ${bg}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+  it("the darker blue text of a tinted chip (the Recommended tag on the Journey question) reaches 4.5:1 on its own 10% tint over every stop of the card gradient; the lighter blue would not (about 4.2:1)", () => {
+    const hex = (n: number) => Math.round(n).toString(16).padStart(2, "0");
+    const mix = (fg: string, bg: string, a: number) => "#" + [1, 3, 5].map((i) => hex(a * parseInt(fg.slice(i, i + 2), 16) + (1 - a) * parseInt(bg.slice(i, i + 2), 16))).join("");
+    for (const stop of grad.card) {
+      expect(contrast(color.accent3, mix(color.accent3, stop, 0x1a / 255)), `accent3 chip on ${stop}`).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(color.accent, mix(color.accent, stop, 0x1a / 255)), `accent chip on ${stop}`).toBeLessThan(4.5);
+    }
+  });
+  it("white text on the blue button reaches 4.5:1 at its darkest and 3:1 (large bold text) at its lightest stop", () => {
+    expect(contrast(color.onAccent, grad.accent[2])).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(color.onAccent, grad.accent[1])).toBeGreaterThanOrEqual(4.5);
+    for (const stop of grad.accent) expect(contrast(color.onAccent, stop)).toBeGreaterThanOrEqual(3);
+  });
+  it("the chosen text colour is near-black on white", () => {
+    expect(contrast(color.text, color.bg)).toBeGreaterThanOrEqual(15);
+  });
+});
+
+describe("a change in price units", () => {
+  it("shows a sign, a real minus and no currency sign, with more places for small prices", () => {
+    expect(formatChange(1.5)).toBe("+1.50");
+    expect(formatChange(-1.98)).toBe("−1.98");
+    expect(formatChange(1234.5)).toBe("+1,234.50");
+    expect(formatChange(-0.0421)).toBe("−0.0421");
+    expect(formatChange(0.00001234)).toBe("+0.000012");
+    expect(formatChange(0)).toBe("+0.00");
+    expect(formatChange(null)).toBe("n/a");
+    expect(formatChange(NaN)).toBe("n/a");
+  });
+});
+
+describe("Strategy Lab waiting message", () => {
+  it("always says it is working and that the first real-data run downloads history", () => {
+    for (const [m, tf] of [["spot", "1d"], ["perp", "1d"], ["spot", "1h"], ["perp", "4h"]]) {
+      const t = busyText(m, tf);
+      expect(t).toMatch(/Running the comparison/);
+      expect(t).toMatch(/first run on real data downloads/);
+      expect(t).toMatch(/later runs are quick/);
+    }
+  });
+  it("mentions funding history only for perpetuals, and hourly prices only for intraday", () => {
+    expect(busyText("spot", "1d")).not.toMatch(/funding/);
+    expect(busyText("perp", "1d")).toMatch(/funding history/);
+    expect(busyText("spot", "1d")).not.toMatch(/hourly/);
+    expect(busyText("spot", "4h")).toMatch(/hourly prices/);
+  });
+});
+
+describe("calendar helpers", () => {
+  const ev = (o: Record<string, unknown>) => ({ kind: "earnings", date: "2026-11-10", at_utc: null, time_label: null, title: "t", symbol: "AAPL", name: "Apple", importance: "high", market_cap: null, details: {}, source: "s", official: false, link: null, watch: false, instrument_id: null, ...o }) as import("../api/types").CalendarEvent;
+  it("groups consecutive events by day and keeps their order", () => {
+    const g = groupByDay([ev({ date: "2026-11-10", symbol: "A" }), ev({ date: "2026-11-10", symbol: "B" }), ev({ date: "2026-11-11", symbol: "C" })]);
+    expect(g.map((x) => [x.day, x.events.map((e) => e.symbol)])).toEqual([["2026-11-10", ["A", "B"]], ["2026-11-11", ["C"]]]);
+    expect(groupByDay([])).toEqual([]);
+  });
+  it("labels today and tomorrow and names other days", () => {
+    expect(dayLabel("2026-11-10", "2026-11-10")).toMatch(/^Today · Tuesday, Nov 10/);
+    expect(dayLabel("2026-11-11", "2026-11-10")).toMatch(/^Tomorrow · Wednesday, Nov 11/);
+    expect(dayLabel("2026-11-13", "2026-11-10")).toMatch(/^Friday, Nov 13/);
+  });
+  it("detail lines use only what the source gave and say n/a otherwise", () => {
+    expect(detailLine(ev({ details: { eps_estimate: 1.25, analysts: 30, last_year_eps: 1.1, quarter_ending: "Sep/2026" } }))).toBe("Estimate $1.25 (30 analysts) · a year ago $1.10 · quarter ending Sep/2026");
+    expect(detailLine(ev({ details: { eps_estimate: null, analysts: null, last_year_eps: null } }))).toBe("Estimate n/a · a year ago n/a");
+    expect(detailLine(ev({ kind: "dividend", details: { amount: 0.97, pay_date: "2026-12-10" } }))).toBe("$0.97 per share · pays 2026-12-10");
+    expect(detailLine(ev({ kind: "economy", details: { release: "Consumer Price Index" } }))).toBe("Consumer Price Index");
+  });
+});
+
+describe("code hygiene for the browser version", () => {
+  const files = (dir: string): string[] => readdirSync(dir).flatMap((f) => { const p = join(dir, f); return statSync(p).isDirectory() ? files(p) : p.endsWith(".tsx") ? [p] : []; });
+  it("never passes React Native accessibility props to an SVG element (the browser warns: 'React does not recognize the accessibilityElementsHidden prop')", () => {
+    const bad = files(join(__dirname, "..")).filter((f) => /<Svg[^>]*accessibility(ElementsHidden|Label|Role)/.test(readFileSync(f, "utf8")));
+    expect(bad).toEqual([]);
+  });
+});
+
+describe("the missing SEC contact setting is explained once", () => {
+  const full = 'SEC filings are off: ATLAS_SEC_CONTACT is not set. Windows: add the line $env:ATLAS_SEC_CONTACT = "you@example.com" to local-settings.ps1 and restart ATLAS. The email is sent only to sec.gov.';
+  const research = "SEC filings are off: ATLAS_SEC_CONTACT is not set. The SEC requires a contact email in the request; set it as an environment setting on the machine that runs ATLAS.";
+  it("recognises the server's message in both of its wordings, and nothing else", () => {
+    expect(isSecOff(full)).toBe(true);
+    expect(isSecOff(research)).toBe(true);
+    expect(isSecOff("SEC returned HTTP 503 for AAPL")).toBe(false);
+    expect(isSecOff("ATLAS_SEC_CONTACT is set but the SEC refused the request")).toBe(false);     // another message that mentions the setting is NOT this one
+    expect(isSecOff("Demo mode: no filings are shown")).toBe(false);
+    expect(isSecOff("")).toBe(false);
+    expect(isSecOff(null)).toBe(false);
+    expect(isSecOff(undefined)).toBe(false);
+  });
+  it("takes it out of an error list and keeps every other error, in order", () => {
+    expect(withoutSecOff([full, "Yahoo did not answer", research, "No earnings date"])).toEqual(["Yahoo did not answer", "No earnings date"]);
+    expect(withoutSecOff([full])).toEqual([]);
+    expect(withoutSecOff([])).toEqual([]);
+  });
+  it("the pointer says where the steps are and does not repeat them", () => {
+    expect(SEC_OFF_POINTER).toMatch(/SEC filings card above/);
+    expect(SEC_OFF_POINTER).not.toMatch(/ATLAS_SEC_CONTACT|\$env|local-settings|example\.com/);
+  });
+});
+
+describe("the closing line of a card that names its source", () => {
+  it("says what the card covers and where the data comes from", () => {
+    expect(sourceLine("This feed covers IPOs only.", "Nasdaq IPO calendar (public website feed)")).toBe("This feed covers IPOs only. Source: Nasdaq IPO calendar (public website feed).");
+    expect(sourceLine(undefined, "FRED")).toBe("Source: FRED.");
+    expect(sourceLine("  ", "FRED")).toBe("Source: FRED.");
+  });
+  it("is empty until the source is known, never an empty \"Source: .\"", () => {
+    expect(sourceLine(undefined, undefined)).toBe("");
+    expect(sourceLine("This feed covers IPOs only.", undefined)).toBe("");
+    expect(sourceLine("This feed covers IPOs only.", null)).toBe("");
+    expect(sourceLine("x", "")).toBe("");
+    expect(sourceLine("x", "   ")).toBe("");
+  });
+});
+
+describe("what a screen reader says for a list row", () => {
+  it("is the words the row shows, in order, with empty ones left out", () => {
+    expect(spoken("BTC", "Crypto", false, "Bitcoin", null, undefined, "", "  ", "$169.78", "+0.90%")).toBe("BTC Crypto Bitcoin $169.78 +0.90%");
+    expect(spoken()).toBe("");
+  });
+  it("trims each word and never starts or ends with a space", () => {
+    expect(spoken("  AAPL ", " Stock")).toBe("AAPL Stock");
+  });
+});
+
+describe("tap targets", () => {
+  it("the shared buttons ask for 44 points, because the web build ignores hitSlop", () => {
+    const ui = readFileSync(join(__dirname, "..", "components", "ui.tsx"), "utf8");
+    expect(ui).toMatch(/export const TAP = 44;/);
+    expect(ui).toMatch(/size = TAP/);                       // the round header buttons
+    expect(ui).toMatch(/iconBtn: \{[^}]*minWidth: TAP[^}]*minHeight: TAP/);
+    expect(ui).toMatch(/chipHit: \{ minHeight: TAP/);
+  });
+  it("the tab bar groups its tabs in a tablist", () => {
+    const bar = readFileSync(join(__dirname, "..", "components", "PillTabBar.tsx"), "utf8");
+    expect(bar).toMatch(/accessibilityRole="tablist"/);
+    expect(bar).toMatch(/accessibilityRole="tab"/);
   });
 });

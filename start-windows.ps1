@@ -4,9 +4,11 @@
 #   .\start-windows.bat -IbkrPort 4001   real data AND read-only IBKR prices through IB Gateway (live: 4001, paper: 4002; TWS: 7496 / 7497).
 #                                        Connects by itself and reconnects after Gateway's daily logout. It can only read: it never places orders.
 # Optional: copy local-settings.example.ps1 to local-settings.ps1 and put your keys there (that file is never uploaded to GitHub).
+# Every start first checks GitHub and updates to the latest version by itself (add -NoUpdate to skip that). Your own changes are never overwritten.
 # First run installs everything (a few minutes). Later runs start in seconds.
 # To stop ATLAS, close the two black windows it opens.
-param([switch]$Real, [int]$IbkrPort = 0)
+#   start-signal-windows.bat   only the Signal phone app (in your browser) plus the backend it needs. Same as: .\start-windows.ps1 -SignalOnly
+param([switch]$Real, [int]$IbkrPort = 0, [switch]$SignalOnly, [switch]$NoUpdate)
 
 $ErrorActionPreference = "Continue"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -36,6 +38,79 @@ function Test-Url($url) {
     }
 }
 
+# 0. Update to the latest version from GitHub, then carry on.
+# Skipped with -NoUpdate, when git is missing, when GitHub cannot be reached, or when you have changes of your own in this folder. Nothing of yours is ever overwritten.
+function Update-Atlas {
+    if ($NoUpdate -or $env:ATLAS_NO_UPDATE -or $env:ATLAS_UPDATED) { return @() }
+    if (-not (Get-Command git -ErrorAction SilentlyContinue) -or -not (Test-Path (Join-Path $root ".git"))) {
+        Write-Host "Update check skipped (git is not installed, or this folder is not a git checkout)." -ForegroundColor DarkGray
+        return @()
+    }
+    Push-Location $root
+    try {
+        $branch = ((& git rev-parse --abbrev-ref HEAD 2>$null) | Select-Object -First 1)
+        if (-not $branch -or $branch -eq "HEAD") {
+            Write-Host "Update check skipped (no branch is checked out)." -ForegroundColor DarkGray
+            return @()
+        }
+        Write-Host "Checking GitHub for a newer version..."
+        & git fetch origin $branch 2>$null | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Could not reach GitHub, so starting the version you have." -ForegroundColor Yellow
+            return @()
+        }
+        # npm rewrites its lock files by itself. Those are not your changes, so they are reset before updating.
+        & git checkout -- atlas/mobile/package-lock.json 2>$null | Out-Null
+        $before = ((& git rev-parse HEAD 2>$null) | Select-Object -First 1)
+        $remote = ((& git rev-parse "origin/$branch" 2>$null) | Select-Object -First 1)
+        if (-not $remote -or $before -eq $remote) {
+            Write-Host "You already have the latest version." -ForegroundColor Green
+            return @()
+        }
+        & git merge-base --is-ancestor $remote $before 2>$null | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "You already have the latest version." -ForegroundColor Green
+            return @()
+        }
+        $dirty = (& git status --porcelain --untracked-files=no 2>$null)
+        if ($dirty) {
+            Write-Host "A newer version exists, but you have changes of your own in this folder, so it was not updated. Starting the version you have." -ForegroundColor Yellow
+            Write-Host "To update: ask Claude, or run  git stash  then start again." -ForegroundColor Yellow
+            return @()
+        }
+        & git merge --ff-only "origin/$branch" 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Could not update automatically, so starting the version you have." -ForegroundColor Yellow
+            return @()
+        }
+        $after = ((& git rev-parse HEAD 2>$null) | Select-Object -First 1)
+        $files = @(& git diff --name-only $before $after 2>$null)
+        $count = @(& git rev-list "$before..$after" 2>$null).Count
+        Write-Host "Updated to the latest version ($count new change(s))." -ForegroundColor Green
+        foreach ($line in @(& git log --oneline -5 "$before..$after" 2>$null)) { Write-Host "  $line" -ForegroundColor DarkGray }
+        return $files
+    } catch {
+        Write-Host "The update check failed ($($_.Exception.Message)), so starting the version you have." -ForegroundColor Yellow
+        return @()
+    } finally {
+        Pop-Location
+    }
+}
+$changedFiles = @(Update-Atlas)
+if ($changedFiles -contains "start-windows.ps1") {
+    # The start script itself changed, so run the new copy (once) instead of carrying on with the old one.
+    Write-Host "The start script was updated; restarting it..." -ForegroundColor Yellow
+    $env:ATLAS_UPDATED = "1"
+    $relaunch = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $PSCommandPath)
+    if ($Real) { $relaunch += "-Real" }
+    if ($IbkrPort -gt 0) { $relaunch += @("-IbkrPort", "$IbkrPort") }
+    if ($SignalOnly) { $relaunch += "-SignalOnly" }
+    & powershell @relaunch
+    exit $LASTEXITCODE
+}
+$backendChanged = ($changedFiles -contains "atlas/backend/pyproject.toml")
+$webChanged = (($changedFiles -contains "atlas/web/package.json") -or ($changedFiles -contains "atlas/web/package-lock.json"))
+
 if ($IbkrPort -gt 0) { $Real = $true }      # IBKR prices only make sense with real data
 
 Write-Host "ATLAS starting..." -ForegroundColor Cyan
@@ -47,6 +122,11 @@ if (Test-Path $localSettings) {
     . $localSettings
     Write-Host "Loaded your private settings from local-settings.ps1"
 }
+if ($Real -and -not $env:ATLAS_SEC_CONTACT) {
+    Write-Host "Note: the Company deep-dive and Discover need an email for SEC filings. Without it they show empty. Fix: add this line to local-settings.ps1 (next to this script):  `$env:ATLAS_SEC_CONTACT = 'you@example.com'" -ForegroundColor Yellow
+}
+# Let the browser version of Signal (http://localhost:8081) talk to this backend. Harmless if you do not use it.
+if (-not $env:ATLAS_CORS_ORIGINS) { $env:ATLAS_CORS_ORIGINS = "http://localhost:8081,http://127.0.0.1:8081" }
 if ($IbkrPort -gt 0) {
     $env:IBKR_ENABLED = "1"
     $env:IBKR_MODE = "readonly"
@@ -84,6 +164,7 @@ if (-not (Test-Path $venvPython)) {
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path $venvPython)) { Stop-WithProblem "Could not create the Python environment." }
 }
 $marker = Join-Path $backend ".venv\atlas-installed"
+if ($backendChanged -and (Test-Path $marker)) { Remove-Item $marker -Force }      # the backend's package list changed: install again
 if (-not (Test-Path $marker)) {
     Write-Host "Installing backend packages. First run only; this takes a few minutes..."
     & $venvPython -m pip install --upgrade pip
@@ -93,7 +174,16 @@ if (-not (Test-Path $marker)) {
 }
 
 # 4. Frontend packages (first run only)
-if (-not (Test-Path (Join-Path $web "node_modules"))) {
+$mobile = Join-Path $root "atlas\mobile"
+if ($SignalOnly) {
+    Write-Host "Checking the Signal app packages (fast when nothing changed)..."
+    Push-Location $mobile
+    & npm install --no-audit --no-fund
+    $npmCode = $LASTEXITCODE
+    Pop-Location
+    if ($npmCode -ne 0) { Stop-WithProblem "Installing the Signal app packages failed. Copy the red text above and send it to Claude." }
+}
+elseif ((-not (Test-Path (Join-Path $web "node_modules"))) -or $webChanged) {
     Write-Host "Installing frontend packages. First run only; this takes a few minutes..."
     Push-Location $web
     & npm install
@@ -122,7 +212,9 @@ $b = $backend.Replace("'", "''")
 $p = $venvPython.Replace("'", "''")
 $demoLine = if ($Real) { "Remove-Item Env:ATLAS_DEMO -ErrorAction SilentlyContinue" } else { "`$env:ATLAS_DEMO = '1'" }
 Start-Window ("`$Host.UI.RawUI.WindowTitle = 'ATLAS backend (close this window to stop it)'; Set-Location '$b'; $demoLine; & '$p' -m atlas_api")
-if (Test-Url "http://127.0.0.1:5173") {
+if ($SignalOnly) {
+    # no ATLAS terminal screen needed
+} elseif (Test-Url "http://127.0.0.1:5173") {
     Write-Host "A screen is already running on port 5173: using it." -ForegroundColor Yellow
 } else {
     $w = $web.Replace("'", "''")
@@ -133,11 +225,21 @@ if (Test-Url "http://127.0.0.1:5173") {
 Write-Host "Waiting for ATLAS to start (up to 2 minutes)..."
 $ready = $false
 for ($i = 0; $i -lt 60; $i++) {
-    if ((Test-Url "http://127.0.0.1:8000/api/health") -and (Test-Url "http://127.0.0.1:5173")) { $ready = $true; break }
+    if ((Test-Url "http://127.0.0.1:8000/api/health") -and ($SignalOnly -or (Test-Url "http://127.0.0.1:5173"))) { $ready = $true; break }
     Start-Sleep -Seconds 2
 }
 if (-not $ready) {
     Stop-WithProblem "ATLAS did not start within 2 minutes. Look at the two black windows it opened: the last red lines there say what went wrong. Send them to Claude."
+}
+if ($SignalOnly) {
+    Write-Host ""
+    Write-Host "The backend is running. Starting Signal now. When it asks for a server address, type: http://localhost:8000" -ForegroundColor Green
+    Write-Host "Signal opens in your browser (usually http://localhost:8081). To stop: press Ctrl+C here, then close the black ATLAS backend window." -ForegroundColor Green
+    Set-Location $mobile
+    $env:EXPO_NO_TELEMETRY = "1"
+    & npx --no-install expo start --web --clear
+    if ($LASTEXITCODE -ne 0) { Stop-WithProblem "Signal did not start. Copy the red text above and send it to Claude." }
+    exit 0
 }
 Start-Process "http://127.0.0.1:5173"
 Write-Host ""

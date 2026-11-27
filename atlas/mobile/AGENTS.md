@@ -6,9 +6,10 @@ Signal Mobile is the phone front end of ATLAS TERMINAL. These rules come before 
 - **Every market number shows its source, a timestamp and an honest freshness label** (Live, Delayed, Market closed, Stale, Demo, Unavailable). The label comes from the server; the app only words it. Never fill a gap with a guess.
 - **Numbers are calculated by the backend.** The app displays them; it does not compute indicators, and written explanations (if any) may not introduce figures.
 - **Demo and live data never mix.** Anything synthetic is labelled "Demo" on every screen it appears on; saved copies and recent searches are kept per server.
-- **Two tabs only** (Watchlist, Search). Settings sit behind the profile icon. There is no screen or tab per agent.
+- **Six tabs** (BTC, Journey, Stocks, Macro, Discover, Journal); Search is a screen opened from Stocks. Settings sit behind the profile icon. There is no screen or tab per agent.
 - **No provider keys in the app.** It talks to your ATLAS server and nothing else.
 - Before finishing: `npm run typecheck && npm test`. After UI changes: `npm run export:web` then `node e2e/signal.e2e.cjs` (see README.md).
+- **Tap targets are at least 44 by 44 points and a labelled control's spoken name holds the words it shows** (the `a11y` scenario of the e2e fails the run otherwise). Use `TAP` from `components/ui.tsx`; the web build ignores `hitSlop`, so the touchable itself has to be that big.
 
 ---
 

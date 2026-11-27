@@ -7,6 +7,7 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    timeout-minutes: 20                           # the job takes 3 to 5 minutes; a hung test must not run for the default six hours
     defaults: { run: { working-directory: atlas/backend } }
     steps:
       - uses: actions/checkout@v4
@@ -14,18 +15,10 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install -e '.[dev]'
       - run: pytest -q
-  web:
-    runs-on: ubuntu-latest
-    defaults: { run: { working-directory: atlas/web } }
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - run: npm ci
-      - run: npm run build
-      - run: npm test
+      - run: pytest -q ../devtools/tests          # the development-skills review tool
   mobile:
     runs-on: ubuntu-latest
+    timeout-minutes: 20                           # the job takes under a minute
     defaults: { run: { working-directory: atlas/mobile } }
     steps:
       - uses: actions/checkout@v4

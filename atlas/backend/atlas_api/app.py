@@ -6,7 +6,7 @@ import math
 import os
 import time
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from contextlib import asynccontextmanager
 
@@ -22,9 +22,94 @@ from .fedwatch import FedWatchService
 from .signal import routes as signal_routes
 from .signal.service import SignalService
 from .macro import MacroService
+from .macro_brief import MacroBriefService
+from .discover.service import DiscoverService
+from .eventcal.service import EventCalendar
+from .btclab.data import BtcData
+from .sentiment import FearGreed
+from .nyfed import NyFedSofr
+from .treasury import Treasury
+from .cftc import CftcBitcoin
+from .stablecoins import Stablecoins
+from .onchain import OnChain
+from .ecb import EcbFx
+from .worldbank import WorldBank
+from .fedops import FedOps
+from .tga import Tga
+from .auctions import Auctions
+from .mts import Mts
+from .intexp import InterestExpense
+from .buybacks import Buybacks
+from .billauctions import BillAuctions
+from .borrowing import Borrowing
+from .cftc_futures import CftcAgriculture, CftcCommodities, CftcCurrencies, CftcFutures
+from .customs import Customs
+from .dealers import Dealers
+from .outlays import Outlays
+from .realyields import RealYields
+from .fincond import FinConditions
+from .claims import JoblessClaims
+from .oil import OilPrices
+from .gasoline import GasolinePrices
+from .naturalgas import NaturalGas
+from .moneysupply import MoneySupply
+from .retailsales import RetailSales
+from .housingstarts import HousingStarts
+from .industrialproduction import IndustrialProduction
+from .euromoney import EuroMoneySupply
+from .eurohicp import EuroInflation
+from .eurounemployment import EuroUnemployment
+from .eurostress import EuroStress
+from .euroyields import EuroYields
+from .eurogdp import EuroGdp
+from .eurobankrates import EuroBankRates
+from .eurostockrates import EuroStockRates
+from .euroemployment import EuroEmployment
+from .jolts import Jolts
+from .joltsindustries import JoltsIndustries
+from .joltsflows import JoltsFlows
+from .usinventories import UsInventories
+from .usconsumercredit import UsConsumerCredit
+from .usbankloans import UsBankLoans
+from .usbankbalance import UsBankBalance
+from .usbuildingpermits import UsBuildingPermits
+from .usconstruction import UsConstruction
+from .usnewhomes import UsNewHomes
+from .usfactoryorders import UsFactoryOrders
+from .usindustryjobs import UsIndustryJobs
+from .usjobsdetail import UsJobsDetail
+from .usproducerprices import UsProducerPrices
+from .usjobs import UsJobs
+from .usgdp import UsGdp
+from .ushousehold import UsHousehold
+from .usrealspending import UsRealSpending
+from .ustrade import UsTrade
+from .eurolending import EuroLending
+from .reserves import BankReserves
+from .ecbrates import EcbRates
+from .receipts import Receipts
+from .avgrates import AvgRates
+from .mspd import Mspd
+from .soma import Soma
+from .fedrates import FedRates
+from .cgglobal import CoinGeckoGlobal
+from .sched.engine import Scheduler
+from .sched.jobs import register_default_jobs
+from .sched import settings as sched_settings
+from .discover.narratives import NarrativeService
+from .btclab.evaluate import LabError
+from .btclab.service import AgentIn as LabAgentIn, LabService, RunIn as LabRunIn
+from .stocks.edgar import EdgarClient
+from .stocks.research import StockResearch
+from .research.live import FundamentalResearch
+from .research.brief import build_brief
+from .discover.store import DiscoveryStore, STATES as DISC_STATES
+from .discover.listings import NasdaqIpoFeed
+from .discover.listings_service import ListingsService
+from .discover.newtome import NewToMe
 from .brokers.ibkr import BrokerError, IBKRBroker, IBKRSettings
 from .providers.ibkr_data import IBKRData
-from .journal import hyperliquid as hl, importers as jimp, stats as jstats
+from .journal import entries as jent, hyperliquid as hl, importers as jimp, stats as jstats
 from .journal.matching import Exec
 from .journal.store import JournalError, JournalStore
 from .news.service import NewsError, NewsService
@@ -74,7 +159,7 @@ def ok(data):
     return {"ok": True, "data": data}
 
 
-def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None, fundamentals_provider=None, deriv_client=None, auth_password: str | None = None, signal_registry=None, signal_parts: dict | None = None) -> FastAPI:
+def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None, providers: dict | None = None, bar_source: BarSource | None = None, backtest_source: BarSource | None = None, alert_loop: bool | None = None, telegram: TelegramNotifier | None = None, broker: IBKRBroker | None = None, hyperliquid: hl.HyperliquidClient | None = None, news_client: httpx.AsyncClient | None = None, news_loop: bool | None = None, fundamentals_provider=None, deriv_client=None, auth_password: str | None = None, signal_registry=None, signal_parts: dict | None = None, calendar_client: httpx.AsyncClient | None = None) -> FastAPI:
     demo = os.getenv("ATLAS_DEMO") == "1" if demo is None else demo
     db = DB(db_path or os.getenv("ATLAS_DB", "atlas.db"))
     provs = providers if providers is not None else {"coinbase": CoinbaseProvider(), "yahoo": YahooProvider(), "fred": FredProvider()}
@@ -84,6 +169,7 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     if llm is None and os.getenv("ANTHROPIC_API_KEY"):
         llm = AnthropicLLM(os.environ["ANTHROPIC_API_KEY"], os.getenv("ATLAS_MODEL", "claude-sonnet-5-5"))
     journal = JournalStore(db)
+    journal_entries = jent.EntryStore(db)
     news = NewsService(db, news_client, allow_local=os.getenv("ATLAS_NEWS_ALLOW_LOCAL") == "1", user_agent=os.getenv("ATLAS_NEWS_USER_AGENT", "ATLAS-Terminal/0.1 (personal research)"),
                        symbol_url=os.getenv("ATLAS_NEWS_SYMBOL_URL") or None)
     derivs = DerivativesService(db, deriv_client, demo)
@@ -158,6 +244,9 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
                     pass
             await asyncio.sleep(every)
 
+    # The background scheduler runs inside this process by default (local use). In the cloud a separate worker process runs it (ATLAS_SCHEDULER=off here, `python -m atlas_api.worker` there).
+    run_sched = os.getenv("ATLAS_SCHEDULER", "inprocess") == "inprocess" and alert_loop is not False and not demo
+
     @asynccontextmanager
     async def lifespan(_app):
         tasks = []
@@ -169,6 +258,9 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             tasks.append(asyncio.create_task(news.run_loop(news_seconds)))
         if run_derivs:
             tasks.append(asyncio.create_task(derivs.run_loop(deriv_seconds)))
+        sched = getattr(_app.state, "scheduler", None)
+        if sched is not None and run_sched:
+            tasks.append(asyncio.create_task(sched.run_forever()))
         if broker is not None and os.getenv("IBKR_AUTOCONNECT") == "1":
             tasks.append(asyncio.create_task(ibkr_keepalive(float(os.getenv("IBKR_RECONNECT_SECONDS", "30")))))
         yield
@@ -314,12 +406,404 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     fedwatch = FedWatchService(provs.get("fred"), news, demo)
     signal = SignalService(db=db, svc=svc, news=news, fundamentals=fundamentals, macro=macro, fedwatch=fedwatch, demo=demo, llm=llm, registry=signal_registry, **(signal_parts or {}))       # Signal Mobile research API (read-only); the last two are test hooks
     signal_routes.register(app, signal, ok)
+    jent.register(app, ok, journal, journal_entries)           # simple journal entries: write a trade down like a note
 
     @app.get("/api/macro/fed")
     async def macro_fed():
         if not demo and provs.get("fred") is None:
             raise ApiError("NOT_CONFIGURED", "The FRED provider is not set up.", 503)
         return ok(await fedwatch.overview())
+
+    treasury = Treasury(demo=demo)
+    ecb_fx = EcbFx(demo=demo)
+    world_bank = WorldBank(demo=demo)
+    fed_ops = FedOps(demo=demo)
+    tga = Tga(demo=demo)
+    auctions = Auctions(demo=demo)
+    budget = Mts(demo=demo)
+    interest = InterestExpense(demo=demo)
+    buybacks = Buybacks(demo=demo)
+    bill_auctions = BillAuctions(demo=demo)
+    borrowing = Borrowing(demo=demo)
+    dealers = Dealers(demo=demo)
+    futures_positioning = CftcFutures(demo=demo)
+    customs = Customs(demo=demo)
+    receipts = Receipts(demo=demo)
+    outlays = Outlays(demo=demo)
+    real_yields = RealYields(demo=demo)
+    fin_conditions = FinConditions(demo=demo)
+    jobless_claims = JoblessClaims(demo=demo)
+    oil_prices = OilPrices(demo=demo)
+    gasoline_prices = GasolinePrices(demo=demo)
+    natural_gas = NaturalGas(demo=demo)
+    money_supply = MoneySupply(demo=demo)
+    retail_sales = RetailSales(demo=demo)
+    housing_starts = HousingStarts(demo=demo)
+    industrial_production = IndustrialProduction(demo=demo)
+    euro_money_supply = EuroMoneySupply(demo=demo)
+    euro_inflation = EuroInflation(demo=demo)
+    euro_unemployment = EuroUnemployment(demo=demo)
+    euro_stress = EuroStress(demo=demo)
+    euro_yields = EuroYields(demo=demo)
+    euro_gdp = EuroGdp(demo=demo)
+    euro_lending = EuroLending(demo=demo)
+    euro_bank_rates = EuroBankRates(demo=demo)
+    euro_stock_rates = EuroStockRates(demo=demo)
+    euro_employment = EuroEmployment(demo=demo)
+    jolts = Jolts(demo=demo)
+    jolts_industries = JoltsIndustries(demo=demo)
+    jolts_flows = JoltsFlows(demo=demo)
+    us_inventories = UsInventories(demo=demo)
+    us_consumer_credit = UsConsumerCredit(demo=demo)
+    us_bank_loans = UsBankLoans(demo=demo)
+    us_bank_balance = UsBankBalance(demo=demo)
+    us_building_permits = UsBuildingPermits(demo=demo)
+    us_construction = UsConstruction(demo=demo)
+    us_new_homes = UsNewHomes(demo=demo)
+    us_factory_orders = UsFactoryOrders(demo=demo)
+    us_industry_jobs = UsIndustryJobs(demo=demo)
+    us_jobs_detail = UsJobsDetail(demo=demo)
+    us_producer_prices = UsProducerPrices(demo=demo)
+    us_jobs = UsJobs(demo=demo)
+    us_gdp = UsGdp(demo=demo)
+    us_household = UsHousehold(demo=demo)
+    us_real_spending = UsRealSpending(demo=demo)
+    us_trade = UsTrade(demo=demo)
+    bank_reserves = BankReserves(demo=demo)
+    ecb_rates = EcbRates(demo=demo)
+    commodity_positioning = CftcCommodities(demo=demo)
+    currency_positioning = CftcCurrencies(demo=demo)
+    agri_positioning = CftcAgriculture(demo=demo)
+    debt_rates = AvgRates(demo=demo)
+    debt_mix = Mspd(demo=demo)
+    fed_holdings = Soma(demo=demo)
+    fed_rates = FedRates(demo=demo)
+
+    @app.get("/api/macro/fedrates")
+    async def macro_fedrates():
+        """The Fed's policy rate (EFFR), its target range and the overnight reference rates (New York Fed). Describes where overnight money costs; not a signal."""
+        return ok(await fed_rates.overview())
+
+    @app.get("/api/macro/fedholdings")
+    async def macro_fedholdings():
+        """What the Federal Reserve holds (SOMA, weekly, New York Fed): size, mix and changes. Describes the Fed's portfolio; not a signal."""
+        return ok(await fed_holdings.overview())
+
+    @app.get("/api/macro/debtmix")
+    async def macro_debtmix():
+        """What the US national debt is made of (Monthly Statement of the Public Debt): size, share and monthly change by security type. A month-end record; not a signal."""
+        return ok(await debt_mix.overview())
+
+    @app.get("/api/macro/debtrates")
+    async def macro_debtrates():
+        """Average interest rate the US government pays on its debt, by security type. Describes what it pays on what it owes; not a signal."""
+        return ok(await debt_rates.overview())
+
+    @app.get("/api/macro/interest")
+    async def macro_interest():
+        """Interest the US government owes on debt held by the public, by month and security type. Describes what already happened; not a signal."""
+        return ok(await interest.overview())
+
+    @app.get("/api/macro/buybacks")
+    async def macro_buybacks():
+        """US Treasury buyback operations: what dealers offered and what the Treasury bought. Describes what already happened; not a signal."""
+        return ok(await buybacks.overview())
+
+    @app.get("/api/macro/bills")
+    async def macro_bills():
+        """US Treasury bill auction results by term: rate, bid-to-cover, size and who bought. Describes auctions that already happened; not a signal."""
+        return ok(await bill_auctions.overview())
+
+    @app.get("/api/macro/borrowing")
+    async def macro_borrowing():
+        """US Treasury marketable borrowing from the Daily Treasury Statement: issues, redemptions and net, month and fiscal year so far. Describes what already happened; not a signal."""
+        return ok(await borrowing.overview())
+
+    @app.get("/api/macro/futures-positioning")
+    async def macro_futures_positioning():
+        """Who holds S&P 500, Nasdaq-100, 2-year and 10-year Treasury and dollar index futures (CFTC Commitments of Traders), weekly. Checked against the report's own totals; describes what already happened, not a signal."""
+        return ok(await futures_positioning.overview())
+
+    @app.get("/api/macro/agriculture-positioning")
+    async def macro_agriculture_positioning():
+        """Who holds silver, corn, soybean, wheat, coffee and sugar futures (CFTC Commitments of Traders, Disaggregated report), weekly. Checked against the report's own totals; describes what already happened, not a signal."""
+        return ok(await agri_positioning.overview())
+
+    @app.get("/api/macro/currency-positioning")
+    async def macro_currency_positioning():
+        """Who holds euro, yen, pound and VIX futures (CFTC Commitments of Traders), weekly. Checked against the report's own totals; describes what already happened, not a signal."""
+        return ok(await currency_positioning.overview())
+
+    @app.get("/api/macro/commodity-positioning")
+    async def macro_commodity_positioning():
+        """Who holds gold, crude oil, copper and natural gas futures (CFTC Commitments of Traders, Disaggregated report), weekly. Checked against the report's own totals; describes what already happened, not a signal."""
+        return ok(await commodity_positioning.overview())
+
+    @app.get("/api/macro/financial-conditions")
+    async def macro_financial_conditions():
+        """Chicago Fed National Financial Conditions Index (weekly, via FRED): zero is the average since 1971, positive tighter, negative looser. Describes what already happened; not a signal or a forecast."""
+        return ok(await fin_conditions.overview())
+
+    @app.get("/api/macro/oil-prices")
+    async def macro_oil_prices():
+        """WTI and Brent crude, spot, daily (US Energy Information Administration via FRED): checked for range, spacing, one-day moves and the Brent minus WTI spread. Describes what already happened; not a signal or a forecast."""
+        return ok(await oil_prices.overview())
+
+    @app.get("/api/macro/gasoline-prices")
+    async def macro_gasoline_prices():
+        """US regular gasoline, weekly national average (US Energy Information Administration via FRED): checked for spacing, range, weekly moves and consistency with WTI crude. Describes what already happened; not a signal or a forecast."""
+        return ok(await gasoline_prices.overview())
+
+    @app.get("/api/macro/natural-gas")
+    async def macro_natural_gas():
+        """Henry Hub natural gas spot price, daily (US Energy Information Administration via FRED): checked for range, spacing, one-day moves (a real cold-snap spike is allowed) and against EIA's own monthly average. Describes what already happened; not a signal or a forecast."""
+        return ok(await natural_gas.overview())
+
+    @app.get("/api/macro/money-supply")
+    async def macro_money_supply():
+        """M2 money supply, monthly seasonally adjusted level and its growth (Federal Reserve Board H.6 via FRED): checked for range, months in a row, one-month and one-year moves (real shocks like 2020 are allowed), adjusted against unadjusted, and the weekly figures against the monthly one. Describes what already happened; not a signal or a forecast."""
+        return ok(await money_supply.overview())
+
+    @app.get("/api/macro/retail-sales")
+    async def macro_retail_sales():
+        """US retail and food services sales, monthly seasonally adjusted (Census Bureau Advance Monthly Retail Trade Survey via FRED): checked for range, months in a row, one-month and one-year moves (real shocks like 2020 are allowed), retail trade plus food services against the total, and food services' share; the newest month is an advance estimate that is revised later. A failing check or request shows nothing."""
+        return ok(await retail_sales.overview())
+
+    @app.get("/api/macro/housing-starts")
+    async def macro_housing_starts():
+        """US housing starts, monthly seasonally adjusted annual rate in thousands (Census Bureau and HUD via FRED): the total, single-family and five-or-more-unit homes, checked for range, months in a row, one-month and one-year moves (real shocks like 2009 are allowed), the parts never exceeding the total and the single-family share; there is no exact parts-add-up check (the two-to-four-unit series is calculated from the other two). No key. A failure says so and shows nothing."""
+        return ok(await housing_starts.overview())
+
+    @app.get("/api/macro/industrial-production")
+    async def macro_industrial_production():
+        """US industrial production, monthly seasonally adjusted index with 2017 = 100 (Board of Governors of the Federal Reserve System, release G.17, via FRED): the total, manufacturing, mining and electric and gas utilities, and capacity utilization, checked for range, months in a row, one-month and one-year moves (real shocks like 2020 are allowed), the total's change lying between those of its three groups, and the capacity implied by output and utilization moving slowly. The newest month is an estimate that is revised later. Describes what already happened: not a signal or a forecast."""
+        return ok(await industrial_production.overview())
+
+    @app.get("/api/macro/euro-money-supply")
+    async def macro_euro_money_supply():
+        """Euro-area money supply, monthly, adjusted for working days and the season (ECB Data Portal, the monetary aggregates from the balance sheets of euro-area monetary financial institutions): M3, M2 and M1 in euro at the end of the month, the ECB's own annual growth rates, and what M3 is made of, checked for units, months in a row, range, one-month moves (real shocks like 2020 are allowed), four sums that hold to the million euro in the ECB's own arithmetic, and the published growth staying near the growth of the amounts. The newest month is provisional and revised later. Describes what already happened: not a signal or a forecast."""
+        return ok(await euro_money_supply.overview())
+
+    @app.get("/api/macro/euro-inflation")
+    async def macro_euro_inflation():
+        """Euro-area consumer prices (HICP, compiled by Eurostat and published on the ECB Data Portal), monthly: the headline annual rate, core, the five parts of the basket with their shares and annual rates, and about how many points of the headline each contributes, checked for units, months in a row, range, one-month moves, the basket weights, the headline lying between its parts and core between goods and services, and two checks that are Eurostat's own arithmetic (the all-items index follows from its parts and weights; each published rate matches its index). The newest month is an early (flash) estimate until the final figure replaces it. Describes what already happened: not a signal or a forecast."""
+        return ok(await euro_inflation.overview())
+
+    @app.get("/api/macro/euro-unemployment")
+    async def macro_euro_unemployment():
+        """Euro-area unemployment (the European Labour Force Survey, compiled by Eurostat and published on the ECB Data Portal; euro area of 20 countries, fixed composition, seasonally adjusted), monthly: the rate for everybody aged 15 to 74 with its change over a month, three months and a year, women, men, the under 25 and the 25 to 74, the number of unemployed persons, checked for units, months in a row, ranges, one-month moves, the rate for everybody lying between its parts, and three checks that are Eurostat's own arithmetic (the persons add up, the labour force implied by the parts agrees). Describes what already happened: not a signal or a forecast."""
+        return ok(await euro_unemployment.overview())
+
+    @app.get("/api/macro/euro-stress")
+    async def macro_euro_stress():
+        """Euro-area financial stress (the ECB's New Composite Indicator of Systemic Stress, published on the ECB Data Portal; euro area of changing composition), daily: the index between 0 and 1 with its change over a week and a month, how it compares with the past ten years, the contribution of each of its five market segments and of the correlation between them, checked for units, holes, range, one-day moves, the signs of the contributions (properties) and one check that is the ECB's own arithmetic (the contributions add up to the index). Describes stress that already happened: not a signal or a forecast."""
+        return ok(await euro_stress.overview())
+
+    @app.get("/api/macro/euro-yields")
+    async def macro_euro_yields():
+        """Euro-area government bond yields (the ECB's yield curve for AAA-rated euro-area government bonds, a Svensson curve fitted every business day and published on the ECB Data Portal), daily: the 3-month, 1-, 2-, 5-, 10- and 30-year spot rates with their change over a week and a month, the ECB's spreads of the 10-year rate over the shorter ones, where the 10-year rate sits among the past ten years, checked for units, holes, ranges, one-day moves and the model parameters (plain checks) and for two pieces of the ECB's own arithmetic (the spreads are differences of the rates, and the rates follow from the published curve parameters). Describes yields that already happened: not a signal or a forecast."""
+        return ok(await euro_yields.overview())
+
+    @app.get("/api/macro/euro-gdp")
+    async def macro_euro_gdp():
+        """Euro-area GDP (Eurostat's quarterly national accounts for the euro area of 21 countries, seasonally adjusted, published on the ECB Data Portal): real growth on the previous quarter and on a year earlier for the newest quarter with where it sits among the past ten years and the last six quarters, and, for the newest quarter with a breakdown, nominal GDP, domestic demand, exports and imports with their contributions to growth. Calculated figures are labelled as the ECB's own arithmetic; a failed check shows nothing. Demo mode shows nothing."""
+        return ok(await euro_gdp.overview())
+
+    @app.get("/api/macro/euro-lending")
+    async def macro_euro_lending():
+        """Euro-area bank lending (the ECB's loans of euro-area banks to firms and households, adjusted for loan sales and securitisation, seasonally adjusted, monthly, from the ECB Data Portal): annual growth, amounts outstanding and the month's net lending, households by purpose and firms by maturity, with the source's own arithmetic checked. Describes what already happened; not a signal or a forecast."""
+        return ok(await euro_lending.overview())
+
+    @app.get("/api/macro/euro-bank-rates")
+    async def macro_euro_bank_rates():
+        """Euro-area bank interest rates (what euro-area banks charge on new loans to firms and households and pay on new deposits, monthly, with the ECB's composite cost of borrowing, from the ECB Data Portal): the rates, their changes, the new business volumes and a ten-year comparison, with the source's own arithmetic checked. Describes what already happened; not a signal or a forecast."""
+        return ok(await euro_bank_rates.overview())
+
+    @app.get("/api/macro/euro-stock-rates")
+    async def macro_euro_stock_rates():
+        """Euro-area bank interest rates on EXISTING loans and deposits (ECB Data Portal, MIR dataflow, outstanding amounts): the average rate on loans to firms and households (all, for house purchase, for consumption and other purposes, by original maturity) and on deposits with an agreed maturity, with the ECB's split of each month's change into a rate part and a weight part. Official, dated, with its checks; describes what already happened, not a signal."""
+        return ok(await euro_stock_rates.overview())
+
+    @app.get("/api/macro/euro-employment")
+    async def macro_euro_employment():
+        """Euro-area employment and productivity (Eurostat's quarterly national accounts for the euro area of 21 countries, seasonally adjusted, published on the ECB Data Portal): people in work and hours worked, by activity and by employees and self-employed, and labour productivity per person and per hour. Checked against Eurostat's own sums and the ECB's own arithmetic; a failing check shows nothing."""
+        return ok(await euro_employment.overview())
+
+    @app.get("/api/macro/jolts")
+    async def macro_jolts():
+        """US job openings and labour turnover (Bureau of Labor Statistics JOLTS, with payroll employment and unemployed persons, via FRED): openings, hires and separations with their rates, openings per unemployed person and the range of the last ten years, checked for months in a row, ranges, the sum of separations and each rate against its level; shows nothing if a check fails. Describes what already happened: not a signal or a forecast."""
+        return ok(await jolts.overview())
+
+    @app.get("/api/macro/jolts-industries")
+    async def macro_jolts_industries():
+        """US job openings by industry (Bureau of Labor Statistics JOLTS via FRED): total nonfarm, private and government openings and the openings of seven groups of industries with their parts (health care, retail, state and local government, durable and nondurable manufacturing, accommodation and food, arts), each with its share of all openings, its change on a year ago and where it stands among the last ten years, four remainders worked out by subtraction and marked as such, checked for months in a row, ranges, three sums and the parts inside their wholes; nothing is shown when a check fails."""
+        return ok(await jolts_industries.overview())
+
+    @app.get("/api/macro/jolts-flows")
+    async def macro_jolts_flows():
+        """US hires, quits and layoffs by industry (Bureau of Labor Statistics JOLTS via FRED, 33 monthly series): total nonfarm hires, quits, layoffs, other separations and total separations with the net of the month (hires minus separations), the same for the private sector and government, and hires, quits and total separations of six private industries with the rest of the private sector worked out by subtraction and marked as such, each with its change on a year ago; checked for months in a row, ranges, the eight sums of the survey's own arithmetic, quits inside separations and the six industries inside private; nothing is shown when a check fails."""
+        return ok(await jolts_flows.overview())
+
+    @app.get("/api/macro/us-inventories")
+    async def macro_us_inventories():
+        """US business inventories and sales (US Census Bureau, Manufacturing and Trade Inventories and Sales via FRED, 12 monthly series): total inventories, sales and the inventories-to-sales ratio, and the same for manufacturers, merchant wholesalers and retailers; the totals are checked against the three kinds and every ratio against its inventories over its sales."""
+        return ok(await us_inventories.overview())
+
+    @app.get("/api/macro/us-consumer-credit")
+    async def macro_us_consumer_credit():
+        """US consumer credit (Board of Governors of the Federal Reserve System, G.19 Consumer Credit via FRED, 3 monthly series): total consumer credit owed at the end of the month, split into revolving credit (mostly credit cards) and nonrevolving credit (mostly car and student loans), with the change on the month and on a year ago and the last six months; checked for months in a row, ranges and that the total equals the two kinds to the rounding of the figures; nothing is shown when a check fails."""
+        return ok(await us_consumer_credit.overview())
+
+    @app.get("/api/macro/us-bank-loans")
+    async def macro_us_bank_loans():
+        """US bank loans and leases (Board of Governors of the Federal Reserve System, H.8 Assets and Liabilities of Commercial Banks via FRED, 14 weekly series): the loans and leases of all US commercial banks on a Wednesday in all and by kind (business, real estate, consumer, all other), real estate split into residential and commercial, loans to nondepository financial institutions, the change on the week and on a year ago and the last six weeks; checked for weeks in a row, ranges, four sums to the rounding of the figures and that the loans to nondepository institutions are within the other loans; nothing is shown when a check fails."""
+        return ok(await us_bank_loans.overview())
+
+    @app.get("/api/macro/us-bank-balance-sheet")
+    async def macro_us_bank_balance_sheet():
+        """US bank balance sheet (Board of Governors of the Federal Reserve System, H.8 Assets and Liabilities of Commercial Banks via FRED, 10 weekly series): what all US commercial banks held (total assets: loans and leases, securities, cash assets, everything else) and owed (deposits, everything else) on a Wednesday, the residual, the changes on a week and on a year, where the growth of total assets stands against its last ten years, the last six weeks and what was checked (three sums, two orders). Describes what already happened: not a signal or a forecast."""
+        return ok(await us_bank_balance.overview())
+
+    @app.get("/api/macro/us-building-permits")
+    async def macro_us_building_permits():
+        """US building permits (U.S. Census Bureau and U.S. Department of Housing and Urban Development, New Residential Construction via FRED, 8 monthly series): how many new homes local governments gave permission to build in a month, as a seasonally adjusted annual rate in thousands of homes, split by type (single-family, 2-4 units, 5 or more) and by Census region, the changes on a month and on a year, where the growth of the total on a year earlier stands among the last ten years and the last six months, with the checks it passed (the months in a row, the ranges, and two sums that hold exactly). Research only: a plain record of permission already given, no forecast."""
+        return ok(await us_building_permits.overview())
+
+    @app.get("/api/macro/us-construction")
+    async def macro_us_construction():
+        """US construction spending (U.S. Census Bureau, Construction Spending, the value of construction put in place, via FRED, 9 monthly series): how much construction work was done in a month, as a seasonally adjusted annual rate in millions of dollars, split by who pays (private, public), by use (residential, nonresidential) and into the four parts of that table, the changes on a month and on a year, where the growth of the total on a year earlier stands among the last ten years and the last six months, with the checks it passed (the months in a row, the ranges, and six sums that hold to within the rounding). Research only: a plain record of work already done, no forecast."""
+        return ok(await us_construction.overview())
+
+    @app.get("/api/macro/us-new-home-sales")
+    async def macro_us_new_home_sales():
+        """US new home sales (U.S. Census Bureau and U.S. Department of Housing and Urban Development, New Residential Sales via FRED, 9 monthly series): sales of new one-family houses in thousands at a seasonally adjusted annual rate, in total and for the four regions, the homes for sale at the month end, the months' supply and the median and average prices, with three checks (the four regions add up to the total, the months' supply is 12 times the homes for sale over the sales, the average price is not below the median). Research only: it describes houses already sold."""
+        return ok(await us_new_homes.overview())
+
+    @app.get("/api/macro/us-factory-orders")
+    async def macro_us_factory_orders():
+        """US factory orders (U.S. Census Bureau, Manufacturers' Shipments, Inventories, and Orders, the M3 survey, via FRED, 13 monthly series): what US manufacturers were ordered, shipped, held in stock and still owed in a month, in millions of dollars seasonally adjusted, as totals, for nondurable goods and for durable goods (with orders excluding transportation and core capital goods), the changes on a month and on a year and the last six months, with the checks it passed (the months in a row, the ranges, three sums, two published equalities and the order of the durable parts; the newest month the two reports share is left out of the sums and its gaps are shown). Research only: it describes factory activity that already happened."""
+        return ok(await us_factory_orders.overview())
+
+    @app.get("/api/macro/us-jobs-by-industry")
+    async def macro_us_jobs_by_industry():
+        """US jobs by industry (U.S. Bureau of Labor Statistics, Current Employment Statistics payrolls, via FRED, 17 monthly series): how many jobs employers had on their payrolls in thousands, seasonally adjusted, in total, for goods-producing, private service-providing and government jobs, for the eleven industries and inside manufacturing, with each one's share of the total, the changes on a month and on a year and the last six months of the total, and the checks it passed (the months in a row, the ranges, and six sums that hold to the thousand). Research only: it describes jobs that already existed."""
+        return ok(await us_industry_jobs.overview())
+
+    @app.get("/api/macro/us-jobs-detail")
+    async def macro_us_jobs_detail():
+        """US jobs in detail (U.S. Bureau of Labor Statistics, Current Employment Statistics payrolls, via FRED, 26 monthly series): how many jobs sit inside seven of the larger industries (trade, transportation and utilities, construction, financial activities, professional and business services, education and health services, leisure and hospitality, government) and the 19 parts they are made of, in thousands, seasonally adjusted, with each part's share of its industry and the changes on a month and on a year. Checked: the series end in the same month and cover the same months, every figure is inside its range and seven sums hold (each industry against its parts, within the rounding). Described, not forecast; a failed check shows nothing."""
+        return ok(await us_jobs_detail.overview())
+
+    @app.get("/api/macro/us-producer-prices")
+    async def macro_us_producer_prices():
+        """US producer prices (U.S. Bureau of Labor Statistics, Producer Price Index, via FRED, nine seasonally adjusted monthly series): how the prices US producers receive change, for final demand and its core, for finished goods (consumer goods, foods and energy) and for what producers pay (processed goods, unprocessed goods and services for intermediate demand), each as an index with its own base, with the changes on a month and on a year and the range of final demand growth over ten years. Checked: the series end in the same month and cover the same months, every index is inside its range and no month moves by more than its limit (plain checks: producer price indexes have no sums). Described, not forecast; a failed check shows nothing."""
+        return ok(await us_producer_prices.overview())
+
+    @app.get("/api/macro/us-jobs")
+    async def macro_us_jobs():
+        """The US jobs report (Bureau of Labor Statistics Employment Situation via FRED): payrolls and their monthly change, private and government, the unemployment rate, participation and the employment-population ratio with the ten-year range of the unemployment rate, checked for months in a row, ranges, the sums of payrolls and of the labour force and each rate against its levels; shows nothing if a check fails. Describes what already happened: not a signal or a forecast."""
+        return ok(await us_jobs.overview())
+
+    @app.get("/api/macro/us-gdp")
+    async def macro_us_gdp():
+        """US gross domestic product by component (Bureau of Economic Analysis National Income and Product Accounts via FRED): GDP in billions of dollars at an annual rate with consumer spending, private investment, government spending and net exports, real growth and each part's contribution to it, checked for quarters in a row, ranges, the four parts against GDP, exports minus imports against net exports and the contributions against growth; shows nothing if a check fails. Describes what already happened: not a signal or a forecast."""
+        return ok(await us_gdp.overview())
+
+    @app.get("/api/macro/us-household")
+    async def macro_us_household():
+        """US household income, spending and saving (Bureau of Economic Analysis Personal Income and Outlays and the GDP release via FRED): personal income, taxes, disposable income, outlays (consumer spending, interest, the rest), saving and the saving rate, monthly, with the quarterly split of consumer spending into durable goods, nondurable goods and services; the whole record since 1959 is checked for months in a row, ranges, the accounting sums and the quarter against the average of its months. Describes what already happened; not a signal or a forecast. Unavailable (never a guess) if any series fails a check."""
+        return ok(await us_household.overview())
+
+    @app.get("/api/macro/us-real-spending")
+    async def macro_us_real_spending():
+        """US real consumer spending (Bureau of Economic Analysis Personal Income and Outlays via FRED): spending with the effect of price changes taken out (chained 2017 dollars), spending in the dollars of the day and the PCE price index with and without food and energy, with the year's change split into more goods and services bought and higher prices, the last six months, and the checks the figures passed (ranges, monthly moves, real spending times prices against spending in dollars). Free, no key; research only."""
+        return ok(await us_real_spending.overview())
+
+    @app.get("/api/macro/us-trade")
+    async def macro_us_trade():
+        """US international trade in goods and services (Census Bureau and Bureau of Economic Analysis via FRED): exports, imports and the balance for the total, for goods and for services, the change in the balance over a month and a year, the last six months and the checks the figures passed (six sums, each within 1.5 million dollars). Read-only research data, never a trading signal."""
+        return ok(await us_trade.overview())
+
+    @app.get("/api/macro/bank-reserves")
+    async def macro_bank_reserves():
+        """Bank reserves, currency and the monetary base (Federal Reserve Board H.4.1 weekly and H.6 monthly via FRED): checked for dates, ranges, one-week and one-month moves (real shocks like 2020 are allowed), the identity base = currency + reserves, and the weekly figures against the monthly base. Describes what already happened; not a signal or a forecast."""
+        return ok(await bank_reserves.overview())
+
+    @app.get("/api/macro/ecb-rates")
+    async def macro_ecb_rates():
+        """The European Central Bank's three key interest rates (deposit, main refinancing, marginal lending) and the euro short-term rate (ECB Data Portal): checked for days in a row, steps of 0.05, range, one-day moves, the order of the three rates and that the market rate sits near the deposit rate. Describes what the rates are and were; not a signal or a forecast."""
+        return ok(await ecb_rates.overview())
+
+    @app.get("/api/macro/jobless-claims")
+    async def macro_jobless_claims():
+        """US weekly jobless claims (initial and continuing, seasonally adjusted, Thursdays, via FRED): checked against the Labor Department's own four-week average. Describes what already happened; not a signal or a forecast."""
+        return ok(await jobless_claims.overview())
+
+    @app.get("/api/macro/real-yields")
+    async def macro_real_yields():
+        """US Treasury real (TIPS) yields and breakeven inflation at 5 to 30 years, from the Treasury's own daily curves. Describes what already happened; not a forecast of inflation or prices."""
+        return ok(await real_yields.overview())
+
+    @app.get("/api/macro/outlays")
+    async def macro_outlays():
+        """Where US federal money goes: net outlays by purpose, receipts and the deficit, latest month and fiscal year so far versus last year (Monthly Treasury Statement). Checked against the source's own totals; describes what already happened, not a signal."""
+        return ok(await outlays.overview())
+
+    @app.get("/api/macro/receipts")
+    async def macro_receipts():
+        """Where US federal revenue comes from: the seven receipt categories, latest month and fiscal year so far versus last year (Monthly Treasury Statement). Checked against the source's own total; describes what already happened, not a signal."""
+        return ok(await receipts.overview())
+
+    @app.get("/api/macro/customs")
+    async def macro_customs():
+        """US customs duties (tariff revenue): collected, refunded and net, by month and fiscal year so far (Monthly Treasury Statement). Checked against the source's own arithmetic; describes what already happened, not a signal."""
+        return ok(await customs.overview())
+
+    @app.get("/api/macro/dealers")
+    async def macro_dealers():
+        """Primary dealers' net position in US Treasuries (New York Fed), weekly. Describes what already happened; not a signal."""
+        return ok(await dealers.overview())
+
+    @app.get("/api/macro/budget")
+    async def macro_budget():
+        """US federal receipts, outlays and deficit from the Monthly Treasury Statement. Describes what already happened; not a signal."""
+        return ok(await budget.overview())
+
+    @app.get("/api/macro/auctions")
+    async def macro_auctions():
+        """US Treasury note and bond auction results (yield and bid-to-cover by term). Describes finished auctions; not a signal."""
+        return ok(await auctions.overview())
+
+    @app.get("/api/macro/tga")
+    async def macro_tga():
+        """US Treasury General Account (the government's cash balance at the Fed), from the Daily Treasury Statement. Describes where cash sits; not a signal."""
+        return ok(await tga.overview())
+
+    @app.get("/api/macro/fedops")
+    async def macro_fedops():
+        """Fed repo and reverse repo operations (New York Fed): cash parked at the Fed and cash the Fed lent. Describes money-market plumbing; not a signal."""
+        return ok(await fed_ops.overview())
+
+    @app.get("/api/macro/world")
+    async def macro_world():
+        """Yearly growth, inflation and unemployment for the US and five other big economies (World Bank). Context, not a forecast; figures arrive months late and are revised."""
+        return ok(await world_bank.overview())
+
+    @app.get("/api/macro/fx")
+    async def macro_fx():
+        """How the US dollar is doing against the major currencies (ECB euro reference rates, daily, official). For information, not tradable quotes."""
+        return ok(await ecb_fx.overview())
+
+    @app.get("/api/macro/treasury")
+    async def macro_treasury():
+        """Full US Treasury yield curve (1 month to 30 years) with 2s10s / 3m10y spreads, plus total public debt. Official free data, with dates."""
+        return ok(await treasury.overview())
+
+    macro_brief = MacroBriefService(macro, fedwatch, news, demo, sofr=NyFedSofr(demo=demo))
+
+    @app.get("/api/macro/brief")
+    async def macro_brief_route():
+        return ok(await macro_brief.overview())      # works without a FRED key: it then says the indicators are unavailable instead of failing
 
     @app.get("/api/market/status")
     async def market_status():
@@ -983,6 +1467,292 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
             raise ApiError("UNKNOWN_INSTRUMENT", f"unknown instrument '{token[:40]}'", 404)
         return ok(await fundamentals.get(inst, force=refresh))
 
+    stock_research = StockResearch(EdgarClient(db), fundamentals, news, demo)
+
+    discover = DiscoverService(db, bars, stock_research.edgar, demo)
+    fundamental_research = FundamentalResearch(stock_research.edgar, fundamentals, demo)
+    discovery_store = DiscoveryStore(db)
+    listings_service = ListingsService(db, NasdaqIpoFeed(db), bars, stock_research.edgar, demo)
+
+    async def _study(symbol, price, price_time, price_source, now):
+        return await fundamental_research.filing_research(symbol, price, price_time, price_source, now)
+    new_to_me = NewToMe(db, discovery_store, _study, None, demo, watchlist=lambda: [r["symbol"] for r in db.q("SELECT symbol FROM signal_watchlist WHERE asset_type='stock'")])
+    narratives = NarrativeService(db, bars, news, demo)
+
+    @app.get("/api/discover/narrative")
+    async def discover_narrative(refresh: bool = False):
+        """Today's market narrative (Quantum, Nuclear, Robotics ...), found by fixed rules from price strength, breadth, volume and headlines. Saved per UTC day."""
+        return ok(await narratives.today(refresh))
+
+    @app.get("/api/discover/narrative/history")
+    async def discover_narrative_history(limit: int = 30):
+        return ok({"items": narratives.history(max(1, min(limit, 100))), "method": narratives.method()})
+
+
+    @app.get("/api/discover/shortlist")
+    async def discover_shortlist(refresh: bool = False):
+        return ok(await discover.shortlist(refresh))
+
+    @app.get("/api/discover/ranked")
+    async def discover_ranked(sector: str | None = None, min_score: float = 0, max_pe: float | None = None, min_growth: float | None = None, limit: int = 25):
+        return ok(discover.ranked(sector, min_score, max_pe, min_growth, limit))
+
+    @app.get("/api/discover/method")
+    async def discover_method():
+        return ok(discover.method())
+
+    event_calendar = EventCalendar(db, demo, client=calendar_client)
+
+    @app.get("/api/calendar")
+    async def calendar_route(days: int = 14, start: str | None = None, kinds: str = "", scope: str = "major", symbols: str = ""):
+        """Earnings, economic data, rate decisions, dividends and Treasury auctions in one list."""
+        try:
+            st = date.fromisoformat(start) if start else None
+        except ValueError:
+            raise ApiError("INVALID_DATE", "start must look like 2026-11-10", 422)
+        names = [x.strip().upper() for x in symbols.split(",") if x.strip()][:40]
+        return ok(await event_calendar.overview(st, days, [k.strip() for k in kinds.split(",") if k.strip()] or None, scope, names))
+
+    lab = LabService(BtcData(db), demo)
+    fear_greed = FearGreed(demo=demo)
+    cftc_btc = CftcBitcoin(demo=demo)
+    stablecoins = Stablecoins(demo=demo)
+    onchain = OnChain(demo=demo)
+    cg_global = CoinGeckoGlobal(demo=demo)
+
+    @app.get("/api/btc/market")
+    async def btc_market():
+        """Whole crypto market (CoinGecko): total value, 24h change and volume, Bitcoin and Ether share, stablecoin share. Descriptive, not a signal."""
+        return ok(await cg_global.overview())
+
+    @app.get("/api/btc/network")
+    async def btc_network():
+        """Bitcoin network health (mempool.space): fees, mempool size, difficulty cycle and hashrate. Each section fails on its own; not a price signal."""
+        return ok(await onchain.overview())
+
+    @app.get("/api/btc/stablecoins")
+    async def btc_stablecoins():
+        """US-dollar stablecoin supply (DefiLlama): the cash inside crypto, with changes and the biggest issuers. A liquidity gauge, not a price signal."""
+        return ok(await stablecoins.overview())
+
+    @app.get("/api/btc/positioning")
+    async def btc_positioning():
+        """Who holds CME Bitcoin futures (CFTC Commitments of Traders): leveraged funds, asset managers, dealers. Weekly, official, dated; not a signal."""
+        return ok(await cftc_btc.overview())
+
+    @app.get("/api/btc/sentiment")
+    async def btc_sentiment():
+        """Crypto Fear & Greed index (alternative.me), labelled with its source and date. A mood gauge, not a signal."""
+        return ok(await fear_greed.overview())
+
+
+    @app.get("/api/btclab/strategies")
+    async def btclab_strategies():
+        return ok({"strategies": lab.listing(), **lab.status()})
+
+    @app.post("/api/btclab/data/refresh")
+    async def btclab_refresh():
+        try:
+            return ok(await lab.refresh(["1d", "1h"]))
+        except LabError as e:
+            raise ApiError("DATA_UNAVAILABLE", str(e), 503)
+
+    @app.get("/api/btclab/tracker")
+    async def btclab_tracker():
+        """Strategies added by the research loop: frozen backtest plus the forward record since each was added. Research only."""
+        try:
+            return ok(await lab.tracker())
+        except LabError as e:
+            raise ApiError("LAB_UNAVAILABLE", str(e), 503)
+
+    @app.get("/api/btclab/experiments")
+    async def btclab_experiments():
+        """The pre-registered strategy experiments and how each ended (a frozen ledger, never recomputed). Research only: nothing here is advice and nothing places a trade."""
+        import json as _json
+        from pathlib import Path as _P
+        entries = _json.loads((_P(__file__).parent / "btclab" / "experiments_ledger.json").read_text())["entries"]
+        passed = sum(1 for e in entries if e["verdict"] == "passed")
+        return ok({"entries": entries, "tested": len(entries), "passed": passed,
+                   "note": "Each rule and pass bar was written down before it was run, then run once and never adjusted. A pass would only mean a candidate to follow on new data for 60 days, never 'profitable'. None has passed yet."})
+
+    @app.get("/api/btcquant/paper")
+    async def btcquant_paper():
+        """The paper-trading lab: the latest daily dashboard in plain words and the last trades as the ledger recorded them on signal. Simulated accounts only; nothing here can place an order."""
+        from .btcquant import view as _view
+        return ok(_view.paper_view())
+
+    @app.post("/api/btclab/run")
+    async def btclab_run(b: LabRunIn):
+        try:
+            res = await lab.run(b)
+        except LabError as e:
+            raise ApiError("LAB_UNAVAILABLE", str(e), 503)
+        db.audit("user", "btclab_run", {"strategies": b.strategies, "timeframe": b.timeframe, "market": b.market, "leverage": b.leverage})
+        return ok(res)
+
+    @app.post("/api/btclab/agent")
+    async def btclab_agent(b: LabAgentIn):
+        """Five-year stress test, find where the rule loses money, apply a fix from a fixed menu, rerun. Research only."""
+        try:
+            res = await lab.agent(b, db)
+        except LabError as e:
+            raise ApiError("LAB_UNAVAILABLE", str(e), 503)
+        db.audit("user", "btclab_agent", {"strategies": b.strategies, "rounds": b.rounds})
+        return ok(res)
+
+    @app.get("/api/btclab/agent/history")
+    async def btclab_agent_history(strategy: str = "", limit: int = 20):
+        return ok({"items": lab.agent_history(db, strategy or None, max(1, min(limit, 100)))})
+
+    @app.get("/api/stocks/earnings")
+    async def stocks_earnings(symbols: str = "", days: int = 30):
+        """Next earnings dates for the symbols asked about (default: the equities on the watchlist)."""
+        names = [x.strip().upper() for x in symbols.split(",") if x.strip()][:40]
+        insts = []
+        for n in names:
+            inst = I.resolve(n)
+            if inst is not None and inst.asset_class == "equity":
+                insts.append(inst)
+        if not names:
+            insts = [i for i in (I.resolve(r["symbol"]) for r in db.q("SELECT symbol FROM signal_watchlist WHERE asset_type='stock' ORDER BY position")) if i is not None and i.asset_class == "equity"][:40]
+        return ok(await stock_research.earnings_calendar(insts, max(1, min(days, 120))))
+
+    @app.get("/api/stocks/filings")
+    async def stocks_filings(symbols: str = "", forms: str = "", limit: int = 40, days: int = 365):
+        """Latest SEC filings (10-K, 10-Q, 8-K, insider Form 4, 5% holders, offerings...) for the symbols asked about, default the watchlist's stocks."""
+        names = [x.strip().upper() for x in symbols.split(",") if x.strip()][:25]
+        insts = [i for i in (I.resolve(n) for n in names) if i is not None and i.asset_class == "equity"]
+        if not names:
+            insts = [i for i in (I.resolve(r["symbol"]) for r in db.q("SELECT symbol FROM signal_watchlist WHERE asset_type='stock' ORDER BY position")) if i is not None and i.asset_class == "equity"][:25]
+        want = [f.strip().upper() if f.strip().upper() != "SC13D" else "SC 13D" for f in forms.split(",") if f.strip()] or None
+        return ok(await stock_research.filings_feed(insts, want, max(1, min(limit, 200)), max(1, min(days, 1500))))
+
+    # --- fundamental discovery: newly listed companies, new-to-me candidates, my own states and notes ---
+    @app.get("/api/discover/listings")
+    async def discover_listings(days: int = 30):
+        """Newly listed companies on NYSE and Nasdaq: upcoming deals and recent pricings, with confirmation and SEC verification where they could be checked."""
+        return ok(listings_service.read(days))
+
+    def _csv(v: str | None):
+        items = [x.strip() for x in (v or "").split(",") if x.strip()]
+        return items[:20] or None
+
+    @app.get("/api/discover/candidates")
+    async def discover_candidates(target: int = 5, sectors: str | None = None, countries: str | None = None, exchanges: str | None = None, min_market_cap: float | None = None,
+                                  max_market_cap: float | None = None, min_dollar_volume: float | None = None, max_listing_age_years: int | None = None, min_listing_age_years: int | None = None):
+        """New-to-me research candidates from the latest daily study, narrowed by my filters and by what I have already seen, saved or dismissed. Fewer are shown when evidence is weak."""
+        f = {"sectors": _csv(sectors), "countries": _csv(countries), "exchanges": _csv(exchanges), "min_market_cap": 0 if min_market_cap is None else max(0.0, min_market_cap),
+             "max_market_cap": float("inf") if max_market_cap is None else max_market_cap, "min_dollar_volume": 0 if min_dollar_volume is None else max(0.0, min_dollar_volume),
+             "max_listing_age_years": max_listing_age_years, "min_listing_age_years": min_listing_age_years}
+        return ok(new_to_me.read(f, max(1, min(target, 20))))
+
+    class StateIn(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        symbol: str = Field(min_length=1, max_length=10, pattern=r"^[A-Za-z]{1,5}([-/][A-Za-z])?$")
+        state: str
+        on: bool = True
+
+    @app.post("/api/discover/state")
+    async def discover_state(body: StateIn):
+        if body.state not in DISC_STATES:
+            raise ApiError("BAD_STATE", f"state must be one of {', '.join(DISC_STATES)}", 422)
+        return ok(discovery_store.set_state(body.symbol, body.state, body.on))
+
+    @app.get("/api/discover/state/{symbol}")
+    async def discover_state_get(symbol: str):
+        return ok({"state": discovery_store.get(symbol), "notes": discovery_store.notes(symbol), "last_review": discovery_store.last_review(symbol)})
+
+    class NoteIn(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        body: str = Field(min_length=1, max_length=4000)
+
+    @app.post("/api/research/{token}/notes")
+    async def research_note_add(token: str, body: NoteIn):
+        inst = I.resolve(token)
+        if inst is None or inst.asset_class != "equity":
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown stock '{token[:40]}'", 404)
+        try:
+            return ok(discovery_store.add_note(inst.symbol, body.body))
+        except ValueError as e:
+            raise ApiError("BAD_NOTE", str(e), 422)
+
+    @app.delete("/api/research/notes/{note_id}")
+    async def research_note_delete(note_id: int):
+        if not discovery_store.delete_note(note_id):
+            raise ApiError("NOT_FOUND", "no such note", 404)
+        return ok({"deleted": note_id})
+
+    class BriefIn(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        detail: str = Field("concise", pattern=r"^(concise|detailed)$")
+        question: str | None = Field(None, max_length=2000)
+        include_notes: bool = False
+        include_position: bool = False
+        shares: float | None = Field(None, gt=0, le=1e10)
+        buy_price: float | None = Field(None, gt=0, le=1e8)
+
+    @app.post("/api/research/{token}/brief")
+    async def research_brief(token: str, body: BriefIn):
+        """A paste-ready research brief for ChatGPT, built locally from research the app already holds: no AI call, no key. My notes and position are included only when switched on."""
+        inst = I.resolve(token)
+        if inst is None or inst.asset_class != "equity":
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown stock '{token[:40]}'", 404)
+        r = await fundamental_research.research(inst)
+        if not r.get("available"):
+            raise ApiError("NOT_AVAILABLE", r.get("reason") or "there is no research to export for this company right now", 409)
+        run = new_to_me.latest_run()
+        disc = next((p for p in (run or {}).get("pool", []) if p["symbol"] == inst.symbol), None)
+        try:
+            stories = [{"title": s["title"], "link": s.get("link"), "feed": s["feed"], "published": s.get("published")} for s in news.items(symbol=inst.symbol, hours=24 * 14, limit=8)["items"]]
+        except Exception:  # noqa: BLE001  headlines are optional
+            stories = []
+        notes = discovery_store.notes(inst.symbol) if body.include_notes else None
+        pos = {"shares": body.shares, "buy_price": body.buy_price} if body.include_position else None
+        return ok(build_brief(r, detail=body.detail, question=body.question, discovery=disc, filings=r.get("filings"), news=stories, exchange=inst.exchange, notes=notes, position=pos))
+
+    @app.post("/api/research/{token}/review")
+    async def research_review(token: str):
+        """Mark a company as reviewed now: saves the figures I looked at so the next visit can show what changed. Needs the filing analysis to be available."""
+        inst = I.resolve(token)
+        if inst is None or inst.asset_class != "equity":
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown stock '{token[:40]}'", 404)
+        r = await fundamental_research.research(inst)
+        if not r.get("available"):
+            raise ApiError("NOT_AVAILABLE", r.get("reason") or "the research is not available right now, so there is nothing to record", 409)
+        return ok({"snapshot": discovery_store.record_review(inst.symbol, r)})
+
+    @app.get("/api/research/{token}/changes")
+    async def research_changes(token: str):
+        inst = I.resolve(token)
+        if inst is None or inst.asset_class != "equity":
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown stock '{token[:40]}'", 404)
+        r = await fundamental_research.research(inst)
+        if not r.get("available"):
+            return ok({"has_review": discovery_store.last_review(inst.symbol) is not None, "available": False, "reason": r.get("reason")})
+        return ok({**discovery_store.changes_since_review(inst.symbol, r), "available": True})
+
+    @app.get("/api/research/{token}")
+    async def fundamental_research_route(token: str, discount_rate_pct: float | None = None, terminal_growth_pct: float | None = None, band_pct: float | None = None):
+        """Revenue-first fundamental research from SEC filings: revenue, quality, Rule of 40, valuation under stated assumptions. Policy values outside their limits are ignored."""
+        inst = I.resolve(token)
+        if inst is None:
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown instrument '{token[:40]}'", 404)
+        if inst.asset_class != "equity":
+            raise ApiError("NOT_APPLICABLE", f"fundamental research applies to US stocks, not {inst.asset_class} instruments", 422)
+        discovery_store.set_state(inst.symbol, "opened")
+        out = await fundamental_research.research(inst, {"discount_rate_pct": discount_rate_pct, "terminal_growth_pct": terminal_growth_pct, "band_pct": band_pct})
+        out["my_state"] = {"state": discovery_store.get(inst.symbol), "notes": discovery_store.notes(inst.symbol), "last_review": discovery_store.last_review(inst.symbol)}
+        return ok(out)
+
+    @app.get("/api/stocks/{token}/research")
+    async def stocks_research(token: str):
+        inst = I.resolve(token)
+        if inst is None:
+            raise ApiError("UNKNOWN_INSTRUMENT", f"unknown instrument '{token[:40]}'", 404)
+        if inst.asset_class != "equity":
+            raise ApiError("NOT_APPLICABLE", f"stock research applies to US stocks, not {inst.asset_class} instruments", 422)
+        return ok(await stock_research.research(inst))
+
     # --- news -----------------------------------------------------------------
     @app.exception_handler(NewsError)
     async def _news_err(_, e: NewsError):
@@ -1341,5 +2111,104 @@ def create_app(*, db_path: str | None = None, demo: bool | None = None, llm=None
     if dist and os.path.isdir(dist):                       # cloud: one server serves both the API and the built web app (same origin, no CORS)
         from fastapi.staticfiles import StaticFiles
         app.mount("/", StaticFiles(directory=dist, html=True), name="web")
+
+    # --- operations: the shared scheduler -----------------------------------------------------------------------------------------------
+    def sched_notify(severity: str, message: str) -> None:
+        if tg is None:
+            return
+        try:
+            asyncio.get_running_loop().create_task(tg.send_text(f"ATLAS {severity.upper()}: {message}"))
+        except RuntimeError:
+            pass                                                         # no running loop (a synchronous caller): the event is still stored and shown on the dashboard
+
+    scheduler = Scheduler(db, notify=sched_notify)
+    register_default_jobs(scheduler, {"db": db, "news": news, "stock_research": stock_research, "resolve": I.resolve, "btc_data": lab.data, "demo": demo,
+                                      "listings": listings_service, "new_to_me": new_to_me,
+                                      "extras": {"fed_rates": fed_rates, "fed_holdings": fed_holdings, "debt_mix": debt_mix, "debt_rates": debt_rates, "budget": budget, "interest": interest, "buybacks": buybacks, "bill_auctions": bill_auctions, "borrowing": borrowing, "dealers": dealers, "futures_positioning": futures_positioning, "customs": customs, "receipts": receipts, "outlays": outlays, "real_yields": real_yields, "fin_conditions": fin_conditions, "jobless_claims": jobless_claims, "oil_prices": oil_prices, "gasoline_prices": gasoline_prices, "natural_gas": natural_gas, "money_supply": money_supply, "retail_sales": retail_sales, "housing_starts": housing_starts, "industrial_production": industrial_production, "euro_money_supply": euro_money_supply, "euro_inflation": euro_inflation, "euro_unemployment": euro_unemployment, "euro_stress": euro_stress, "euro_yields": euro_yields, "euro_gdp": euro_gdp, "euro_lending": euro_lending, "euro_bank_rates": euro_bank_rates, "euro_stock_rates": euro_stock_rates, "euro_employment": euro_employment, "jolts": jolts, "jolts_industries": jolts_industries, "jolts_flows": jolts_flows, "us_inventories": us_inventories, "us_consumer_credit": us_consumer_credit, "us_bank_loans": us_bank_loans, "us_bank_balance": us_bank_balance, "us_building_permits": us_building_permits, "us_construction": us_construction, "us_new_homes": us_new_homes, "us_factory_orders": us_factory_orders, "us_industry_jobs": us_industry_jobs, "us_jobs_detail": us_jobs_detail, "us_producer_prices": us_producer_prices, "us_jobs": us_jobs, "us_gdp": us_gdp, "us_household": us_household, "us_real_spending": us_real_spending, "us_trade": us_trade, "bank_reserves": bank_reserves, "ecb_rates": ecb_rates, "commodity_positioning": commodity_positioning, "currency_positioning": currency_positioning, "agri_positioning": agri_positioning, "auctions": auctions, "tga": tga, "fed_ops": fed_ops, "macro_brief": macro_brief, "treasury": treasury, "ecb_fx": ecb_fx, "world_bank": world_bank, "fear_greed": fear_greed,
+                                                 "stablecoins": stablecoins, "onchain": onchain, "cg_global": cg_global, "cftc_btc": cftc_btc}})
+    app.state.scheduler = scheduler
+
+    class JobPatch(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        enabled: bool | None = None
+        paused: bool | None = None
+        priority: int | None = Field(None, ge=1, le=5)
+        interval_market_s: int | None = Field(None, ge=30, le=7 * 86400)
+        interval_off_s: int | None = Field(None, ge=30, le=7 * 86400)
+        max_tokens: int | None = Field(None, ge=0, le=2_000_000)
+        max_runtime_s: int | None = Field(None, ge=5, le=6 * 3600)
+        max_experiments: int | None = Field(None, ge=0, le=10_000)
+
+    class ClaudePatch(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        access: Literal["unknown", "api", "subscription", "claude_code"] | None = None
+        model: str | None = Field(None, max_length=60)
+        usage_telemetry: Literal["unknown", "per_request", "none"] | None = None
+        price_in_per_mtok: float | None = Field(None, ge=0, le=1000)
+        price_out_per_mtok: float | None = Field(None, ge=0, le=1000)
+        daily_token_limit: int | None = Field(None, ge=0, le=100_000_000)
+        daily_usd_limit: float | None = Field(None, ge=0, le=100_000)
+        monthly_usd_limit: float | None = Field(None, ge=0, le=1_000_000)
+
+    class SchedPatch(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        reserve_pct: float | None = Field(None, ge=0, le=90)
+        max_concurrent: int | None = Field(None, ge=1, le=8)
+        claude: ClaudePatch | None = None
+
+    @app.get("/api/ops/overview")
+    async def ops_overview():
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/jobs/{job_id}")
+    async def ops_job_update(job_id: str, b: JobPatch):
+        if scheduler.job(job_id) is None:
+            raise ApiError("UNKNOWN_JOB", "no such job", 404)
+        patch = {k: (int(v) if isinstance(v, bool) else v) for k, v in b.model_dump(exclude_none=True).items()}
+        scheduler.update_job(job_id, **patch)
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/jobs/{job_id}/run")
+    async def ops_job_run(job_id: str):
+        if scheduler.job(job_id) is None:
+            raise ApiError("UNKNOWN_JOB", "no such job", 404)
+        if not scheduler.request_run(job_id):
+            raise ApiError("STOPPED", "The emergency stop is on, so nothing can be run. Clear it first.", 409)
+        if not run_sched:
+            await scheduler.tick()                                         # no background scheduler in this process (demo or cloud web): run it now
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/pause")
+    async def ops_pause():
+        scheduler.set_global(paused=True)
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/resume")
+    async def ops_resume():
+        scheduler.set_global(paused=False)
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/emergency-stop")
+    async def ops_stop():
+        scheduler.emergency_stop(True)
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/emergency-clear")
+    async def ops_clear():
+        scheduler.emergency_stop(False)
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/settings")
+    async def ops_settings(b: SchedPatch):
+        patch = b.model_dump(exclude_none=True)
+        scheduler.set_global(**patch)
+        return ok(scheduler.overview())
+
+    @app.post("/api/ops/dead-letters/{dl_id}/{action}")
+    async def ops_dead_letter(dl_id: int, action: Literal["retry", "dismiss"]):
+        if not scheduler.resolve_dead_letter(dl_id, retry=action == "retry"):
+            raise ApiError("NOT_FOUND", "no such open dead letter", 404)
+        return ok(scheduler.overview())
+
 
     return app

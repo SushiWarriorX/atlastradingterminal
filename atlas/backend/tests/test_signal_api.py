@@ -11,7 +11,7 @@ from atlas_api import app as app_module
 from atlas_api.app import create_app
 from atlas_api.signal import assets as A
 from atlas_api.signal import fixtures
-from signal_helpers import FakeFund, ScriptProvider
+from signal_helpers import FakeFund, ScriptProvider, freeze_demo_clock
 
 BTC, AAPL, SPY = "CRYPTO:COINBASE:BTC-USD:SPOT", "EQUITY:NASDAQ:AAPL", "ETF:ARCA:SPY"
 
@@ -72,7 +72,8 @@ def test_watchlist_rows_are_labelled_demo_in_demo_mode(demo):
     assert len(row["spark"]) == 30 and row["asset"]["type"] == "stock"
 
 
-def test_asset_header_includes_saved_flag_and_chart_ranges(demo):
+def test_asset_header_includes_saved_flag_and_chart_ranges(demo, monkeypatch):
+    freeze_demo_clock(monkeypatch, "2026-11-24T15:07:30+00:00")                              # mid-session: the demo candles must not depend on the time of day the suite runs (CI failed at 05:09 UTC without this)
     h = data(demo.get(f"/api/signal/asset/{AAPL}"))
     assert h["saved"] is False and h["quote"]["prov"]["event_time"]
     data(demo.post("/api/signal/watchlist", json={"id": AAPL}))
@@ -83,6 +84,31 @@ def test_asset_header_includes_saved_flag_and_chart_ranges(demo):
     bad = demo.get(f"/api/signal/chart/{AAPL}", params={"range": "10Y"})
     assert bad.status_code == 422 and bad.json()["error"]["code"] == "INVALID_RANGE"
     assert demo.get("/api/signal/chart/NOT-REAL").status_code == 404
+
+
+@pytest.mark.parametrize("iso, points", [
+    ("2026-11-24T05:04:59+00:00", 240),     # winter, 23:59 in New York: the session is the whole of the day before (288 bars, thinned to the 240 the chart keeps)
+    ("2026-11-24T05:05:00+00:00", 1),       # the last finished bar is the 00:00 one: a session of one bar
+    ("2026-11-24T05:09:59+00:00", 1),
+    ("2026-11-24T05:10:00+00:00", 2),       # the 00:05 bar is finished: two bars
+    ("2026-07-14T04:04:59+00:00", 240),     # summer time moves the same window an hour earlier
+    ("2026-07-14T04:05:00+00:00", 1),
+])
+def test_the_demo_one_day_chart_holds_one_bar_in_the_first_five_minutes_of_a_new_york_day(demo, monkeypatch, iso, points):
+    """A known limit, written down so it cannot surprise a test run again: the demo series runs round the clock but the 1D range of a stock keeps only the New York
+    calendar day of its last bar, so for five minutes after midnight there is one bar and the phone draws no line (it needs two). If the range ever falls back to the
+    day before in that window, change this test with it."""
+    freeze_demo_clock(monkeypatch, iso)
+    ch = data(demo.get(f"/api/signal/chart/{AAPL}", params={"range": "1D"}))
+    assert len(ch["points"]) == points
+
+
+def test_the_demo_ranges_other_than_one_day_do_not_depend_on_the_time_of_day(demo, monkeypatch):
+    for iso in ("2026-11-24T05:05:00+00:00", "2026-11-24T05:09:59+00:00", "2026-11-24T13:45:00+00:00", "2026-07-14T04:05:00+00:00"):
+        freeze_demo_clock(monkeypatch, iso)
+        for rng in ("1W", "1M", "3M", "1Y", "5Y"):
+            assert len(data(demo.get(f"/api/signal/chart/{AAPL}", params={"range": rng}))["points"]) >= 30, (iso, rng)
+        assert len(data(demo.get(f"/api/signal/chart/{BTC}", params={"range": "1D"}))["points"]) >= 100, iso             # crypto keeps the last 24 hours, never a calendar day
 
 
 def test_research_bundle_has_four_findings_a_briefing_and_demo_labels_everywhere(demo):

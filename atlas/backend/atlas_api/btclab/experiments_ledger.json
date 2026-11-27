@@ -1,0 +1,333 @@
+{
+ "entries": [
+  {
+   "id": "exp1_vol_target",
+   "name": "Volatility-targeted Bitcoin",
+   "date": "2026-11-11",
+   "registered": "rule and pass bar written down and pushed before the run (2026-11-11 01:20 UTC)",
+   "idea": "Hold Bitcoin, but hold less of it when it has recently been jumping around, aiming for a smoother ride.",
+   "period": "Last 30% of Bitcoin's history (never used to design the rule)",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule",
+     "v": "+116.8%"
+    },
+    {
+     "k": "Just holding Bitcoin",
+     "v": "+159.3%"
+    },
+    {
+     "k": "Worst drop, rule vs holding",
+     "v": "-52.4% vs -53.1%"
+    },
+    {
+     "k": "Sharpe (return per unit of risk), rule vs holding",
+     "v": "0.775 vs 0.84"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Sharpe at least 0.10 above holding",
+     "met": false
+    },
+    {
+     "rule": "Worst drop at least 10 points shallower",
+     "met": false
+    },
+    {
+     "rule": "Return at least 70% of holding's",
+     "met": true
+    },
+    {
+     "rule": "Beats simply holding less Bitcoin",
+     "met": false
+    }
+   ],
+   "reading": "Reacting to volatility added nothing over just holding a bit less Bitcoin.",
+   "not_verified": "Cash earned nothing in the test. Fees were modelled; real trading would differ."
+  },
+  {
+   "id": "exp2_momentum",
+   "name": "Crypto momentum (top 5 of 28 coins)",
+   "date": "2026-11-11",
+   "registered": "commit 2a93f19, pushed before the run",
+   "idea": "Each week, hold the five coins that rose most over the last 90 days.",
+   "period": "Last 30% of the history of 28 coins",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule",
+     "v": "+206.2%"
+    },
+    {
+     "k": "Just holding Bitcoin",
+     "v": "+174.6%"
+    },
+    {
+     "k": "Worst drop, rule vs holding",
+     "v": "-63.0% vs -53.1%"
+    },
+    {
+     "k": "Sharpe, rule vs holding",
+     "v": "0.81 vs 0.876"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Sharpe at least 0.15 above holding every coin",
+     "met": true
+    },
+    {
+     "rule": "Sharpe above holding Bitcoin",
+     "met": false
+    },
+    {
+     "rule": "Return at least Bitcoin's",
+     "met": true
+    },
+    {
+     "rule": "Beats 95% of random 5-coin picks",
+     "met": true
+    }
+   ],
+   "reading": "It beat random picking and the whole list, but took more risk than Bitcoin for it.",
+   "not_verified": "The coin list is coins that exist today, so dead coins are missing and the result is flattered by an unknown amount."
+  },
+  {
+   "id": "exp3_gated_momentum",
+   "name": "Momentum with a Bitcoin trend filter",
+   "date": "2026-11-11",
+   "registered": "commit 71d9396, pushed before the run",
+   "idea": "The same momentum rule, but only invested while Bitcoin is above its 200-day average; otherwise cash.",
+   "period": "Last 30% of the history of 28 coins",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule",
+     "v": "+345.2%"
+    },
+    {
+     "k": "Just holding Bitcoin",
+     "v": "+174.6%"
+    },
+    {
+     "k": "Worst drop, rule vs holding",
+     "v": "-60.0% vs -53.1%"
+    },
+    {
+     "k": "Sharpe, rule vs holding",
+     "v": "0.989 vs 0.876"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Sharpe at least 0.15 above the gated list",
+     "met": true
+    },
+    {
+     "rule": "Sharpe above holding Bitcoin",
+     "met": true
+    },
+    {
+     "rule": "Worst drop shallower than Bitcoin's",
+     "met": false
+    },
+    {
+     "rule": "Beats 95% of gated random picks",
+     "met": true
+    },
+    {
+     "rule": "Return above zero, at least 30 trades",
+     "met": true
+    }
+   ],
+   "reading": "A near miss: better on most counts, but the worst drop was still deeper than Bitcoin's, which was the reason for the filter. Closed, not retuned.",
+   "not_verified": "Same survivorship flattery as above. This was the second look at one idea, so a pass would have counted for less."
+  },
+  {
+   "id": "exp4_funding_carry",
+   "name": "Bitcoin funding carry (market-neutral)",
+   "date": "2026-11-14",
+   "registered": "commit 539ca0e, simulator committed before the run (4833b9f)",
+   "idea": "Hold Bitcoin and short the matching futures contract to collect its funding payments, switching on only when payments beat Treasury bills.",
+   "period": "Last year (2025-11-06 to 2026-11-13)",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule, per year",
+     "v": "+0.66%"
+    },
+    {
+     "k": "Always holding the carry, per year",
+     "v": "+2.68%"
+    },
+    {
+     "k": "3-month Treasury bills, per year",
+     "v": "+3.78%"
+    },
+    {
+     "k": "Just holding Bitcoin, per year",
+     "v": "-33.7%"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Beats bills by at least 1 point a year",
+     "met": false
+    },
+    {
+     "rule": "Worst drop no deeper than 3%",
+     "met": true
+    },
+    {
+     "rule": "At least as good as always holding the carry",
+     "met": false
+    }
+   ],
+   "reading": "Funding paid well in 2024 but less than bills this past year, and the 11 switches cost more in fees than they earned.",
+   "not_verified": "Exchange, price-mismatch and liquidation risk are not modelled. One market cycle of data."
+  },
+  {
+   "id": "exp5_net_liquidity",
+   "name": "Bitcoin only while US net liquidity is rising",
+   "date": "2026-11-14",
+   "registered": "commit 76c2805; runner and tests committed before the run (f5fafec)",
+   "idea": "Hold Bitcoin only in weeks when the Federal Reserve's balance sheet, less the Treasury's cash account and the overnight reverse repo, is higher than 13 weeks earlier; otherwise sit in cash.",
+   "period": "Last 30% of Bitcoin's history (2023-06-22 to 2026-11-13, never used to design the rule)",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule",
+     "v": "+25.4%"
+    },
+    {
+     "k": "Just holding Bitcoin",
+     "v": "+127.2%"
+    },
+    {
+     "k": "Worst drop, rule vs holding",
+     "v": "-53.2% vs -53.1%"
+    },
+    {
+     "k": "Random timing with the same exposure that did as well or better",
+     "v": "62% of 1,000"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Sharpe at least 0.10 above holding",
+     "met": false
+    },
+    {
+     "rule": "Beats 95% of randomly shifted copies of its own timing",
+     "met": false
+    },
+    {
+     "rule": "Worst drop at least 10 points shallower than holding",
+     "met": false
+    },
+    {
+     "rule": "Return above zero and at least 10 switches",
+     "met": true
+    }
+   ],
+   "reading": "Whether liquidity was rising did not time Bitcoin. The rule sat in cash 57% of the time, earned about a fifth of what holding earned, avoided none of the worst drop, and random timing with the same exposure did as well or better 62% of the time.",
+   "not_verified": "One of several popular ways to define net liquidity, one lookback, today's version of the Fed's data, and about three years of Bitcoin with only a few liquidity swings. Cash earned nothing in the test."
+  },
+  {
+   "id": "exp6_hash_rate",
+   "name": "Bitcoin only while miners are not capitulating",
+   "date": "2026-11-14",
+   "registered": "commit 9567b02; runner and tests committed before the run (7b2d904)",
+   "idea": "Hold Bitcoin only on days when the 30-day average of the network's mining power (hash rate) is at or above its 60-day average; otherwise sit in cash.",
+   "period": "Last 30% of Bitcoin's history (2023-06-22 to 2026-11-13, never used to design the rule)",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule",
+     "v": "+47.4%"
+    },
+    {
+     "k": "Just holding Bitcoin",
+     "v": "+127.2%"
+    },
+    {
+     "k": "Worst drop, rule vs holding",
+     "v": "-55.5% vs -53.1%"
+    },
+    {
+     "k": "Random timing with the same exposure that did as well or better",
+     "v": "60% of 1,000"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Sharpe at least 0.10 above holding",
+     "met": false
+    },
+    {
+     "rule": "Beats 95% of randomly shifted copies of its own timing",
+     "met": false
+    },
+    {
+     "rule": "Worst drop at least 10 points shallower than holding",
+     "met": false
+    },
+    {
+     "rule": "Return above zero and at least 6 switches",
+     "met": true
+    }
+   ],
+   "reading": "Mining power did not time Bitcoin. In these years it hovered and jittered, so the rule flipped 40 times (about 3 a year in the earlier years); its five longest sit-outs included two rallies of about 25% and one 28% fall; and random timing with the same exposure did as well or better 60% of the time.",
+   "not_verified": "One popular reading of one indicator (30 against 60 days, no price confirmation), mining power is an estimate and its day stamp is undocumented, and the sample holds only a few mining-stress episodes. Cash earned nothing in the test."
+  },
+  {
+   "id": "exp7_equity_trend",
+   "name": "Bitcoin only while US stocks are in an uptrend",
+   "date": "2026-11-14",
+   "registered": "commit edf2c7c; loader, runner and tests committed before the run (05ae19c)",
+   "idea": "Hold Bitcoin only on days when the Nasdaq Composite closed above its 200-day average (using the previous day's close); otherwise sit in cash.",
+   "period": "Last 30% of Bitcoin's history (2023-06-22 to 2026-11-13, never used to design the rule)",
+   "verdict": "failed",
+   "results": [
+    {
+     "k": "The rule",
+     "v": "+73.1%"
+    },
+    {
+     "k": "Just holding Bitcoin",
+     "v": "+127.2%"
+    },
+    {
+     "k": "Worst drop, rule vs holding",
+     "v": "-58.5% vs -53.1%"
+    },
+    {
+     "k": "Random timing with the same exposure that did as well or better",
+     "v": "73% of 1,000"
+    }
+   ],
+   "conditions": [
+    {
+     "rule": "Sharpe at least 0.10 above holding",
+     "met": false
+    },
+    {
+     "rule": "Beats 95% of randomly shifted copies of its own timing",
+     "met": false
+    },
+    {
+     "rule": "Worst drop at least 10 points shallower than holding",
+     "met": false
+    },
+    {
+     "rule": "Return above zero and at least 12 switches",
+     "met": true
+    }
+   ],
+   "reading": "In the earlier years (not judged) the filter sat out two big falls, late 2018 and 2022. In these years the Nasdaq stayed above its 200-day average 92% of the time, so the rule was nearly always in Bitcoin, sat out one 18% rally, and held through Bitcoin's worst fall because stocks kept rising; random timing with the same exposure did as well or better 73% of the time.",
+   "not_verified": "One popular rule (200 days, the Nasdaq, no confirmation); Bitcoin's link to stocks was weak before 2020; the earlier good years rest on two bear markets. Cash earned nothing in the test."
+  }
+ ]
+}
