@@ -1416,6 +1416,35 @@ async function healthy(browser) {
       await page.locator(V("usjobsdetail-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: the check line, the note and the source link
       await shot(page, "07zz-usjobsdetail-bottom");
 
+      await page.waitForSelector(V("usproducerprices-card"));
+      await page.waitForSelector(V("usproducerprices-body") + ", " + V("usproducerprices-unavailable") + ", " + V("usproducerprices-error"), { timeout: 45000 });
+      const ppTxt = await text(page);
+      match(ppTxt, /Producer prices/); match(ppTxt, /Bureau of Labor Statistics/); noMatch(ppTxt, FORECASTS, "the producer prices card makes no forecasts");
+      if (await liveCard(page, "usproducerprices-body")) {
+        const ppBody = await inner(page, "usproducerprices-body");
+        const PPM = "[A-Z][a-z]+ (?:19|20)\\d\\d";
+        const PPCH = "(?:(?:up|down) \\d+\\.\\d\\d%|unchanged)";
+        const PPIDX = "\\d{2,3}\\.\\d";
+        match(await inner(page, "usproducerprices-headline"), new RegExp(`^In ${PPM} the producer price index for final demand was ${PPIDX} \\(November 2009 = 100\\): ${PPCH} on the month before and ${PPCH} on a year earlier; without foods and energy it was ${PPCH} on a year earlier\\.$`), "what final demand prices were and how they moved");
+        match(await inner(page, "usproducerprices-range"), new RegExp(`^Over the last 10 years \\(120 months\\) the growth of final demand prices on a year earlier ran from [+-]\\d+\\.\\d\\d% \\(${PPM}\\) to [+-]\\d+\\.\\d\\d% \\(${PPM}\\); \\d{1,3}% of those months were lower than now\\.$`), "the ten-year range is explained in months");
+        const PPITEMS = [["final", "Final demand", "November 2009 = 100"], ["core", "Final demand without foods and energy", "April 2010 = 100"], ["finished", "Finished goods", "1982 = 100"], ["consumer", "Finished consumer goods", "1982 = 100"],
+          ["foods", "Finished consumer foods", "1982 = 100"], ["energy", "Finished consumer energy goods", "1982 = 100"], ["processed", "Processed goods for intermediate demand", "1982 = 100"],
+          ["unprocessed", "Unprocessed goods for intermediate demand", "1982 = 100"], ["services", "Services for intermediate demand", "November 2009 = 100"]];
+        for (const [k, label, base] of PPITEMS) {
+          match(await inner(page, `usproducerprices-item-${k}`), new RegExp(`^${label}: ${PPIDX} \\(${base}\\); on the month ${PPCH}, on a year earlier ${PPCH}\\.$`), `the series ${k} has its own line`);
+        }
+        match(await inner(page, "usproducerprices-recent"), new RegExp(`^(?:${PPM}: final demand ${PPCH} on the month before, without foods and energy ${PPCH}\\.\\s*){6}$`), "six months of final demand and core changes");
+        match(await inner(page, "usproducerprices-check"), new RegExp(`^Check: in each of the \\d[\\d,]* months from ${PPM} to ${PPM} the 9 series covered the same months with none missing, every index lay inside its range and no month moved by more than its limit \\(plain checks only: producer price indexes have no sums to check against, so this shows that the series are lined up and plausible, not that the figures are right\\)\\.$`), "the check line says what was checked");
+        match(ppBody, /Producer price indexes from the Bureau of Labor Statistics/); match(ppBody, /Final demand is what is sold to households/); match(ppBody, /only their changes/); match(ppBody, /The newest months are revised in later releases/); match(ppBody, /not a market signal or a forecast/);
+        noMatch(ppBody, /\b(?:19|20)\d\d-\d\d(-\d\d)?\b/, "no raw ISO dates on screen");
+      }
+      await page.locator(V("usproducerprices-card")).first().evaluate((el) => el.scrollIntoView({ block: "start" })).catch(() => undefined);
+      await shot(page, "07zzz-usproducerprices-top");
+      await page.locator(V("usproducerprices-group-finished")).first().evaluate((el) => el.scrollIntoView({ block: "center" })).catch(() => undefined);      // the middle: the finished goods
+      await shot(page, "07zzz-usproducerprices-middle");
+      await page.locator(V("usproducerprices-card")).first().evaluate((el) => el.scrollIntoView({ block: "end" })).catch(() => undefined);         // and its bottom: what producers pay, the last months, the check line, the note and the source link
+      await shot(page, "07zzz-usproducerprices-bottom");
+
       await page.waitForSelector(V("oil-card"));
       await page.waitForSelector(V("oil-body") + ", " + V("oil-unavailable") + ", " + V("oil-error"), { timeout: 45000 });
       const oilTxt = await text(page);

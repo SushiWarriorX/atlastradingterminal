@@ -594,6 +594,14 @@ export interface UsJobsDetailData { available: boolean; reason?: string; demo: b
   groups?: UsJobsDetailGroup[];
   detail?: { months_checked: number; first_month: string; last_month: string; largest_sum_gap: number };
   checks?: { months_in_a_row: boolean; range_ok: boolean; sums_ok: boolean } }
+export interface UsProducerPricesItem { key: string; label: string; base: string; index: number; change_pct: number; change_year_pct: number }
+export interface UsProducerPricesGroup { key: string; label: string; items: UsProducerPricesItem[] }
+export interface UsProducerPricesData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
+  headline?: UsProducerPricesItem & { core_change_year_pct: number; range: JoltsRange };
+  groups?: UsProducerPricesGroup[];
+  recent?: { month: string; change_pct: number; core_change_pct: number }[];
+  detail?: { months_checked: number; first_month: string; last_month: string };
+  checks?: { months_in_a_row: boolean; range_ok: boolean; moves_ok: boolean } }
 export interface UsJobsPart { level_thousands: number; change_thousands: number; change_year_thousands: number }
 export interface UsJobsRate { pct: number; month_before_pct: number | null; year_ago_pct: number | null }
 export interface UsJobsData { available: boolean; reason?: string; demo: boolean; as_of: string; url?: string; source?: string; note?: string; date?: string; month?: string; age_days?: number; freshness?: "CURRENT" | "OVERDUE";
